@@ -88,6 +88,7 @@ done
 #=================================================
 # Program configuration
 #=================================================
+COPY="cp --force"
 ECHO="echo"
 FIND="find"
 LINK="ln --symbolic --force $VERBOSE"
@@ -139,7 +140,8 @@ if [[ $DO_ROOT -eq 1 && -d $SOURCE_FILESYSTEM_DIR ]]; then
 			$SUDO $MKDIR $(dirname $DST) || exit $?
 		fi
 
-		$SUDO $LINK $SRC $DST || exit $?
+		#$SUDO $LINK $SRC $DST || exit $?
+		$SUDO $COPY $SRC $DST || exit $?
 	done
 	$POPD >/dev/null
 	$ECHO
