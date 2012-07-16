@@ -1,0 +1,158 @@
+#===============================================================================
+# File: ~/.bash/environment
+# Author: Joshua Spence <josh@joshuaspence.com>
+#===============================================================================
+# This file sets up the environment correctly. It gets run for every shell, so 
+# it must be fast. Also, starting a shell within a shell shouldn't change the
+# environment. The path manipulation functions are useful for this.
+#-------------------------------------------------------------------------------
+
+# Personalisation.
+export NAME=Joshua Spence
+export EMAIL=josh@joshuaspence.com
+
+# Set the file creation mask.
+#	0 - read, write and execute
+#	1 - read and write
+#	2 - read and execute
+#	3 - read only
+#	4 - write and execute
+# 	5 - write only
+#	6 - execute only
+#	7 - no permissions
+umask 0022
+
+# General environment settings.
+export PAGER=less
+export EDITOR=vim
+export SHELL=/bin/bash
+export CVS_RSH=ssh
+export RSYNC_RSH=ssh
+
+# Locale.
+export LANG=en_AU.utf-8
+export LANGUAGE=en_AU:en
+export LC_ALL=en_AU.utf-8
+export LC_MESSAGES=en_AU.UTF-8
+export LC_CTYPE=en_AU.UTF-8
+export LC_COLLATE=en_AU.UTF-8
+
+# Alias definitions.
+if [ -f "${HOME}/.bash/aliases" ]; then
+    source "${HOME}/.bash/aliases"
+fi
+
+# Options for controlling bash history commands.
+#	erasedups		Don't put duplicate items in the history.
+#	ignoredups		Don't put duplicate lines in the history (only if they 
+#                   are entered consecutively.
+#	ignorespace		If a command starts with a space, it will not be stored 
+#		            in your bash history.
+export HISTCONTROL=ignoredups:ignorespace
+
+# File where history is stored (default is ~/.bash_history).
+export HISTFILE="$HOME/.bash_history"
+
+# Number of history commands to remember.
+export HISTSIZE=100000
+export HISTFILESIZE=${HISTSIZE}
+
+# Load the bash functions.
+source "${HOME}/.bash/functions"
+
+# ~/bin should be in the front of path if it exists.
+PATH="${HOME}/bin":$PATH
+
+# LaTeX path
+#PATH="/usr/local/texlive/2011/bin/x86_64-linux:$PATH"
+
+# Manipulate shell variables and functions.
+# Use '+' to cause an option to be turned off.
+# Use '-' to cause an option to be turned on.
+set -b		    		# notify:       Causes output from background processes 
+			        	#       to be output right away, not on wait for next
+			        	#		primary prompt.
+#set -B  	    		# braceexpand:  The shell will perform brace expansion
+			        	#		(this option is on by default).
+#set -C		    		# noclobber:    Prevent output redirection using `>', 
+			        	#		`>&' and `<>' from overwriting existing files.
+#set -f 	    		# noglob:       Disable file name generation 
+                        #       (globbing). 
+#set -H		    		# histexpand:   Enable `!' style history substitution.
+			        	#		This option is on by default for interactive 
+			        	#		shells.
+#set -m			    	# monitor:      Job control is enabled. 
+#set -n			    	# noexec:       Read commands but do not execute them;
+		        		#		this may be used to check a script for syntax 
+		        		#		errors. This option is ignored by interactive
+			        	#		shells.
+set -o emacs			# Use an emacs-style line editing interface.
+#set -o ignoreeof		# An interactive shell will not exit upon reading EOF.
+set -o notify	  		# Notify when jobs running in background terminate.
+#set -o posix			# Change the behavior of Bash to match the POSIX 1003.2
+				        # standard.
+#set -o vi	    		# Use a vi-style line editing interface.
+#set -P		    		# physical:     If set, do not follow symbolic links 
+			        	#		when performing commands. The physical
+			        	#		directory is is used instead.
+#set -t		    		# onecmd:   Exit after reading and executing one 
+			        	#		command.
+#set -u		    		# nounset:      Treat unset variables as an error when 
+			        	#		performing parameter expansion. An error 
+			        	#		message will be written to the standard error,
+		        		#		and a non-interactive shell will exit.
+#set -v	    			# verbose:      Print shell input lines as they are 
+                        #               read.
+#set -x	    			# xtrace:       Print a trace of simple commands and 
+		        		#		their arguments after they are expanded and 
+		        		#		before before they are executed. (useful for
+		        		#		debugging).
+
+# Shell Options
+shopt -s cdspell	    # If set, minor errors in the spelling of a directory 
+			            # component in a cd command will be corrected. The
+		            	# errors checked for are transposed characters, a 
+		            	# missing character, and a character too many. If a 
+			            # correction is found, the corrected path is printed, 
+			            # and the command proceeds. This option is only used by
+			            # interactive shells.
+shopt -s checkwinsize	# If set, Bash checks the window size after each 
+			            # command and, if necessary, updates the values of
+			            # LINES and COLUMNS.
+#shopt -s cmdhist	    # If set, Bash attempts to save all lines of a 
+			            # multiple-line command in the same history entry.
+			            # This  allows easy re-editing of multi-line commands.
+#shopt -s dotglob	    # If set, Bash includes filenames beginning with a `.'
+			            # in the results of filename expansion.
+shopt -s expand_aliases	# If set, aliases are expanded. This option is enabled
+			            # by default for interactive shells.
+shopt -s histappend	    # If set, the history list is appended to the history 
+			            # file  when the shell exits, rather than overwriting 
+			            # the history file.
+shopt -s hostcomplete	# If set, and Readline is being used, Bash will attempt
+			            # to perform hostname completion when a word containing
+			            # a `@' is being completed. This option is enabled by
+        			    # default.
+#shopt -s huponexit	    # If set, Bash will send SIGHUP to all jobs when an 
+			            # interactive login shell exits.
+#shopt -s interactive_comments	# Allow a word beginning with `#' to cause that
+			            # word and all remaining characters on that line to be 
+			            # ignored in an interactive shell. This option is 
+			            # enabled by default. 
+shopt -s no_empty_cmd_completion    # If set, and Readline is being used, Bash
+			            # will not attempt to search the PATH for possible 
+			            # completions when completion is attempted on an empty 
+			            # line.
+shopt -s nocaseglob	    # If set, Bash matches filenames in a case-insensitive 
+			            # fashion when performing filename expansion.
+#shopt -s shift_verbose	# If this is set, the shift builtin prints an error 
+			            # message when the shift count exceeds the number of 
+			            # positional parameters. 
+shopt -s sourcepath	    # If set, the source builtin uses the value of PATH to 
+			            # find the directory containing the file supplied as an
+			            # argument. This option is enabled by default.
+
+# Load local environment settings.
+if [ -f "${HOME}/.bash/environment_local" ]; then
+    source "${HOME}/.bash/environment_local"
+fi

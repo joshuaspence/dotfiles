@@ -1,0 +1,13 @@
+This folder contains configuration files for my GTK Bookmarks.
+
+The "~" subdirectory contains configuration files for the current user. The 
+files in this subdirectory will be symlinked to the current user's home 
+directory.
+
+The "_" subdirectory contains global configuration files. Root access is usually
+required to create the symlinks for these configuration files.
+
+To setup the symlinks, run the "install.sh" script.
+
+Note that the files in this directory would not be useful for other people 
+really.

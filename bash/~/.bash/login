@@ -1,0 +1,20 @@
+#===============================================================================
+# File: ~/.bash/login
+# Author: Joshua Spence <josh@joshuaspence.com>
+#===============================================================================
+# Is run whenever we have a login interactive shell. Just prints a little 
+# welcome message.
+#-------------------------------------------------------------------------------
+
+#echo "Welcome to $(uname)"'!'
+
+#cookie="$(fortune 2>/dev/null)"
+#if [ -n "${cookie}" ]; then
+#    echo "${cookie}"
+#    echo
+#fi
+
+# Load local login message (if it exists)
+if [ -f "${HOME}/.bash/login_local" ]; then
+    source "${HOME}/.bash/login_local"
+fi

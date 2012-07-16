@@ -1,0 +1,429 @@
+#===============================================================================
+# File: ~/.bash/functions
+# Author: Joshua Spence <josh@joshuaspence.com>
+#===============================================================================
+# Useful bash functions. This is sourced by the environment file. These are 
+# available to scripts, but you shouldn't use them in scripts if you want them 
+# to be portable.
+#-------------------------------------------------------------------------------
+
+#==========================================================
+# mcd
+#==========================================================
+# Creates the directory if it doesn't exist, and changes 
+# into it.
+#
+# Usage:
+#   `mcd somedir`
+#----------------------------------------------------------
+function mcd {
+    DIR=$1
+    
+    mkdir -p "${DIR}" && cd "${DIR}"
+}
+
+#==========================================================
+# box
+#==========================================================
+# Create box of '#' characters around given string.
+#
+# Usage:
+#   `box STRING`
+#----------------------------------------------------------
+function box() {
+    t="$1xxxx";
+    c=${2:-#};
+    echo ${t//?/$c};
+    echo "$c $1 $c";
+    echo ${t//?/$c};
+}
+
+#==========================================================
+# bu
+#==========================================================
+# Backup a file with a date-time stamp.
+#
+# Usage:
+#   `bu FILENAME`
+#
+# Example:
+#   Running the command `bu README.txt` will create a file
+#   named 'README.txt_YYYY-MM-DD-HHMM.backup'.
+#----------------------------------------------------------
+function bu() {
+    ORIGINAL=$1
+    SEPERATOR=_
+    DATE=`date +%Y-%m-%d-%H%M`
+    SUFFIX=.backup
+    
+    if [ -z "${ORIGINAL}" ]; then
+        echo "Path not specified!" >&2
+        return 1
+    fi
+    
+    if [ ! -e "${ORIGINAL}" ]; then
+        echo "Path doesn't exist!" >&2
+        return 1
+    fi
+    
+    cp -r ${ORIGINAL} ${ORIGINAL}${SEPERATOR}${DATE}${SUFFIX}
+}
+
+#==========================================================
+# empty
+#==========================================================
+# Copyright 2007 - 2010 Christopher Bratusek
+#----------------------------------------------------------
+# Show empty files in the directed directory.
+#
+# Usage:
+#   `empty [DIRECTORY]`
+#----------------------------------------------------------
+function empty() {
+    if [ $# -lt 1 ]; then
+        find . -empty
+    else
+        find "$1" -empty
+    fi
+}
+
+#==========================================================
+# err
+#==========================================================
+# Determining the meaning of error codes.
+#
+# Usage:
+#   `err ERROR_CODE`
+#---------------------------------------------------------- 
+function err() {
+    grep --recursive --color=auto --recursive -- "$@" /usr/include/*/errno.h
+    if [ "${?}" != 0 ]; then
+        echo "Not found." >&2
+    fi
+}
+
+#==========================================================
+# most_frequent
+#==========================================================
+# Computes most frequent used words of text file.
+#
+# Usage:
+#   `most_frequent FILE_NAME`
+#
+# Example:
+#   `most_frequent file.txt`
+#----------------------------------------------------------
+function most_frequent() {
+    FILENAME=$1
+    SHOW=30
+    
+    if [ -z "${FILENAME}" ]; then
+        echo "File not specified!" >&2
+        exit 1
+    fi
+    
+    if [ ! -f "${FILENAME}" ]; then
+        echo "File '${FILENAME}' not found!" >&2
+        exit 1
+    fi
+    
+    cat "${FILENAME}" | \
+        tr -cs "[:alnum:]" "\n"| \
+        tr "[:lower:]" "[:upper:]" | \
+        awk '{h[$1]++}END{for (i in h){print h[i]" "i}}' | \
+        sort -nr | \
+        cat -n | \
+        head -n ${SHOW}
+}
+
+#==========================================================
+# spanner
+#==========================================================
+# Copyright 2007 - 2010 Christopher Bratusek
+#----------------------------------------------------------
+# Display a "Please wait..." message.
+#
+# Usage:
+#   `spanner PID`
+#
+# Example:
+#   `sleep 10 &
+#   spanner $!`
+#----------------------------------------------------------
+function spanner() {
+    PROC=$1
+    COUNT=0
+    COLOUR=""
+    DELAY=0.1
+    
+    echo -n "${COLOUR}Please wait... "
+
+    while [ -d /proc/$PROC ]; do
+        while [ "$COUNT" -lt 10 ]; do
+            echo -ne '\x08  ';
+            sleep $DELAY
+            ((COUNT++))
+        done
+                
+        until [ "$COUNT" -eq 0 ]; do
+            echo -ne '\x08\x08 ';
+            sleep $COUNT
+            ((COUNT -= 1))
+        done
+    done
+}
+ 
+#==========================================================
+# spin
+#==========================================================
+# Copyright 2007 - 2010 Christopher Bratusek
+#----------------------------------------------------------
+# Display a spinning progress process.
+#
+# Usage:
+#   `spin PID`
+#
+# Example:
+#   `sleep 10 &
+#   spin $!`
+#----------------------------------------------------------
+function spin() {
+    PID=$1
+    COLOUR="$YELLOW"
+    DELAY=0.05
+    
+    echo -ne "${COLOUR}|/     |"
+        
+    while [ -d /proc/$PID ]; do
+        # moving right
+        echo -ne "${COLOUR}\b\b\b\b\b\b\b-     |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b\b\\     |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b\b|     |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b\b /    |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b-    |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b\\    |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b|    |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b /   |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b-   |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\\   |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b|   |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b /  |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b-  |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\\  |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b|  |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b / |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b- |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\\ |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b| |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b /|"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b-|"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\\|"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b||"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b/|"
+        sleep $DELAY
+
+        # moving left
+        echo -ne "${COLOUR}\b\b||"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\\|"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b-|"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b/ |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b| |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\\ |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b- |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b/  |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b|  |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\\  |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b-  |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b/   |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b|   |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\\   |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b-   |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b/    |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b|    |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b\\    |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b-    |"
+        sleep $DELAY
+        echo -ne "${COLOUR}\b\b\b\b\b\b\b/     |"
+        sleep $DELAY
+    done
+
+    echo -e "${COLOUR}\b\b\b\b\b\b\b\b\b|=======| done!"
+}
+
+#==========================================================
+# spinner
+#==========================================================
+# Copyright 2007 - 2010 Christopher Bratusek
+#----------------------------------------------------------
+# Display a spinning progress process.
+#
+# Usage:
+#   `spinner PID`
+#
+# Example:
+#   `sleep 10 &
+#   spinner $!`
+#----------------------------------------------------------
+function spinner() {
+    PROC=$1
+    COLOUR="$YELLOW"
+    DELAY=0.05
+    
+    while [ -d /proc/$PROC ];do
+        echo -ne ''${COLOUR}'/\r'; sleep $DELAY
+        echo -ne ''${COLOUR}'-\r'; sleep $DELAY
+        echo -ne ''${COLOUR}'\\\r'; sleep $DELAY
+        echo -ne ''${COLOUR}'|\r'; sleep $DELAY
+    done
+}
+
+#==========================================================
+# spinner2
+#==========================================================
+# Display a spinning progress process.
+#
+# To start the spinner2 function, you have to send the 
+# function into the background. To stop the spinner2 
+# function, you have to define the argument "stop".
+#
+# Example:
+#   echo -n "Starting some daemon "; spinner2 &
+#   if sleep 10; then
+#       spinner2 "stop"; echo -e "\t[ OK ]"
+#   else
+#       spinner2 "stop"; echo -e "\t[ FAILED ]"
+#   fi
+#----------------------------------------------------------
+function spinner2() {
+    local action=${1:-"start"}
+    declare -a sign=( "-" "/" "|" "\\\\" )
+     
+    # define singnal file...
+    [ "$action" = "start" ] && echo 1 > /tmp/signal
+    [ "$action" = "stop" ] && echo 0 > /tmp/signal
+
+    while [ "$( cat /tmp/signal 2>/dev/null )" == "1" ]; do
+        for (( i=0; i<${#sign[@]}; i++ )); do
+            echo -en "${sign[$i]}\b"
+
+            # with this command you can use millisecond as sleep time
+            perl -e 'select( undef, undef, undef, 0.1 );'
+        done
+    done
+
+    # clear the last ${sign[$i]} sign at finish...
+    [ "$action" = "stop" ] && echo -ne " \b"
+}
+
+#==========================================================
+# stopwatch
+#==========================================================
+# Copyright 2007 - 2010 Christopher Bratusek
+#----------------------------------------------------------
+# A stopwatch that counts in minutes and seconds.
+#
+# Usage:
+#   `stopwatch`
+#----------------------------------------------------------
+function stopwatch() {
+    BEGIN=$(date +%s)
+    
+    while true; do
+        NOW=$(date +%s)
+        DIFF=$(($NOW - $BEGIN))
+        MINS=$(($DIFF / 60))
+        SECS=$(($DIFF % 60))
+        echo -ne "Time elapsed: $MINS:`printf %02d $SECS`\r"
+        sleep .1
+    done
+}
+
+#==========================================================
+# countdown
+#==========================================================
+# A countdown clock for a specified number of seconds.
+#
+# Usage:
+#       `countdown SECONDS`
+#----------------------------------------------------------
+function countdown() {
+    SECONDS=$1
+    ALERTS="\a\a\a"
+    # Countdown
+    for i in $(seq "$SECONDS" -1 1); do
+        echo -ne " $i \r"
+        sleep 1
+    done
+    
+    echo -e "\rDone!${ALERTS}"
+}
+
+# Load local functions
+if [ -f "${HOME}/.bash/functions_local" ]; then
+    source "${HOME}/.bash/functions_local"
+fi
+
+#==========================================================
+# whatismyp
+#==========================================================
+# Return current external IP address.
+#
+# Usage:
+#       `whatismyip`
+#----------------------------------------------------------
+function whatismyip() {
+	curl -s checkip.dyndns.org|sed -e 's/.*Current IP Address: //' -e 's/<.*$//'
+}
+
+#==========================================================
+# nonascii
+#==========================================================
+# Grep for non-ascii text.
+#
+# Usage:
+#       `nonascii FILE`
+#----------------------------------------------------------
+function nonascii() {
+	grep --color='auto' -P -n "[\x80-\xFF]" $1
+}
