@@ -1,0 +1,16 @@
+# sudo dpkg --get-selections | grep '[[:space:]]install$' | awk '{print $1}'
+
+# Adobe Acrobat
+acroread
+acroread-common
+
+ant
+ant-contrib
+ant-contrib-cpptasks
+ant-doc
+ant-optional
+
+antlr
+antlr3
+
+

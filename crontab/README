@@ -1,0 +1,8 @@
+This folder contains my crontab configuration files.
+
+The "~" subdirectory contains configuration files for the current user.
+
+The "_" subdirectory contains global configuration files. Root access is usually
+required to create the symlinks for these configuration files.
+
+To setup the symlinks, run the "install.sh" script.

@@ -23,8 +23,11 @@ fi
 
 # Set PATH so it includes user's private bin if it exists.
 if [ -d "$HOME/bin" ]; then
-    PATH="$HOME/bin:$PATH"
+    export PATH="$HOME/bin:$PATH"
 fi
+
+# Add LaTeX to path.
+export PATH="/usr/local/texlive/2011/bin/x86_64-linux:$PATH"
 
 # Locale.
 export LANG=en_AU.utf-8

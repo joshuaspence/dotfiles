@@ -1,24 +1,16 @@
 #!/bin/bash
 #===============================================================================
-# File:   install_all.sh
+# File:   bash/install.sh
 # Author: Joshua Spence <josh@joshuaspence.com>
 #===============================================================================
-# Creates symbolic links for all of my configuration files.
+# Creates symbolic links for my bash configuration files.
 #-------------------------------------------------------------------------------
 
 #=================================================
 # Configuration
 #=================================================
-SUBDIRS="
-	bash
-	bless
-	git
-	gtk-bookmarks
-	recordMyDesktop
-	skypecallrecorder
-	vim
-	xmonad
-"
+SOURCE_HOME_DIR="$(readlink -f $(dirname $0))/~/"			# Files in this directory will go to the current user's home directory
+SOURCE_FILESYSTEM_DIR="$(readlink -f $(dirname $0))/_/"		# Files in this directory will go to the root filesystem
 #-------------------------------------------------
 
 #=================================================
@@ -29,12 +21,12 @@ usage() {
 usage:
     $0 [OPTIONS...]
 
-This scripts creates symbolic links to all of my configuration files.
+This scripts creates symbolic links to my configuration files for bash.
 
 OPTIONS
     -h, --help
     		Show this message.
-    -n, --no-root
+	-n, --no-root
 			Do not install any configuration files that require root access.
     -v, --verbose
             Verbose mode. Verbose messages will be output to stderr.
@@ -47,7 +39,6 @@ EOF
 #=================================================
 VERBOSE=        # verbose output? [default: no]
 DO_ROOT=1		# install root configuration files? [default: yes]
-ARGS=			# arguments to pass to install.sh scripts
 
 PROGRAM_NAME=$(basename $0)
 ARGS=$(getopt --name "$PROGRAM_NAME" --long help,no-root,verbose --options hnv -- "$@")
@@ -66,13 +57,11 @@ while [ $# -gt 0 ]; do
         
         -n | --no-root)
         	DO_ROOT=0
-        	ARGS="$ARGS --no-root"
         	;;
 
         -v | --verbose)
             # enable verbose output to stderr
             VERBOSE="--verbose"
-            ARGS="$ARGS --verbose"
             ;;
 
     # OTHER
@@ -110,21 +99,39 @@ READLINK="readlink --canonicalize"
 SUDO="sudo"
 #-------------------------------------------------
 
-for DIR in $SUBDIRS; do
-	# Echo the header.
-	$ECHO "================================================================================"
-	$ECHO $DIR
-	$ECHO "================================================================================"
-	
-	# Execute the script.
-	SCRIPT="$DIR/install.sh"
-	if [[ -f $SCRIPT ]]; then
-		./$SCRIPT $ARGS
-	else
-		$ECHO "Could not find $SCRIPT" >&2
-	fi
-	
-	# Echo the footer.
-	$ECHO "--------------------------------------------------------------------------------"
+if [[ -d $SOURCE_HOME_DIR ]]; then
+	$ECHO "Copying personal configuration files..."
+	$PUSHD $SOURCE_HOME_DIR >/dev/null
+	$FIND . -type f -print0 | while $READ -d $'\0' file; do
+		SRC="$(readlink -f $file)"
+		DST="$($READLINK ~)/$file"
+
+		if [[ ! -d $(dirname $DST) ]]; then
+			$MKDIR $(dirname $DST) || exit $?
+		fi
+
+		$LINK $SRC $DST || exit $?
+	done
+	$POPD >/dev/null
 	$ECHO
-done
+fi
+
+if [[ $DO_ROOT -eq 1 && -d $SOURCE_FILESYSTEM_DIR ]]; then
+	$ECHO "Copying global configuration files..."
+	$PUSHD $SOURCE_FILESYSTEM_DIR >/dev/null
+	$FIND . -type f -print0 | while $READ -d $'\0' file; do
+		SRC="$(readlink -f $file)"
+		DST="/$file"
+
+		if [[ ! -d $(dirname $DST) ]]; then
+			$SUDO $MKDIR $(dirname $DST) || exit $?
+		fi
+
+		$SUDO $LINK $SRC $DST || exit $?
+	done
+	$POPD >/dev/null
+	$ECHO
+fi
+
+$ECHO "Done!"
+exit 0
