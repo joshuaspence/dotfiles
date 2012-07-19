@@ -4,13 +4,402 @@
 acroread
 acroread-common
 
+# ant
+# Java based build tool like Make
 ant
 ant-contrib
 ant-contrib-cpptasks
 ant-doc
 ant-optional
 
+# ant
+# Language tool for constructing recognizers, compilers, etc
 antlr
 antlr3
 
+# apt
+# Command line package manager
+apt
+apt-file
+apt-transport-https
+apt-utils
+apt-xapian-index
 
+# aspell
+# Spell checker
+aspell
+aspell-en
+
+#autoconf
+#Automatic configure script build
+autoconf
+autoconf-doc
+
+# automake
+# Tool for generating GNU Standards-compliant Makefiles
+automake
+
+# bash
+# GNU Bourne Again SHell
+bash
+bash-completion
+
+# bison
+# YACC-compatible parser generator
+bison
+
+# bless
+# A full featured hexadecimal editor
+bless
+
+# Calibre
+# e-book converter and library managementr
+calibre
+calibre-bin
+
+# cpp
+# GNU C preprocessor (cpp)
+cpp
+
+# curl
+# Get a file from an HTTP, HTTPS or FTP server
+curl
+
+# dmg2img
+# Tool for converting compress dmg files to hfsplus images
+dmg2img
+
+# Doxygen
+# Documentation system for C, C++, Java, Python and other languages
+doxygen
+doxygen-doc
+doxygen-gui
+doxygen-latex
+
+# Eclipse
+# Extensible Tool Platform and Java IDE
+eclipse
+eclipse-cdt                 # C/C++ Development Tools for Eclipse
+eclipse-egit                # Eclipse Team provider for the Git version control system
+eclipse-jdt                 # Eclipse Java Development Tools
+eclipse-pde                 # Eclipse Plug-in Development Environment
+eclipse-platform            # Eclipse platform without development plug-ins
+eclipse-platform-data       # Eclipse platform without development plug-ins (data)
+eclipse-rcp                 # Eclipse Rich Client Platform
+eclipse-rse                 # Eclipse Remote System Explorer
+
+# file
+# Determines file type using "magic" numbers
+file
+
+# filepp
+# A generic perl-based file pre-processor
+filepp
+
+# Filezilla
+# Full-featured graphical FTP/FTPS/SFTP client
+filezilla
+filezilla-common
+
+# findutils
+# Utilities for finding files--find, xargs
+findutils
+
+# Firefox
+# Safe and easy web browser from Mozilla
+firefox
+firefox-locale-en           # English language pack for Firefox
+firefox-globalmenu          # Unity appmenu integration for Firefox
+firefox-gnome-support       # Safe and easy web browser from Mozilla - GNOME support
+xul-ext-ubufox              # Ubuntu-specific configuration defaults and apt support for Firefox 
+
+# flex
+# A fast lexical analyzer generator.
+flex
+
+#gcc
+#GNU C/C++ compiler
+gcc
+g++
+gcc-opt                     # Allow global optimization flags for gcc, g++
+gcc-opt                     # Allow global optimization flags for gcc, g++
+gcc-doc                     # Documentation for the GNU C compilers (gcc, gobjc, g++)
+
+# gawk
+# GNU awk, a pattern scanning and processing language
+gawk
+gawk-doc
+
+# gdb
+# The GNU Debugger
+gdb
+gdb-doc
+
+# gedit
+# Official text editor of the GNOME desktop environment
+gedit
+gedit-common
+gedit-developer-plugins
+gedit-latex-plugin
+gedit-plugins
+
+# ghex
+# GNOME Hex editor for files
+ghex
+
+# GIMP
+# The GNU Image Manipulation Program
+gimp
+gimp-data
+gimp-dcraw                  # GIMP plug-in for loading RAW digital photos
+gimp-gap                    # Animation package for the GIMP
+gimp-help-common
+gimp-help-en
+pandora                     # GIMP Plugin For Creating Panoramas
+
+# git
+# Fast, scalable, distributed revision control system
+git
+git-buildpackage            # Suite to help with Debian packages in Git repositories
+git-cola                    # Highly caffeinated git GUI
+git-core
+git-doc
+git-gui                     # Fast, scalable, distributed revision control system (GUI)
+git-man
+git-sh                      # A git shell
+git-stuff                   # Additional Git utilities
+gitg                        # Git repository viewer for gtk+/GNOME
+gitk
+giggle                      # Gtk+ frontend for the git directory tracker
+qgit                        # Qt application for viewing GIT trees
+
+# Google Chrome
+# The web browser from Google
+google-chrome-stable
+
+# Google Earth
+google-earth-stable
+
+# grep
+# GNU grep, egrep and fgrep
+grep
+
+# htop
+# Interactive processes viewer
+htop
+
+# indent
+# C language source code formatting program
+indent
+indent-doc
+
+# less
+# Pager program simila4r to more.
+less
+
+# LibreOffice
+# Office productivity suite
+libreoffice-base-core
+libreoffice-calc            # Soreadsgeet
+libreoffice-common
+libreoffice-core
+libreoffice-draw            # Drawing
+libreoffice-emailmerge      # Email mail merge
+libreoffice-gnome
+libreoffice-gtk
+libreoffice-help-en-gb
+libreoffice-help-en-us
+libreoffice-impress         # Presentation
+libreoffice-l10n-en-gb
+libreoffice-l10n-en-za
+libreoffice-math            # Equation editor
+libreoffice-pdfimport       # LibreOffice extension for importing PDF documents
+libreoffice-style-human
+libreoffice-style-tango
+libreoffice-writer          # Word processor
+
+# lsof
+# List open files
+lsof
+
+# m4
+# A macro processing language
+m4
+
+# make
+# An utility for Directing compilation.
+make
+make-doc
+colormake
+
+# meld
+# Graphical tool to diff and merge files
+meld
+
+# mySQL
+mysql-client
+mysql-common
+mysql-navigator             # GUI client program for MySQL database server
+
+# nmap
+# The Network Mapper
+nmap
+zenmap                      # The Network Mapper Front End
+
+# ntop
+# Display network usage in web browser
+ntop
+ntop-data
+
+# ophcrack
+# Microsoft Windows password cracker using rainbow tables
+ophcrack
+ophcrack-cli
+
+# outguess
+# Universal Steganographic tool
+outguess
+
+# patch
+patch                       # Apply a diff file to an original
+patchutils                  # Utilities to work with patches
+
+# perl
+# Larry Wall's Practical Extraction and Report Language
+perl
+perl-base
+perl-debug
+perl-doc
+perl-modules
+
+# powertop
+# Linux tool to find out what is using power on a laptop 
+powertop
+
+# PuTTY
+# Telnet/SSH client for X
+putty
+putty-doc
+putty-tools                 # Command-line tools for SSH, SCP, and SFTP
+
+# Pyrit
+# GPGPU-driven WPA/WPA2-PSK key cracker
+pyrit
+
+# Python
+# Interactive high-level object-oriented language 
+python
+python-doc
+
+# Rake
+# Ruby make-like utility
+rake
+
+# rsync
+# Fast, versatile, remote (and local) file-copying tool
+rsync
+gadmin-rsync                # GTK+ configuration tool for rsync
+gtkrsync                    # GUI front-end to display rsync status
+grsync                      # GTK+ frontend for rsync
+
+# ruby
+ruby
+
+# sbackup
+# Simple Backup Suite for desktop use
+sbackup
+sbackup-gtk
+
+# sed
+# The GNU sed stream editor
+sed
+
+# tar
+# GNU version of the tar archiving utility
+tar
+
+# TeX
+tex-common
+texlive-base
+texlive-binaries
+texlive-common
+texlive-doc-base
+texlive-extra-utils
+texlive-font-utils
+texlive-latex-base
+texlive-latex-base-doc
+texlive-luatex
+texlive-metapost
+texlive-metapost-doc
+
+# traceroute
+# Traces the route taken by packets over an IPv4/IPv6 network
+traceroute
+
+# tree
+# Displays directory tree, in color
+tree
+
+# UNetbootin
+# Installer of Linux/BSD distributions to a partition or USB drive
+unetbootin
+
+# Unison
+# File-synchronization tool for Unix and Windows
+unison
+unison-gtk
+
+# Unzip
+# De-archiver for .zip files
+unzip
+
+# vim
+# Vi IMproved - enhanced vi editor
+vim
+vim-common
+vim-doc
+vim-gnome
+vim-gtk
+vim-gui-common
+vim-latexsuite              # View, edit and compile LaTeX documents from within Vim
+vim-runtime
+vim-tiny
+
+# VLC
+# Multimedia player and streamer
+vlc
+vlc-data
+vlc-nox                     # Multimedia player and streamer (without X support)
+videolan-doc
+
+# wget
+# Retrieves files from the web
+wget
+
+# whois
+# Intelligent WHOIS client
+whois
+
+# WinFF
+# Graphical video and audio batch converter using ffmpeg
+winff
+winff-doc
+
+# Wireshark
+# Network traffic analyzer
+wireshark
+wireshark-doc
+wireshark-common
+tshark                      # Network traffic analyzer - console version
+
+# xmobar
+# Lightweight status bar for X11 window managers with UTF-8 and Xft support
+xmobar
+
+# xmonad
+# Lightweight X11 window manager written in Haskell
+xmonad
+
+# zip
+# Archiver for .zip files
+zip
