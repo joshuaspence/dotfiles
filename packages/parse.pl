@@ -38,22 +38,31 @@ open FILE, "<", $package_file or die $!;
 
 # Parse the data
 my $line;
-my $new_package = false;
+my $header;
 while($line = <FILE>) {
     chomp($line); # remove newline characters
     
-    if ($line = "") {
-        $new_package = true;
-    } else if ($line =~ m/^\s*#/) {
-        # This is a header
-        # or a comment
-        (my $header = $line) =~ s/\s*#\s*//;
+    if ($line =~ m/^\s*#/) {
+        # This is a header and/or a comment
         
-        print "Header: '$header'\n";
+        if ($line =~ m/\$.*\$/) {
+            ($header = $line) =~ s/\s*#\s*\$(.*)\$/$1/;
+            $all_packages{$header} = ();
+            $all_packages{$header}{'comment'} = '';
+            $all_packages{$header}{'packages'} = [];
+        }
+        
+        (my $comment = $line) =~ s/\$.*\$//;
+        $comment =~ s/^[^#]*(#\s*)?//;
+        if ($comment !~ m/^$/) {
+            $all_packages{$header} = $comment;
+        }
     } else {
         # This is data
         (my $package = $line) =~ s/\s*#.*$//;
         (my $comment = $line) =~ s/^[^#]*(#\s*)?//;
+        
+        $all_packages{$header}{'packages'} = 
         
         print "Package: '$package'\n";
         print "Comment: '$comment'\n";

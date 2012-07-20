@@ -1,10 +1,22 @@
 # sudo dpkg --get-selections | grep '[[:space:]]install$' | awk '{print $1}'
 
-# Adobe Acrobat
+$ Adobe Acrobat
 acroread
 acroread-common
 
-# ant
+$ agrep
+# text search tool with support for approximate patterns
+agrep
+
+$ alien
+# convert and install rpm and other packages
+alien
+
+$ anacron
+# cron-like program that doesn't go by time
+anacron
+
+$ ant
 # Java based build tool like Make
 ant
 ant-contrib
@@ -12,12 +24,12 @@ ant-contrib-cpptasks
 ant-doc
 ant-optional
 
-# ant
+$ antlr
 # Language tool for constructing recognizers, compilers, etc
 antlr
 antlr3
 
-# apt
+$ apt
 # Command line package manager
 apt
 apt-file
@@ -25,58 +37,67 @@ apt-transport-https
 apt-utils
 apt-xapian-index
 
-# aspell
+$ aspell
 # Spell checker
 aspell
 aspell-en
 
-#autoconf
-#Automatic configure script build
+$ at
+# Delayed job execution and batch processing
+at
+
+# Audacity
+# Fast, cross-platform audio editor
+audacity
+audacity-data
+
+$ autoconf
+# Automatic configure script build
 autoconf
 autoconf-doc
 
-# automake
+$ automake
 # Tool for generating GNU Standards-compliant Makefiles
 automake
 
-# bash
+$ bash
 # GNU Bourne Again SHell
 bash
 bash-completion
 
-# bison
+$ bison
 # YACC-compatible parser generator
 bison
 
-# bless
+$ bless
 # A full featured hexadecimal editor
 bless
 
-# Calibre
+$ Calibre
 # e-book converter and library managementr
 calibre
 calibre-bin
 
-# cpp
+$ cpp
 # GNU C preprocessor (cpp)
 cpp
 
-# curl
+$ curl
 # Get a file from an HTTP, HTTPS or FTP server
 curl
 
-# dmg2img
+$ dmg2img
 # Tool for converting compress dmg files to hfsplus images
 dmg2img
 
-# Doxygen
+$ Doxygen
 # Documentation system for C, C++, Java, Python and other languages
 doxygen
 doxygen-doc
 doxygen-gui
 doxygen-latex
 
-# Eclipse
+$ Eclipse
 # Extensible Tool Platform and Java IDE
 eclipse
 eclipse-cdt                 # C/C++ Development Tools for Eclipse
@@ -88,24 +109,24 @@ eclipse-platform-data       # Eclipse platform without development plug-ins (dat
 eclipse-rcp                 # Eclipse Rich Client Platform
 eclipse-rse                 # Eclipse Remote System Explorer
 
-# file
+$ file
 # Determines file type using "magic" numbers
 file
 
-# filepp
+$ filepp
 # A generic perl-based file pre-processor
 filepp
 
-# Filezilla
+$ Filezilla
 # Full-featured graphical FTP/FTPS/SFTP client
 filezilla
 filezilla-common
 
-# findutils
+$ findutils
 # Utilities for finding files--find, xargs
 findutils
 
-# Firefox
+$ Firefox
 # Safe and easy web browser from Mozilla
 firefox
 firefox-locale-en           # English language pack for Firefox
@@ -113,29 +134,29 @@ firefox-globalmenu          # Unity appmenu integration for Firefox
 firefox-gnome-support       # Safe and easy web browser from Mozilla - GNOME support
 xul-ext-ubufox              # Ubuntu-specific configuration defaults and apt support for Firefox 
 
-# flex
+$ flex
 # A fast lexical analyzer generator.
 flex
 
-#gcc
-#GNU C/C++ compiler
+$ gcc / g++
+# $GNU C/C++ compiler$
 gcc
 g++
 gcc-opt                     # Allow global optimization flags for gcc, g++
 gcc-opt                     # Allow global optimization flags for gcc, g++
 gcc-doc                     # Documentation for the GNU C compilers (gcc, gobjc, g++)
 
-# gawk
+$ gawk
 # GNU awk, a pattern scanning and processing language
 gawk
 gawk-doc
 
-# gdb
+$ gdb
 # The GNU Debugger
 gdb
 gdb-doc
 
-# gedit
+$ gedit
 # Official text editor of the GNOME desktop environment
 gedit
 gedit-common
@@ -143,11 +164,11 @@ gedit-developer-plugins
 gedit-latex-plugin
 gedit-plugins
 
-# ghex
+$ ghex
 # GNOME Hex editor for files
 ghex
 
-# GIMP
+$ GIMP
 # The GNU Image Manipulation Program
 gimp
 gimp-data
@@ -157,7 +178,7 @@ gimp-help-common
 gimp-help-en
 pandora                     # GIMP Plugin For Creating Panoramas
 
-# git
+$ git
 # Fast, scalable, distributed revision control system
 git
 git-buildpackage            # Suite to help with Debian packages in Git repositories
@@ -173,34 +194,34 @@ gitk
 giggle                      # Gtk+ frontend for the git directory tracker
 qgit                        # Qt application for viewing GIT trees
 
-# Google Chrome
+$ Google Chrome
 # The web browser from Google
 google-chrome-stable
 
-# Google Earth
+$ Google Earth
 google-earth-stable
 
-# grep
+$ grep
 # GNU grep, egrep and fgrep
 grep
 
-# htop
+$ htop
 # Interactive processes viewer
 htop
 
-# indent
+$ indent
 # C language source code formatting program
 indent
 indent-doc
 
-# less
+$ less
 # Pager program simila4r to more.
 less
 
-# LibreOffice
+$ LibreOffice
 # Office productivity suite
 libreoffice-base-core
-libreoffice-calc            # Soreadsgeet
+libreoffice-calc            # Spreadsgeet
 libreoffice-common
 libreoffice-core
 libreoffice-draw            # Drawing
@@ -218,53 +239,53 @@ libreoffice-style-human
 libreoffice-style-tango
 libreoffice-writer          # Word processor
 
-# lsof
+$ lsof
 # List open files
 lsof
 
-# m4
+$ m4
 # A macro processing language
 m4
 
-# make
+$ make
 # An utility for Directing compilation.
 make
 make-doc
 colormake
 
-# meld
+$ meld
 # Graphical tool to diff and merge files
 meld
 
-# mySQL
+$ mySQL
 mysql-client
 mysql-common
 mysql-navigator             # GUI client program for MySQL database server
 
-# nmap
+$ nmap
 # The Network Mapper
 nmap
 zenmap                      # The Network Mapper Front End
 
-# ntop
+$ ntop
 # Display network usage in web browser
 ntop
 ntop-data
 
-# ophcrack
+$ ophcrack
 # Microsoft Windows password cracker using rainbow tables
 ophcrack
 ophcrack-cli
 
-# outguess
+$ outguess
 # Universal Steganographic tool
 outguess
 
-# patch
+$ patch
 patch                       # Apply a diff file to an original
 patchutils                  # Utilities to work with patches
 
-# perl
+$ perl
 # Larry Wall's Practical Extraction and Report Language
 perl
 perl-base
@@ -272,53 +293,53 @@ perl-debug
 perl-doc
 perl-modules
 
-# powertop
+$ powertop
 # Linux tool to find out what is using power on a laptop 
 powertop
 
-# PuTTY
+$ PuTTY
 # Telnet/SSH client for X
 putty
 putty-doc
 putty-tools                 # Command-line tools for SSH, SCP, and SFTP
 
-# Pyrit
+$ Pyrit
 # GPGPU-driven WPA/WPA2-PSK key cracker
 pyrit
 
-# Python
+$ Python
 # Interactive high-level object-oriented language 
 python
 python-doc
 
-# Rake
+$ Rake
 # Ruby make-like utility
 rake
 
-# rsync
+$ rsync
 # Fast, versatile, remote (and local) file-copying tool
 rsync
 gadmin-rsync                # GTK+ configuration tool for rsync
 gtkrsync                    # GUI front-end to display rsync status
 grsync                      # GTK+ frontend for rsync
 
-# ruby
+$ ruby
 ruby
 
-# sbackup
+$ sbackup
 # Simple Backup Suite for desktop use
 sbackup
 sbackup-gtk
 
-# sed
+$ sed
 # The GNU sed stream editor
 sed
 
-# tar
+$ tar
 # GNU version of the tar archiving utility
 tar
 
-# TeX
+$ TeX
 tex-common
 texlive-base
 texlive-binaries
@@ -332,28 +353,28 @@ texlive-luatex
 texlive-metapost
 texlive-metapost-doc
 
-# traceroute
+$ traceroute
 # Traces the route taken by packets over an IPv4/IPv6 network
 traceroute
 
-# tree
+$ tree
 # Displays directory tree, in color
 tree
 
-# UNetbootin
+$ UNetbootin
 # Installer of Linux/BSD distributions to a partition or USB drive
 unetbootin
 
-# Unison
+$ Unison
 # File-synchronization tool for Unix and Windows
 unison
 unison-gtk
 
-# Unzip
+$ Unzip
 # De-archiver for .zip files
 unzip
 
-# vim
+$ vim
 # Vi IMproved - enhanced vi editor
 vim
 vim-common
@@ -365,41 +386,45 @@ vim-latexsuite              # View, edit and compile LaTeX documents from within
 vim-runtime
 vim-tiny
 
-# VLC
+$ VLC
 # Multimedia player and streamer
 vlc
 vlc-data
 vlc-nox                     # Multimedia player and streamer (without X support)
 videolan-doc
 
-# wget
+$ Vuze
+# Multimedia BitTorrent client
+vuze
+
+$ wget
 # Retrieves files from the web
 wget
 
-# whois
+$ whois
 # Intelligent WHOIS client
 whois
 
-# WinFF
+$ WinFF
 # Graphical video and audio batch converter using ffmpeg
 winff
 winff-doc
 
-# Wireshark
+$ Wireshark
 # Network traffic analyzer
 wireshark
 wireshark-doc
 wireshark-common
 tshark                      # Network traffic analyzer - console version
 
-# xmobar
+$ xmobar
 # Lightweight status bar for X11 window managers with UTF-8 and Xft support
 xmobar
 
-# xmonad
+$ xmonad
 # Lightweight X11 window manager written in Haskell
 xmonad
 
-# zip
+$ zip
 # Archiver for .zip files
 zip
