@@ -178,6 +178,7 @@ $gdb
 # The GNU Debugger
 gdb
 gdb-doc
+xxgdb
 
 $gedit
 # Official text editor of the GNOME desktop environment
@@ -451,3 +452,41 @@ xmonad
 $zip
 # Archiver for .zip files
 zip
+
+$cron
+# Process scheduling daemon
+cron
+
+$csstidy
+# CSS parser and optimiser
+csstidy
+
+$ddclient
+# Address updating utility for dynamic DNS services
+ddclient
+
+$Data Display Debugger
+# The Data Display Debugger, a graphical debugger frontend
+ddd
+ddd-doc
+
+$deborphan
+# Program that can find unused packages, e.g. libraries
+deborphan
+
+$desktop-file-utils
+# Utilities for .desktop files
+desktop-file-utils
+
+$diffpdf
+# Compare two PDF files textually or visually
+diffpdf
+
+$diffstat
+# Produces graph of changes introduced by a diff file
+diffstat
+
+$diffutils
+# File comparison utilities
+diffutils
+diffutils-doc

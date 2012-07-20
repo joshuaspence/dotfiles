@@ -110,11 +110,9 @@ cpio
 cpu-checker
 crash
 crda
-cron
 cryptsetup
 cryptsetup-bin
 csh
-csstidy
 cups
 cups-bjnp
 cups-bsd
@@ -137,9 +135,6 @@ dconf-gsettings-backend
 dconf-service
 dconf-tools
 dctrl-tools
-ddclient
-ddd
-ddd-doc
 debconf
 debconf-i18n
 debhelper
@@ -148,13 +143,11 @@ debian-keyring
 debian-policy
 debianutils
 debootstrap
-deborphan
 default-jdk
 default-jre
 default-jre-headless
 defoma
 deja-dup
-desktop-file-utils
 developers-reference
 devscripts
 dh-apparmor
@@ -162,9 +155,6 @@ dh-autoreconf
 dh-translations
 dialog
 dictionaries-common
-diffpdf
-diffstat
-diffutils
 distro-info
 distro-info-data
 dkms
