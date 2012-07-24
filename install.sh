@@ -3,7 +3,7 @@
 # File:   install_all.sh
 # Author: Joshua Spence <josh@joshuaspence.com>
 #===============================================================================
-# Creates symbolic links for all of my configuration files.
+# Installs all configuration files from the $SUBDIRS subdirectories.
 #-------------------------------------------------------------------------------
 
 #=================================================
@@ -12,10 +12,14 @@
 SUBDIRS="
     bash
     bless
+    crontab
     git
+    GPG
     gtk-bookmarks
+    packages
     recordMyDesktop
     skypecallrecorder
+    SSH
     vim
     xmonad
 "
@@ -32,10 +36,23 @@ usage:
 This scripts creates symbolic links to all of my configuration files.
 
 OPTIONS
+    -a, --all
+        Perform all jobs.
+    -b, --backup
+        Backup any files that would be replaced by this script. This is the 
+        default.
+    -c, --copy
+        Copy the configuration files to the destination directory instead of 
+        using symlinks.
     -h, --help
         Show this message.
+    -l, --link
+        Symlink the configuration files to the destination directory. This is 
+        the default.
     -n, --no-root
         Do not install any configuration files that require root access.
+    -u, --no-backup
+        Do not backup any files that would be replaced by this script.
     -v, --verbose
         Verbose mode. Verbose messages will be output to stderr.
 
@@ -45,37 +62,65 @@ EOF
 #-------------------------------------------------
 
 #=================================================
+# Options
+#=================================================
+BACKUP=1            # backup files? [default: yes]
+VERBOSE=            # verbose output? [default: no]
+DO_ROOT=1		    # install root configuration files? [default: yes]
+SCRIPT_ARGS=		# arguments to pass to install.sh scripts
+JOBS=               # subdirs to install
+INSTALL="\$LINK"    # command to use for installation
+#-------------------------------------------------
+
+#=================================================
 # Get program command line options
 #=================================================
-VERBOSE=        # verbose output? [default: no]
-DO_ROOT=1		# install root configuration files? [default: yes]
-ARGS=			# arguments to pass to install.sh scripts
-JOBS=           # subdirs to install
-
 PROGRAM_NAME=$(basename $0)
-ARGS=$(getopt --name "$PROGRAM_NAME" --long help,no-root,verbose --options hnv -- "$@")
+ARGS=$(getopt --name "$PROGRAM_NAME" --long "all,backup,copy,help,link,no-backup,no-root,verbose" --options "abchlnuv" -- "$@")
+
+# Bad arguments
 if [ $? -ne 0 ]; then
     echo "getopt failed!" >&2
     exit 1
 fi
 
+# A little magic. Preserves whitespace within option arguments.
 eval set -- $ARGS
+
 while [ $# -gt 0 ]; do
     case $1 in
+        -a | --all)
+            JOBS="$SUBDIRS"
+            ;;
+        
+        -b | --backup)
+            BACKUP=1
+            SCRIPT_ARGS="$SCRIPT_ARGS --backup"
+            ;;
+            
+        -c | --copy)
+            INSTALL="\$COPY"
+            SCRIPT_ARGS="$SCRIPT_ARGS --copy"
+            ;;
+            
         -h | --help)
             usage
             exit 0
             ;;
         
+        -l | --link)
+            INSTALL="\$LINK"
+            SCRIPT_ARGS="$SCRIPT_ARGS --link"
+            ;;
+        
         -n | --no-root)
         	DO_ROOT=0
-        	ARGS="$ARGS --no-root"
+        	SCRIPT_ARGS="$SCRIPT_ARGS --no-root"
         	;;
 
         -v | --verbose)
-            # enable verbose output to stderr
             VERBOSE="--verbose"
-            ARGS="$ARGS --verbose"
+            SCRIPT_ARGS="$SCRIPT_ARGS --verbose"
             ;;
 
     # OTHER
@@ -97,6 +142,11 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
+
+# Get the jobs
+shift  $(( OPTIND-1 ))
+# ...
+
 #-------------------------------------------------
 
 #=================================================
@@ -122,7 +172,7 @@ for DIR in $SUBDIRS; do
 	# Execute the script.
 	SCRIPT="$DIR/install.sh"
 	if [[ -f $SCRIPT ]]; then
-		./$SCRIPT $ARGS
+		./$SCRIPT $SCRIPT_ARGS
 	else
 		$ECHO "Could not find $SCRIPT" >&2
 	fi
