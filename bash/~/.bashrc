@@ -1,25 +1,20 @@
-#===============================================================================
-# File: ~/.bashrc
-# Author: Joshua Spence <josh@joshuaspence.com>
-#===============================================================================
-# Executed by bash(1) for non-login shells. See 
-# /usr/share/doc/bash/examples/startup-files (in the package bash-doc).
-#
-# When you login (type username and password) via console, either sitting at the
-# machine, or remotely via ssh: .bash_profile is executed to configure your 
-# shell before the initial command prompt.
-#
-# But, if you've already logged into your machine and open a new terminal window
-# (xterm) inside Gnome or KDE, then .bashrc is executed before the window 
-# command prompt. .bashrc is also run when you start a new bash instance by
-# typing /bin/bash in a terminal.
-#-------------------------------------------------------------------------------
+# To print debug messages, run the command: `touch ~/.rcfiles.debug`
+[ -e ${HOME}/.rcfiles.debug ] && echo "Parsing ~/.bashrc..." >&2
 
 # We run the environment settings for all shells to ensure it's always set up.
-source "${HOME}/.bash/environment"
-
-# An interactive shell starting bashrc is not a login shell, just run 
-# interactive setup.
-if [ -n "${PS1}" ]; then
-    source "${HOME}/.bash/interactive"
+if [ -r ${HOME}/.bash/environment ]; then
+    [ -e ${HOME}/.rcfiles.debug ] && echo "Sourcing ~/.bash/environment..." >&2
+    source ${HOME}/.bash/environment
 fi
+
+# An interactive shell starting bashrc is not a login shell, just run
+# interactive setup.
+if [ -n ${PS1} ]; then
+    [ -e ${HOME}/.rcfiles.debug ] && echo "Sourcing ~/.bash/interactive..." >&2
+    source ${HOME}/.bash/interactive
+fi
+
+for file in $(find ${HOME} -maxdepth 1 -type f -regextype posic-basic -regex ".*/.\+\.bashrc"); do
+    [ -e ${HOME}/.rcfiles.debug ] && echo "Sourcing ${file}..." >&2
+    source ${file}
+done

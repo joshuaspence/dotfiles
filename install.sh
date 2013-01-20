@@ -1,126 +1,71 @@
 #!/bin/bash
-#===============================================================================
-# File:   install_all.sh
-# Author: Joshua Spence <josh@joshuaspence.com>
-#===============================================================================
-# Installs all configuration files from the $SUBDIRS subdirectories.
-#-------------------------------------------------------------------------------
 
-#=================================================
-# Configuration
-#=================================================
-SUBDIRS="
-    bash
-    bless
-    crontab
-    git
-    GPG
-    gtk-bookmarks
-    packages
-    recordMyDesktop
-    skypecallrecorder
-    SSH
-    vim
-    xmonad
-"
-#-------------------------------------------------
+CONFIGURATIONS=( $(find . -mindepth 1 -maxdepth 1 -type d \( ! -name ".*" \) -printf '%P\n') )
 
-#=================================================
+#===============================================================================
 # Usage information
-#=================================================
+#===============================================================================
 usage() {
     cat << EOF
 usage:
-    $0 [OPTIONS...] [JOBS...]
+    $0 [OPTIONS...] [CONFIGURATIONS...]
 
 This scripts creates symbolic links to all of my configuration files.
 
 OPTIONS
     -a, --all
-        Perform all jobs.
-    -b, --backup
-        Backup any files that would be replaced by this script. This is the 
-        default.
-    -c, --copy
-        Copy the configuration files to the destination directory instead of 
-        using symlinks.
+            Install all configurations.
+    -d, --dry-run
+            Do not install anything.
+    -f, --force
+            Force installation by overwriting existing files.
     -h, --help
-        Show this message.
-    -l, --link
-        Symlink the configuration files to the destination directory. This is 
-        the default.
-    -n, --no-root
-        Do not install any configuration files that require root access.
-    -u, --no-backup
-        Do not backup any files that would be replaced by this script.
+            Show this message.
     -v, --verbose
-        Verbose mode. Verbose messages will be output to stderr.
+            Verbose mode. Verbose messages will be output to stderr.
 
-JOBS $SUBDIRS
+CONFIGURATIONS
+$(for i in ${CONFIGURATIONS[@]}; do echo "    $i"; done)
 EOF
 }
-#-------------------------------------------------
+#-------------------------------------------------------------------------------
 
-#=================================================
-# Options
-#=================================================
-BACKUP=1            # backup files? [default: yes]
-VERBOSE=            # verbose output? [default: no]
-DO_ROOT=1		    # install root configuration files? [default: yes]
-SCRIPT_ARGS=		# arguments to pass to install.sh scripts
-JOBS=               # subdirs to install
-INSTALL="\$LINK"    # command to use for installation
-#-------------------------------------------------
-
-#=================================================
+#===============================================================================
 # Get program command line options
-#=================================================
-PROGRAM_NAME=$(basename $0)
-ARGS=$(getopt --name "$PROGRAM_NAME" --long "all,backup,copy,help,link,no-backup,no-root,verbose" --options "abchlnuv" -- "$@")
+#===============================================================================
+FORCE=          # forced installation? [default: no]
+VERBOSE=        # verbose output? [default: no]
+DRY_RUN=0       # dry run? [default: no]
 
-# Bad arguments
-if [ $? -ne 0 ]; then
+ARGS=$(getopt --name "$(basename $0)" --long dry-run,force,help,verbose --options dfhv -- $@)
+if [[ $? -ne 0 ]]; then
     echo "getopt failed!" >&2
     exit 1
 fi
 
-# A little magic. Preserves whitespace within option arguments.
 eval set -- $ARGS
-
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
     case $1 in
         -a | --all)
-            JOBS="$SUBDIRS"
+            TODO=${JOBS[@]}
             ;;
-        
-        -b | --backup)
-            BACKUP=1
-            SCRIPT_ARGS="$SCRIPT_ARGS --backup"
+
+        -d | --dry-run)
+            DRY_RUN=1
+            VERBOSE="--verbose"
             ;;
-            
-        -c | --copy)
-            INSTALL="\$COPY"
-            SCRIPT_ARGS="$SCRIPT_ARGS --copy"
+
+        -f | --force)
+            FORCE="--force"
             ;;
-            
+
         -h | --help)
             usage
             exit 0
             ;;
-        
-        -l | --link)
-            INSTALL="\$LINK"
-            SCRIPT_ARGS="$SCRIPT_ARGS --link"
-            ;;
-        
-        -n | --no-root)
-        	DO_ROOT=0
-        	SCRIPT_ARGS="$SCRIPT_ARGS --no-root"
-        	;;
 
         -v | --verbose)
             VERBOSE="--verbose"
-            SCRIPT_ARGS="$SCRIPT_ARGS --verbose"
             ;;
 
     # OTHER
@@ -129,15 +74,15 @@ while [ $# -gt 0 ]; do
             break
             ;;
 
-	    -*)
+        -*)
             usage
-    		exit 1
-    		;;
+            exit 1
+            ;;
 
-	    *)
-	        # terminate while loop
-	        break
-	        ;;
+        *)
+            # terminate while loop
+            break
+            ;;
 
     esac
     shift
@@ -145,39 +90,181 @@ done
 
 # Get the jobs
 shift  $(( OPTIND-1 ))
-# ...
+if [[ -z "${TODO}" ]]; then
+    TODO=$@
+fi
+#-------------------------------------------------------------------------------
 
-#-------------------------------------------------
+#===============================================================================
+# Utility functions
+#===============================================================================
 
-#=================================================
-# Program configuration
-#=================================================
-ECHO="echo"
-FIND="find"
-LINK="ln --symbolic --force $VERBOSE"
-MKDIR="mkdir --parents $VERBOSE"
-POPD="popd"
-PUSHD="pushd"
-READ="read"
-READLINK="readlink --canonicalize"
-SUDO="sudo"
-#-------------------------------------------------
+# Cleans up path names a little bit.
+function clean_path() {
+    local path=$1
+    path=$(echo ${path} | sed -e 's/\/\.\//\//')
+    echo "${path}"
+    return 0
+}
 
-for DIR in $SUBDIRS; do
-	# Echo the header.
-	$ECHO "================================================================================"
-	$ECHO $DIR
-	$ECHO "================================================================================"
-	
-	# Execute the script.
-	SCRIPT="$DIR/install.sh"
-	if [[ -f $SCRIPT ]]; then
-		./$SCRIPT $SCRIPT_ARGS
-	else
-		$ECHO "Could not find $SCRIPT" >&2
-	fi
-	
-	# Echo the footer.
-	$ECHO "--------------------------------------------------------------------------------"
-	$ECHO
+# Check if an array ($1) contains a specified value ($2).
+function contains() {
+    local n=$#
+    local value=${!n}
+
+    for ((i=1; i < $#; i++)) {
+        if [[ "${!i}" == "${value}" ]]; then
+            echo "1"
+            return 1
+        fi
+    }
+
+    echo "0"
+    return 0
+}
+
+# Returns $2 relative to $1
+function relative_path() {
+    local source=$(readlink --canonicalize $1)/
+    local target=$(readlink --canonicalize $2)/
+    local common=${source}
+    local back="."
+
+    while [[ "${target#$common}" = "${target}" ]]; do
+        common=$(dirname ${common})
+        back="../${back}"
+    done
+
+    echo ${back}${target#${common}}
+    return 0
+}
+#-------------------------------------------------------------------------------
+
+#===============================================================================
+# Install functions
+#===============================================================================
+function install() {
+    local conf=$1
+    local source_user_dir=$(readlink --canonicalize $(dirname $0)/${conf}/~/)
+    local source_root_dir=$(readlink --canonicalize $(dirname $0)/${conf}/_/)
+    local source_custom_dir=$(readlink --canonicalize $(dirname $0)/${conf}/custom/)
+    local failures=0
+
+    _install ${source_user_dir} 0
+    failures=$(expr ${failures} + $?)
+
+    _install ${source_root_dir} 1
+    failures=$(expr ${failures} + $?)
+
+    #install ${source_custom_dir} 0
+    #failures=$(expr ${failures} + $?)
+
+    return ${failures}
+}
+
+function _install() {
+    local source_dir=$1
+    local sudo=$([[ $2 -ne 0 ]] && echo "sudo")
+    local failures=0
+
+    if [[ -d "${source_dir}" ]]; then
+        #pushd ${source_dir} >/dev/null
+
+        find ${source_dir} -type f -print0 | while read -d $'\0' file; do
+            file=$(relative_path ${source_dir} $(dirname ${file}))/$(basename ${file})
+            local src=$(relative_path ~/$(dirname ${file}) $(dirname ${file}))/$(basename ${file})
+            local dst=$(clean_path $(readlink --canonicalize ~)/${file})
+            echo ${src}
+            echo ${dst}
+            exit 0
+            [[ -n "${VERBOSE}" ]] && echo "${dst} --> ${src}" >&2
+
+            if [[ "${DRY_RUN}" -eq 0 ]]; then
+                if [[ ! -d $(dirname ${dst}) ]]; then
+                    [[ -n "${VERBOSE}" ]] && echo "Creating parent directory: $(dirname ${dst})"
+                    ${sudo} mkdir --parents $(dirname ${dst})
+                    if [[ $? -ne 0 ]]; then
+                        failures=$(expr ${failures} + 1)
+                        continue
+                    fi
+                fi
+
+                ${sudo} ln --symbolic ${FORCE} ${VERBOSE} ${src} ${dst}
+                if [[ $? -ne 0 ]]; then
+                    failures=$(expr ${failures} + 1)
+                    continue
+                fi
+            fi
+        done
+
+        #popd >/dev/null
+    fi
+
+    return ${failures}
+}
+
+function _execute() {
+    local source_dir=$1
+    local sudo=$([[ $2 -ne 0 ]] && echo "sudo")
+    local failures=0
+
+    if [[ -d "${source_dir}" ]]; then
+        pushd ${source_dir} >/dev/null
+
+        find . -type f -print0 | while read -d $'\0' file; do
+            local src=$(relative_path ~/$(dirname ${file}) $(dirname ${file}))/$(basename ${file})
+            local dst=$(clean_path $(readlink --canonicalize ~)/${file})
+
+            [[ -n "${VERBOSE}" ]] && echo "${dst} --> ${src}" >&2
+
+            if [[ "${DRY_RUN}" -eq 0 ]]; then
+                if [[ ! -d $(dirname ${dst}) ]]; then
+                    [[ -n "${VERBOSE}" ]] && echo "Creating parent directory: $(dirname ${dst})"
+                    ${sudo} mkdir --parents $(dirname ${dst})
+                    if [[ $? -ne 0 ]]; then
+                        failures=$(expr ${failures} + 1)
+                        continue
+                    fi
+                fi
+
+                ${sudo} ln --symbolic ${FORCE} ${VERBOSE} ${src} ${dst}
+                if [[ $? -ne 0 ]]; then
+                    failures=$(expr ${failures} + 1)
+                    continue
+                fi
+            fi
+        done
+
+        popd >/dev/null
+    fi
+
+    return ${failures}
+}
+#-------------------------------------------------------------------------------
+
+total_failures=0
+for CONF in ${TODO}; do
+    if [[ $(contains ${CONFIGURATIONS[@]} ${CONF}) -eq 1 ]]; then
+    	[[ -n "${VERBOSE}" ]] && echo "================================================================================"
+    	echo "${CONF}"
+    	[[ -n "${VERBOSE}" ]] && echo "================================================================================"
+    	install ${CONF}
+        failures=$?
+        if [[ ${failures} -gt 0 ]]; then
+            total_failures=$(expr ${total_failures} + ${failures})
+            [[ -n "${VERBOSE}" ]] && echo "--------------------------------------------------------------------------------"
+            echo " FAILURES = ${failures}"
+        fi
+        [[ -n "${VERBOSE}" ]] && echo "--------------------------------------------------------------------------------"
+    	[[ -n "${VERBOSE}" ]] && echo ""
+    else
+        echo "Configuration not found: ${CONF}" >&2
+    fi
 done
+
+if [[ ${total_failures} -gt 0 ]]; then
+    echo "********************************************************************************"
+    echo " TOTAL FAILURES = ${total_failures}"
+    echo "********************************************************************************"
+fi
+exit ${total_failures}

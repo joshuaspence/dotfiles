@@ -1,38 +1,50 @@
-#===============================================================================
-# File: ~/.bash/functions
-# Author: Joshua Spence <josh@joshuaspence.com>
-#===============================================================================
-# Useful bash functions. This is sourced by the environment file. These are 
-# available to scripts, but you shouldn't use them in scripts if you want them 
+#-------------------------------------------------------------------------------
+# Useful bash functions. This is sourced by the environment file. These are
+# available to scripts, but you shouldn't use them in scripts if you want them
 # to be portable.
 #-------------------------------------------------------------------------------
 
-#==========================================================
-# mcd
-#==========================================================
-# Creates the directory if it doesn't exist, and changes 
-# into it.
+#===============================================================================
+# add_path
+#===============================================================================
+# Adds to the front of the PATH variable, whilst ensuring that duplicate
+# entries are not created.
 #
 # Usage:
-#   `mcd somedir`
-#----------------------------------------------------------
-function mcd {
-    DIR=$1
-    
+#     `add_path PATH`
+#-------------------------------------------------------------------------------
+add_path() {
+    if [ "x${PATH}" = "x" ]; then
+        export PATH="$1"
+    elif ! echo "${PATH|" | tr ':' '\n' | grep -Fxq "$1"; then
+        export PATH="$1:${PATH}"
+    fi
+}
+
+#===============================================================================
+# mcd
+#===============================================================================
+# Creates the directory if it doesn't exist, and changes into it.
+#
+# Usage:
+#     `mcd somedir`
+#-------------------------------------------------------------------------------
+function mcd() {
+    local DIR=$1
     mkdir -p "${DIR}" && cd "${DIR}"
 }
 
-#==========================================================
+#===============================================================================
 # box
-#==========================================================
+#===============================================================================
 # Create box of '#' characters around given string.
 #
 # Usage:
-#   `box STRING`
-#----------------------------------------------------------
+#     `box STRING`
+#-------------------------------------------------------------------------------
 function box() {
-    t="$1xxxx";
-    c=${2:-#};
+    local t="$1xxxx";
+    local c=${2:-#};
     echo ${t//?/$c};
     echo "$c $1 $c";
     echo ${t//?/$c};
@@ -55,17 +67,17 @@ function bu() {
     SEPERATOR=_
     DATE=`date +%Y-%m-%d-%H%M`
     SUFFIX=.backup
-    
+
     if [ -z "${ORIGINAL}" ]; then
         echo "Path not specified!" >&2
         return 1
     fi
-    
+
     if [ ! -e "${ORIGINAL}" ]; then
         echo "Path doesn't exist!" >&2
         return 1
     fi
-    
+
     cp -r ${ORIGINAL} ${ORIGINAL}${SEPERATOR}${DATE}${SUFFIX}
 }
 
@@ -94,7 +106,7 @@ function empty() {
 #
 # Usage:
 #   `err ERROR_CODE`
-#---------------------------------------------------------- 
+#----------------------------------------------------------
 function err() {
     grep --recursive --color=auto --recursive -- "$@" /usr/include/*/errno.h
     if [ "${?}" != 0 ]; then
@@ -116,17 +128,17 @@ function err() {
 function most_frequent() {
     FILENAME=$1
     SHOW=30
-    
+
     if [ -z "${FILENAME}" ]; then
         echo "File not specified!" >&2
         exit 1
     fi
-    
+
     if [ ! -f "${FILENAME}" ]; then
         echo "File '${FILENAME}' not found!" >&2
         exit 1
     fi
-    
+
     cat "${FILENAME}" | \
         tr -cs "[:alnum:]" "\n"| \
         tr "[:lower:]" "[:upper:]" | \
@@ -155,7 +167,7 @@ function spanner() {
     COUNT=0
     COLOUR=""
     DELAY=0.1
-    
+
     echo -n "${COLOUR}Please wait... "
 
     while [ -d /proc/$PROC ]; do
@@ -164,7 +176,7 @@ function spanner() {
             sleep $DELAY
             ((COUNT++))
         done
-                
+
         until [ "$COUNT" -eq 0 ]; do
             echo -ne '\x08\x08 ';
             sleep $COUNT
@@ -172,7 +184,7 @@ function spanner() {
         done
     done
 }
- 
+
 #==========================================================
 # spin
 #==========================================================
@@ -191,9 +203,9 @@ function spin() {
     PID=$1
     COLOUR="$YELLOW"
     DELAY=0.05
-    
+
     echo -ne "${COLOUR}|/     |"
-        
+
     while [ -d /proc/$PID ]; do
         # moving right
         echo -ne "${COLOUR}\b\b\b\b\b\b\b-     |"
@@ -309,7 +321,7 @@ function spinner() {
     PROC=$1
     COLOUR="$YELLOW"
     DELAY=0.05
-    
+
     while [ -d /proc/$PROC ];do
         echo -ne ''${COLOUR}'/\r'; sleep $DELAY
         echo -ne ''${COLOUR}'-\r'; sleep $DELAY
@@ -323,8 +335,8 @@ function spinner() {
 #==========================================================
 # Display a spinning progress process.
 #
-# To start the spinner2 function, you have to send the 
-# function into the background. To stop the spinner2 
+# To start the spinner2 function, you have to send the
+# function into the background. To stop the spinner2
 # function, you have to define the argument "stop".
 #
 # Example:
@@ -338,7 +350,7 @@ function spinner() {
 function spinner2() {
     local action=${1:-"start"}
     declare -a sign=( "-" "/" "|" "\\\\" )
-     
+
     # define singnal file...
     [ "$action" = "start" ] && echo 1 > /tmp/signal
     [ "$action" = "stop" ] && echo 0 > /tmp/signal
@@ -368,7 +380,7 @@ function spinner2() {
 #----------------------------------------------------------
 function stopwatch() {
     BEGIN=$(date +%s)
-    
+
     while true; do
         NOW=$(date +%s)
         DIFF=$(($NOW - $BEGIN))
@@ -395,7 +407,7 @@ function countdown() {
         echo -ne " $i \r"
         sleep 1
     done
-    
+
     echo -e "\rDone!${ALERTS}"
 }
 
@@ -427,3 +439,15 @@ function whatismyip() {
 function nonascii() {
 	grep --color='auto' -P -n "[\x80-\xFF]" $1
 }
+
+# Convenient when navigating around files and directories
+ls_or_cmd() {
+    local cmd=$1; shift
+    if [[ -d "$1" ]]; then
+        ls "$@"
+    else
+        "$cmd" "$@"
+    fi
+}
+alias cat='ls_or_cmd cat'
+alias less='ls_or_cmd less'

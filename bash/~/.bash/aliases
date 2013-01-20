@@ -1,18 +1,8 @@
-#===============================================================================
-# File: ~/.bash/bash_aliases
-# Author: Joshua Spence <josh@joshuaspence.com>
-#===============================================================================
-# Useful bash aliases.
-#-------------------------------------------------------------------------------
-
-# Shorthand for finding files.
-alias f='find . -iname'
-
-# Less command repaints the screen.
+# Less command repaints the screen
 alias less='less -R'
 
-# Enable color support.
-if [ -x /usr/bin/dircolors ]; then
+# Enable color support
+if [[ -x /usr/bin/dircolors ]]; then
     test -r ~/.dircolors \
         && eval "$(dircolors -b ~/.dircolors)" \
         || eval "$(dircolors -b)"
@@ -27,7 +17,7 @@ fi
 
 # Add an "alert" alias for long running commands. Use like so:
 #   `sleep 10; alert`
-# Another example: 
+# Another example:
 #   `( sleep 5 && alert "sleeped OK" || alert "sleep failed") &`
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history | tail -n1 | sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"';
 
