@@ -1,0 +1,26 @@
+# Always color, even if piping to a another program
+--color
+
+# Use "less -r" as my pager
+--pager=less -r
+
+# Follow or don't follow symlinks
+--nofollow
+
+# Operate on all files, regardless of type
+#--all
+
+# Print the filename for each match
+--with-filename
+
+# Ignore case in search strings
+#--ignore-case
+
+# Ignore case in the search strings if PATTERN contains no uppercase characters.
+--smart-case
+
+--type-add=vim=vimrc
+--type-add=js=json
+
+# Add types ack doesn't know about
+--type-set=MARKDOWN=md,mkd,markdown
