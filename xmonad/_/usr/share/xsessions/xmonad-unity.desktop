@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=XMonad Unity
-Comment=Tiling window manager
-TryExec=gnome-session
-Exec=gnome-session --session=xmonad-unity
-Icon=xmonad.png
-Type=XSession

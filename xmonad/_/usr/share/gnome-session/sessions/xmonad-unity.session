@@ -1,9 +1,0 @@
-[GNOME Session]
-Name=Xmonad Unity
-RequiredProviders=windowmanager;settingsdaemon;panel;shell;launcher;filemanager;
-DefaultProvider-windowmanager=xmonad
-DefaultProvider-settingsdaemon=gnome-settings-daemon
-DefaultProvider-panel=unity-2d-panel
-DefaultProvider-shell=unity-2d-shell
-DefaultProvider-launcher=unity-2d-launcher
-DefaultProvider-filemanager=nautilus
