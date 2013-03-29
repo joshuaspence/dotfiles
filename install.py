@@ -46,29 +46,29 @@ class DryInstaller(Installer):
 Installer.register(DryInstaller)
 
 class SymlinkInstaller(Installer):
-	def __init__(self, verbose = False, use_relative_links = True):
-		super(SymlinkInstaller, self).__init__(verbose)
-		self.use_relative_links = use_relative_links
-	
-	def install(self, src, dst):
-		if self.verbose
-			print "Symlinking %s ==> %s" % (src, dst)
-		os.symlink(src, dst)
-	
-	def relative_path(from_path, to_path):
-		""" Get the relative path to traverse from one path to another. """
-		common_prefix = os.path.commonprefix([from_path, to_path])
-		relpath_from = os.path.relpath(common_prefix, from_path)
-		relpath_to = os.path.relpath(to_path, common_prefix)
-		return os.path.join(relpath_from, relpath_to)
+    def __init__(self, verbose = False, use_relative_links = True):
+        super(SymlinkInstaller, self).__init__(verbose)
+        self.use_relative_links = use_relative_links
+    
+    def install(self, src, dst):
+        if self.verbose
+            print "Symlinking %s ==> %s" % (src, dst)
+        os.symlink(src, dst)
+    
+    def relative_path(from_path, to_path):
+        """ Get the relative path to traverse from one path to another. """
+        common_prefix = os.path.commonprefix([from_path, to_path])
+        relpath_from = os.path.relpath(common_prefix, from_path)
+        relpath_to = os.path.relpath(to_path, common_prefix)
+        return os.path.join(relpath_from, relpath_to)
 Installer.register(SymlinkInstaller)
 
 class CopyInstaller(Installer):
-	def install(self, src, dst):
-	if os.path.isdir(src):
-		os.makedirs(dst)
-	else:
-		shutil.copy(src, dst)
+    def install(self, src, dst):
+    if os.path.isdir(src):
+        os.makedirs(dst)
+    else:
+        shutil.copy(src, dst)
 Installer.register(CopyInstaller)
 
 class RcFiles(object):
@@ -95,7 +95,9 @@ class RcFiles(object):
 			installer.install(self.src, filename, self.dst)
 
 class RcFilesInstaller(object):
-	def __init__(self, argv):
+	""" TODO """
+	def __init__(self, root, argv):
+		self.root = root
 		(options, args) = self.parse_args(argv)
 		
 		if (options.all_confs):
@@ -103,25 +105,42 @@ class RcFilesInstaller(object):
 		else:
 			self.confs = args
 		
-		self.force   = options.force
-		self.list	= options.list
-		self.mode	= options.mode
+		self.force = options.force
+		self.list = options.list
+		self.mode = options.mode
 		self.verbose = options.verbose
 	
-	def get_installer():
-		return
+	installers = {
+		'symlink': DryInstaller,
+		'copy': DryInstaller,
+		'dry': DryInstaller
+	}
+	
+	@staticmethod
+	def get_installer(mode):
+		if mode in RcFilesInstaller.installers:
+			return RcFilesInstaller.installers[mode]()
+		else:
+			raise InstallerException('No such installer')
 	
 	def run(self):
-		if self.options.list:
+		if self.list:
 			self.list_configurations()
 			sys.exit(0)
-		elif
+		else:
+			self.install()
+	
+	def install(self):
+		installer = self.get_installer(self.mode)
 		
-	@staticmethod
-	def all_configurations(root):
+		for conf in self.confs:
+			rcfiles = RcFiles(conf)
+			rcfiles.install(installer)
+	
+	def all_configurations(self):
 		""" Retrieve all configurations by iterating through subdirectories. """
-		return [name for name in os.listdir(root)
-					 if os.path.isdir(os.path.join(root, name))
+		return [name for name in os.listdir(self.root)
+					 if os.path.isdir(os.path.join(self.root, name))
 					 and name[0] != '.']
 	
 	def list_configurations():
@@ -131,8 +150,8 @@ class RcFilesInstaller(object):
 	@staticmethod
 	def parse_args(argv):
 		""" Parses and validates command line arguments. """
-		parser = OptionParser(usage="usage: %prog [options] configurations ...",
-							  version="1.0.0")
+		parser = OptionParser(usage="usage: %prog [options] configurations ...")
+		
 		parser.add_option("-l", "--list",
 						  action="store_true",
 						  dest="list",
@@ -165,12 +184,14 @@ class RcFilesInstaller(object):
 						 help="force installation by overwriting existing files")
 		parser.add_option_group(group)
 		
+		# Set defaults
 		parser.set_defaults(list=False,
 							verbose=False,
 							mode="symlink",
 							all=True,
 							force=False)
 		
+		# Parse arguments
 		(options, args) = parser.parse_args(argv[1:])
 		
 		# Validation
