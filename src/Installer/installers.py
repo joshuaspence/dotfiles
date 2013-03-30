@@ -3,25 +3,28 @@ from . import Installer
 import os
 import shutil
 
-class CopyInstaller(Installer):
-    """An installer which copies package configuration files (rcfiles) to the
-    destination directory.
 
+class CopyInstaller(Installer):
+    """
+    An installer which copies package configuration files (rcfiles) to the
+    destination directory.
     """
 
     @staticmethod
     def name():
         return 'copy'
-    
+
     @staticmethod
     def execute(src, dst):
+        Installer.execute(src, dst)
         os.makedirs(os.path.dirname(dst))
         shutil.copy(src, dst)
 
-class DryInstaller(Installer):
-    """An installer which simply prints the files that would be installed,
-    without actually installing them.
 
+class DryInstaller(Installer):
+    """
+    An installer which simply prints the files that would be installed,
+    without actually installing them.
     """
 
     @staticmethod
@@ -30,15 +33,24 @@ class DryInstaller(Installer):
 
     @staticmethod
     def execute(src, dst):
+        Installer.execute(src, dst)
         print "Install %r to %r" % (src, dst)
 
+
 class SymlinkInstaller(Installer):
+    """
+    An installer which creates a symbolic link for the package configuration
+    files (rcfiles).
+    """
+
     @staticmethod
     def name():
         return 'symlink'
 
-    def __init__(self, src_root, dst_root, force=False, verbose=False, use_relative_links=True):
-        super(SymlinkInstaller, self).__init__(src_root, dst_root, force, verbose)
+    def __init__(self, src_root, dst_root, force=False, verbose=False,
+                 use_relative_links=True):
+        super(SymlinkInstaller, self).__init__(
+            src_root, dst_root, force, verbose)
         self.use_relative_links = use_relative_links
 
     @property
@@ -53,17 +65,11 @@ class SymlinkInstaller(Installer):
 
     @staticmethod
     def execute(src, dst):
-        if self.use_relative_links:
-            src = self.relative_path(src, dst)
-        os.symlink(src, dst)
+        Installer.execute(src, dst)
 
-    @staticmethod
-    def relative_path(from_path, to_path):
-        """ Get the relative path to traverse from one path to another. """
-        common_prefix = os.path.commonprefix([from_path, to_path])
-        relpath_from = os.path.relpath(common_prefix, from_path)
-        relpath_to = os.path.relpath(to_path, common_prefix)
-        return os.path.join(relpath_from, relpath_to)
+        if self.use_relative_links:
+            src = os.path.relpath(src, dst)
+        os.symlink(src, dst)
 
 Installer.register(CopyInstaller)
 Installer.register(DryInstaller)

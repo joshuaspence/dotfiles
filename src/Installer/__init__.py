@@ -11,10 +11,11 @@ class InstallerException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class Installer(object):
-    """An installer is used to install package configuration files (rcfiles) to
-    a destination directory.
 
+class Installer(object):
+    """
+    An installer is used to install package configuration files (rcfiles) to a
+    destination directory.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -24,7 +25,7 @@ class Installer(object):
         self.dst_root = dst_root
         self.force = force
         self.verbose = verbose
-    
+
     @staticmethod
     def get(name):
         """Get an Installer instance based on the specified name."""
@@ -50,7 +51,7 @@ class Installer(object):
         if not os.path.exists(path):
             raise InstallerException("Path does not exist: %r" % path)
         else:
-            self._src_root = path
+            self._src_root = os.path.realpath(path)
 
     @property
     def dst_root(self):
@@ -63,7 +64,7 @@ class Installer(object):
         if not os.path.exists(path):
             raise InstallerException("Path does not exist: %r" % path)
         else:
-            self._dst_root = path
+            self._dst_root = os.path.realpath(path)
 
     @property
     def force(self):
@@ -95,6 +96,7 @@ class Installer(object):
             raise InstallerException("%r is not a file" % src)
 
         if os.path.exists(dst):
+            print dst
             if not self.force:
                 return
             else:
@@ -108,22 +110,47 @@ class Installer(object):
     @staticmethod
     @abc.abstractmethod
     def execute(src, dst):
-        """Install a source file to a destination. This is the main method that
+        """
+        Install a source file to a destination. This is the main method that
         base classes should implement.
 
+        Note that the source and destination paths must be absolute paths.
         """
-        return
+        # Error checking
+        if not os.path.isabs(src):
+            raise InstallerException("%r is not an absolute path" % src)
+        elif not os.path.isabs(dst):
+            raise InstallerException("%r is not an absolute path" % dst)
+        else:
+            return
 
     def get_source(self, path):
-        """TODO"""
+        """
+        Get the full source path for the installer given a (relative) source
+        path.
+        """
         if os.path.isabs(path):
-            relpath = os.path.relpath(path, self.src_root)
-            if relpath[0:3] == "../":
-                raise InstallerException("%s is not below %s"
-                                         % (path, self.src_root))
+            if os.path.relpath(path, self.src_root)[0:3] == '../':
+                raise InstallerException(
+                    "%r is not a relative path and is not below %r"
+                    % (path, self.src_root))
+            else:
+                return path
         else:
             return os.path.join(self.src_root, path)
 
     def get_destination(self, path):
-        """Get the full destination path for installer a given source path."""
-        return os.path.join(self.dst_root, path)
+        """
+        Get the full destination path for the installer given a (relative)
+        source path.
+        """
+        if os.path.isabs(path):
+            if os.path.relpath(path, self.src_root)[0:3] == '../':
+                raise InstallerException(
+                    "%r is not a relative path and is not below %r"
+                    % (path, self.dst_root))
+            else:
+                return os.path.join(self.dst_root,
+                                    os.path.relpath(path, self.src_root))
+        else:
+            return os.path.join(self.dst_root, path)
