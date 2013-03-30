@@ -14,10 +14,19 @@ class CopyInstaller(Installer):
     def name():
         return 'copy'
 
-    @staticmethod
-    def execute(src, dst):
-        Installer.execute(src, dst)
-        os.makedirs(os.path.dirname(dst))
+    def execute(self, src, dst):
+        super(CopyInstaller, self).execute(src, dst)
+
+        # Create parent directories
+        parent_dir = os.path.dirname(dst)
+        if not os.path.exists(parent_dir):
+            if self.verbose:
+                print "Creating directory: %r" % parent_dir
+            os.makedirs(parent_dir)
+
+        # Install the file
+        if self.verbose:
+            print "Copying %r to %r" % (src, dst)
         shutil.copy(src, dst)
 
 
@@ -31,9 +40,15 @@ class DryInstaller(Installer):
     def name():
         return 'dry'
 
-    @staticmethod
-    def execute(src, dst):
-        Installer.execute(src, dst)
+    def execute(self, src, dst):
+        super(DryInstaller, self).execute(src, dst)
+
+        # Create parent directories
+        parent_dir = os.path.dirname(dst)
+        if not os.path.isdir(parent_dir):
+            print "Create directory: %r" % parent_dir
+
+        # Install the file
         print "Install %r to %r" % (src, dst)
 
 
@@ -63,12 +78,21 @@ class SymlinkInstaller(Installer):
         """Setter for the use_relative_links attribute."""
         self._use_relative_links = value
 
-    @staticmethod
-    def execute(src, dst):
-        Installer.execute(src, dst)
+    def execute(self, src, dst):
+        super(SymlinkInstaller, self).execute(src, dst)
 
+        # Create parent directories
+        parent_dir = os.path.dirname(dst)
+        if not os.path.exists(parent_dir):
+            if self.verbose:
+                print "Creating directory: %r" % parent_dir
+            os.makedirs(parent_dir)
+
+        # Install the file
         if self.use_relative_links:
             src = os.path.relpath(src, dst)
+        if self.verbose:
+            print "Creating symbolic link %r => %r" % (dst, src)
         os.symlink(src, dst)
 
 Installer.register(CopyInstaller)

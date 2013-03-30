@@ -88,8 +88,8 @@ class Installer(object):
 
     def install(self, path):
         """Install a source configuration file."""
-        src = self.get_source(path)
-        dst = self.get_destination(path)
+        src = self._get_source(path)
+        dst = self._get_destination(path)
 
         # Error checking
         if not os.path.isfile(src):
@@ -107,9 +107,8 @@ class Installer(object):
             print "Installing %r to %r" % (src, dst)
         return self.execute(src, dst)
 
-    @staticmethod
     @abc.abstractmethod
-    def execute(src, dst):
+    def execute(self, src, dst):
         """
         Install a source file to a destination. This is the main method that
         base classes should implement.
@@ -124,7 +123,7 @@ class Installer(object):
         else:
             return
 
-    def get_source(self, path):
+    def _get_source(self, path):
         """
         Get the full source path for the installer given a (relative) source
         path.
@@ -139,7 +138,7 @@ class Installer(object):
         else:
             return os.path.join(self.src_root, path)
 
-    def get_destination(self, path):
+    def _get_destination(self, path):
         """
         Get the full destination path for the installer given a (relative)
         source path.
