@@ -11,19 +11,10 @@ class RcFiles(object):
         self.src = os.path.realpath(os.path.join(root, "~"))
         self.dst = os.path.expanduser("~")
 
-    def __get(self, files, dirs):
+    def _files(self, files, dirs):
         for dirname, dirnames, filenames in os.walk(self.src):
             for filename in [x for x in dirnames if dirs] + [x for x in filenames if files]:
                 yield os.path.join(dirname, filename)
-
-    def files(self):
-        return self.__get(files=True, dirs=False)
-
-    def dirs(self):
-        return self.__get(files=False, dirs=True)
-
-    def paths(self):
-        return self.__get(files=True, dirs=True)
 
     def install(self, installer):
         for filename in self.files():
@@ -36,15 +27,20 @@ class RcFilesInstaller(object):
         self.root = root
         (options, args) = self.parse_args(argv)
         
-        if (options.all_confs):
-            self.confs = self.all_configurations()
-        else:
-            self.confs = args
         
-        self.force = options.force
-        self.list = options.list
-        self.mode = options.mode
-        self.verbose = options.verbose
+    
+    @property
+    def root(self):
+        """Getter for the root path."""
+        return self._root
+
+    @root.setter
+    def root(self, path):
+        """Setter for the root path."""
+        if not os.path.exists(path):
+            raise InstallerException("Path does not exist: %r" % path)
+        else:
+            self._src_root = path
 
     def run(self):
         if self.list:
@@ -73,12 +69,12 @@ class RcFilesInstaller(object):
     
     @staticmethod
     def parse_args(argv):
-        """ Parses and validates command line arguments. """
+        """Parses and validates command line arguments."""
         parser = OptionParser(usage="usage: %prog [options] configurations ...")
         
         parser.add_option("-l", "--list",
                           action="store_true",
-                          dest="list",
+                          dest="list_confs",
                           help="list all configurations and exit")
         
         group = OptionGroup(parser, "Output options")
@@ -109,17 +105,26 @@ class RcFilesInstaller(object):
         parser.add_option_group(group)
         
         # Set defaults
-        parser.set_defaults(list=False,
+        parser.set_defaults(list_confs=False,
                             verbose=False,
                             mode="symlink",
-                            all=True,
+                            all_confs=True,
                             force=False)
         
         # Parse arguments
         (options, args) = parser.parse_args(argv[1:])
         
         # Validation
-        if not options.all_confs and len(args) <= 0:
+        if not options.list_confs and (not options.all_confs and len(args) <= 0):
             parser.error('no configuration was specified')
         
-        return (options, args)
+        # Store attributes
+        if (options.all_confs):
+            self.confs = self.all_configurations()
+        else:
+            self.confs = args
+        
+        self.force = options.force
+        self.list = options.list
+        self.mode = options.mode
+        self.verbose = options.verbose
