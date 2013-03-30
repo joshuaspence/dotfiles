@@ -4,29 +4,39 @@ import os
 import shutil
 
 class CopyInstaller(Installer):
-    """An installer which copies package configuration files to the
+    """An installer which copies package configuration files (rcfiles) to the
     destination directory.
 
     """
+
+    @staticmethod
+    def name():
+        return 'copy'
+    
     @staticmethod
     def execute(src, dst):
         os.makedirs(os.path.dirname(dst))
         shutil.copy(src, dst)
-
-Installer.register(CopyInstaller)
 
 class DryInstaller(Installer):
     """An installer which simply prints the files that would be installed,
     without actually installing them.
 
     """
+
+    @staticmethod
+    def name():
+        return 'dry'
+
     @staticmethod
     def execute(src, dst):
-        print "Install %s to %s" % (src, dst)
-
-Installer.register(DryInstaller)
+        print "Install %r to %r" % (src, dst)
 
 class SymlinkInstaller(Installer):
+    @staticmethod
+    def name():
+        return 'symlink'
+
     def __init__(self, src_root, dst_root, force=False, verbose=False, use_relative_links=True):
         super(SymlinkInstaller, self).__init__(src_root, dst_root, force, verbose)
         self.use_relative_links = use_relative_links
@@ -55,4 +65,6 @@ class SymlinkInstaller(Installer):
         relpath_to = os.path.relpath(to_path, common_prefix)
         return os.path.join(relpath_from, relpath_to)
 
+Installer.register(CopyInstaller)
+Installer.register(DryInstaller)
 Installer.register(SymlinkInstaller)

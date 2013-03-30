@@ -5,7 +5,7 @@ class RcFiles(object):
     
     def __get(self, files, dirs):
         for dirname, dirnames, filenames in os.walk(self.src):
-            for filename in [x for x in dirnames if dirs] + [x for x in filenames if files]:
+            for filename in ([x for x in dirnames if dirs] + [x for x in filenames if files]):
                 yield os.path.join(dirname, filename)
     
     def files(self):
