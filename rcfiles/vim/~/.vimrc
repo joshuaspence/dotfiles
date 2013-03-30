@@ -1,3 +1,11 @@
+"===============================================================================
+" PATHOGEN
+"===============================================================================
+" Use pathogen to easily modify the runtime path to include all plugins under
+" the ~/.vim/bundle directory
+call pathogen#helptags()
+call pathogen#runtime_append_all_bundles()
+
 "=========================
 " GENERAL
 "=========================
@@ -12,7 +20,7 @@ set background=dark
 syntax on
 
 " load filetype plugins/indent settings
-filetype plugin indent on 
+filetype plugin indent on
 
 " always switch to the current file directory
 set autochdir
@@ -45,7 +53,7 @@ set cursorcolumn
 "set cursorline
 
 " do highlight as you type you search phrase
-set incsearch 
+set incsearch
 
 " always show the status line
 set laststatus=2
@@ -54,7 +62,7 @@ set laststatus=2
 set lazyredraw
 
 " don't insert any extra pixel lines between rows
-"set linespace=0 
+"set linespace=0
 
 " we do want to show tabs
 set list
@@ -131,3 +139,7 @@ set copyindent
 " OTHER
 "=========================
 let g:tex_flavor = "latex"
+
+
+# Use ack-grep  instead of grep
+set grepprg=ack-grep\ -a
