@@ -1,42 +1,40 @@
-# Always color, even if piping to a another program
+# Always color, even if piping to a another program.
 --color
 
-# Matches by file name with
+# Matches by file name with.
 --group
 
-# Use "less -r" as my pager
+# Use "less -r" as my pager.
 --pager=less -r
 
-# Follow or don't follow symlinks
+# Follow or don't follow symlinks.
 --nofollow
 
-# Operate on all files, regardless of type
+# Operate on all files, regardless of type.
 #--all
 
-# Print the filename for each match
+# Print the filename for each match.
 --with-filename
 
-# Ignore case in search strings
+# Ignore case in search strings.
 #--ignore-case
 
 # Ignore case in the search strings if PATTERN contains no uppercase characters.
 --smart-case
 
-# Types
+# Types.
 --type-add=ruby=.haml,.rake,.rsel,.builder,Gemfile
 --type-add=html=.html.erb,.html.haml
 --type-add=js=.js.erb
 --type-add=css=.sass,.less
 
-# Add types ack doesn't know about
+# Add types ack doesn't know about.
 --type-set=MARKDOWN=md,mkd,markdown
 
-# Ignore these directories
---ignore-dir=vendor
---ignore-dir=log
---ignore-dir=tmp
+# Ignore these directories.
 --ignore-dir=doc
---ignore-dir=rdoc
 --ignore-dir=coverage
---sort-files
---follow
+--ignore-dir=log
+--ignore-dir=rdoc
+--ignore-dir=tmp
+--ignore-dir=vendor
