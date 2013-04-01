@@ -1,6 +1,9 @@
 [submodule "vim/home/.vim/bundle/vundle"]
 	path = vim/home/.vim/bundle/vundle
 	url = git://github.com/gmarik/vundle.git
-[submodule "git/bin/git-extras"]
-	path = git/bin/git-extras
+[submodule "git/modules/git-extras"]
+	path = git/modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git
+[submodule "git/modules/hub"]
+	path = git/modules/hub
+	url = git://github.com/defunkt/hub.git
