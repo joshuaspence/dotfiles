@@ -1,0 +1,19 @@
+{
+	"auto_upgrade_last_run": null,
+	"installed_packages":
+	[
+		"Alignment",
+		"Ant",
+		"ChangeQuotes",
+		"Clipboard History",
+		"Git",
+		"Gitignore",
+		"Markdown Preview",
+		"Package Control",
+		"PhpDoc",
+		"SideBarEnhancements",
+		"SublimeCodeIntel",
+		"sublimelint",
+		"Wrap Plus"
+	]
+}
