@@ -1,0 +1,9 @@
+[dotfiles]
+repository = ~/dotfiles/home
+packages = ['config']
+ignore = [
+	'.git',
+	'.gitignore',
+	'.gitmodules',
+	'*.swp',
+	'README.md']
