@@ -1,6 +1,4 @@
-# To print debug messages, run the command: `touch ~/.rcfiles.debug`
-[ -e ${HOME}/.rcfiles.debug ] && echo "Parsing ~/.screenrc..." >&2
-
+# Disable the startup message
 startup_message off
 
 shell -${SHELL}
@@ -18,8 +16,3 @@ hardstatus string '%{= kG}[ %{G}%H %{g}][%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u
 
 # Always send backspace as ^?, which is consistent with the bundled terminfo.
 bindkey -k kb stuff ^?
-
-for file in $(find ${HOME} -maxdepth 1 -type f -regextype posic-basic -regex ".*/.\+\.screenrc"); do
-    [ -e ${HOME}/.rcfiles.debug ] && echo "Sourcing ${file}..." >&2
-    source ${file}
-done

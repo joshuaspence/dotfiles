@@ -1,3 +1,9 @@
+# Easier navigation: .., ..., ...., ....., ~ and -
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+
 # Less command repaints the screen
 alias less='less -R'
 
@@ -42,3 +48,11 @@ alias matrix4='tr -c "[:digit:]" " " < /dev/urandom | dd cbs=$COLUMNS conv=lcase
 # Diagnostics.
 alias cpu_hogs='ps -e -o %cpu,pid,ppid,user,cmd | awk '"'"'NR == 1; NR > 1 {print $0 | "sort -nr"}'"'"' | head'
 alias mem_hogs='ps -e -o %mem,pid,ppid,user,cmd | awk '"'"'NR == 1; NR > 1 {print $0 | "sort -nr"}'"'"' | head'
+
+alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
+
+# ROT13-encode text. Works for decoding, too! ;)
+alias rot13='tr a-zA-Z n-za-mN-ZA-M'
+
+
+myip= dig +short myip.opendns.com @resolver1.opendns.com
