@@ -1,177 +1,99 @@
+# Do not bell on tab-completion.
+set bell-style none
+
+# Show automatically how parentheses (and other matching delimiters) match
+# in the text. Whenever you type a self-inserting character that is a
+# closing delimiter, the cursor moves momentarily to the location of the
+# matching opening delimiter, provided that is on the screen.
+set blink-matching-paren on
+
+# The string that is inserted in vi mode when the insert-comment command is
+# executed.
+set comment-begin #
+
 # Make tab autocomplete regardless of filename case.
 set completion-ignore-case on
 
-# List all matches in case multiple possible completions are possible
-set show-all-if-ambiguous on
-
-# Immediately add a trailing slash when autocompleting symlinks to directories
-set mark-symlinked-directories on
-
-# Do not autocomplete hidden files unless the pattern explicitly begins with a dot
-set match-hidden-files off
-
-# Show all autocomplete results at once
-set page-completions off
-
-# If there are more than 200 possible completions for a word, ask to show them all
+# If there are more than 200 possible completions for a word, ask to show them all.
 set completion-query-items 200
 
-# Show extra file information when completing, like `ls -F` does
-set visible-stats on
-
-# Be more intelligent when autocompleting by also looking at the text after
-# the cursor. For example, when the current line is "cd ~/src/mozil", and
-# the cursor is on the "z", pressing Tab will not autocomplete it to "cd
-# ~/src/mozillail", but to "cd ~/src/mozilla". (This is supported by the
-# Readline used by Bash 4.)
-set skip-completed-text on
-
 # Allow UTF-8 input and output, instead of showing stuff like $'\0123\0456'
+set convert-meta off
 set input-meta on
 set output-meta on
-set convert-meta off
-
-# Use Alt/Meta + Delete to delete the preceding word
-"\e[3;3~": kill-word
-
-# Do not bell on tab-completion.
-set bell-style none
-#set bell-style visible
-
-# When set to on, makes readline use a single line for display, scrolling the
-# input horizontally on a single screen line when it becomes longer than the
-# screen width rather than wrapping to a new line.
-set horizontal-scroll-mode off
-
-# Allow the use of the Home/End keys.
-"\e[1~": beginning-of-line
-"\e[4~": end-of-line
-
-# Allow the use of the Delete/Insert keys.
-"\e[3~": delete-char
-"\e[2~": quoted-insert
-
-# Mappings for "page up" and "page down" to step to the beginning/end of the
-# history.
-"\e[5~": beginning-of-history
-"\e[6~": end-of-history
-
-# Alternate mappings for "page up" and "page down" to search the history.
-#"\e[5~": history-search-backward
-#"\e[6~": history-search-forward
-
-# Use the text that has already been typed as the prefix for searching through
-# commands (i.e. more intelligent Up/Down behavior)
-#
-# By default up/down are bound to previous-history and next-history
-# respectively. The following does the same but gives the extra
-# functionality where if there is any text between the start of the line and
-# the cursor, the subset of the history starting with that text is searched.
-# Note to get rid of a line just Ctrl-C.
-"\e[B": history-search-forward
-"\e[A": history-search-backward
-"\eOA": history-search-backward
-"\eOB": history-search-forward
 
 # Don't echo ^C etc (new in bash 4.1). Note this only works for the command
 # line itself, not if already running a command.
 set echo-control-characters off
 
 # If set to on, tilde expansion is performed when readline attempts word
-# completion. For example, typing 'cd ~/sr[tab]' expands to 'cd
-# /home/directory/src/' when expand-tilde is on and is unaltered when
-# expand-tilde is off.
+# completion.
 set expand-tilde off
 
-# If set to on, completed directory names have a slash appended. For example
-# 'cd sr[tab]' expands to 'src/' when mark-directories is on and expands to
-# 'src' when mark-directories is off.
-set mark-directories on
+# When set to on, makes readline use a single line for display, scrolling the
+# input horizontally on a single screen line when it becomes longer than the
+# screen width rather than wrapping to a new line.
+set horizontal-scroll-mode off
 
-    # If set to on, history lines that have been modified are displayed with a
-    # preceding asterisk (*). For example, if you scroll to a previous command
-    # using the up/down arrow keys and then edit the text of a previous command,
-    # an asterisk will be appended to the start of the line if
-    # mark-modified-lines is set to on.
-    set mark-modified-lines off
+# Immediately add a trailing slash when autocompleting symlinks to directories.
+set mark-symlinked-directories on
 
-    # If set to on, completed names which are symbolic links to directories have
-    # a slash appended (subject to the value of mark-directories).
-    set mark-symlinked-directories on
+# Do not autocomplete hidden files unless the pattern explicitly begins with a dot.
+set match-hidden-files off
 
-    # This variable, when set to on, causes readline to match files whose names
-    # begin with a '.' (hidden files) when performing filename completion,
-    # unless the leading '.' is supplied by the user in the filename to be
-    # completed.
-    set match-hidden-files on
+# If set to on, readline uses an internal more-like pager to display a
+# screenful of possible completions at a time.
+set page-completions on
 
-    # If set to on, readline uses an internal more-like pager to display a
-    # screenful of possible completions at a time.
-    set page-completions on
+# If set to on, readline will display completions with matches sorted
+# horizontally in alphabetical order, rather than down the screen.
+set print-completions-horizontally on
 
-    # If set to on, readline will display completions with matches sorted
-    # horizontally in alphabetical order, rather than down the screen.
-    set print-completions-horizontally on
+# List all matches in case multiple possible completions are possible.
+set show-all-if-ambiguous on
 
-    # If set to on, readline will undo all changes to history lines before
-    # returning when accept-line is executed. By default, history lines may be
-    # modified and retain individual undo lists across calls to readline.
-    set revert-all-at-newline off
+# This alters the default behavior of the completion functions in a fashion
+# similar to show-all-if-ambiguous. If set to on, words which have more than
+# one possible completion without any possible partial completion (the
+# possible completions don't share a common prefix) cause the matches to be
+# listed immediately instead of ringing the bell.
+set show-all-if-unmodified on
 
-    # This alters the default behavior of the completion functions. If set to
-    # on, words which have more than one possible completion cause the matches
-    # to be listed immediately instead of ringing the bell.
-    set show-all-if-ambiguous on
+# Be more intelligent when autocompleting by also looking at the text after
+# the cursor.
+set skip-completed-text on
 
-    # This alters the default behavior of the completion functions in a fashion
-    # similar to show-all-if-ambiguous. If set to on, words which have more than
-    # one possible completion without any possible partial completion (the
-    # possible completions don't share a common prefix) cause the matches to be
-    # listed immediately instead of ringing the bell.
-    set show-all-if-unmodified on
+# Show extra file information when completing, like `ls -F` does.
+set visible-stats on
 
-    # If set to on, this alters the default completion behavior when inserting a
-    # single match into the line. It's only active when performing completion in
-    # the middle of a word. If enabled, readline does not insert characters from
-    # the completion that match characters after point in the word being
-    # completed, so portions of the word following the cursor are not
-    # duplicated.
-    set skip-completed-text on
+#===============================================================================
+# Key mappings
+#===============================================================================
 
-    # The string that is inserted in vi mode when the insert-comment command is
-    # executed. This command is bound to M-# in emacs mode and to # in vi
-    # command mode.
-    set comment-begin #
+"\e[3;3~": kill-word                # Alt-Delete
 
-    # Show automatically how parentheses (and other matching delimiters) match
-    # in the text. Whenever you type a self-inserting character that is a
-    # closing delimiter, the cursor moves momentarily to the location of the
-    # matching opening delimiter, provided that is on the screen.
-    set blink-matching-paren on
+"\e[1~": beginning-of-line           Home
+"\eOH": beginning-of-line           # Home
+"\e[2~": quoted-insert              # Insert
+"\e[3~": delete-char                # Delete
+"\e[4~": end-of-line                # End
+"\eOF": end-of-line                 # End
+"\e[5~": beginning-of-history       # PgUp
+#"\e[5~": history-search-backward   # PgUp
+"\e[6~": end-of-history             # PgDown
+#"\e[6~": history-search-forward    # PgDown
 
-    # Mappings for Ctrl-left-arrow and Ctrl-right-arrow for word moving.
-    "\e[1;5C": forward-word
-    "\e[1;5D": backward-word
-    "\e[5C": forward-word
-    "\e[5D": backward-word
-    "\e\e[C": forward-word
-    "\e\e[D": backward-word
+"\e[A": history-search-backward     # Up
+"\eOA": history-search-backward     # Up
+"\e[B": history-search-forward      # Down
+"\eOB": history-search-forward      # Down
+"\e[C": forward-char                # Right
+"\e[D": backward-char               # Left
 
-    $if term=rxvt
-        "\e[8~": end-of-line
-        "\eOc": forward-word
-        "\eOd": backward-word
-    $endif
+"\e[5C": forward-word               # Ctrl-Right
+"\e[1;5C": forward-word             # Ctrl-Right
+"\e\e[C": forward-word              # Ctrl-Right
 
-    # For xterm...
-    $if term=xterm
-        "\eOH": beginning-of-line
-        "\eOF": end-of-line
-    $endif
-
-    # For freebsd console...
-    $if term=freebsd
-        "\e[H": beginning-of-line
-        "\e[F": end-of-line
-    $endif
-$endif
+"\e[5D": backward-word              # Ctrl-Left
+"\e[1;5D": backward-word            # Ctrl-Left
+"\e\e[D": backward-word             # Ctrl-Left
