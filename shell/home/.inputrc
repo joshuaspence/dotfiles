@@ -1,15 +1,3 @@
-#-------------------------------------------------------------------------------
-# The inputrc file handles keyboard mapping for specific situations. This file
-# is the startup file used by Readline - the input-related library - used by
-# bash and most other shells.
-#
-# If ~/.inputrc doesn't work, then you need to add 'export INPUTRC=~/.inputrc'
-# to your ~/.bash_profile file.
-#
-# Since this is .inputrc, this is automatically turned on for many different
-# programs: bash, irb, python, mysql, octave, etc.
-#-------------------------------------------------------------------------------
-
 # Make tab autocomplete regardless of filename case.
 set completion-ignore-case on
 
