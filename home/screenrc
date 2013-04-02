@@ -7,6 +7,32 @@ autodetach on
 # No annoying screen flashes.
 vbell off
 
+# Change scrollback.
+defscrollback 10000
+
+# Clear the text when exiting visual programs.
+altscreen on
+
+# When the display is split into multiple regions, screen puts a caption at the
+# bottom of each region.
+caption string "%?%F%{= Bk}%? %C%A %D %d-%m-%Y %{= kB} %t%= %?%F%{= Bk}%:%{= wk}%? %n "
+
 # Display a line at the bottom with hostname, window titles & time.
 hardstatus alwayslastline
-hardstatus string '%{= kG}[ %{G}%H %{g}][%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{B} %Y-%m-%d %{W}%C%a %{g}]'
+hardstatus string '%{= kG}[ %{G}%H %{g}][%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{B} %Y-%m-%d %{W}%c%a %{g}]'
+
+# Previous window.
+bindkey ^[[1;7C prev    # Ctrl+Alt+Left from gnome-terminal
+bindkey ^[^[[D prev     # Ctrl+Alt+Left from putty
+
+# Next window.
+bindkey ^[[1;7D next    # Ctrl+Alt+Right from gnome-terminal
+bindkey ^[^[[C next     # Ctrl+Alt+Right from putty
+
+# Change background-color-erase setting.
+defbce on
+
+# You need this line to make backspace work properly on linux. Otherwise,
+# backspace becomes CTRL-H, which causes the help window to pop every in emacs
+# whenever you hit backspace.
+bindkey -k kb stuff ^?
