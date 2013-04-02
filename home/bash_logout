@@ -1,5 +1,5 @@
 # When leaving the console clear the screen to increase privacy.
 # First checks that shell level is equal to 1.
-if [ ${SHLVL} = 1 ] ; then
+if [ $SHLVL = 1 ]; then
     [ -x /usr/bin/clear_console ] && /usr/bin/clear_console -q
 fi
