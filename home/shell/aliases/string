@@ -1,0 +1,5 @@
+# URL-encode a string.
+alias urlencode="python -c 'import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);'"
+
+# ROT13 encoder/decoder.
+alias rot13="tr a-zA-Z n-za-mN-ZA-M"

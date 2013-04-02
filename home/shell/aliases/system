@@ -1,0 +1,7 @@
+# Diagnostics.
+alias cpu_hogs='ps -e -o %cpu,pid,ppid,user,cmd | awk '"'"'NR == 1; NR > 1 {print $0 | "sort -nr"}'"'"' | head'
+alias mem_hogs='ps -e -o %mem,pid,ppid,user,cmd | awk '"'"'NR == 1; NR > 1 {print $0 | "sort -nr"}'"'"' | head'
+
+# Displays the folders/files in the current directory.
+alias biggest='du -hsk "$(/bin/ls -A)" | sort -rn | head -10'
+alias rbiggest='BLOCKSIZE=1048576; du -hx | sort -nr | head -10'
