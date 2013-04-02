@@ -1,11 +1,8 @@
-# Disable the startup message
+# Disable the startup message.
 startup_message off
 
-shell -${SHELL}
-altscreen on
-defbce on
-shelltitle "$ |bash"
-term 'screen-s'
+# Detach on hangup.
+autodetach on
 
 # No annoying screen flashes.
 vbell off
@@ -13,6 +10,3 @@ vbell off
 # Display a line at the bottom with hostname, window titles & time.
 hardstatus alwayslastline
 hardstatus string '%{= kG}[ %{G}%H %{g}][%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{B} %Y-%m-%d %{W}%C%a %{g}]'
-
-# Always send backspace as ^?, which is consistent with the bundled terminfo.
-bindkey -k kb stuff ^?
