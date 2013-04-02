@@ -82,25 +82,10 @@
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 
     # Update current branch and master.
-    sync = !git update && \
-        git co master && \
-        git pull && \
-        git co @{-1}
+    sync = !git update && git checkout master && git pull && git checkout @{-1}
 
     # Attempt to cleanup some common problems.
     unfuck = !git fsck && git remote prune origin && git gc --aggressive --auto
 
     # From https://github.com/cypher/dotfiles/blob/master/gitconfig
     ls-ignored = ls-files --exclude-standard --ignored --others
-
-    # As per https://twitter.com/jrbowes/status/304942580133679105,
-    # delete all local branches that have been merged into master.
-    #
-    # Note, "git branch --merged master" will helpfully include master itself
-    # as a branch that has been fully merged to master. Gee, thanks git.
-    #
-    # So for sanity, filter out current branch and anything named master.
-    #
-    # Also note -d won't delete branches that aren't merged to their tracking
-    # branch. Use -D if you dont care.
-    purge = !"git branch -d $(git branch --merged master | grep -v -e '*' -e 'master')"

@@ -1,42 +1,19 @@
-function source_file() {
-    local path=$1
-
-    if [ -r $path ] ; then
-        source $path
-        return 0
-    else
-        return 1
-    fi
-}
-
-function source_file_or_dir() {
-    local path=$1
-
-    if [ -d $path ] ; then
-        source $path/*
-        return 0
-    elif [ -r $path ] ; then
-        source $path
-        return 0
-
-     fi
-}
+source $HOME/.shell/functions/source
 
 # Pull in any system defaults first so they can be overridden later.
-source_file /etc/profile
+source_r /etc/profile
 
 # We run the environment settings for all shells to ensure it's always set up.
-source_file_or_dir ~/.shell/environment
+source_r $HOME/.shell/environment
 
 # An interactive shell starting bash_profile must be a login shell (man bash).
 # We run the login script and the interactive setup.
-if [ -n ${PS1} ] ; then
-    source_file_or_dir ~/.shell/login
-    source_file_or_dir ~/.shell/interactive
+if [ -n $PS1 ]; then
+    source_r ~/.shell/login
+    source_r ~/.shell/interactive
 fi
 
-# If running bash, source bashrc
+# If running bash, source bashrc.
 case $- in
-    *i*)
-        source_file ~/.bashrc ;;
+    *i*) source_r $HOME/.bashrc ;;
 esac

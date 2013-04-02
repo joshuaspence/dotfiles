@@ -61,7 +61,7 @@ set backupdir=~/.vim/backups
 set backupdir=~/.vim/backups
 "set directory=~/.vim/swaps
 
-" Use the persistent undo feature (see :h `persistent-undo`). 
+" Use the persistent undo feature (see :h `persistent-undo`).
 " NOTE: the directory listed in undodir must exist; Vim will not create this
 " directory itself!
 set undodir=~/.vim/undo
@@ -96,6 +96,9 @@ Bundle 'airblade/vim-gitgutter'
 Bundle 'tpope/vim-surround'
 Bundle 'sickill/vim-pasta'
 Bundle 'tpope/vim-markdown'
+Bundle 'Valloric/MatchTagAlways'
+Bundle 'mileszs/ack.vim'
+Bundle 'scrooloose/syntastic'
 
 " Gist
 " https://github.com/mattn/gist-vim

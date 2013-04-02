@@ -16,3 +16,6 @@
 [submodule "modules/spark"]
 	path = modules/spark
 	url = git://github.com/holman/spark.git
+[submodule "modules/hosts"]
+	path = modules/hosts
+	url = git://github.com/StevenBlack/hosts.git

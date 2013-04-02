@@ -1,0 +1,8 @@
+# Use `less` as the default pager.
+export PAGER=less
+
+# Less.
+export LESS='-R'
+
+# Set the Less input preprocessor.
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"

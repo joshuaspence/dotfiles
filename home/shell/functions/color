@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ##
 # Prints terminal codes.
 #
@@ -7,7 +9,7 @@
 # @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
 #
 function bput() {
-    case "$1" in
+    case $1 in
         # regular colours
         black)    tput setaf 0 ;;
         red)      tput setaf 1 ;;
@@ -52,7 +54,7 @@ function bput() {
         default)  tput setaf 9 ;;
         bdefault) tput setab 9 ;;
         none)     tput sgr0    ;;
-        *)        tput sgr0    # Reset
+        *)        tput sgr0    ; return 1 ;; # reset
     esac
-    return $RETURN_SUCCESS
+    return 0
 }

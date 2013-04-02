@@ -1,0 +1,302 @@
+source $HOME/.shell/functions/color
+
+##
+# TODO
+#
+# @param [String] TODO
+# @param [String] TODO
+# @param [Integer] TODO
+# @param [String] TODO
+#
+function __prompt_state() {
+    local cvstool=$1
+    local branch=$2
+    local last_commit=$3
+    local bits=$4
+
+    # Age
+    local age="-1"
+    if [ -n "$last_commit" ] ; then
+        age=$(( $(( $(date +%s)-last_commit )) / 60 )) # zomg nesting
+    fi
+
+    # Color
+    local age_color=
+    if [ "$age" -lt 0 ] ; then
+        age_color="cyan"
+    elif [ "$age" -gt 60 ] ; then
+        age_color="red"
+    elif [ "$age" -gt 30 ] ; then
+        age_color="yellow"
+    else
+        age_color="green"
+    fi
+
+    # If age is more than 7 days, show in days otherwise minutes
+    if [ "$age" -gt 10080 ] ; then
+        age=$(printf "%dd" $(( age / 1440 )))
+    else
+        age=$(printf "%dm" $age)
+    fi
+
+    case "$TERM" in
+        *term | xterm-* | rxvt | screen | screen-* )
+            age="$(bput $age_color)$age$(bput rst)"
+            bits="$(bput cyan)$bits$(bput rst)"
+            ;;
+    esac
+
+    printf "%b" " $(bput magenta)${cvstool}(${age}$(bput magenta)|$(bput rst)${branch}${bits}$(bput magenta))$(bput rst)"
+    return $RETURN_SUCCESS
+}
+
+##
+# Prints out contextual git state for the command prompt.
+#
+# @link http://github.com/darkhelmet/dotfiles
+# @link http://github.com/fnichol/bashrc/blob/master/bashrc
+#
+function prompt_state_git() {
+    if git rev-parse ; then
+        local git_status=$(git -c color.status=false status --short --branch 2>/dev/null)
+
+        local bits=
+        printf $git_status | egrep -q '^ ?M'      && bits="${bits}\xb1" # modified files
+        printf $git_status | egrep -q '^ ?\?'     && bits="${bits}?"    # untracked files
+        printf $git_status | egrep -q '^ ?A'      && bits="${bits}\*"   # new/added files
+        printf $git_status | egrep -q '^ ?R'      && bits="${bits}>"    # renamed files
+        printf $git_status | egrep -q '^ ?D'      && bits="${bits}\xa7" # deleted files
+        printf $git_status | egrep -q ' \[ahead ' && bits="${bits}+"    # ahead of origin
+
+        local branch=$(echo $git_status | egrep '^## ' | awk '{print $2}' | sed 's/\.\.\..*$//')
+        [ "${branch}" == "Initial commit on master" ] && branch="nobranch"
+
+        local last_commit=$(git log --pretty=format:'%at' -1 2>/dev/null)
+
+        printf $(__prompt_state "git" "$branch" "$last_commit" "$bits")
+        return $RETURN_SUCCESS
+    else
+        return $RETURN_INVALID_CALL
+    fi
+}
+
+##
+# Prints out contextual hg state for the command prompt.
+#
+# @link http://github.com/darkhelmet/dotfiles
+# @link http://github.com/fnichol/bashrc/blob/master/bashrc
+#
+function prompt_state_hg() {
+    if hg --repository $(pwd) root 2>/dev/null ; then
+        local hg_status=$(hg status --config 'extensions.color=!' 2>/dev/null)
+
+        local bits=
+        printf $hg_status | egrep -q '^M '   && bits="${bits}\xb1" # modified files
+        printf $hg_status | egrep -q '^\? '  && bits="${bits}?"    # untracked files
+        printf $hg_status | egrep -q '^A '   && bits="${bits}\*"   # new files
+        printf $hg_status | egrep -q '^! '   && bits="${bits}\!"   # deleted files
+        printf $hg_status | egrep -q '^R '   && bits="${bits}\xa7" # removed files
+
+        local branch=$(hg branch)
+        [ -z "$branch" ] && branch="nobranch"
+
+        local last_commit=$(hg log -l 1 --template '{date|hgdate}' 2>/dev/null | awk '{print $1}')
+
+        printf $(__prompt_state "hg" "$branch" "$last_commit" "$bits")
+        return $RETURN_SUCCESS
+    else
+        return $RETURN_INVALID_CALL
+    fi
+}
+
+##
+# TODO
+#
+function prompt_state() {
+    prompt_state_git
+    prompt_state_hg
+
+    if command -v chruby >/dev/null && [[ -n "$RUBY_ROOT" ]] ; then
+        printf "%b" " {$(basename $RUBY_ROOT)}"
+    elif command -v rvm-prompt >/dev/null ; then
+        printf "%b" " {$(rvm-prompt)}"
+    fi
+}
+
+##
+# Sets a shell prompt. Uses a set variable of `PROMPT_COLOR' to determine the
+# main color of the prompt, if it exists. This is generally set in bashrc.local.
+# If a variable of `REMOTE_PROMPT_COLOR' is given, then this color will be used
+# for all remote SSH sessions.
+function bash_prompt() {
+    [ -z "$PROMPT_COLOR" ] && PROMPT_COLOR="default"
+
+    # Change prompt color if remotely logged in and alt color is given
+    if [[ -n "$SSH_CLIENT" && -n "$REMOTE_PROMPT_COLOR" ]] ; then
+        PROMPT_COLOR="$REMOTE_PROMPT_COLOR"
+    fi
+
+    if [ "$(id --user --real)" -eq "0" ] ; then
+        # Root shell
+        local user_c="#"
+        local tb=$user_c
+        local color="red"
+    else
+        local user_c=">"
+        local tb=
+        local color=$PROMPT_COLOR
+    fi
+
+    case "$TERM" in
+        *term|xterm-*|rxvt|screen|screen-*)
+            local cyan="\[$(bput cyan)\]"
+            if [ -z "$bashrc_light_bg" ] ; then
+                local white="\[$(bput white)\]"
+            else
+                local white="\[$(bput black)\]"
+            fi
+            local nocolor="\[$(bput rst)\]"
+            local custom="\[$(bput $color)\]"
+            local titlebar="\[\033]0;${tb}\u@\h:\w${tb}\007\]"
+            ;;
+        *)
+            local cyan=
+            local white=
+            local nocolor=
+            local custom=
+            local titlebar=
+            ;;
+    esac
+
+    local prompt_core=
+    if [[ -n "$SSH_TTY" || "$(id --user --real)" -eq "0" ]] ; then
+        local prompt_core="\u@\h"
+    fi
+
+    PS1="${titlebar}${cyan}[${custom}\$(short_pwd)${white}\ $(prompt_state)${cyan}]${nocolor}\n${custom}${prompt_core}${user_c} ${nocolor}"
+    PS2="${custom}${user_c} ${nocolor}"
+}
+
+
+
+
+# My awesome bash prompt
+#
+# Copyright (c) 2012 "Cowboy" Ben Alman
+# Licensed under the MIT license.
+# http://benalman.com/about/license/
+#
+# Example:
+# [master:!?][cowboy@CowBook:~/.dotfiles]
+# [11:14:45] $
+#
+# Read more (and see a screenshot) in the "Prompt" section of
+# https://github.com/cowboy/dotfiles
+
+# ANSI CODES - SEPARATE MULTIPLE VALUES WITH ;
+#
+#  0  reset          4  underline
+#  1  bold           7  inverse
+#
+# FG  BG  COLOR     FG  BG  COLOR
+# 30  40  black     34  44  blue
+# 31  41  red       35  45  magenta
+# 32  42  green     36  46  cyan
+# 33  43  yellow    37  47  white
+
+if [[ ! "${prompt_colors[@]}" ]]; then
+  prompt_colors=(
+    "36" # information color
+    "37" # bracket color
+    "31" # error color
+  )
+
+  if [[ "$SSH_TTY" ]]; then
+    # connected via ssh
+    prompt_colors[0]="32"
+  elif [[ "$USER" == "root" ]]; then
+    # logged in as root
+    prompt_colors[0]="35"
+  fi
+fi
+
+# Inside a prompt function, run this alias to setup local $c0-$c9 color vars.
+alias prompt_getcolors='prompt_colors[9]=; local i; for i in ${!prompt_colors[@]}; do local c$i="\[\e[0;${prompt_colors[$i]}m\]"; done'
+
+# Exit code of previous command.
+function prompt_exitcode() {
+  prompt_getcolors
+  [[ $1 != 0 ]] && echo " $c2$1$c9"
+}
+
+# Git status.
+function prompt_git() {
+  prompt_getcolors
+  local status output flags
+  status="$(git status 2>/dev/null)"
+  [[ $? != 0 ]] && return;
+  output="$(echo "$status" | awk '/# Initial commit/ {print "(init)"}')"
+  [[ "$output" ]] || output="$(echo "$status" | awk '/# On branch/ {print $4}')"
+  [[ "$output" ]] || output="$(git branch | perl -ne '/^\* (.*)/ && print $1')"
+  flags="$(
+    echo "$status" | awk 'BEGIN {r=""} \
+      /^# Changes to be committed:$/        {r=r "+"}\
+      /^# Changes not staged for commit:$/  {r=r "!"}\
+      /^# Untracked files:$/                {r=r "?"}\
+      END {print r}'
+  )"
+  if [[ "$flags" ]]; then
+    output="$output$c1:$c0$flags"
+  fi
+  echo "$c1[$c0$output$c1]$c9"
+}
+
+# SVN info.
+function prompt_svn() {
+  prompt_getcolors
+  local info="$(svn info . 2> /dev/null)"
+  local last current
+  if [[ "$info" ]]; then
+    last="$(echo "$info" | awk '/Last Changed Rev:/ {print $4}')"
+    current="$(echo "$info" | awk '/Revision:/ {print $2}')"
+    echo "$c1[$c0$last$c1:$c0$current$c1]$c9"
+  fi
+}
+
+# Maintain a per-execution call stack.
+prompt_stack=()
+trap 'prompt_stack=("${prompt_stack[@]}" "$BASH_COMMAND")' DEBUG
+
+function prompt_command() {
+  local exit_code=$?
+  # If the first command in the stack is prompt_command, no command was run.
+  # Set exit_code to 0 and reset the stack.
+  [[ "${prompt_stack[0]}" == "prompt_command" ]] && exit_code=0
+  prompt_stack=()
+
+  # Manually load z here, after $? is checked, to keep $? from being clobbered.
+  [[ "$(type -t _z)" ]] && _z --add "$(pwd -P 2>/dev/null)" 2>/dev/null
+
+  # While the simple_prompt environment var is set, disable the awesome prompt.
+  [[ "$simple_prompt" ]] && PS1='\n$ ' && return
+
+  prompt_getcolors
+  # http://twitter.com/cowboy/status/150254030654939137
+  PS1="\n"
+  # svn: [repo:lastchanged]
+  PS1="$PS1$(prompt_svn)"
+  # git: [branch:flags]
+  PS1="$PS1$(prompt_git)"
+  # misc: [cmd#:hist#]
+  # PS1="$PS1$c1[$c0#\#$c1:$c0!\!$c1]$c9"
+  # path: [user@host:path]
+  PS1="$PS1$c1[$c0\u$c1@$c0\h$c1:$c0\w$c1]$c9"
+  PS1="$PS1\n"
+  # date: [HH:MM:SS]
+  PS1="$PS1$c1[$c0$(date +"%H$c1:$c0%M$c1:$c0%S")$c1]$c9"
+  # exit code: 127
+  PS1="$PS1$(prompt_exitcode "$exit_code")"
+  PS1="$PS1 \$ "
+}
+
+PROMPT_COMMAND="prompt_command"

@@ -1,0 +1,33 @@
+##
+# Creates the directory if it doesn't exist, and changes into it.
+#
+# @param [String] The path of the new directory.
+#
+mcd() {
+    local dir="$1"
+
+    if command -v pushd >/dev/null; then
+        local cd_cmd=$(command -v pushd)
+    else
+        local cd_cmd=$(which cd)
+    fi
+
+    mkdir -p ${dir} && ${cd_cmd} ${dir} >/dev/null
+}
+
+##
+# Calculates are truncated pwd. Overriding of the truncation length can be done
+# by setting `PROMPT_LEN'.
+#
+# Thanks to: https://gist.github.com/548242 (@nicksieger)
+#
+function short_pwd () {
+    local pwd_length=${PROMPT_LEN-35}
+    local cur_pwd=$(echo $(pwd) | sed -e "s,^$HOME,~,")
+
+    if [ $(echo -n $cur_pwd | wc -c | tr -d " ") -gt $pwd_length ]; then
+        echo "...$(echo $cur_pwd | sed -e "s/.*\(.\{$pwd_length\}\)/\1/")"
+    else
+        echo $cur_pwd
+    fi
+}

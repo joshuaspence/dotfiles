@@ -1,0 +1,25 @@
+# The history list is appended to the history file  when the shell exits, rather
+# than overwriting the history file.
+shopt -s histappend
+
+# Entries beginning with space aren't added into history, and duplicate
+# entries will be erased (leaving the most recent entry).
+export HISTCONTROL="ignorespace:erasedups"
+
+# Give history timestamps.
+#export HISTTIMEFORMAT="[%F %T] "
+export HISTTIMEFORMAT="%Y-%m-%d %H:%M:%S "
+
+# Lots of history.
+export HISTSIZE=10000000000
+export HISTFILESIZE=${HISTSIZE}
+
+# File where history is stored (default is ~/.bash_history).
+export HISTFILE=${HOME}/.bash_history
+
+# Prepend a timestamp on each history event
+export HISTTIMEFORMAT="%Y-%m-%dT%H:%M:%S "
+
+# Ignore commands starting with a space, duplicates,
+# and a few others.
+export HISTIGNORE="[ ]*:&:bg:fg:ls -l:ls -al:ls -la:ll:la"

@@ -1,0 +1,2 @@
+# Starts a web server.
+alias http="python -m SimpleHTTPServer"
