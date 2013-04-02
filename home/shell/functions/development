@@ -1,0 +1,23 @@
+##
+# Count code lines in some directory.
+#
+# @param [String] The file extensions to count.
+#
+loc() {
+    local total
+    local ext
+    local lines
+
+    total=0
+    for ext in $@; do
+        if [[ $(echo $ext | cut -c1-1) != "." ]]; then
+            ext=".$ext"
+        fi
+        lines=$(find . -type f -name "*$ext" | xargs cat | wc -l)
+        lines=${lines// /}
+        total=$(( $total + $lines ))
+        echo "Lines of code for $ext: $lines"
+    done
+    echo "Total lines of code: $total"
+    return 0
+}

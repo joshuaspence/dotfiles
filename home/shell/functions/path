@@ -1,0 +1,97 @@
+##
+# Appends paths to the end of a search path variable list.
+#
+# @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
+# @param [List] Space-seperated list of system paths to append, in order.
+#
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
+append_path() {
+    local path_var="$1"; shift
+
+    # Create var if not exists
+    if eval "test -z \"\$$path_var\""; then
+        [[ -d "$1" ]] && eval $path_var="$1"
+        shift
+    fi
+
+    for p in $@; do
+        remove_from_path "$path_var" "$p"
+        [[ -d "$p" ]] && eval $path_var="\$${path_var}:${p}"
+    done; unset p
+}
+
+##
+# Pushes paths to the front of a search path variable list.
+#
+# @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
+# @param [List] Space-seperated list of system paths to push, in reverse order.
+#
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
+push_path() {
+    local path_var="$1"
+    shift
+
+    # Create var if not exists
+    if eval "test -z \"\$$path_var\"" ; then
+        [ -d "$1" ] && eval $path_var="$1"
+        shift
+    fi
+
+    for p in $@ ; do
+        remove_from_path "$path_var" "$p"
+        [ -d "$p" ] && eval $path_var="${p}:\$${path_var}"
+    done
+    unset p
+}
+
+##
+# Removes all instances of paths in a search path.
+#
+# @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
+# @param [List] Space-separated list of system paths to remove.
+#
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
+remove_from_path() {
+    local path_var="$1"
+    shift
+    local new_path=
+
+    # Remove paths from path_var, working in new_path
+    for rp in $@ ; do
+        new_path=$(
+            eval "echo \"\$$path_var\"" |
+            tr ':' '\n' |
+            grep -v "^${rp}$" |
+            tr '\n' ':' |
+            sed -e 's/:$//'
+        )
+    done
+    unset rp
+
+    # Reassign path_var from new_path
+    eval $path_var="$new_path"
+}
+
+##
+# Sets a colon-separated search path variable, overwriting any previous values.
+#
+# @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
+# @param [List] Space-separated list of system paths to append, in order.
+#
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
+set_path() {
+    local path_var="$1"; shift
+
+    # Set var and overwrite any previous values
+    [[ -d "$1" ]] && eval $path_var="$1"
+    shift
+
+    for p in $@ ; do
+        remove_from_path "$path_var" "$p"
+        [[ -d "$p" ]] && eval $path_var="\$${path_var}:${p}"
+    done; unset p
+}
