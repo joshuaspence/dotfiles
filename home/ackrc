@@ -4,9 +4,6 @@
 # Matches by file name with.
 --group
 
-# Use "less -r" as my pager.
---pager=less -r
-
 # Follow or don't follow symlinks.
 --nofollow
 
