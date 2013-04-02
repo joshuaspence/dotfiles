@@ -13,3 +13,6 @@
 [submodule "modules/rename"]
 	path = modules/rename
 	url = git://github.com/ap/rename.git
+[submodule "modules/hosts"]
+	path = modules/hosts
+	url = git://github.com/StevenBlack/hosts.git
