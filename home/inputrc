@@ -1,10 +1,10 @@
 # Do not bell on tab-completion.
 set bell-style none
 
-# Show automatically how parentheses (and other matching delimiters) match
-# in the text. Whenever you type a self-inserting character that is a
-# closing delimiter, the cursor moves momentarily to the location of the
-# matching opening delimiter, provided that is on the screen.
+# Show automatically how parentheses (and other matching delimiters) match in
+# the text. Whenever you type a self-inserting character that is a closing
+# delimiter, the cursor moves momentarily to the location of the matching
+# opening delimiter, provided that is on the screen.
 set blink-matching-paren on
 
 # The string that is inserted in vi mode when the insert-comment command is
@@ -72,7 +72,7 @@ set visible-stats on
 
 "\e[3;3~": kill-word                # Alt-Delete
 
-"\e[1~": beginning-of-line           Home
+"\e[1~": beginning-of-line          # Home
 "\eOH": beginning-of-line           # Home
 "\e[2~": quoted-insert              # Insert
 "\e[3~": delete-char                # Delete
