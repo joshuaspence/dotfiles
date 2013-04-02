@@ -1,6 +1,3 @@
-# To print debug messages, run the command: `touch ~/.rcfiles.debug`
-[ -e ${HOME}/.rcfiles.debug ] && echo "Parsing ~/.bash/environment..." >&2
-
 # Personalisation.
 export NAME="Joshua Spence"
 export EMAIL="josh@joshuaspence.com"
@@ -14,7 +11,7 @@ export EMAIL="josh@joshuaspence.com"
 #   5 - write only
 #   6 - execute only
 #   7 - no permissions
-umask 0022
+#umask 0022
 
 # General environment settings
 export PAGER=less
@@ -32,7 +29,7 @@ export LC_CTYPE=en_AU.UTF-8
 export LC_COLLATE=en_AU.UTF-8
 
 # Alias definitions.
-if [ -f ${HOME}/.bash/aliases ]; then
+[ -f ${HOME}/.bash/aliases ]; then
 	[ -e ${HOME}/.rcfiles.debug ] && echo "Parsing ~/.bash/aliases..." >&2
 	source ${HOME}/.bash/aliases
 fi
@@ -147,7 +144,7 @@ shopt -s sourcepath	    # If set, the source builtin uses the value of PATH to
 			            # find the directory containing the file supplied as an
 			            # argument. This option is enabled by default.
 
-
+# EC2
 export EC2_HOME=~/.ec2
 export PATH=${PATH}:${EC2_HOME}/bin
 export EC2_PRIVATE_KEY=$(ls $EC2_HOME/pk-*.pem 2>/dev/null)

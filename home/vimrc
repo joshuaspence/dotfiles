@@ -57,12 +57,17 @@ set ttyfast
 set backup
 set backupdir=~/.vim/backups
 
-" Centralize backups, swapfiles and undo history
+" Centralize backups and swapfiles
 set backupdir=~/.vim/backups
 "set directory=~/.vim/swaps
-"if exists("&undodir")
-"    set undodir=~/.vim/undo
-"endif
+
+" Use the persistent undo feature (see :h `persistent-undo`). 
+" NOTE: the directory listed in undodir must exist; Vim will not create this
+" directory itself!
+set undodir=~/.vim/undo
+set undofile
+set undolevels=1000
+set undoreload=10000
 
 "===============================================================================
 " Vundle

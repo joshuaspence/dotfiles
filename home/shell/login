@@ -1,4 +1,0 @@
-# To print debug messages, run the command: `touch ~/.rcfiles.debug`
-[ -e ${HOME}/.rcfiles.debug ] && echo "Parsing ~/.bash/login..." >&2
-
-echo "Welcome to $(cat /etc/hostname)!"
