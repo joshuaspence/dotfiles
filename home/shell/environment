@@ -29,10 +29,7 @@ export LC_CTYPE=en_AU.UTF-8
 export LC_COLLATE=en_AU.UTF-8
 
 # Alias definitions.
-[ -f ${HOME}/.bash/aliases ]; then
-	[ -e ${HOME}/.rcfiles.debug ] && echo "Parsing ~/.bash/aliases..." >&2
-	source ${HOME}/.bash/aliases
-fi
+find ~/.shell/aliases -type f -exec source {} \;
 
 # Options for controlling bash history commands.
 #	erasedups       Don't put duplicate items in the history.
@@ -50,10 +47,7 @@ export HISTSIZE=100000
 export HISTFILESIZE=${HISTSIZE}
 
 # Load the bash functions.
-if [ -f ${HOME}/.bash/functions ]]; then
-	[ -e ${HOME}/.rcfiles.debug ] && echo "Parsing ~/.bash/functions..." >&2
-	source ${HOME}/.bash/functions
-fi
+find ~/.shell/functions -type f -exec source {} \;
 
 # ~/bin should be in the front of path if it exists.
 add_path ${HOME}/bin

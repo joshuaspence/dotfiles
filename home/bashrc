@@ -319,16 +319,6 @@ safe_source "${bashrc_prefix:-/etc/bash}/bashrc.local" "${HOME}/.bash_aliases"
 
 cleanup
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# To print debug messages, run the command: `touch ~/.rcfiles.debug`
-function debug() {
-    if [ -e ${HOME}/.rcfiles.debug ]; then
-        echo $@ >&2
-    fi
-}
-
-debug "Parsing ~/.bashrc..."
-
 # We run the environment settings for all shells to ensure it's always set up.
 if [ -r ${HOME}/.bash/environment ]; then
     debug "Sourcing ~/.bash/environment..."

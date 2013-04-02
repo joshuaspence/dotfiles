@@ -1,6 +1,3 @@
-# Pull in any system defaults first so they can be overridden later.
-[ -r /etc/profile ] && source /etc/profile
-
 function source_file() {
     local path=$1
 
@@ -21,9 +18,12 @@ function source_file_or_dir() {
     elif [ -r $path ] ; then
         source $path
         return 0
-   
-m     fi
+
+     fi
 }
+
+# Pull in any system defaults first so they can be overridden later.
+source_file /etc/profile
 
 # We run the environment settings for all shells to ensure it's always set up.
 source_file_or_dir ~/.shell/environment
@@ -35,8 +35,8 @@ if [ -n ${PS1} ] ; then
     source_file_or_dir ~/.shell/interactive
 fi
 
-# If running bash...
+# If running bash, source bashrc
 case $- in
     *i*)
-        source_file ~/.bashrc
+        source_file ~/.bashrc ;;
 esac

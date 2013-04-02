@@ -217,15 +217,6 @@ function bash_prompt() {
 }
 
 #===============================================================================
-# Path modifiers
-#===============================================================================
-
-
-
-
-
-
-#===============================================================================
 # Navigation
 #===============================================================================
 
@@ -459,29 +450,11 @@ function diskusage() {
         }'
 }
 
-if command -v homesick >/dev/null ; then
-  __homesick_update() {
-    local castles="$(homesick list | awk '{print $2}' | \
-      sed -e 's|^\([a-zA-Z0-9_ -]\{1,\}\).*$|\1|' | xargs)"
-
-    for c in $castles ; do
-      printf -- "-----> Updating $c castle ...\n"
-      $(which homesick) pull "$c" --force
-      $(which homesick) symlink "$c" --force
-    done ; unset c
-
-    printf -- "-----> homesick castles [$castles] are up to date.\n"
-  }
-  alias hsu=__homesick_update
-fi
-
-
-
 # credit: http://nparikh.org/notes/zshrc.txt
 # Usage: extract <file>
 # Description: extracts archived files / mounts disk images
 # Note: .dmg/hdiutil is Mac OS X-specific.
-extract () {
+function extract () {
     if [ -f $1 ]; then
         case $1 in
             *.tar.bz2)  tar -jxvf $1                        ;;
@@ -503,7 +476,6 @@ extract () {
         echo "'$1' is not a valid file"
     fi
 }
-
 
 function compute() {
   while true; do head -n 100 /dev/urandom; sleep 0.1; done \

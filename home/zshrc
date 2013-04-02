@@ -44,9 +44,8 @@ export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:$HOME
 export TERM='rxvt-unicode'
 export EDITOR='vim'
 
-for file in $(find ~/.shell/aliases -type f); do
-    source ~/.aliases/"$file"
-done
+# Source aliases
+find ~/.shell/aliases -type f -exec source {} \;
 
 # Terminal related settings.
 export LS_COLORS="ow=01;94:di=01;94"
@@ -56,4 +55,3 @@ bindkey "^[[8~" end-of-line
 
 # zsh options.
 setopt extended_glob
-
