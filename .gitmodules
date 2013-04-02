@@ -13,3 +13,6 @@
 [submodule "modules/rename"]
 	path = modules/rename
 	url = git://github.com/ap/rename.git
+[submodule "modules/spark"]
+	path = modules/spark
+	url = git://github.com/holman/spark.git
