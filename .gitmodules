@@ -7,3 +7,9 @@
 [submodule "modules/hub"]
 	path = modules/hub
 	url = git://github.com/defunkt/hub.git
+[submodule "home/oh-my-zsh"]
+	path = home/oh-my-zsh
+	url = git://github.com/robbyrussell/oh-my-zsh.git
+[submodule "modules/rename"]
+	path = modules/rename
+	url = git://github.com/ap/rename.git
