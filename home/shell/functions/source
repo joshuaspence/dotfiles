@@ -4,7 +4,7 @@
 # @param [String] The path of the file or directory to source.
 #
 function source_r() {
-    for file in $(find $1 -type f) ; do
+    for file in $(find $1 -type f -readable) ; do
         source $file
     done ; unset file
 }
