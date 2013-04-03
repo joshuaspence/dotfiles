@@ -1,3 +1,5 @@
+#!/bin/sh
+
 if [[ ! "$SSH_TTY" && "$OSTYPE" =~ ^darwin ]]; then
   export EDITOR='subl -w'
   export LESSEDIT='subl %f'

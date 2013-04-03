@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # The history list is appended to the history file  when the shell exits, rather
 # than overwriting the history file.
 shopt -s histappend

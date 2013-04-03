@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # We need the path functions!
 source $HOME/.shell/functions/path
 

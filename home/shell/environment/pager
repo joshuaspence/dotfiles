@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Use `less` as the default pager.
 export PAGER=less
 

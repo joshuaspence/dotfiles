@@ -1,3 +1,5 @@
+#!/bin/sh
+
 if [[ -z "$LANG" ]]; then
   eval "$(locale)"
 fi
