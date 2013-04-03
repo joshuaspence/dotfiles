@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ##
 # The flavor of linux that we are using.
 #

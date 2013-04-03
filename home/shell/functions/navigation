@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ##
 # Creates the directory if it doesn't exist, and changes into it.
 #

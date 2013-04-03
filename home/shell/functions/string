@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ##
 # Create box of '#' characters around given string.
 #

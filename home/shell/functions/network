@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ##
 # Checks whether a website is down for you, or everybody.
 #

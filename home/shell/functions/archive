@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ##
 # Extracts archived files / mounts disk images.
 #

@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ##
 # Appends paths to the end of a search path variable list.
 #
