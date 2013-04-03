@@ -5,7 +5,12 @@
 		"Alignment",
 		"Ant",
 		"ChangeQuotes",
+		"Clickable URLs",
 		"Clipboard History",
+		"Comments Aware Enter",
+		"DataConverter",
+		"Dotfiles Syntax Highlighting",
+		"FileSystem Autocompletion",
 		"Git",
 		"Gitignore",
 		"Markdown Preview",
@@ -13,7 +18,9 @@
 		"PhpDoc",
 		"SideBarEnhancements",
 		"SublimeCodeIntel",
+		"SublimeEvernote",
 		"sublimelint",
+		"SublimeLinter",
 		"Wrap Plus"
 	]
 }
