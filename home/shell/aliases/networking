@@ -1,8 +1,10 @@
+#!/bin/sh
+
 # Prints IP addresses.
 alias ips="ifconfig | grep 'inet ' | awk '{ print \$2 }'"
 
+# Get my public IP address.
+alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
+
 # List hosts defined in ~/.ssh/config.
 alias sshlist="awk '\$1 ~ /Host\$/ { print \$2 }' \$HOME/.ssh/config"
-
-# Get my public IP address.
-alias myip="dig +short myip.opendns.com @resolver1.opendns.com"

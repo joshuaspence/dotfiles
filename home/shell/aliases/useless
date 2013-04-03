@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Outputs random hexadecimal stuff that makes the screen look busy.
 alias compute='cat /dev/urandom | hexdump -C | grep --color=auto "ca fe"'
 
