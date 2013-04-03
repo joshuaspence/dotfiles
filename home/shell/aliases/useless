@@ -3,8 +3,10 @@
 # Outputs random hexadecimal stuff that makes the screen look busy.
 alias compute='cat /dev/urandom | hexdump -C | grep --color=auto "ca fe"'
 
-# Cool "Matrix"-looking screens (the movie).
-alias matrix='echo -e "\e[32m"
+# Cool "Matrix" (the movie) looking screens.
+alias matrix=matrix1
+
+alias matrix1='echo -e "\e[32m"
 while true; do
     for i in $(seq 1 $(( $(tput cols)/5 ))); do
         r=$(( $RANDOM % 2 ))

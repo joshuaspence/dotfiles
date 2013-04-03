@@ -1,12 +1,13 @@
 #!/bin/sh
 
 # Prints IP addresses.
-alias ips="ifconfig | grep 'inet ' | awk '{ print \$2 }'"
+alias ips="ifconfig | grep 'inet ' | awk '{print \$2}'"
 
 # Get my public IP address.
-alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
-alias whatismyip="curl -s checkip.dyndns.org | grep -Eo '[0-9\.]+'"
-alias json_whatismyip='curl -s "http://jsonip.com"'
+alias whatismyip=whatismyip1
+alias whatismyip1='dig +short myip.opendns.com @resolver1.opendns.com'
+alias whatismyip2="curl -s checkip.dyndns.org | grep -Eo '[0-9\.]+'"
+alias whatismyip3='curl -s jsonip.com'
 
 # List hosts defined in ~/.ssh/config.
-alias sshlist="awk '\$1 ~ /Host\$/ { print \$2 }' \$HOME/.ssh/config"
+alias sshlist="awk '\$1 ~ /Host\$/ {print \$2}' \$HOME/.ssh/config"

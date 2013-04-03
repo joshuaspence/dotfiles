@@ -2,11 +2,11 @@
 
 # Display the processes that are using the most processing resources.
 alias cpu_hogs='ps -e -o %cpu,pid,ppid,user,cmd |
-awk '\''NR == 1; NR > 1 { print $0 | "sort -nr" }'\'' | head'
+awk '\''NR == 1; NR > 1 {print $0 | "sort -nr"}'\'' | head'
 
 # Display the processes that are using the most memory.
 alias mem_hogs='ps -e -o %mem,pid,ppid,user,cmd |
-awk '\''NR == 1; NR > 1 { print $0 | "sort -nr" }'\'' | head'
+awk '\''NR == 1; NR > 1 {print $0 | "sort -nr"}'\'' | head'
 
 # Displays the largest files/directories in the current directory.
 alias biggest='du -hsk $(ls -A) | sort -rn | head -10'
