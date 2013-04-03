@@ -6,5 +6,8 @@ export PAGER=less
 # Less flags.
 export LESS='-R'
 
+# Get color support for `less`.
+export LESS='$LESS --RAW-CONTROL-CHARS'
+
 # Set the Less input preprocessor.
 type lesspipe >/dev/null 2>&1 && eval $(lesspipe)
