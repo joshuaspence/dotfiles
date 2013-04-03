@@ -4,22 +4,8 @@
 source $HOME/.shell/functions/path
 
 # ~/bin should be in the front of PATH if it exists.
-push_path PATH ${HOME}/bin
+push_path PATH $HOME/bin
 
 # ~/man should be in the front of MANPATH if it exists.
+export MANPATH=$(manpath)
 push_path MANPATH ${HOME}/man
-
-case $(uname -s) in
-    OpenBSD)
-        # Make sure MANPATH isn't set.
-        unset MANPATH
-        ;;
-    *)
-        export MANPATH
-        ;;
-esac
-
-if [[ -z "$_debug_bashrc" ]] ; then
-  unset __set_path __append_path __push_path __remove_from_path
-  unset __set_grails_home __set_groovy_home
-fi

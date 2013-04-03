@@ -1,12 +1,10 @@
 #!/bin/sh
 
-if [[ ! "$SSH_TTY" && "$OSTYPE" =~ ^darwin ]]; then
-  export EDITOR='subl -w'
-  export LESSEDIT='subl %f'
-  alias q='subl'
+if [ -n $SSH_TTY ]; then
+    export EDITOR=subl
 else
-  export EDITOR=$(type nano pico vi vim 2>/dev/null | sed 's/ .*$//;q')
-  alias q="$EDITOR -w -z"
+    export EDITOR=vim
 fi
 
-export VISUAL="$EDITOR"
+export LESSEDIT=$EDITOR
+export VISUAL=$EDITOR

@@ -3,8 +3,8 @@
 # Use `less` as the default pager.
 export PAGER=less
 
-# Less.
+# Less flags.
 export LESS='-R'
 
 # Set the Less input preprocessor.
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+type lesspipe >/dev/null 2>&1 && eval $(lesspipe)

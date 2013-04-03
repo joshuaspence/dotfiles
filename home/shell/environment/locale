@@ -1,5 +1,5 @@
 #!/bin/sh
 
-if [[ -z "$LANG" ]]; then
-  eval "$(locale)"
+if [ -z $LANG ]; then
+    type locale >/dev/null 2>&1 && eval $(locale)
 fi
