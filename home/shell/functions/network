@@ -9,8 +9,7 @@ down4me() {
     curl -s "http://www.downforeveryoneorjustme.com/$1" | sed '/just you/!d;s/<[^>]*>//g'
 }
 
-myip ()
-{
+myip() {
     about 'displays your ip address, as seen by the Internet'
     group 'base'
     res=$(curl -s checkip.dyndns.org | grep -Eo '[0-9\.]+')
@@ -19,7 +18,8 @@ myip ()
 
 ##
 # Returns the primary IP address of the system.
-function whatsmy_primary_ip() {
+#
+whatsmy_primary_ip() {
     local def_gateway=
     local iface=
     local ip=
@@ -58,7 +58,8 @@ function whatsmy_primary_ip() {
 # `webserver1.domainhosting.com').
 #
 # @params [String] Domainname to look up.
-function hostfromdomain() {
+#
+hostfromdomain() {
     if command -v dig >/dev/null; then
         [[ -z "$1" ]] && printf "usage: hostfromdomain <domainname>\n" && return 11
         dig -x $(dig $1 +short) +short
@@ -72,13 +73,15 @@ function hostfromdomain() {
 # Returns the public/internet visible IP address of the system.
 #
 # @link https://twitter.com/#!/mojombo/status/48948402955882496
-function whatsmy_public_ip() {
+#
+whatsmy_public_ip() {
     curl --silent 'http://jsonip.com/' | json_val '["ip"]'
 }
 
 ##
 # Return current external IP address.
-function whatismyip() {
+#
+whatismyip() {
     curl --silent checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'
 }
 
@@ -89,7 +92,8 @@ function whatismyip() {
 #
 # @param [String] remote ssh host in for form of [<user>@]host[:<port>]
 # @param [String] remote public key, using id_dsa.pub by default
-function mysshkey() {
+#
+mysshkey() {
     if [ -z "$1" ] ; then
         echo "Usage: mysshkey <ssh_host> [<pub_key>]" >&2
         return $RETURN_INVALID_CALL
@@ -119,7 +123,8 @@ function mysshkey() {
 #
 # @param [String] remote ssh host in for form of [<user>@]host[:<port>]
 # @param [String] public key, using $HOME/.ssh/id_dsa.pub by default
-function authme() {
+#
+authme() {
     if [ -z "$1" ] ; then
         echo "Usage: authme <ssh_host> [<pub_key>]" >&2
         return $RETURN_INVALID_CALL

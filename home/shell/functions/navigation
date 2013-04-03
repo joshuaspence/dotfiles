@@ -23,7 +23,7 @@ mcd() {
 #
 # Thanks to: https://gist.github.com/548242 (@nicksieger)
 #
-function short_pwd () {
+short_pwd() {
     local pwd_length=${PROMPT_LEN-35}
     local cur_pwd=$(echo $(pwd) | sed -e "s,^$HOME,~,")
 

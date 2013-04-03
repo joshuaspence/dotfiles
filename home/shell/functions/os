@@ -10,6 +10,7 @@ linux_flavor() {
     elif [ -f /etc/lsb-release ]; then
         head -n 1 /etc/lsb-release | awk -F= '{print $2}'
         return 0
+    else
+        return 1
     fi
-    return 1
 }

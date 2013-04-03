@@ -8,7 +8,7 @@
 # @link http://github.com/fnichol/bashrc/blob/master/bashrc
 # @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
 #
-function bput() {
+bput() {
     case $1 in
         # regular colours
         black)    tput setaf 0 ;;
