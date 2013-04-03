@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Starts a web server using PHP. Requires PHP >= 5.4.
-alias php-webserver='php -S localhost:8000'
-
-# Starts a web server using Python.
-alias python-webserver='python -m SimpleHTTPServer'
