@@ -7,5 +7,4 @@ alias rot13='tr a-zA-Z n-za-mN-ZA-M'
 alias urlencode='python -c "
 import sys;
 import urllib;
-print urllib.quote_plus(sys.argv[1]);
-"'
+print urllib.quote_plus(sys.argv[1]);"'

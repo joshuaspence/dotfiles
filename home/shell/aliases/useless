@@ -4,7 +4,31 @@
 alias compute='cat /dev/urandom | hexdump -C | grep --color=auto "ca fe"'
 
 # Cool "Matrix"-looking screens (the movie).
-alias matrix='echo -e "\e[32m"; while :; do for i in {1..16}; do r="$(($RANDOM % 2))"; if [[ $(($RANDOM % 5)) == 1 ]]; then if [[ $(($RANDOM % 4)) == 1 ]]; then v+="\e[1m $r   "; else v+="\e[2m $r   "; fi; else v+="     "; fi; done; echo -e "$v"; v=""; done'
-alias matrix2='COL=$(( $(tput cols) / 2 )); clear; tput setaf 2; while :; do tput cup $((RANDOM%COL)) $((RANDOM%COL)); printf "%$((RANDOM%COL))s" $((RANDOM%2)); done'
-alias matrix3='echo -ne "\e[32m"; while true; do echo -ne "\e[$(($RANDOM % 2 + 1))m"; tr -c "[:print:]" " " < /dev/urandom | dd count=1 bs=50 2> /dev/null; done'
-alias matrix4='tr -c "[:digit:]" " " < /dev/urandom | dd cbs=$COLUMNS conv=lcase,unblock | GREP_COLOR="1;32" grep --color "[^ ]"'
+alias matrix='echo -e "\e[32m"
+while true; do
+    for i in $(seq 1 $(( $(tput cols)/5 ))); do
+        r=$(( $RANDOM % 2 ))
+        if [ $(( $RANDOM % 5 )) == 1 ]; then
+            if [ $(( $RANDOM % 4 )) == 1 ]; then
+                v+="\e[1m $r   "
+            else
+                v+="\e[2m $r   "
+            fi
+        else
+            v+="     "
+        fi
+    done
+    echo -e "$v"
+    unset v
+done'
+
+alias matrix2='(echo -ne "\e[32m"
+while true; do
+    echo -ne "\e[$(( $RANDOM % 2 + 1 ))m"
+    tr -c "[:print:]" " " </dev/urandom | dd count=1 bs=50 2>/dev/null
+done)'
+
+alias matrix3='
+tr -c "[:digit:]" " " </dev/urandom |
+dd cbs=$(tput cols) conv=lcase,unblock |
+GREP_COLOR="1;32" grep --color "[^ ]"'
