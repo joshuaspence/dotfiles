@@ -10,7 +10,7 @@ source $HOME/.shell/functions/color
 # @param [Integer] TODO
 # @param [String] TODO
 #
-__prompt_state() {
+_prompt_state() {
     local cvstool=$1
     local branch=$2
     local last_commit=$3
@@ -18,30 +18,30 @@ __prompt_state() {
 
     # Age
     local age="-1"
-    if [ -n "$last_commit" ] ; then
+    if [ -n $last_commit ]; then
         age=$(( $(( $(date +%s)-last_commit )) / 60 )) # zomg nesting
     fi
 
     # Color
     local age_color=
-    if [ "$age" -lt 0 ] ; then
+    if [ $age -lt 0 ]; then
         age_color="cyan"
-    elif [ "$age" -gt 60 ] ; then
+    elif [ $age -gt 60 ]; then
         age_color="red"
-    elif [ "$age" -gt 30 ] ; then
+    elif [ $age -gt 30 ]; then
         age_color="yellow"
     else
         age_color="green"
     fi
 
-    # If age is more than 7 days, show in days otherwise minutes
-    if [ "$age" -gt 10080 ] ; then
+    # If age is more than 7 days, show in days otherwise minutes.
+    if [ $age -gt 10080 ]; then
         age=$(printf "%dd" $(( age / 1440 )))
     else
         age=$(printf "%dm" $age)
     fi
 
-    case "$TERM" in
+    case $TERM in
         *term | xterm-* | rxvt | screen | screen-* )
             age="$(bput $age_color)$age$(bput rst)"
             bits="$(bput cyan)$bits$(bput rst)"
@@ -49,7 +49,7 @@ __prompt_state() {
     esac
 
     printf "%b" " $(bput magenta)${cvstool}(${age}$(bput magenta)|$(bput rst)${branch}${bits}$(bput magenta))$(bput rst)"
-    return $RETURN_SUCCESS
+    return 0
 }
 
 ##
@@ -59,27 +59,27 @@ __prompt_state() {
 # @link http://github.com/fnichol/bashrc/blob/master/bashrc
 #
 prompt_state_git() {
-    if git rev-parse ; then
-        local git_status=$(git -c color.status=false status --short --branch 2>/dev/null)
-
-        local bits=
-        printf $git_status | egrep -q '^ ?M'      && bits="${bits}\xb1" # modified files
-        printf $git_status | egrep -q '^ ?\?'     && bits="${bits}?"    # untracked files
-        printf $git_status | egrep -q '^ ?A'      && bits="${bits}\*"   # new/added files
-        printf $git_status | egrep -q '^ ?R'      && bits="${bits}>"    # renamed files
-        printf $git_status | egrep -q '^ ?D'      && bits="${bits}\xa7" # deleted files
-        printf $git_status | egrep -q ' \[ahead ' && bits="${bits}+"    # ahead of origin
-
-        local branch=$(echo $git_status | egrep '^## ' | awk '{print $2}' | sed 's/\.\.\..*$//')
-        [ "${branch}" == "Initial commit on master" ] && branch="nobranch"
-
-        local last_commit=$(git log --pretty=format:'%at' -1 2>/dev/null)
-
-        printf $(__prompt_state "git" "$branch" "$last_commit" "$bits")
-        return $RETURN_SUCCESS
-    else
-        return $RETURN_INVALID_CALL
+    if ! git rev-parse >/dev/null 2>&1; then
+        return 1
     fi
+
+    local git_status=$(git -c color.status=false status --short --branch 2>/dev/null)
+
+    local bits=
+    printf $git_status | egrep -q '^ ?M'      && bits="${bits}\xb1" # modified files
+    printf $git_status | egrep -q '^ ?\?'     && bits="${bits}?"    # untracked files
+    printf $git_status | egrep -q '^ ?A'      && bits="${bits}\*"   # new/added files
+    printf $git_status | egrep -q '^ ?R'      && bits="${bits}>"    # renamed files
+    printf $git_status | egrep -q '^ ?D'      && bits="${bits}\xa7" # deleted files
+    printf $git_status | egrep -q ' \[ahead ' && bits="${bits}+"    # ahead of origin
+
+    local branch=$(echo $git_status | egrep '^## ' | awk '{print $2}' | sed 's/\.\.\..*$//')
+    [ $branch == "Initial commit on master" ] && branch="nobranch"
+
+    local last_commit=$(git log --pretty=format:'%at' -1 2>/dev/null)
+
+    printf $(_prompt_state "git" "$branch" "$last_commit" "$bits")
+    return 0
 }
 
 ##
@@ -89,26 +89,26 @@ prompt_state_git() {
 # @link http://github.com/fnichol/bashrc/blob/master/bashrc
 #
 prompt_state_hg() {
-    if hg --repository $(pwd) root 2>/dev/null ; then
-        local hg_status=$(hg status --config 'extensions.color=!' 2>/dev/null)
-
-        local bits=
-        printf $hg_status | egrep -q '^M '   && bits="${bits}\xb1" # modified files
-        printf $hg_status | egrep -q '^\? '  && bits="${bits}?"    # untracked files
-        printf $hg_status | egrep -q '^A '   && bits="${bits}\*"   # new files
-        printf $hg_status | egrep -q '^! '   && bits="${bits}\!"   # deleted files
-        printf $hg_status | egrep -q '^R '   && bits="${bits}\xa7" # removed files
-
-        local branch=$(hg branch)
-        [ -z "$branch" ] && branch="nobranch"
-
-        local last_commit=$(hg log -l 1 --template '{date|hgdate}' 2>/dev/null | awk '{print $1}')
-
-        printf $(__prompt_state "hg" "$branch" "$last_commit" "$bits")
-        return $RETURN_SUCCESS
-    else
-        return $RETURN_INVALID_CALL
+    if ! hg --repository $(pwd) root >/dev/null 2>&1; then
+        return 1
     fi
+
+    local hg_status=$(hg status --config 'extensions.color=!' 2>/dev/null)
+
+    local bits=
+    printf $hg_status | egrep -q '^M '  && bits="${bits}\xb1" # modified files
+    printf $hg_status | egrep -q '^\? ' && bits="${bits}?"    # untracked files
+    printf $hg_status | egrep -q '^A '  && bits="${bits}\*"   # new files
+    printf $hg_status | egrep -q '^! '  && bits="${bits}\!"   # deleted files
+    printf $hg_status | egrep -q '^R '  && bits="${bits}\xa7" # removed files
+
+    local branch=$(hg branch)
+    [ -z $branch ] && branch="nobranch"
+
+    local last_commit=$(hg log -l 1 --template '{date|hgdate}' 2>/dev/null | awk '{print $1}')
+
+    printf $(_prompt_state "hg" "$branch" "$last_commit" "$bits")
+    return 0
 }
 
 ##
@@ -117,28 +117,22 @@ prompt_state_hg() {
 prompt_state() {
     prompt_state_git
     prompt_state_hg
-
-    if command -v chruby >/dev/null && [[ -n "$RUBY_ROOT" ]] ; then
-        printf "%b" " {$(basename $RUBY_ROOT)}"
-    elif command -v rvm-prompt >/dev/null ; then
-        printf "%b" " {$(rvm-prompt)}"
-    fi
 }
 
 ##
-# Sets a shell prompt. Uses a set variable of `PROMPT_COLOR' to determine the
-# main color of the prompt, if it exists. This is generally set in bashrc.local.
-# If a variable of `REMOTE_PROMPT_COLOR' is given, then this color will be used
-# for all remote SSH sessions.
+# Sets a shell prompt. Uses a set variable of "PROMPT_COLOR" to determine the
+# main color of the prompt, if it exists. If a variable of "REMOTE_PROMPT_COLOR"
+# is given, then this color will be used for all remote SSH sessions.
+#
 bash_prompt() {
-    [ -z "$PROMPT_COLOR" ] && PROMPT_COLOR="default"
+    [ -z $PROMPT_COLOR ] && PROMPT_COLOR="default"
 
     # Change prompt color if remotely logged in and alt color is given
-    if [[ -n "$SSH_CLIENT" && -n "$REMOTE_PROMPT_COLOR" ]] ; then
-        PROMPT_COLOR="$REMOTE_PROMPT_COLOR"
+    if [[ -n $SSH_CLIENT && -n $REMOTE_PROMPT_COLOR ]]; then
+        PROMPT_COLOR=$REMOTE_PROMPT_COLOR
     fi
 
-    if [ "$(id --user --real)" -eq "0" ] ; then
+    if [ "$(id --user --real)" -eq "0" ]; then # CAN THIS BE DONE BETTER
         # Root shell
         local user_c="#"
         local tb=$user_c
@@ -149,10 +143,10 @@ bash_prompt() {
         local color=$PROMPT_COLOR
     fi
 
-    case "$TERM" in
-        *term|xterm-*|rxvt|screen|screen-*)
+    case $TERM in
+        *term | xterm-* | rxvt | screen | screen-*)
             local cyan="\[$(bput cyan)\]"
-            if [ -z "$bashrc_light_bg" ] ; then
+            if [ -z "$bashrc_light_bg" ]; then
                 local white="\[$(bput white)\]"
             else
                 local white="\[$(bput black)\]"
@@ -171,7 +165,7 @@ bash_prompt() {
     esac
 
     local prompt_core=
-    if [[ -n "$SSH_TTY" || "$(id --user --real)" -eq "0" ]] ; then
+    if [[ -n $SSH_TTY || "$(id --user --real)" -eq "0" ]]; then
         local prompt_core="\u@\h"
     fi
 
@@ -302,3 +296,5 @@ prompt_command() {
 }
 
 PROMPT_COMMAND="prompt_command"
+
+export PS1=PS1="\[\033[0;37m\]\342\224\214\342\224\200\$([[ \$? != 0 ]] && echo \"[\[\033[0;31m\]\342\234\227\[\033[0;37m\]]\342\224\200\")[$(if [[ ${EUID} == 0 ]]; then echo '\[\033[0;31m\]\h'; else echo '\[\033[0;33m\]\u\[\033[0;37m\]@\[\033[0;96m\]\h'; fi)\[\033[0;37m\]]\342\224\200[\[\033[0;32m\]\w\[\033[0;37m\]]\n\[\033[0;37m\]\342\224\224\342\224\200\342\224\200\342\225\274 \[\033[0m\]"

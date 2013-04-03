@@ -1,79 +1,10 @@
+#!/bin/bash
+
 # Skip this config if we aren't in bash.
-[ -n "$BASH_VERSION" ] || return
+[ -n $BASH_VERSION ] || return
 
 # Skip the rest if this is not an interactive shell.
-if [ -z "${PS1}" -a "$-" != "*i*" ] ; then return ; fi
-
-#---------------------------------------------------------------
-# Interactive shell (prompt,history) settings
-#---------------------------------------------------------------
-
-# Set the default editor
-if [ -z "$SSH_CLIENT" ] ; then          # for local/console sessions
-  case "$TERM" in
-  screen*|xterm-256color)               # we're in screen or tmux
-    if command -v vim >/dev/null ; then
-      export EDITOR="$(which vim)"
-      export BUNDLER_EDITOR="$EDITOR"
-    else
-      export EDITOR="$(which vi)"
-      export BUNDLER_EDITOR="$EDITOR"
-    fi
-  ;;
-  *)                                      # we're on a normal term console
-    if command -v mvim >/dev/null ; then
-      case "$TERM_PROGRAM" in
-        Apple_Terminal) _terminal="Terminal"  ;;
-        iTerm.app)      _terminal="iTerm"     ;;
-      esac
-      export EDITOR="$(which mvim) -f -c \"au VimLeave * !open -a ${_terminal}\""
-      export BUNDLER_EDITOR="$(which mvim)"
-      unset _terminal
-    elif command -v gvim >/dev/null ; then
-      export EDITOR="$(which gvim) -f"
-      export BUNDLER_EDITOR="$(which gvim)"
-    elif command -v mate >/dev/null ; then
-      export EDITOR="mate -w"
-      export EDITOR="mate"
-    elif command -v vim >/dev/null ; then
-      export EDITOR="$(which vim)"
-      export BUNDLER_EDITOR="$EDITOR"
-    else
-      export EDITOR="$(which vi)"
-      export BUNDLER_EDITOR="$EDITOR"
-    fi
-  ;;
-  esac
-else                                    # for remote/ssh sessions
-  if command -v vim >/dev/null ; then
-    export EDITOR="$(which vim)"
-  else
-    export EDITOR="$(which vi)"
-  fi
-  export BUNDLER_EDITOR="$EDITOR"
-fi
-export VISUAL="$EDITOR"
-export GEM_EDITOR="$BUNDLER_EDITOR"
-
-bash_prompt ; unset bash_prompt
-
-#---------------------------------------------------------------
-# Completions
-#---------------------------------------------------------------
-
-if [[ -r "${HOME}/.ssh/known_hosts" ]]; then
-    # ssh hosts from ~/.ssh/known_hosts
-    # Thanks to:
-    # https://github.com/jqr/dotfiles/blob/master/bash_profile.d/
-    _ssh_hosts() {
-        grep "Host " "${HOME}/.ssh/config" 2>/dev/null | sed -e "s/Host //g"
-        # http://news.ycombinator.com/item?id=751220
-        cat "${HOME}/.ssh/known_hosts" | cut -f 1 -d ' ' | \
-            sed -e s/,.*//g | uniq | grep -v "\["
-    }
-    complete -W "$(_ssh_hosts)" ssh
-    unset _ssh_hosts
-fi
+if [[ -z $PS1 && "$-" != "*i*" ]]; then return; fi
 
 source ${HOME}/.shell/functions/source
 
@@ -82,9 +13,14 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 # We run the environment settings for all shells to ensure it's always set up.
-source_r ${HOME}/.bash/environment
+source_r $HOME/.shell/environment
 
-# An interactive shell starting bashrc is not a login shell, just run interactive setup.
-if [ -n ${PS1} ]; then
-    source_r ${HOME}/.bash/interactive
+# An interactive shell starting bashrc is not a login shell, just run
+# interactive setup.
+if [ -n $PS1 ]; then
+    source_r $HOME/.shell/interactive
 fi
+
+source_r $HOME/.shell/functions
+
+bash_prompt

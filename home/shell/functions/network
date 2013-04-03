@@ -68,11 +68,11 @@ hostfromdomain() {
 
 ##
 # Returns the remote user's public SSH key on STDOUT. The host can optionally
-# contain the username (like `jdoe@ssh.example.com') and a non-standard port
-# number (like `ssh.example.com:666').
+# contain the username (like "jdoe@ssh.example.com") and a non-standard port
+# number (like "ssh.example.com:666").
 #
-# @param [String] remote ssh host in for form of [<user>@]host[:<port>]
-# @param [String] remote public key, using id_dsa.pub by default
+# @param [String] Remote ssh host in for form of [<user>@]host[:<port>].
+# @param [String] Path to the remote public key.
 #
 mysshkey() {
     if [ -z "$1" ] ; then
@@ -104,6 +104,8 @@ mysshkey() {
 #
 # @param [String] Remote ssh host in for form of [<user>@]host[:<port>].
 # @param [String] Path to the public key.
+#
+# @todo Test this!!!
 #
 authme() {
     if [ -z $1 ] ; then
