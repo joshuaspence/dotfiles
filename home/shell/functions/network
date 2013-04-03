@@ -9,80 +9,61 @@ down4me() {
     curl -s "http://www.downforeveryoneorjustme.com/$1" | sed '/just you/!d;s/<[^>]*>//g'
 }
 
-myip() {
-    about 'displays your ip address, as seen by the Internet'
-    group 'base'
-    res=$(curl -s checkip.dyndns.org | grep -Eo '[0-9\.]+')
-    echo -e "Your public IP is: ${echo_bold_green} $res ${echo_normal}"
-}
-
 ##
 # Returns the primary IP address of the system.
 #
-whatsmy_primary_ip() {
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
+whats_my_primary_ip() {
     local def_gateway=
     local iface=
     local ip=
 
-    case $(os) in
+    case $(uname -s) in
         Darwin)
             iface=$(netstat -nr | grep ^default | grep -v 'link#' | awk '{print $6}')
-            ip=$(ifconfig $_if | grep '^[[:space:]]*inet ' | awk '{print $2}')
+            ip=$(ifconfig $iface | grep '^[[:space:]]*inet ' | awk '{print $2}')
             ;;
         OpenBSD)
             iface=$(netstat -nr | grep ^default | awk '{print $8}')
-            ip=$(ifconfig $_if | grep '^[[:space:]]*inet ' | awk '{print $2}')
+            ip=$(ifconfig $iface | grep '^[[:space:]]*inet ' | awk '{print $2}')
             ;;
         Linux)
             iface=$(netstat -nr | grep ^0\.0\.0\.0 | awk '{print $8}')
-            ip=$(/sbin/ifconfig $_if | grep '^[[:space:]]*inet ' | awk '{print $2}' | awk -F':' '{print $2}')
+            ip=$(/sbin/ifconfig $iface | grep '^[[:space:]]*inet ' | awk '{print $2}' | awk -F':' '{print $2}')
             ;;
         SunOS)
             def_gateway=$(netstat -nr | grep ^default | awk '{print $2}')
             iface=$(route get $_def_gateway | \ grep '^[ ]*interface:' | awk '{print $2}')
-            ip=$(ifconfig $_if |  awk '/^\t*inet / {print $2}')
+            ip=$(ifconfig $iface |  awk '/^\t*inet / {print $2}')
             ;;
     esac
 
-    if [[ -z $ip || $ip == "" ]]; then
+    if [ -z $ip ]; then
         echo "Could not determine primary IP address" >&2
-        return 10
+        return 1
     else
         echo $ip
+        return 0
     fi
 }
 
 ##
 # Determines the primary hostname of another domain name. Often used to resolve
-# a website url (like `www.example.com') to a server hostname (like
-# `webserver1.domainhosting.com').
+# a website url (like "www.example.com") to a server hostname (like
+# "webserver1.domainhosting.com").
 #
 # @params [String] Domainname to look up.
 #
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
 hostfromdomain() {
-    if command -v dig >/dev/null; then
-        [[ -z "$1" ]] && printf "usage: hostfromdomain <domainname>\n" && return 11
-        dig -x $(dig $1 +short) +short
+    if [ -z $1 ]; then
+        echo "usage: hostfromdomain <domainname>" >&2
+        return 1
     else
-        echo "dig command not available" >&2
-        return 5
+        dig -x $(dig $1 +short) +short
     fi
-}
-
-##
-# Returns the public/internet visible IP address of the system.
-#
-# @link https://twitter.com/#!/mojombo/status/48948402955882496
-#
-whatsmy_public_ip() {
-    curl --silent 'http://jsonip.com/' | json_val '["ip"]'
-}
-
-##
-# Return current external IP address.
-#
-whatismyip() {
-    curl --silent checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'
 }
 
 ##
@@ -118,19 +99,19 @@ mysshkey() {
 
 ##
 # Places a given public ssh key on a remote host for key-based authentication.
-# The host can optionally contain the username (like `jdoe@ssh.example.com')
-# and a non-standard port number (like `ssh.example.com:666').
+# The host can optionally contain the username (like "jdoe@ssh.example.com")
+# and a non-standard port number (like "ssh.example.com:666").
 #
-# @param [String] remote ssh host in for form of [<user>@]host[:<port>]
-# @param [String] public key, using $HOME/.ssh/id_dsa.pub by default
+# @param [String] Remote ssh host in for form of [<user>@]host[:<port>].
+# @param [String] Path to the public key.
 #
 authme() {
-    if [ -z "$1" ] ; then
-        echo "Usage: authme <ssh_host> [<pub_key>]" >&2
-        return $RETURN_INVALID_CALL
+    if [ -z $1 ] ; then
+        echo "Usage: authme <ssh_host> <public_key>" >&2
+        return 1
     fi
 
-    local host="$1" ; shift
+    local host=$1
     if [ -z "$1" ] ; then
         local key="${HOME}/.ssh/id_dsa.pub"
     else

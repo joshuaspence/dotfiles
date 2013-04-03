@@ -22,6 +22,8 @@ box() {
 # @param [String] The keys to access the JSON data. Keys are separated by
 #                 spaces.
 #
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
 json_value() {
     if [ -z $1 ]; then
         echo "Usage: json_value <key1> <key2> ... <keyN>" >&2

@@ -54,7 +54,10 @@ bput() {
         default)  tput setaf 9 ;;
         bdefault) tput setab 9 ;;
         none)     tput sgr0    ;;
-        *)        tput sgr0    ; return 1 ;; # reset
+        *)
+            tput sgr0
+            return 1
+            ;;
     esac
     return 0
 }
