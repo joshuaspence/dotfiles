@@ -1,13 +1,16 @@
 #!/bin/sh
 
 # Use `less` as the default pager.
-export PAGER=less
+if type less >/dev/null 2>&1; then
+    export PAGER=$(which less)
+else
+    echo "Unable to set PAGER environment variable" >&2
+fi
 
-# Less flags.
+# Allow `less` to show color escape sequences.
 export LESS='-R'
 
-# Get color support for `less`.
-export LESS='$LESS --RAW-CONTROL-CHARS'
-
-# Set the Less input preprocessor.
-type lesspipe >/dev/null 2>&1 && eval $(lesspipe)
+# Set the less input preprocessor.
+if type lesspipe >/dev/null 2>&1; then
+    eval $(lesspipe)
+fi

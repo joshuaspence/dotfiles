@@ -39,7 +39,9 @@ export WHITE_BACKGROUND='\[\033[47m\]'
 export NO_COLOR='\[\033[0m\]'
 export NC=$NO_COLOR
 
-# Terminals that we want coloured prompts in
-if [[ -n ${COLORTERM} || $(tput colors) -gt 2 ]]; then
-    PS1_COLOR=1
+# Check for color support.
+if [ -n $COLORTERM ] || [ $(tput colors) -gt 2 ]; then
+    export SHELL_COLOR=1
+else
+    export SHELL_COLOR=0
 fi

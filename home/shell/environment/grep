@@ -1,4 +1,8 @@
 #!/bin/sh
 
-export GREP_COLOR='1;33'
-export GREP_OPTIONS='--color=auto'
+# Check for color support.
+source $HOME/.shell/environment/color
+if [ $SHELL_COLOR -eq 1 ]; then
+    export GREP_COLOR='1;33'
+    export GREP_OPTIONS='--color=auto'
+fi

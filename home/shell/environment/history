@@ -1,8 +1,4 @@
-#!/bin/bash
-
-# The history list is appended to the history file when the shell exits, rather
-# than overwriting the history file.
-shopt -s histappend
+#!/bin/sh
 
 # Entries beginning with space aren't added into history, and duplicate entries
 # will be erased (leaving the most recent entry).
