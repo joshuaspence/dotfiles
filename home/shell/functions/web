@@ -1,9 +1,49 @@
 #!/bin/sh
 
 ##
+# Create a data URL from an image. This also works for other file types too, if
+# you tweak the Content-Type afterwards.
+#
+# @param [String] The path of the image file.
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+#
+dataurl() {
+    echo "data:image/${1##*.};base64,$(openssl base64 -in "$1")" | tr -d '\n'
+}
+
+# All the dig info
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+#
+function digga() {
+    dig +nocmd "$1" any +multiline +noall +answer
+}
+
+##
+# Checks whether a website is down for you, or everybody.
+#
+# @param [String] The URL.
+#
+down4me() {
+    curl -s "http://www.downforeveryoneorjustme.com/$1" | sed '/just you/!d;s/<[^>]*>//g'
+}
+
+##
+# Gzip-enabled `curl`.
+#
+# @param TODO
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+#
+function gurl() {
+    curl -sH "Accept-Encoding: gzip" "$@" | gunzip
+}
+
+##
 # Starts a web server using PHP. Requires PHP >= 5.4.
 #
-# @param [optional, Integer] bind port number, default 8000
+# @param [optional, Integer] Bind port number, default 8000.
 #
 php-webserver() {
     php -S localhost:${1:-8000}
@@ -12,10 +52,37 @@ php-webserver() {
 ##
 # Starts a web server using Python.
 #
-# @param [optional, Integer] bind port number, default 8000
+# @param [optional, Integer] Bind port number, default 8000.
 #
 # @link https://github.com/fnichol/bashrc/blob/master/bashrc
 #
 python-webserver() {
     python -m SimpleHTTPServer ${1:-8000}
+}
+
+##
+# TODO
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases
+#
+sniff() {
+    local iface=$1
+    if [ -z $iface ]; then
+        error "No interface specified" >&2
+        return 1
+    fi
+    sudo ngrep -d $iface -t '^(GET|POST) ' 'tcp and port 80'
+}
+
+##
+# TODO
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases#L76
+#
+httpdump() {
+    local iface
+    if [ -n $1 ]; then
+        iface="-i $1"
+    fi
+    sudo tcpdump $iface -n -s 0 -w - | grep -a -o -E "Host\: .*|GET \/.*"
 }
