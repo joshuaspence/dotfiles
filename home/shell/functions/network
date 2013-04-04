@@ -1,12 +1,31 @@
 #!/bin/sh
 
 ##
-# Checks whether a website is down for you, or everybody.
+# TODO
 #
-# @param [String] The URL.
-#
-down4me() {
-    curl -s "http://www.downforeveryoneorjustme.com/$1" | sed '/just you/!d;s/<[^>]*>//g'
+iface() {
+    case $(uname -s) in
+        Darwin)
+            netstat -nr | grep ^default | grep -v 'link#' | awk '{print $6}'
+            return 0
+            ;;
+        OpenBSD)
+            netstat -nr | grep ^default | awk '{print $8}'
+            return 0
+            ;;
+        Linux)
+            netstat -nr | grep ^0\.0\.0\.0 | awk '{print $8}'
+            return 0
+            ;;
+        SunOS)
+            local def_gateway=$(netstat -nr | grep ^default | awk '{print $2}')
+            route get $def_gateway | \ grep '^[ ]*interface:' | awk '{print $2}'
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
 
 ##
@@ -15,37 +34,27 @@ down4me() {
 # @link https://github.com/fnichol/bashrc/blob/master/bashrc
 #
 whats_my_primary_ip() {
-    local def_gateway=
-    local iface=
-    local ip=
-
     case $(uname -s) in
         Darwin)
-            iface=$(netstat -nr | grep ^default | grep -v 'link#' | awk '{print $6}')
-            ip=$(ifconfig $iface | grep '^[[:space:]]*inet ' | awk '{print $2}')
+            ifconfig $(iface) | grep '^[[:space:]]*inet ' | awk '{print $2}'
+            return 0
             ;;
         OpenBSD)
-            iface=$(netstat -nr | grep ^default | awk '{print $8}')
-            ip=$(ifconfig $iface | grep '^[[:space:]]*inet ' | awk '{print $2}')
+            ifconfig $(iface) | grep '^[[:space:]]*inet ' | awk '{print $2}'
+            return 0
             ;;
         Linux)
-            iface=$(netstat -nr | grep ^0\.0\.0\.0 | awk '{print $8}')
-            ip=$(/sbin/ifconfig $iface | grep '^[[:space:]]*inet ' | awk '{print $2}' | awk -F':' '{print $2}')
+            /sbin/ifconfig $(iface) | grep '^[[:space:]]*inet ' | awk '{print $2}' | awk -F':' '{print $2}'
+            return 0
             ;;
         SunOS)
-            def_gateway=$(netstat -nr | grep ^default | awk '{print $2}')
-            iface=$(route get $_def_gateway | \ grep '^[ ]*interface:' | awk '{print $2}')
-            ip=$(ifconfig $iface |  awk '/^\t*inet / {print $2}')
+            ifconfig $(iface) | awk '/^\t*inet / {print $2}'
+            return 0
             ;;
+        *)
+            echo "Could not determine primary IP address" >&2
+            return 1
     esac
-
-    if [ -z $ip ]; then
-        echo "Could not determine primary IP address" >&2
-        return 1
-    else
-        echo $ip
-        return 0
-    fi
 }
 
 ##
