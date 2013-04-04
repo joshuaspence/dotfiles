@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ -n $SSH_TTY ]; then
+    export BROWSER=$(which google-chrome)
+else
+    export BROWSER=$(which lynx)
+fi
