@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# Enable programmable completion features (you don't need to enable this, if
-# it's already enabled in /etc/bash.bashrc and /etc/profile sources
-# /etc/bash.bashrc).
-if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
-    [ -e ${HOME}/.rcfiles.debug ] && echo "Sourcing /etc/bash_completion..." >&2
-    source /etc/bash_completion
-fi

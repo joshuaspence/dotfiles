@@ -1,3 +1,6 @@
+#!/bin/bash
+
+# We need the path functions!
 source $HOME/.shell/functions/source
 
 # Pull in any system defaults first so they can be overridden later.

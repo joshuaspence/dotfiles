@@ -74,22 +74,19 @@ hostfromdomain() {
 # @param [String] Remote ssh host in for form of [<user>@]host[:<port>].
 # @param [String] Path to the remote public key.
 #
+# @todo Test this!!!
+#
 mysshkey() {
-    if [ -z "$1" ] ; then
-        echo "Usage: mysshkey <ssh_host> [<pub_key>]" >&2
-        return $RETURN_INVALID_CALL
+    if [ -z $1 ] ; then
+        echo "Usage: mysshkey <ssh_host> <pub_key>" >&2
+        return 1
     fi
 
-    local host="$1" ; shift
-    if [ -z "$1" ] ; then
-        local key="id_dsa.pub"
-    else
-        local key="$1"
-    fi
-    shift
+    local host=$1
+    local key=$2
 
-    if echo "$host" | egrep -q ':' ; then
-        local ssh_cmd=$(echo $host | awk -F':' '{print \"ssh -p \" $2 \" \" $1}')
+    if echo $host | egrep -q ':'; then
+        local ssh_cmd="$(echo $host | awk -F':' '{print \"ssh -p \" $2 \" \" $1}')"
     else
         local ssh_cmd="ssh $host"
     fi
@@ -114,22 +111,19 @@ authme() {
     fi
 
     local host=$1
-    if [ -z "$1" ] ; then
-        local key="${HOME}/.ssh/id_dsa.pub"
-    else
-        local key="$1"
+    local key=$2
+
+    if [ ! -f $key ]; then
+        echo "SSH key: $key does not exist."
+        return 2
     fi
-    shift
 
-    [[ ! -f "$key" ]] && echo "SSH key: $key does not exist." && return 11
-
-    if echo "$host" | egrep -q ':' ; then
+    if echo $host | egrep -q ':'; then
         local ssh_cmd="$(echo $host | awk -F':' '{print \"ssh -p \" $2 \" \" $1}')"
     else
         local ssh_cmd="ssh $host"
     fi
 
-    $ssh_cmd '(if [ ! -d "${HOME}/.ssh" ]; then \
-        mkdir -m 0700 -p ${HOME}/.ssh; fi; \
-        cat - >> .ssh/authorized_keys)' < $key
+    $ssh_cmd '([ -d $HOME/.ssh ] || mkdir -m 0700 -p $HOME/.ssh; \
+        cat - >> $HOME/.ssh/authorized_keys)' < $key
 }

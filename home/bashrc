@@ -4,9 +4,9 @@
 [ -n $BASH_VERSION ] || return
 
 # Skip the rest if this is not an interactive shell.
-if [[ -z $PS1 && "$-" != "*i*" ]]; then return; fi
+if [ -z $PS1 ] && [ "$-" != "*i*" ]; then return; fi
 
-source ${HOME}/.shell/functions/source
+source $HOME/.shell/functions/source
 
 if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     source_r /etc/bash_completion
@@ -22,5 +22,3 @@ if [ -n $PS1 ]; then
 fi
 
 source_r $HOME/.shell/functions
-
-bash_prompt

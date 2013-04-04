@@ -3,7 +3,7 @@
 ##
 # Starts a web server using PHP. Requires PHP >= 5.4.
 #
-# @param [optional, Integer] bind port number, default 8000
+# @param [optional, Integer] Bind port number, default 8000.
 #
 php-webserver() {
     php -S localhost:${1:-8000}
@@ -12,7 +12,7 @@ php-webserver() {
 ##
 # Starts a web server using Python.
 #
-# @param [optional, Integer] bind port number, default 8000
+# @param [optional, Integer] Bind port number, default 8000.
 #
 # @link https://github.com/fnichol/bashrc/blob/master/bashrc
 #

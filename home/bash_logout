@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # When leaving the console clear the screen to increase privacy.
 # First checks that shell level is equal to 1.
