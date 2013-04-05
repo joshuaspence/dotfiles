@@ -3,14 +3,14 @@
 ##
 # The flavor of linux that we are using.
 #
-linux_flavor() {
+linux-flavor() {
     if [ -f /etc/redhat-release ]; then
         awk '{print $1}' /etc/redhat-release
-        return 0
     elif [ -f /etc/lsb-release ]; then
         head -n 1 /etc/lsb-release | awk -F= '{print $2}'
-        return 0
     else
+        echo "Unable to determine Linux flavor" >&2
         return 1
     fi
+    return 0
 }

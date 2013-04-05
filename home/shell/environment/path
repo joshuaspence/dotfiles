@@ -5,11 +5,11 @@ source $HOME/.shell/functions/path
 
 # ~/bin should be in the front of PATH if it exists.
 if [ -d $HOME/bin ]; then
-    push_path PATH $HOME/bin
+    prepend-path PATH $HOME/bin
 fi
 
 # ~/man should be in the front of MANPATH if it exists.
 if [ -d $HOME/man ]; then
     export MANPATH=$(manpath)
-    push_path MANPATH $HOME/man
+    prepend-path MANPATH $HOME/man
 fi

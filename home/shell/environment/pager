@@ -1,11 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 
 # Use `less` as the default pager.
 if type less >/dev/null 2>&1; then
-    export PAGER=$(which less)
+    PAGER=less
+elif type more >/dev/null 2>&1; then
+    PAGER=more
 else
-    echo "Unable to set PAGER environment variable" >&2
+    echo "No command set for PAGER environment variable" >&2
 fi
+export PAGER
 
 # Allow `less` to show color escape sequences.
 export LESS='-R'

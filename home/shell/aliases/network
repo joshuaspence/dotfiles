@@ -1,13 +1,44 @@
 #!/bin/sh
 
+##
 # Prints IP addresses.
-alias ips="ifconfig | grep 'inet ' | awk '{print \$2}'"
+#
+# @link @todo
+#
+alias ips='ifconfig | grep "inet " | awk "{print \$2}"'
 
+##
 # Get my public IP address.
+#
 alias whatismyip=whatismyip1
-alias whatismyip1='dig +short myip.opendns.com @resolver1.opendns.com'
-alias whatismyip2="curl -s checkip.dyndns.org | grep -Eo '[0-9\.]+'"
-alias whatismyip3='curl -s jsonip.com'
 
+##
+# Get my public IP address.
+#
+# @link @todo
+#
+alias whatismyip1='dig +short myip.opendns.com @resolver1.opendns.com'
+
+##
+# Get my public IP address.
+#
+# @link @todo
+#
+alias whatismyip2='curl -s checkip.dyndns.org |
+    grep --color=none -Eo "[0-9]{1,4}(.[0-9]{1,4}){3}"'
+
+##
+# Get my public IP address.
+#
+# @link @todo
+#
+alias whatismyip3='curl -s jsonip.com |
+    grep --color=none -Eo '\''"ip":"[0-9]{1,4}(.[0-9]{1,4}){3}"'\'' |
+    grep --color=none -Eo '\''[0-9]{1,4}(.[0-9]{1,4}){3}'\'''
+
+##
 # List hosts defined in ~/.ssh/config.
-alias sshlist="awk '\$1 ~ /Host\$/ {print \$2}' \$HOME/.ssh/config"
+#
+# @link @todo
+#
+alias sshlist='awk '\''$1 ~ /Host$/ && $2 != "*" {print $2}'\'' $HOME/.ssh/config'

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # The `dircolors` command provides color setup for `ls`.
 if type dircolors >/dev/null 2>&1; then

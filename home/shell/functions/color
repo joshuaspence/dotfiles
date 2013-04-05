@@ -1,53 +1,60 @@
 #!/bin/sh
 
-##
-# Prints terminal codes for shell colors.
-#
-# @param [String] Terminal code keyword (usually a colour).
-#
-# @link http://github.com/fnichol/bashrc/blob/master/bashrc
-# @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
-#
-colorize() {
-    local capname=setaf # foreground
+# Check for color support.
+source $HOME/.shell/environment/color
 
-    case $1 in
-        # Emphasized (bolded) colors.
-        b-* | bold-* | e-* | emph-*)
-            tput bold
-            ;;
+if [ -n $HAS_COLOR ]; then
+    ##
+    # Prints terminal codes for shell colors.
+    #
+    # @param [String] Terminal code keyword (usually a colour).
+    #
+    # @link http://github.com/fnichol/bashrc/blob/master/bashrc
+    # @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
+    #
+    colorize() {
+        local capname=setaf # foreground
 
-        # Underlined colors.
-        u-* | underline-*)
-            set smul
-            unset rmul
-            ;;
+        case $1 in
+            # Emphasized (bolded) colors.
+            b-* | bold-* | e-* | emph-*)
+                tput bold
+                ;;
 
-        # Background colours.
-        bg-* | background-*)
-            capname=setab # background
-            ;;
-    esac
+            # Underlined colors.
+            u-* | underline-*)
+                set smul
+                unset rmul
+                ;;
 
-    case $1 in
-        # regular colours
-        black   | *-black  ) tput $capname 0 ;;
-        red     | *-red    ) tput $capname 1 ;;
-        green   | *-green  ) tput $capname 2 ;;
-        yellow  | *-yellow ) tput $capname 3 ;;
-        blue    | *-blue   ) tput $capname 4 ;;
-        magenta | *-magenta) tput $capname 5 ;;
-        cyan    | *-cyan   ) tput $capname 6 ;;
-        white   | *-white  ) tput $capname 7 ;;
+            # Background colours.
+            bg-* | background-*)
+                capname=setab # background
+                ;;
+        esac
 
-        # Defaults
-        default | *-default) tput $capname 9 ;;
-        none)                tput sgr0       ;;
+        case $1 in
+            # regular colours
+            black   | *-black  ) tput $capname 0;;
+            red     | *-red    ) tput $capname 1;;
+            green   | *-green  ) tput $capname 2;;
+            yellow  | *-yellow ) tput $capname 3;;
+            blue    | *-blue   ) tput $capname 4;;
+            magenta | *-magenta) tput $capname 5;;
+            cyan    | *-cyan   ) tput $capname 6;;
+            white   | *-white  ) tput $capname 7;;
 
-        *)
-            tput sgr0
-            return 1
-            ;;
-    esac
-    return 0
-}
+            # Defaults
+            default | *-default) tput $capname 9;;
+            none)                tput sgr0      ;;
+
+            *)                   tput sgr0; return 1;;
+        esac
+        return 0
+    }
+else
+    # A dummy function.
+    colorize() {
+        true
+    }
+fi

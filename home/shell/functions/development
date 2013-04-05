@@ -1,9 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 ##
-# Count code lines in some directory.
+# Count code lines in the current directory.
 #
-# @param [String] The file extensions to count.
+# @param [List] The file extension(s) to count.
+# @link @todo
 #
 loc() {
     local total=0
@@ -16,9 +17,9 @@ loc() {
         fi
         lines=$(find . -type f -name "*$ext" | xargs cat | wc -l)
         lines=${lines// /}
-        total=$(( $total + $lines ))
-        echo "Lines of code for $ext: $lines"
+        total=$(($total + $lines))
+        echo "Lines of code for $(colorize bold-green)$ext$(colorize-none): $(colorize cyan)$lines$(colorize none)"
     done
-    echo "Total lines of code: $total"
+    echo "Total lines of code: $(colorize bold-yellow)$total$(colorize none)"
     return 0
 }

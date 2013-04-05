@@ -1,7 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-if [ -n $SSH_TTY ]; then
-    export BROWSER=$(which google-chrome)
+# Check if this is an SSH connection.
+source $HOME/.shell/environment/ssh
+
+if [ -z $IS_SSH ] && type google-chrome >/dev/null 2>&1; then
+    BROWSER=google-chrome
+elif [ -z $IS_SSH ] && type firefox >/dev/null 2>&1; then
+    BROWSER=firefox
+elif type lynx >/dev/null 2>&1; then
+    BROWSER=lynx
 else
-    export BROWSER=$(which lynx)
+    echo "No command set for BROWSER environment variable" >&2
 fi
+export BROWSER

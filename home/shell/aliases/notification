@@ -1,9 +1,16 @@
 #!/bin/sh
 
+##
 # Add an `alert` alias for long running commands. Use like so:
 #   `sleep 10; alert`
 # Another example:
 #   `( sleep 5 && alert "slept OK" || alert "sleep failed" ) &`
-alias alert='notify-send --urgency=low
--i $([ $? = 0 ] && echo terminal || echo error)
-"$(history | tail -n1 | sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+#
+# @param [String] The alert text.
+# @link @todo
+#
+# @todo Test this!!!
+#
+alias alert='notify-send --urgency=low \
+    -i $([ $? = 0 ] && echo terminal || echo error) \
+    "$(history | tail -n1 | sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'

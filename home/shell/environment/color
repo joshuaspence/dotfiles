@@ -2,7 +2,8 @@
 
 # Check for color support.
 if [ -n $COLORTERM ] || [ $(tput colors) -gt 2 ]; then
-    export SHELL_COLOR=1
-else
-    export SHELL_COLOR=0
+    export HAS_COLOR=1
 fi
+
+# The colorize function.
+source $HOME/.shell/functions/color

@@ -2,7 +2,8 @@
 
 # Check for color support.
 source $HOME/.shell/environment/color
-if [ $SHELL_COLOR -eq 1 ]; then
+
+if [ -n $HAS_COLOR ]; then
     export GREP_COLOR='1;33'
     export GREP_OPTIONS='--color=auto'
 fi

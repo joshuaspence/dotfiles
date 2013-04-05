@@ -8,7 +8,7 @@
 #
 # @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
 #
-dataurl() {
+image_to_base64() {
     echo "data:image/${1##*.};base64,$(openssl base64 -in "$1")" | tr -d '\n'
 }
 
@@ -77,7 +77,7 @@ sniff() {
 ##
 # TODO
 #
-# @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases#L76
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases
 #
 httpdump() {
     local iface

@@ -1,16 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 
+# Check if this is an SSH connection.
 source $HOME/.shell/environment/ssh
-if [ $IS_SSH -eq 0 ] && type subl >/dev/null 2>&1 then
-    export EDITOR=$(which subl)
+
+if [ -z $IS_SSH ] && type subl >/dev/null 2>&1; then
+    EDITOR=subl
+elif [ -z $IS_SSH ] && type sublime-text-2 >/dev/null 2>&1; then
+    EDITOR=sublime-text-2
 elif type vim >/dev/null 2>&1
-    export EDITOR=$(which vim)
+    export EDITOR=vim
 else
     echo "Unable to set EDITOR environment variable" >&2
 fi
+export EDITOR
 
 # The `less` pager supports editing the file being viewed by pressing "v".
 export LESSEDIT=$EDITOR
 
-# VISUAL is basically the same as EDITOR.
+# "VISUAL" is basically the same as "EDITOR".
 export VISUAL=$EDITOR
