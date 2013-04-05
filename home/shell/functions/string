@@ -38,3 +38,43 @@ json_value() {
 
     python -c 'import sys; import json; j = json.loads(sys.stdin.read()); print j'$keys';'
 }
+
+# Syntax-highlight JSON strings or files
+function json() {
+    if [ -p /dev/stdin ]; then
+        # piping, e.g. `echo '{"foo":42}' | json`
+        python -mjson.tool | pygmentize -l javascript
+    else
+        # e.g. `json '{"foo":42}'`
+        python -mjson.tool <<< "$*" | pygmentize -l javascript
+    fi
+}
+
+##
+# Escape UTF-8 characters into their 3-byte format
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+escape() {
+    printf "\\\x%s" $(printf "$@" | xxd -p -c1 -u)
+    echo # newline
+}
+
+##
+# Decode \x{ABCD}-style Unicode escape sequences
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+#
+unidecode() {
+    perl -e "binmode(STDOUT, ':utf8'); print \"$@\""
+    echo # newline
+}
+
+##
+# Get a character's Unicode code point
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+#
+function codepoint() {
+    perl -e "use utf8; print sprintf('U+%04X', ord(\"$@\"))"
+    echo # newline
+}
