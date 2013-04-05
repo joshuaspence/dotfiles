@@ -81,9 +81,7 @@ set visible-stats on
 "\e[4~": end-of-line                # End
 "\eOF": end-of-line                 # End
 "\e[5~": beginning-of-history       # PgUp
-#"\e[5~": history-search-backward   # PgUp
 "\e[6~": end-of-history             # PgDown
-#"\e[6~": history-search-forward    # PgDown
 
 "\e[A": history-search-backward     # Up
 "\eOA": history-search-backward     # Up

@@ -6,4 +6,4 @@ if [ -n $COLORTERM ] || [ $(tput colors) -gt 2 ]; then
 fi
 
 # The colorize function.
-source $HOME/.shell/functions/color
+source "$HOME/.shell/functions/color"

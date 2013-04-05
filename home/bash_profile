@@ -1,26 +1,11 @@
 #!/bin/bash
 
 # We need the path functions!
-source $HOME/.shell/functions/source
+source "$HOME/.shell/functions/source"
 
 # Pull in any system defaults first so they can be overridden later.
-source_r /etc/profile
+[ -f /etc/profile ] && source /etc/profile
 
-# We run the environment settings for all shells to ensure it's always set up.
-source_r $HOME/.shell/environment
-
-source_r $HOME/.shell/aliases
-
-source_r $HOME/.shell/functions
-
-# An interactive shell starting bash_profile must be a login shell (man bash).
-# We run the login script and the interactive setup.
-if [ -n $PS1 ]; then
-    source_r ~/.shell/login
-    source_r ~/.shell/interactive
-fi
-
-# If running bash, source bashrc.
-case $- in
-    *i*) source_r $HOME/.bashrc ;;
-esac
+# If running bash, source bashrc. According to `man bash`, "$-" includes "i" if
+# bash is interactive.
+[[ $- == *i* ]] && [ -e "$HOME/.bashrc" ] && source_r "$HOME/.bashrc"

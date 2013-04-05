@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Check if this is an SSH connection.
-source $HOME/.shell/environment/ssh
+source "$HOME/.shell/environment/ssh"
 
-if [ -z $IS_SSH ] && type subl >/dev/null 2>&1; then
+if [ -z $IS_SSH ] && command -v subl; then
     EDITOR=subl
-elif [ -z $IS_SSH ] && type sublime-text-2 >/dev/null 2>&1; then
+elif [ -z $IS_SSH ] && command -v sublime-text-2; then
     EDITOR=sublime-text-2
-elif type vim >/dev/null 2>&1
-    export EDITOR=vim
+elif command -v vim; then
+    EDITOR=vim
 else
     echo "Unable to set EDITOR environment variable" >&2
 fi

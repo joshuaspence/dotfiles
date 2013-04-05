@@ -1,24 +1,15 @@
 #!/bin/bash
 
-# Skip this config if we aren't in bash.
-[ -n $BASH_VERSION ] || return
-
-# Skip the rest if this is not an interactive shell.
-if [ -z $PS1 ] && [ "$-" != "*i*" ]; then return; fi
-
-source $HOME/.shell/functions/source
-
-if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
-    source_r /etc/bash_completion
-fi
+# Set up command aliases.
+[ -e "$HOME/.shell/aliases" ] && source_r "$HOME/.shell/aliases"
 
 # We run the environment settings for all shells to ensure it's always set up.
-source_r $HOME/.shell/environment
+[ -e "$HOME/.shell/environment" ] && source_r "$HOME/.shell/environment"
 
-# An interactive shell starting bashrc is not a login shell, just run
-# interactive setup.
-if [ -n $PS1 ]; then
-    source_r $HOME/.shell/interactive
+# Import user-defined functions.
+[ -e "$HOME/.shell/functions" ] && source_r "$HOME/.shell/functions"
+
+# If PS1 is defined then the shell should be interactive.
+if [ -n "$PS1" ]; then
+    [ -e "$HOME/.shell/completion" ] && source_r "$HOME/.shell/completion"
 fi
-
-source_r $HOME/.shell/functions

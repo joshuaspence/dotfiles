@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Check for color support.
-source $HOME/.shell/environment/color
+source "$HOME/.shell/environment/color"
 
 if [ -n $HAS_COLOR ]; then
     # `less` colors for `man` pages.

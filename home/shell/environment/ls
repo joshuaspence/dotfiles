@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
 # The `dircolors` command provides color setup for `ls`.
-if type dircolors >/dev/null 2>&1; then
+if command -v dircolors; then
     eval $(dircolors)
 fi

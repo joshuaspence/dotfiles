@@ -1,13 +1,13 @@
-#!/bin/bash
+#!/bin/sh
 
 # Check if this is an SSH connection.
-source $HOME/.shell/environment/ssh
+source "$HOME/.shell/environment/ssh"
 
-if [ -z $IS_SSH ] && type google-chrome >/dev/null 2>&1; then
+if [ -z $IS_SSH ] && command -v google-chrome; then
     BROWSER=google-chrome
-elif [ -z $IS_SSH ] && type firefox >/dev/null 2>&1; then
+elif [ -z $IS_SSH ] && command -v firefox; then
     BROWSER=firefox
-elif type lynx >/dev/null 2>&1; then
+elif command -v lynx; then
     BROWSER=lynx
 else
     echo "No command set for BROWSER environment variable" >&2
