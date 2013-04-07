@@ -1,2 +1,17 @@
-export GIT_EDITOR=$EDITOR
-export GIT_SSH=$(command -v ssh)
+# Unset environment variables.
+unset GIT_EDITOR
+unset GIT_SSH
+
+# Make sure `git` is installed.
+command -v git >/dev/null || return
+
+# Source prerequisite environment variables.
+source "$HOME/.shell/environment/editor"
+
+# Set environment variables.
+GIT_EDITOR=$EDITOR
+GIT_SSH=$(command -v ssh)
+
+# Export environment variables.
+export GIT_EDITOR
+export GIT_SSH

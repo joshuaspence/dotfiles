@@ -1,10 +1,13 @@
-#!/bin/sh
+# Unset environment variables.
+unset LS_COLORS
+
+# Make sure `ls` is installed.
+command -v ls >/dev/null || return
 
 # The `dircolors` command provides color setup for `ls`.
-if command -v dircolors; then
-    eval $(dircolors)
+if command -v dircolors >/dev/null; then
+    eval $(dircolors -b)
 fi
 
-if [ $SHELL = 'zsh' ]; then
-    export DISABLE_LS_COLORS='false'
-fi
+# Export environment variables.
+export LS_COLORS

@@ -1,4 +1,5 @@
-#!/bin/sh
+# Unset environment variables.
+unset MANPATH
 
 # We need the path functions!
 source "$HOME/.shell/functions/path"
@@ -13,3 +14,7 @@ if [ -d "$HOME/man" ]; then
     MANPATH="$(manpath)"
     prepend-path MANPATH "$HOME/man"
 fi
+
+# Export environment variables.
+export PATH
+export MANPATH

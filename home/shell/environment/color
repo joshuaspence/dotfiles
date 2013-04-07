@@ -1,9 +1,11 @@
-#!/bin/sh
+# Unset environment variables.
+unset HAS_COLOR
 
-# Check for color support.
-if [ -n $COLORTERM ] || [ $(tput colors) -gt 2 ]; then
-    export HAS_COLOR=1
+if [ $COLORTERM ] || [ $(tput colors) -gt 2 ]; then
+    HAS_COLOR='true'
+else
+	HAS_COLOR='false'
 fi
 
-# The colorize function.
-source "$HOME/.shell/functions/color"
+# Export environment variables.
+export HAS_COLOR

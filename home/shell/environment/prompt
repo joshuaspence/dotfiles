@@ -1,10 +1,21 @@
-#!/bin/sh
+# Unset environment variables.
+unset PS1
+unset PS2
+unset PS3
+unset PS4
 
-export PS1=
-export PS2='> '
-export PS3='#? '
-export PS4='+'
+# Set environment variables.
+PS1=
+PS2='> '
+PS3='#? '
+PS4='+'
 
 xtitle() {
     echo -ne "\033]0;$1\007"
 }
+
+# Export environment variables.
+export PS1
+export PS2
+export PS3
+export PS4

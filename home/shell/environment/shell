@@ -1,14 +1,27 @@
-#!/bin/sh
+# Unset environment variables.
+unset SHELL
+unset IS_INTERACTIVE
+unset IS_REMOTE
 
 # Store the name of the shell.
-export SHELL=$0
+SHELL=$0
 
-# Check if this is an interactive shell.
-if [[ $- == *i* ]]; then
-    export IS_INTERACTIVE=1
+# Check if this is an interactive shell. The condition below should be
+# equivalent to `[[ $- =~ *i* ]]`, but compatible with a wider range of shells.
+if $(echo $- | grep -q 'i'); then
+    IS_INTERACTIVE='true'
+else
+	IS_INTERACTIVE='false'
 fi
 
-# Check is this is an SSH connection.
-if [ -n $SSH_TTY ] || [ -n $SSH_CLIENT ] || [ -n $SSH_CONNECTION ]; then
-    export IS_REMOTE=1
+# Check is this is a remote (SSH) connection.
+if [ $SSH_TTY ] || [ $SSH_CLIENT ] || [ $SSH_CONNECTION ]; then
+    IS_REMOTE='true'
+else
+	IS_REMOTE='false'
 fi
+
+# Export environment variables.
+export SHELL
+export IS_INTERACTIVE
+export IS_REMOTE

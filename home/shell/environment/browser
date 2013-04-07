@@ -1,15 +1,18 @@
-#!/bin/sh
+# Unset environment variables.
+unset BROWSER
 
-# Check if this is an SSH connection.
-source "$HOME/.shell/environment/ssh"
+# Source prerequisite environment variables.
+source "$HOME/.shell/environment/shell"
 
-if [ -z $IS_SSH ] && command -v google-chrome; then
-    BROWSER=google-chrome
-elif [ -z $IS_SSH ] && command -v firefox; then
-    BROWSER=firefox
-elif command -v lynx; then
-    BROWSER=lynx
+if ! $IS_REMOTE && command -v google-chrome >/dev/null; then
+    BROWSER=$(command -v google-chrome)
+elif ! $IS_REMOTE && command -v firefox >/dev/null; then
+    BROWSER=$(command -v firefox)
+elif command -v lynx >/dev/null; then
+    BROWSER=$(command -v lynx)
 else
     echo "No command set for BROWSER environment variable" >&2
 fi
+
+# Export environment variables.
 export BROWSER

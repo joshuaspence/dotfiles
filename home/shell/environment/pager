@@ -1,17 +1,36 @@
+# Unset environment variables.
+unset PAGER
+unset LESS
+unset LESSEDIT
+unset LESSOPEN
+unset LESSCLOSE
+
+# Source prerequisite environment variables.
+source "$HOME/.shell/environment/editor"
+
 # Use `less` as the default pager.
-if command -v less; then
-    PAGER=$(command -v less
-elif command -v more; then
-    PAGER=more
+if command -v less >/dev/null; then
+    PAGER=$(command -v less)
+elif command -v more >/dev/null; then
+    PAGER=$(command -v more)
 else
     echo "No command set for PAGER environment variable" >&2
 fi
-export PAGER
 
 # Allow `less` to show color escape sequences.
-export LESS='-R'
+LESS='-R'
+
+# The `less` pager supports editing the file being viewed by pressing "v".
+LESSEDIT=$EDITOR
 
 # Set the less input preprocessor.
-if command -v lesspipe; then
+if command -v lesspipe >/dev/null; then
     eval $(lesspipe)
 fi
+
+# Export environment variables.
+export PAGER
+export LESS
+export LESSEDIT
+export LESSOPEN
+export LESSCLOSE

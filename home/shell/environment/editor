@@ -1,21 +1,25 @@
-#!/bin/bash
+# Unset environment variables.
+unset EDITOR
+unset VISUAL
 
-# Check if this is an SSH connection.
-source "$HOME/.shell/environment/ssh"
+# Source prerequisite environment variables.
+source "$HOME/.shell/environment/shell"
 
-if [ -z $IS_SSH ] && command -v subl; then
-    EDITOR=subl
-elif [ -z $IS_SSH ] && command -v sublime-text-2; then
-    EDITOR=sublime-text-2
-elif command -v vim; then
-    EDITOR=vim
+if ! $IS_REMOTE && command -v subl >/dev/null; then
+    EDITOR=$(command -v subl)
+elif ! $IS_REMOTE && command -v sublime-text-2 >/dev/null; then
+    EDITOR=$(command -v sublime-text-2)
+elif command -v vim >/dev/null; then
+    EDITOR=$(command -v vim)
+elif command -v vi >/dev/null; then
+	EDITOR=$(command -v vi)
 else
-    echo "Unable to set EDITOR environment variable" >&2
+    echo "No command set for EDITOR environment variable" >&2
 fi
-export EDITOR
-
-# The `less` pager supports editing the file being viewed by pressing "v".
-export LESSEDIT=$EDITOR
 
 # "VISUAL" is basically the same as "EDITOR".
-export VISUAL=$EDITOR
+VISUAL=$EDITOR
+
+# Export environment variables.
+export EDITOR
+export VISUAL

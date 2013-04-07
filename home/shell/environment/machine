@@ -1,1 +1,8 @@
-export MACHINE_NAME=$(uname -n)
+# Unset environment variables.
+unset MACHINE_NAME
+
+# Set environment variables.
+MACHINE_NAME=$(uname -n)
+
+# Export environment variables.
+export MACHINE_NAME
