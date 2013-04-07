@@ -1,0 +1,10 @@
+# Don't overwrite alias.
+command -v whatismyip2 >/dev/null && return
+
+##
+# Get my public IP address.
+#
+# @link @todo
+#
+alias whatismyip2='curl -s checkip.dyndns.org |
+    grep --color=none -Eo "[0-9]{1,4}(.[0-9]{1,4}){3}"'

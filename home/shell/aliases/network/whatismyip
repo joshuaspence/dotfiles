@@ -1,0 +1,7 @@
+# Don't overwrite alias.
+command -v whatismyip >/dev/null && return
+
+##
+# Get my public IP address.
+#
+alias whatismyip=whatismyip1

@@ -1,0 +1,11 @@
+# Don't overwrite alias.
+command -v mem_hogs >/dev/null && return
+
+##
+# Display the processes that are using the most memory.
+#
+# @link @todo
+#
+alias mem_hogs='ps -e -o %mem,pid,ppid,user,cmd |
+    awk '\''NR == 1; NR > 1 {print $0 | "sort -nr"}'\'' |
+    head'

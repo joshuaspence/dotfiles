@@ -1,0 +1,9 @@
+# Don't overwrite alias.
+command -v compute >/dev/null && return
+
+##
+# Outputs random hexadecimal stuff that makes the screen look busy.
+#
+# @link @todo
+#
+alias compute="cat /dev/urandom | hexdump -C | grep --color=auto 'ca fe'"

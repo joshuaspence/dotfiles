@@ -1,0 +1,9 @@
+# Don't overwrite alias.
+command -v .. >/dev/null && return
+
+##
+# Easier navigation.
+#
+# @link https://github.com/mathiasbynens/dotfiles/blob/master/.aliases
+#
+alias ..='cd ..'

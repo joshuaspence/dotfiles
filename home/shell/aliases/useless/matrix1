@@ -1,0 +1,26 @@
+# Don't overwrite alias.
+command -v matrix1 >/dev/null && return
+
+##
+# Cool "The Matrix" type screens.
+#
+# @link @todo
+#
+alias matrix1='(echo -e "\e[32m"
+    while true; do
+        for i in $(seq 1 $(($(tput cols)/5))); do
+            r=$(($RANDOM % 2))
+            if [ $(($RANDOM % 5)) == 1 ]; then
+                if [ $(($RANDOM % 4)) == 1 ]; then
+                    v+="\e[1m $r   "
+                else
+                    v+="\e[2m $r   "
+                fi
+            else
+                v+="     "
+            fi
+        done
+        echo -e "$v"
+        unset i
+        unset v
+    done)'

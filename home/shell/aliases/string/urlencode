@@ -1,0 +1,14 @@
+# Don't overwrite alias.
+command -v urlencode >/dev/null && return
+
+##
+# URL-encode a string.
+#
+# @param [String] The URL to be encoded.
+#
+# @link https://github.com/mathiasbynens/dotfiles/blob/master/.aliases
+#
+alias urlencode='python -c '\''
+import sys;
+import urllib;
+print urllib.quote_plus(sys.argv[1]);'\'''

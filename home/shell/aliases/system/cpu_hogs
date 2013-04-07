@@ -1,0 +1,11 @@
+# Don't overwrite alias.
+command -v cpu_hogs >/dev/null && return
+
+##
+# Display the processes that are using the most processing resources.
+#
+# @link @todo
+#
+alias cpu_hogs='ps -e -o %cpu,pid,ppid,user,cmd |
+    awk '\''NR == 1; NR > 1 {print $0 | "sort -nr"}'\'' |
+    head'

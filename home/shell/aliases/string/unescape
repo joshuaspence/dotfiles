@@ -1,0 +1,10 @@
+# Don't overwrite alias.
+command -v unescape >/dev/null && return
+
+##
+# Remove escape characters from a string. The input should be piped into this
+# command.
+#
+# @link http://unix.stackexchange.com/questions/148/colorizing-your-terminal-and-shell-environment
+#
+alias unescape='sed '\''s/\[^[[0-9;]*[a-zA-Z]//gi'\'''

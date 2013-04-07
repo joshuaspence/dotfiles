@@ -1,0 +1,7 @@
+# Don't overwrite alias.
+command -v matrix >/dev/null && return
+
+##
+# Cool "The Matrix" type screens.
+#
+alias matrix=matrix1
