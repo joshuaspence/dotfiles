@@ -9,6 +9,7 @@ command -v extract >/dev/null && return
     command -v hdiutil >/dev/null ||
     command -v tar >/dev/null ||    
     command -v uncompress >/dev/null ||
+    (command -v uncompress >/dev/null && command -v pax >/dev/null) ||
     command -v unzip >/dev/null
 ) || return 1
 
@@ -20,7 +21,7 @@ command -v extract >/dev/null && return
 # @link http://nparikh.org/notes/zshrc.txt
 #
 extract() {
-    if [ -z "$1" ]; then
+    if [ $# -ne 1 ] || [ -z "$1" ]; then
         echo "Usage: extract <path>" >&2
         return 1
     fi

@@ -1,6 +1,9 @@
 # Don't redefine this function.
 command -v append-path >/dev/null && return
 
+# Check for the prerequisite functions.
+command -v eval >/dev/null || return 1
+
 ##
 # Appends paths to the end of a search path variable list.
 #
@@ -10,7 +13,8 @@ command -v append-path >/dev/null && return
 # @link https://github.com/fnichol/bashrc/blob/master/bashrc
 #
 append-path() {
-    local path_var="$1"; shift
+    local path_var="$1"
+    shift
 
     # Create var if not exists.
     if eval "test -z \"\$$path_var\""; then

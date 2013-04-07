@@ -15,7 +15,7 @@ ram() {
     local app="$1"
 
     if [ -z "$app" ]; then
-        echo "usage: ram <pattern to grep from processes>" >&2
+        echo "Usage: ram <pattern to grep from processes>" >&2
         return 1
     else
         local sum=0
@@ -32,7 +32,8 @@ ram() {
             fi
         else
             if [ $SHELL_COLOR == 1]; then
-            echo "There are no processes with pattern '${fg[blue]}${app}${reset_color}' are running."
+                echo "There are no processes with pattern '${fg[blue]}${app}${reset_color}' are running."
+            fi
         fi
     fi
 }

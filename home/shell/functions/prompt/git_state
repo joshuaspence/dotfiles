@@ -1,6 +1,16 @@
 # Don't redefine this function.
 command -v git_state >/dev/null && return
 
+# Check for the prerequisite functions.
+(
+    command -v awk >/dev/null &&
+    command -v date >/dev/null &&
+    command -v egrep >/dev/null &&
+    command -v git >/dev/null &&
+    command -v printf >/dev/null &&
+    command -v sed >/dev/null
+) || return 1
+
 ##
 # Prints out contextual git state for the command prompt.
 #

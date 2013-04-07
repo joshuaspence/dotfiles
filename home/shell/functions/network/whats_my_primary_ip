@@ -2,10 +2,12 @@
 command -v whats_my_primary_ip >/dev/null && return
 
 # Check for the prerequisite functions.
-command -v ifconfig >/dev/null || return 1
-
-# Source the necessary functions.
-source "$HOME/.shell/functions/network/iface"
+(
+    command -v awk >/dev/null &&
+    command -v ifconfig >/dev/null &&
+    command -v grep >/dev/null &&
+    command -v uname >/dev/null
+) || return 1
 
 ##
 # Returns the primary IP address of the system.

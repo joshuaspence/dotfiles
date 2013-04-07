@@ -2,7 +2,7 @@
 unset MANPATH
 
 # We need the path functions!
-source "$HOME/.shell/functions/path"
+[ -r "$HOME/.shell/functions/path/prepend" ] && source "$HOME/.shell/functions/path/prepend"
 
 # ~/bin should be in the front of PATH if it exists.
 if [ -d "$HOME/bin" ]; then

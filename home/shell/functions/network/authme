@@ -2,8 +2,10 @@
 command -v authme >/dev/null && return
 
 # Check for the prerequisite functions.
-command -v awk >/dev/null || return 1
-command -v ssh >/dev/null || return 1
+(
+    command -v awk >/dev/null &&
+    command -v ssh >/dev/null
+) || return 1
 
 ##
 # Places a given public ssh key on a remote host for key-based authentication.
@@ -16,7 +18,7 @@ command -v ssh >/dev/null || return 1
 # @todo Test this!!!
 #
 authme() {
-    if [ -z $1 ] ; then
+    if [ $# -ne 2 ] || [ -z "$1" ] || [ -z "$2" ]; then
         echo "Usage: authme <ssh_host> <public_key>" >&2
         return 1
     fi

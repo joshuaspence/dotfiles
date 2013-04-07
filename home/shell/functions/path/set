@@ -1,6 +1,9 @@
 # Don't redefine this function.
 command -v set-path >/dev/null && return
 
+# Check for the prerequisite functions.
+command -v eval >/dev/null || return 1
+
 ##
 # Sets a colon-separated search path variable, overwriting any previous values.
 #
@@ -10,7 +13,8 @@ command -v set-path >/dev/null && return
 # @link https://github.com/fnichol/bashrc/blob/master/bashrc
 #
 set-path() {
-    local path_var="$1"; shift
+    local path_var="$1"
+    shift
 
     # Set var and overwrite any previous values.
     [ -d "$1" ] && eval $path_var="$1"

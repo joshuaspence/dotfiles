@@ -27,7 +27,7 @@ iface() {
             ;;
         SunOS)
             local def_gateway=$(netstat -nr | grep ^default | awk '{print $2}')
-            route get $def_gateway | \ grep '^[ ]*interface:' | awk '{print $2}'
+            route get $def_gateway | grep '^[ ]*interface:' | awk '{print $2}'
             ;;
         *)
             echo "Could not determine primary network interface" >&2

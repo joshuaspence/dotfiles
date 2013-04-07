@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Minor errors in the spelling of a directory will be corrected when using the
 # `cd` command.
 shopt -s cdspell

@@ -20,10 +20,10 @@
 --smart-case
 
 # Types.
---type-add=ruby=Gemfile,.haml,.rake,.builder
+--type-add=css=.less,.sass
 --type-add=html=.html.erb,.html.haml
 --type-add=js=.js.erb
---type-add=css=.sass,.less
+--type-add=ruby=Gemfile,.builder,.haml,.rake
 
 # Add types ack doesn't know about.
 --type-set=coffeescript=.coffee
@@ -32,7 +32,6 @@
 --type-set=markdown=.md,.markdown
 
 # Ignore these directories.
---ignore-dir=coverage
 --ignore-dir=doc
 --ignore-dir=log
 --ignore-dir=rdoc

@@ -1,6 +1,14 @@
 # Don't redefine this function.
 command -v remove-path >/dev/null && return
 
+# Check for the prerequisite functions.
+(
+    command -v eval >/dev/null &&
+    command -v grep >/dev/null &&
+    command -v sed >/dev/null &&
+    command -v tr >/dev/null
+) || return 1
+
 ##
 # Removes all instances of paths in a search path.
 #

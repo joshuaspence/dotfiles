@@ -1,15 +1,18 @@
 #!/bin/bash
 
-# Set up command aliases.
-[ -e "$HOME/.shell/aliases" ] && source_r "$HOME/.shell/aliases"
+# We need the sh_source_r function!
+source "$HOME/.shell/functions/source/sh_source_r"
 
 # We run the environment settings for all shells to ensure it's always set up.
-[ -e "$HOME/.shell/environment" ] && source_r "$HOME/.shell/environment"
+sh_source_r "$HOME/.shell/environment"
+
+# Set up command aliases.
+sh_source_r "$HOME/.shell/aliases"
 
 # Import user-defined functions.
-[ -e "$HOME/.shell/functions" ] && source_r "$HOME/.shell/functions"
+sh_source_r "$HOME/.shell/functions"
 
 # If PS1 is defined then the shell should be interactive.
 if [ -n "$PS1" ]; then
-    [ -e "$HOME/.shell/completion" ] && source_r "$HOME/.shell/completion"
+    [ -f "$HOME/.shell/completion.bash" ] && "$HOME/.shell/completion.bash"
 fi

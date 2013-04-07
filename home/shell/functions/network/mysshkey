@@ -2,10 +2,12 @@
 command -v mysshkey >/dev/null && return
 
 # Check for the prerequisite functions.
-command -v awk >/dev/null || return 1
-command -v cat >/dev/null || return 1
-command -v egrep >/dev/null || return 1
-command -v ssh >/dev/null || return 1
+(
+    command -v awk >/dev/null &&
+    command -v cat >/dev/null &&
+    command -v egrep >/dev/null &&
+    command -v ssh >/dev/null
+) || return 1
 
 ##
 # Returns the remote user's public SSH key on STDOUT. The host can optionally
@@ -18,7 +20,7 @@ command -v ssh >/dev/null || return 1
 # @todo Test this!!!
 #
 mysshkey() {
-    if [ -z $1 ] ; then
+    if [ $# -ne 2] || [ -z "$1" ] || [ -z "$2" ]; then
         echo "Usage: mysshkey <ssh_host> <pub_key>" >&2
         return 1
     fi
