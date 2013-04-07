@@ -1,0 +1,38 @@
+# Don't redefine this function.
+command -v ram >/dev/null && return
+
+# Check for the prerequisite functions.
+command -v ngrep >/dev/null || return 1
+
+##
+# Show how much RAM an application uses.
+#
+# @param [String] The name of the process.
+#
+# @link @todo
+#
+ram() {
+    local app="$1"
+
+    if [ -z "$app" ]; then
+        echo "usage: ram <pattern to grep from processes>" >&2
+        return 1
+    else
+        local sum=0
+        local i
+        for i in $(ps aux | grep -i "$app" | grep -v 'grep' | awk '{print $6}'); do
+            sum=$(($i + $sum))
+        done
+        sum=$(echo "scale=2; $sum / 1024.0" | bc)
+        if [ $sum != 0 ]; then
+            if [ -z $HAS_COLOR ]; then
+                echo "$(colorize bold-blue)${app}$(colorize reset) uses $(colorize green)${sum} MB$(colorize reset) of RAM."
+            else
+                echo "${app} uses ${sum} MB of RAM."
+            fi
+        else
+            if [ $SHELL_COLOR == 1]; then
+            echo "There are no processes with pattern '${fg[blue]}${app}${reset_color}' are running."
+        fi
+    fi
+}

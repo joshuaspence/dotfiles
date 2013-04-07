@@ -1,0 +1,56 @@
+# Don't redefine this function.
+command -v shell_prompt >/dev/null && return
+
+##
+# Sets a shell prompt. Uses a set variable of "PROMPT_COLOR" to determine the
+# main color of the prompt, if it exists. If a variable of "REMOTE_PROMPT_COLOR"
+# is given, then this color will be used for all remote SSH sessions.
+#
+shell_prompt() {
+    [ -z $PROMPT_COLOR ] && PROMPT_COLOR="default"
+
+    # Change prompt color if remotely logged in and alt color is given
+    if [[ -n $SSH_CLIENT && -n $REMOTE_PROMPT_COLOR ]]; then
+        PROMPT_COLOR=$REMOTE_PROMPT_COLOR
+    fi
+
+    if [ "$(id --user --real)" -eq "0" ]; then # CAN THIS BE DONE BETTER
+        # Root shell
+        local user_c="#"
+        local tb=$user_c
+        local color="red"
+    else
+        local user_c=">"
+        local tb=
+        local color=$PROMPT_COLOR
+    fi
+
+    case $TERM in
+        *term | xterm-* | rxvt | screen | screen-*)
+            local cyan="\[$(bput cyan)\]"
+            if [ -z "$bashrc_light_bg" ]; then
+                local white="\[$(bput white)\]"
+            else
+                local white="\[$(bput black)\]"
+            fi
+            local nocolor="\[$(bput rst)\]"
+            local custom="\[$(bput $color)\]"
+            local titlebar="\[\033]0;${tb}\u@\h:\w${tb}\007\]"
+            ;;
+        *)
+            local cyan=
+            local white=
+            local nocolor=
+            local custom=
+            local titlebar=
+            ;;
+    esac
+
+    local prompt_core=
+    if [[ -n $SSH_TTY || "$(id --user --real)" -eq "0" ]]; then
+        local prompt_core="\u@\h"
+    fi
+
+    PS1="${titlebar}${cyan}[${custom}\$(short_pwd)${white}\ $(prompt_state)${cyan}]${nocolor}\n${custom}${prompt_core}${user_c} ${nocolor}"
+    PS2="${custom}${user_c} ${nocolor}"
+}

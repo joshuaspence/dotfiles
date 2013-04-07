@@ -1,0 +1,52 @@
+# Don't redefine this function.
+command -v extract >/dev/null && return
+
+# Check for the prerequisite functions.
+(
+    command -v bunzip2 >/dev/null ||
+    (command -v cat >/dev/null && command -v pax >/dev/null) ||
+    command -v gunzip >/dev/null ||
+    command -v hdiutil >/dev/null ||
+    command -v tar >/dev/null ||    
+    command -v uncompress >/dev/null ||
+    command -v unzip >/dev/null
+) || return 1
+
+##
+# Extracts archived files / mounts disk images.
+#
+# @param [String] The path to the archive file.
+#
+# @link http://nparikh.org/notes/zshrc.txt
+#
+extract() {
+    if [ -z "$1" ]; then
+        echo "Usage: extract <path>" >&2
+        return 1
+    fi
+
+    if [ ! -f "$1" ]; then
+        echo "'$1' is not a valid file" >&2
+        return 2
+    fi
+
+    case "$1" in
+        *.tar.bz2)  tar -jxvf "$1"                    ;;
+        *.tar.gz)   tar -zxvf "$1"                    ;;
+        *.bz2)      bunzip2 "$1"                      ;;
+        *.dmg)      hdiutil mount "$1"                ;;
+        *.gz)       gunzip "$1"                       ;;
+        *.tar)      tar -xvf "$1"                     ;;
+        *.tbz2)     tar -jxvf "$1"                    ;;
+        *.tgz)      tar -zxvf "$1"                    ;;
+        *.zip)      unzip "$1"                        ;;
+        *.ZIP)      unzip "$1"                        ;;
+        *.pax)      cat "$1" | pax -r                 ;;
+        *.pax.Z)    uncompress "$1" --stdout | pax -r ;;
+        *.Z)        uncompress "$1"                   ;;
+        *)
+            echo "'$1' cannot be extracted/mounted via extract()" >&2
+            return 3
+            ;;
+    esac
+}

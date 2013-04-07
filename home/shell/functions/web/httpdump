@@ -1,0 +1,27 @@
+# Don't redefine this function.
+command -v httpdump >/dev/null && return
+
+# Check for the prerequisite functions.
+(
+	command -v grep >/dev/null &&
+	command -v sudo >/dev/null &&
+	command -v tcpdump >/dev/null
+) || return 1
+
+##
+# Dump HTTP traffic for the specified interface.
+#
+# @param [optional, String] The interface on which to listen for HTTP traffic.
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases
+#
+httpdump() {
+	if [ $# -gt 1 ]; then
+    	echo "Usage: httpdump [<interface>]" >&2
+        return 1
+    fi
+
+    local iface=
+    [ -n "$1" ] && iface="-i $1"
+    sudo tcpdump $iface -n -s 0 -w - | grep -a -o -E "Host\: .*|GET \/.*"
+}

@@ -1,0 +1,16 @@
+# Don't redefine this function.
+command -v svn_state >/dev/null && return
+
+##
+# TODO
+#
+svn_state() {
+    prompt_getcolors
+    local info="$(svn info . 2> /dev/null)"
+    local last current
+    if [[ "$info" ]]; then
+        last="$(echo "$info" | awk '/Last Changed Rev:/ {print $4}')"
+        current="$(echo "$info" | awk '/Revision:/ {print $2}')"
+        echo "$c1[$c0$last$c1:$c0$current$c1]$c9"
+    fi
+}

@@ -1,0 +1,28 @@
+# Don't redefine this function.
+command -v diskusage >/dev/null && return
+
+# Check for the prerequisite functions.
+(
+	command -v awk >/dev/null
+	command -v du >/dev/null &&
+	command -v sort >/dev/null
+) || return 1
+
+##
+# Calculates disk usage (with `du`) and reports back sorted and human readable.
+#
+# @param [List] List of files or directories to report on (file arguments to
+#               `du`).
+#
+# @link http://github.com/lucapette/dotfiles/blob/master/bash/aliases
+#
+diskusage() {
+    du -ks "$@" | \
+        sort -nr | \
+        awk '{
+            if ($1 > 1048576) printf("%8.2fG", $1/1048576);
+            else if ($1 > 1024) printf("%8.2fM", $1/1024);
+            else printf("%8.2fK", $1);
+            sub($1, ""); print
+        }'
+}

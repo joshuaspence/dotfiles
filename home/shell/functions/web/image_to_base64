@@ -1,0 +1,25 @@
+# Don't redefine this function.
+command -v image_to_base64 >/dev/null && return
+
+# Check for the prerequisite functions.
+(
+	command -v openssl >/dev/null &&
+	command -v tr >/dev/null
+) || return 1
+
+##
+# Create a data URL from an image. This also works for other file types too, if
+# you tweak the Content-Type afterwards.
+#
+# @param [String] The path of the image file.
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+#
+image_to_base64() {
+    if [ $# != 1 ] || [ -z "$1" ]; then
+        echo "Usage: image_to_base64 <path>" >&2
+        return 1
+    fi
+
+    echo "data:image/${1##*.};base64,$(openssl base64 -in "$1")" | tr -d '\n'
+}

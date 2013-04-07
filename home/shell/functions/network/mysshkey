@@ -1,0 +1,36 @@
+# Don't redefine this function.
+command -v mysshkey >/dev/null && return
+
+# Check for the prerequisite functions.
+command -v awk >/dev/null || return 1
+command -v cat >/dev/null || return 1
+command -v egrep >/dev/null || return 1
+command -v ssh >/dev/null || return 1
+
+##
+# Returns the remote user's public SSH key on STDOUT. The host can optionally
+# contain the username (like "jdoe@ssh.example.com") and a non-standard port
+# number (like "ssh.example.com:666").
+#
+# @param [String] Remote ssh host in for form of [<user>@]host[:<port>].
+# @param [String] Path to the remote public key.
+#
+# @todo Test this!!!
+#
+mysshkey() {
+    if [ -z $1 ] ; then
+        echo "Usage: mysshkey <ssh_host> <pub_key>" >&2
+        return 1
+    fi
+
+    local host=$1
+    local key=$2
+
+    if echo $host | egrep -q ':'; then
+        local ssh_cmd="$(echo $host | awk -F':' '{print \"ssh -p \" $2 \" \" $1}')"
+    else
+        local ssh_cmd="ssh $host"
+    fi
+
+    $ssh_cmd "(cat .ssh/$key)"
+}

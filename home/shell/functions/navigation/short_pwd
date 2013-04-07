@@ -1,0 +1,27 @@
+# Don't redefine this function.
+command -v short_pwd >/dev/null && return
+
+# Check for the prerequisite functions.
+(
+	command -v pwd >/dev/null &&
+	command -v sed >/dev/null &&
+	command -v tr >/dev/null &&
+	command -v wc >/dev/null
+) || return 1
+
+##
+# Calculates a truncated `pwd`. Overriding of the truncation length can be done
+# by setting "PROMPT_LEN".
+#
+# @link https://gist.github.com/548242
+#
+short_pwd() {
+    local pwd_length=${PROMPT_LEN-35}
+    local cur_pwd=$(pwd | sed -e "s,^$HOME,~,")
+
+    if [ $(echo -n $cur_pwd | wc -c | tr -d ' ') -gt $pwd_length ]; then
+        echo "...$(echo $cur_pwd | sed -e "s/.*\(.\{$pwd_length\}\)/\1/")"
+    else
+        echo $cur_pwd
+    fi
+}

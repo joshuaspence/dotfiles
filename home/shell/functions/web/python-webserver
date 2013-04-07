@@ -1,0 +1,16 @@
+# Don't redefine this function.
+command -v python-webserver >/dev/null && return
+
+# Check for the prerequisite functions.
+command -v python >/dev/null || return 1
+
+##
+# Starts a web server using Python.
+#
+# @param [optional, Integer] Bind port number, default 8000.
+#
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
+python-webserver() {
+    python -m SimpleHTTPServer ${1:-8000}
+}

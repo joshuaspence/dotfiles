@@ -1,0 +1,34 @@
+# Don't redefine this function.
+command -v whats_my_primary_ip >/dev/null && return
+
+# Check for the prerequisite functions.
+command -v ifconfig >/dev/null || return 1
+
+# Source the necessary functions.
+source "$HOME/.shell/functions/network/iface"
+
+##
+# Returns the primary IP address of the system.
+#
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
+whats_my_primary_ip() {
+    case $(uname -s) in
+        Darwin)
+            ifconfig $(iface) | grep '^[[:space:]]*inet ' | awk '{print $2}'
+            ;;
+        OpenBSD)
+            ifconfig $(iface) | grep '^[[:space:]]*inet ' | awk '{print $2}'
+            ;;
+        Linux)
+            ifconfig $(iface) | grep '^[[:space:]]*inet ' | awk '{print $2}' | awk -F':' '{print $2}'
+            ;;
+        SunOS)
+            ifconfig $(iface) | awk '/^\t*inet / {print $2}'
+            ;;
+        *)
+            echo "Could not determine primary IP address" >&2
+            return 1
+            ;;
+    esac
+}

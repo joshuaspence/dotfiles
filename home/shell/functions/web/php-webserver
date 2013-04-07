@@ -1,0 +1,14 @@
+# Don't redefine this function.
+command -v php-webserver >/dev/null && return
+
+# Check for the prerequisite functions.
+command -v php >/dev/null || return 1
+
+##
+# Starts a web server using PHP. Requires PHP >= 5.4.
+#
+# @param [optional, Integer] Bind port number, default 8000.
+#
+php-webserver() {
+    php -S localhost:${1:-8000}
+}

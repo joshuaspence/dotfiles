@@ -1,0 +1,21 @@
+# Check for the prerequisite functions.
+(
+	command -v ps >/dev/null &&
+	command -v uname >/dev/null
+) || return 1
+
+##
+# Performs an egrep on the process list. Use any arguments that egrep accepts.
+#
+# @param [List] egrep arguments.
+#
+# @link http://github.com/fnichol/bashrc/blob/master/bashrc
+#
+psg() {
+    case $(uname -s) in
+        Darwin | OpenBSD) ps wwwaux | egrep "($@|\bPID\b)" | egrep -v 'grep' ;;
+        SunOS | Linux)    ps -ef    | egrep "($@|\bPID\b)" | egrep -v 'grep' ;;
+        CYGWIN_*)         ps -efW   | egrep "($@|\bPID\b)" | egrep -v 'grep' ;;
+        *)                return 1 ;;
+    esac
+}

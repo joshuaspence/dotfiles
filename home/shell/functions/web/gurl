@@ -1,0 +1,24 @@
+# Don't redefine this function.
+command -v gurl >/dev/null && return
+
+# Check for the prerequisite functions.
+(
+	command -v curl >/dev/null &&
+	command -v gunzip >/dev/null
+) || return 1
+
+##
+# Gzip-enabled `curl`.
+#
+# @param [String] The URL to retrieve.
+#
+# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+#
+function gurl() {
+	if [ $# != 1 ] || [ -z "$1" ]; then
+        echo "Usage: gurl <url>" >&2
+        return 1
+    fi
+
+    curl -s -H "Accept-Encoding: gzip" "$@" | gunzip
+}

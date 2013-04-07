@@ -1,0 +1,10 @@
+# Don't redefine this function.
+command -v prompt_state >/dev/null && return
+
+##
+# TODO
+#
+prompt_state() {
+    prompt_state_git
+    prompt_state_hg
+}

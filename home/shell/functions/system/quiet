@@ -1,0 +1,13 @@
+# Don't redefine this function.
+command -v quiet >/dev/null && return
+
+##
+# I'm not really sure what this does...
+#
+# @link @todo
+#
+# @todo What does this do?
+#
+quiet() {
+    $* &>/dev/null &
+}

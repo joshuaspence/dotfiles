@@ -1,0 +1,25 @@
+# Don't redefine this function.
+#command -v monitor_traffic >/dev/null && return
+
+# Check for the prerequisite functions.
+(
+	command -v ngrep >/dev/null &&
+	command -v sudo >/dev/null
+) || return 1
+
+##
+# Monitors network traffic on a specified interface.
+#
+# @param [String] The interface on which to monitor network traffic.
+# @param [optional, String] The match expression for `ngrep`.
+#
+# @link @todo
+#
+monitor_traffic() {
+	if [ $# -lt 1 ] || [ $# -gt 2 ] || [ -z "$1" ]; then
+        echo "Usage: monitor_traffic <interface> [<pattern>]" >&2
+        return 1
+    fi
+
+    sudo ngrep -W byline -q -l -d "$1" "$2"
+}

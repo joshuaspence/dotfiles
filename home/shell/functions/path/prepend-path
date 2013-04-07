@@ -1,0 +1,26 @@
+# Don't redefine this function.
+command -v prepend-path >/dev/null && return
+
+##
+# Prepends paths to the front of a search path variable list.
+#
+# @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
+# @param [List] Space-seperated list of system paths to push, in reverse order.
+#
+# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+#
+prepend-path() {
+    local path_var="$1"; shift
+
+    # Create var if not exists.
+    if eval "test -z \"\$$path_var\"" ; then
+        [ -d "$1" ] && eval $path_var="$1"
+        shift
+    fi
+
+    local p
+    for p in $@ ; do
+        remove-path "$path_var" "$p"
+        [ -d "$p" ] && eval $path_var="${p}:\$${path_var}"
+    done
+}
