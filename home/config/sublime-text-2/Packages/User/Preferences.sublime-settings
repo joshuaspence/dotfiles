@@ -1,47 +1,659 @@
 {
-	"auto_complete": true,
-	"auto_indent": true,
-	"auto_match_enabled": true,
-	"caret_style": "smooth",
 	"color_scheme": "Packages/Color Scheme - Default/Blackboard.tmTheme",
-	"default_line_ending": "system",
-	"detect_indentation": true,
-	"dictionary": "Packages/Language - English/en_GB.dic",
-	"draw_white_space": "selection",
-	"ensure_newline_at_eof_on_save": false,
-	"fold_buttons": true,
-	"font_size": 11,
-	"gutter": true,
-	"highlight_line": true,
-	"ignored_packages":
-	[
-		"Vintage"
+    "line_numbers": true,
+    "gutter": true,
+    "spell_check": true,
+    "tab_size": 4,
+    "dictionary": "Packages/Language - English/en_GB.dic",
+
+    // Fold buttons are the triangles shown in the gutter to fold regions of
+    // text.
+    "fold_buttons": true,
+
+    // Hides the fold buttons unless the mouse is over the gutter.
+    "fade_fold_buttons": true,
+
+    // Columns in which to display vertical rulers.
+    "rulers": [ 80 ],
+
+    // Set to true to insert spaces when tab is pressed.
+    "translate_tabs_to_spaces": false,
+
+    // If "translate_tabs_to_spaces" is true, "use_tab_stops" will make tab and
+    // backspace insert/delete up to the next tabstop.
+    "use_tab_stops": true,
+
+    // Set to false to disable detection of tabs versus spaces on load.
+    "detect_indentation": true,
+
+    // Calculates indentation automatically when pressing enter.
+    "auto_indent": true,
+
+    // Makes auto indent a little smarter, e.g., by indenting the next line
+    // after an if statement in C. Requires "auto_indent" to be enabled.
+    "smart_indent": true,
+
+    // Adds whitespace up to the first open bracket when indenting. Requires
+    // auto_indent to be enabled.
+    "indent_to_bracket": true,
+
+    // Trims white space added by auto_indent when moving the caret off the
+    // line.
+    "trim_automatic_white_space": true,
+
+    // Disables horizontal scrolling if enabled. May be set to true, false, or
+    // "auto", where it will be disabled for source code, and otherwise enabled.
+    "word_wrap": "auto",
+
+    // Set to a value other than 0 to force wrapping at that column rather than
+    // the window width.
+    "wrap_width": 0,
+
+    // Set to false to prevent word wrapped lines from being indented to the
+    // same level.
+    "indent_subsequent_lines": true,
+
+    // Controls auto pairing of quotes, brackets etc.
+    "auto_match_enabled": true,
+
+    // Set to true to draw a border around the visible rectangle on the minimap.
+    "draw_minimap_border": false,
+
+    // If enabled, will highlight any line with a caret.
+    "highlight_line": true,
+
+    // Valid values are "smooth", "phase", "blink", "wide" and "solid".
+    "caret_style": "phase",
+
+    // Set to false to disable underlining the brackets surrounding the caret.
+    "match_brackets": true,
+
+    // Set to false if you'd rather only highlight the brackets when the caret is
+    // next to one.
+    "match_brackets_content": true,
+
+    // Set to false to not highlight square brackets. This only takes effect if
+    // match_brackets is true.
+    "match_brackets_square": true,
+
+    // Set to false to not highlight curly brackets. This only takes effect if
+    // match_brackets is true.
+    "match_brackets_braces": true,
+
+    // Set to false to not highlight angle brackets. This only takes effect if
+    // match_brackets is true.
+    "match_brackets_angle": false,
+
+    // Enable visualization of the matching tag in HTML and XML.
+    "match_tags": true,
+
+    // Highlights other occurrences of the currently selected text.
+    "match_selection": true,
+
+    // Set to false to disable scrolling past the end of the buffer.
+    "scroll_past_end": false,
+
+    // Set to "none" to turn off drawing white space, "selection" to draw only the
+    // white space within the selection, and "all" to draw all white space
+    "draw_white_space": "selection",
+
+    // Set to false to turn off the indentation guides.
+    // The color and width of the indent guides may be customized by editing
+    // the corresponding .tmTheme file, and specifying the colors "guide",
+    // "activeGuide" and "stackGuide"
+    "draw_indent_guides": true,
+
+    // Controls how the indent guides are drawn, valid options are
+    // "draw_normal" and "draw_active". draw_active will draw the indent
+    // guides containing the caret in a different color.
+    "indent_guide_options": ["draw_normal"],
+
+    // Set to true to removing trailing white space on save.
+    "trim_trailing_white_space_on_save": false,
+
+    // Set to true to ensure the last line of the file ends in a newline
+    // character when saving.
+    "ensure_newline_at_eof_on_save": true,
+
+    // Encoding used when saving new files, and files opened with an undefined
+    // encoding (e.g., plain ascii files). If a file is opened with a specific
+    // encoding (either detected or given explicitly), this setting will be
+    // ignored, and the file will be saved with the encoding it was opened with.
+    "default_encoding": "UTF-8",
+
+    // Determines what character(s) are used to terminate each line in new
+    // files. Valid values are "system" (whatever the OS uses), "windows" (CRLF)
+    // and "unix" (LF only).
+    "default_line_ending": "unix",
+
+    // When enabled, pressing tab will insert the best matching completion. When
+    // disabled, tab will only trigger snippets or insert a tab. Shift+tab can
+    // be used to insert an explicit tab when tab_completion is enabled.
+    "tab_completion": true,
+
+    // Enable auto complete to be triggered automatically when typing.
+    "auto_complete": true,
+
+    // By default, shift+tab will only unindent if the selection spans
+    // multiple lines. When pressing shift+tab at other times, it'll insert a
+    // tab character - this allows tabs to be inserted when tab_completion is
+    // enabled. Set this to true to make shift+tab always unindent, instead of
+    // inserting tabs.
+    "shift_tab_unindent": true,
+
+    // If true, the selected text will be copied into the find panel when it's
+    // shown.
+    "find_selected_text": true,
+
+    /**************************************************************************
+     * User Interface Settings
+     **************************************************************************/
+    "theme": "Default.sublime-theme",
+    "highlight_modified_tabs": true,
+    "show_tab_close_buttons": true,
+    "bold_folder_labels": false,
+
+    /**************************************************************************
+     * Application Behavior Settings
+     **************************************************************************/
+
+    // Makes the application start up with the last set of open files.
+    "remember_open_files": true,
+
+    // Set to true to close windows as soon as the last file is closed, unless
+    // there's a folder open within the window.
+    "close_windows_when_empty": false,
+
+    // Show the full path to files in the title bar.
+    "show_full_path": true,
+
+    // Preview file contents when clicking on a file in the side bar.
+    "preview_on_click": true,
+
+    /**************************************************************************
+     * Alignment
+     **************************************************************************/
+
+    // If the indent level of a multi-line selection should be aligned.
+	"align_indent": true,
+
+	// The mid-line characters to align in a multi-line selection, changing
+	// this to an empty array will disable mid-line alignment.
+	"alignment_chars": ["="],
+
+	// If the following character is matched for alignment, insert a space
+	// before it in the final alignment.
+	"alignment_space_chars": ["="],
+
+	// The characters to align along with "alignment_chars". For instance if "="
+    // is to be aligned, there are a number of symbols that can be combined with
+    // "=" to make an operator, and all of those must be kept next to "=" for
+    // the operator to be parsed.
+	"alignment_prefix_chars": [
+		"+", "-", "&", "|", "<", ">", "!", "~", "%", "/", "*", "."
 	],
-	"indent_to_bracket": false,
-	"line_numbers": true,
-	"margin": 4,
-	"match_brackets": true,
-	"match_brackets_angle": false,
-	"match_brackets_braces": true,
-	"match_brackets_content": true,
-	"match_brackets_square": true,
-	"match_selection": true,
-	"match_tags": true,
-	"remember_open_files": true,
-	"rulers":
+
+	/**************************************************************************
+	 * ClipboardHistory
+	 **************************************************************************/
+	"limit": 50,
+	"paste_and_indent": true,
+
+	/**************************************************************************
+	 * Git
+	 **************************************************************************/
+
+	// Point this the installation location of `git-flow`.
+	"git_flow_command": "/usr/local/bin/git-flow",
+
+	// Use the panel for diff output, rather than a new scratch window (new tab).
+	"diff_panel": false,
+
+	// affects blame command when no selection is made
+	// true: blame whole file
+	// false: blame only current line
+	"blame_whole_file": true,
+
+	// If you'd rather have your status command open files instead of show you a
+	// diff, set this to true.  You can still do `Git: Status` followed by
+	// 'Git: Diff Current File' to get a file diff
+	"status_opens_file": false,
+
+	// Use --verbose flag for commit messages
+	"verbose_commits": true,
+
+	// How many commit messages to store in the history. Set to 0 to disable.
+	"history_size": 5,
+
+	// Show git flow commands
+	"flow": true,
+
+	// Annotations default to being on for all files. Can be slow in some cases.
+	"annotations": false,
+
+    /**************************************************************************
+     * Emmet (NOT DONE)
+     **************************************************************************/
+     // You should restart editor after changing this option
+    "remove_html_completions": false,
+
+    // A comma-separated list of scopes where Emmet’s Tab key
+    // abbreviation expander should be disabled  
+    "disable_tab_abbreviations_for_scopes": "",
+
+    // A regexp for scope name: if it matches, Tab handler won’t work
+    // The reason to use this preference is that ST2 has buggy scope matcher
+    // which may still trigger Tab handler even if it's restricted by context
+    "disable_tab_abbreviations_for_regexp": "source\\.(?!css).+?\\stext\\.html",
+
+    // Exit tabstop mode when enter key is pressed
+    "clear_fields_on_enter_key": true,
+
+    // A comma-separated list of disabled action names.
+    // Listed action will not be triggered by default keyboard
+    // shortcut.
+    // Use "all" value to disable all shortcuts at once
+    "disabled_keymap_actions": "",
+
+    // By default, Emmet overrides Tab key to effectively expand abbreviations.
+    // The downside of this approach is that you can’t expand regular ST2
+    // snippets (like `php`). Since it’s not currently possible to get a list
+    // of ST2 snippets via API, you can provide a list of scopes where Emmet’s
+    // Tab trigger should be disabled when expanding simple abbreviation.
+    // If entered abbreviation (like `php`) wasn’t found in Emmet snippets list
+    // or "known_html_tags" preference, Tab handler will not be triggered.
+    // Leave this setting blank to disable this feature
+    "disabled_single_snippet_for_scopes": "text.html",
+
+    // A space-separated list of single snippets that should be 
+    // forcilbly disabled (not handled) for Emmet even if it 
+    // has such abbreviation. 
+    // This option is useful if you wish the enumerated snippets
+    // should be handled by Sublime Text.
+    // Example value: "script style html"
+    "disabled_single_snippets": "",
+
+    // A space separated list of all known HTML tags,
+    // used together with "disabled_on_single_snippets" option
+    "known_html_tags": "html head title base link meta style script noscript body section nav article aside h1 h2 h3 h4 h5 h6 hgroup header footer address p hr pre blockquote ol ul li dl dt dd figure figcaption div a em strong small s cite q dfn abbr data time code var samp kbd sub sup i b u mark ruby rt rp bdi bdo span br wbr ins del img iframe embed object param video audio source track canvas map area svg math table caption colgroup col tbody thead tfoot tr td th form fieldset legend label input button select datalist optgroup option textarea keygen output progress meter details summary command menu",
+
+    "empty_elements": "area base basefont br col frame hr img input isindex link meta param embed",
+
+    // If set to `true`, Emmet will automatically insert final tabstop
+    // at the end of expanded abbreviation
+    "insert_final_tabstop": false,
+
+    // Try to automatically detect XHTML dialect in HTML documents.
+    // With this option enabled, your custom profile for HTML documents may not work.
+    "autodetect_xhtml": true,
+
+    // Use old Tab handler to exand abbreviations.
+    // With this option enabled, editor may better handle Tab key
+    // (especially with other plugins that overrides Tab key),
+    // but will spit "slow plugin" message
+    "use_old_tab_handler": false,
+
+    ///////////////////////////////
+    // Emmet customization
+    // Each section has the same meaning as the same-named JSON file 
+    // described here:
+    // http://docs.emmet.io/customization/
+    ///////////////////////////////
+
+
+    // Custom snippets definitions, as per https://github.com/emmetio/emmet/blob/master/snippets.json
+    "snippets": {
+        // "html": {
+        //  "abbreviations": {
+        //      "example": "<div class='example' title='Custom element example'>"
+        //  }
+        // }
+    },
+
+    // Emmet preferences
+    // List of all available preferences:
+    // http://docs.emmet.io/customization/preferences/
+    "preferences": {
+        // "css.valueSeparator": ": ",
+        // "css.propertyEnd": ";"
+    },
+
+    // Output profiles for syntaxes
+    // http://docs.emmet.io/customization/syntax-profiles/
+    "syntaxProfiles": {
+        // Enable XHTML dialect for HTML syntax
+        // "html": "xhtml"
+    },
+
+    /**************************************************************************
+     * Emmet (NOT DONE)
+     **************************************************************************/
+
+    // If `true` will insert id="$1" snippet on pressing '#', similar on '.'
+    // Useful for `raw html`, but annoying for some templating langs.
+    "auto_id_class": false,
+
+    // disable expanding abbreviation by Tab key
+    "disable_tab_abbreviations": false,
+
+    // disable insertion of formatted linebreak when
+    // Enter key is pressed between opening and closing HTML tags
+    "disable_formatted_linebreak": false,
+
+    // Enables default Emmet keymap. Many users complain that Emmet actions
+    // (especially ones that bound to Alt key) behave incorrectly in
+    // non-English keyboard layouts. Set this setting to `false` in
+    // Users’s Preferences.sublime-settings to disable all default
+    // keybindings at once
+    "enable_emmet_keymap": true,
+
+    // disable expanding abbreviation by Tab key when autocomplete popup is visible
+    "disable_tab_abbreviations_on_auto_complete": true,
+
+    /**************************************************************************
+     * DocBlockr (NOT DONE)
+     **************************************************************************/
+    // If true, when in a docblock, pressing tab after a @tag line (like @param, @return)
+    // will indent to the description. This is useful if you are writing a long description
+    // and want that block of text to stay aligned.
+    "jsdocs_deep_indent": true,
+
+    // If true, then pressing enter while in a double-slash comment (like this one)
+    // will automatically add two slashes to the next line as well
+    "jsdocs_extend_double_slash": true,
+
+    // the number of spaces to add after the leading *
+    "jsdocs_indentation_spaces": 1,
+
+    // The number of spaces to add after the leading * in lines under the first line of each
+    // paragraph. This is only used together with automatic line wrapping. For example, a value
+    // of 3 might look like this:
+    //
+    // /**
+    //  * Duis sed arcu non tellus eleifend ullamcorper quis non erat. Curabitur
+    //  *   metus elit, ultrices et tristique a, blandit at justo.
+    //  * @param  {String} foo Lorem ipsum dolor sit amet.
+    //  * @param  {Number} bar Nullam fringilla feugiat pretium. Quisque
+    //  *   consectetur, risus eu pellentesque tincidunt, nulla ipsum imperdiet
+    //  *   massa, sit amet adipiscing dolor.
+    //  * @return {[Type]}
+    //  */
+    "jsdocs_indentation_spaces_same_para": 1,
+
+    // whether the words following the @tags should align.
+    // Possible values are 'no', 'shallow', 'deep'
+    // For backwards compatibility, false is equivalent to 'no', true is equivalent to 'shallow'
+    //
+    // 'shallow' will just align the first words after the tag. eg:
+    // @param    {MyCustomClass} myVariable desc1
+    // @return   {String} foo desc2
+    // @property {Number} blahblah desc3
+    //
+    // 'deep' will align each component of the tags, eg:
+    // @param    {MyCustomClass} myVariable desc1
+    // @return   {String}        foo        desc2
+    // @property {Number}        blahblah   desc3
+    "jsdocs_align_tags": "deep",
+
+    // Any additional boilerplate tags which should be added to each block. Should be an array of strings.
+    // Note that this only applies when a docblock is opened directly preceding a function.
+    // Tab points can be added by using snippet syntax, eg: ${1:default text}
+    "jsdocs_extra_tags": [],
+
+    // A map to determine the value of variables, should hungarian notation (or similar) be in use
+    "jsdocs_notation_map": [],
+
+    // Since there seems to be no agreed standard for "@return" or "@returns", use this setting to rename it as you wish.
+    "jsdocs_return_tag": "@return",
+
+    // Add a '[description]' placeholder for the return tag?
+    "jsdocs_return_description": true,
+
+    // Add a '[description]' placeholder for the param tag?
+    "jsdocs_param_description": true,
+
+    // Whether there should be blank lines added between the description line, and between tags of different types.
+    // If true, the output might look like this:
+    //
+    // /**
+    //  * [description]
+    //  *
+    //  * @param  {String} foo
+    //  * @param  {Number} bar
+    //  *
+    //  * @return {[Type]}
+    //  */
+    "jsdocs_spacer_between_sections": false,
+
+    // Whether each section should be indented to the same level, or indent each one individually.
+    // (When true, the @param section will lose the extra space immediately after each '@param').
+    "jsdocs_per_section_indent": false,
+
+    // Minimum spaces between cols (default is 1). For example, a value
+    // of 2 might look like this:
+    //
+    // /**
+    //  * Duis sed arcu non tellus eleifend ullamcorper quis non erat. Curabitur
+    //  *
+    //  * @param   {String}  foo  Lorem ipsum dolor sit amet.
+    //  * @param   {Number}  bar  Nullam fringilla feugiat pretium. Quisque
+    //  *
+    //  * @return  {[Type]}       description
+    //  */
+    "jsdocs_min_spaces_between_columns": 1,
+
+    // indicates whether the @method tag should be added automatically
+    "jsdocs_autoadd_method_tag": false,
+
+    /**************************************************************************
+     * ApplySyntax
+     **************************************************************************/
+    "syntaxes": [
+        /*{
+            "name": "XML",
+            "rules": [
+                {"file_name": ".*\\.xml(\\.dist)?$"},
+                {"first_line": "^<\\?xml"},
+                {"function": {"name": "is_rails_file"}}
+                {"binary": "ruby"},
+            ]
+        }*/
+    ],
+
+    /**************************************************************************
+     * Dotfiles Syntax Highlighting
+     **************************************************************************/
+    "extensions":
 	[
-		80
+		".ackrc",
+		".aliases",
+		".bash_profile",
+		".bash_prompt",
+		".bashrc",
+		".brew",
+		".exports",
+		".functions",
+		".git",
+		".gitattributes",
+		".gitconfig",
+		".gitignore",
+		".hushlogin",
+		".inputrc",
+		".npmrc",
+		".osx",
+		".packages",
+		".pkginit",
+		".screenrc",
+		".zlogin",
+		".zlogout",
+		".zprofile",
+		".zshenv",
+		".zshrc",
+		".wgetrc"
 	],
-	"save_on_focus_lost": false,
-	"shift_tab_unindent": true,
-	"smart_indent": true,
-	"spell_check": true,
-	"tab_completion": true,
-	"tab_size": 4,
-	"translate_tabs_to_spaces": true,
-	"trim_automatic_white_space": false,
-	"trim_trailing_white_space_on_save": true,
-	"use_tab_stops": true,
-	"word_wrap": "auto",
-	"wrap_width": 0
+
+    /**************************************************************************
+     * WrapPlus
+     **************************************************************************/
+    "WrapPlus.break_long_words": true,
+	"WrapPlus.break_on_hyphens": true,
+
+	/**************************************************************************
+	 * DataConverter (NOT DONE)
+	 **************************************************************************/
+	// When true, the first row is treated as the header row. Set to false to
+    // always sniff for headers (sniffing isn't perfect!).
+    "assume_headers": false,
+
+    // If false: Defaults to the OS line separator, which is "\r" in Windows.
+    "line_sep": false,
+
+    // Check the python docs for a description of how to define a dialect
+    // http://docs.python.org/2/library/csv.html#csv-fmt-params
+    "dialects": {
+        "example": {
+            "delimiter": ",",
+            "quotechar": "\""
+        }
+    },
+
+    // Could be one of the dialects defined above, or one defined in the csv module (e.g. 'excel', 'excel_tab'.
+    // When false or blank, DataConverter tries to detect the dialect, which isn't 100% reliable.
+    // "use_dialect": "example"
+
+    // DataConverter will try to detect the delimiter used. If it has a problem, it will fall back on this value.
+    // This must be one character long. Use "\t" is for tab.
+    "delimiter": ",",
+
+    // For formats where keys can't have spaces, field names will be joined with this character.
+    // e.g. "First Name" => "First_Name"
+    // An empty string is OK
+    "header_joiner": "_",
+
+    // Will remove quotes from around the field names in the header.
+    // e.g. "id","name" => id,name.
+    // Making false will keep wrapping characters.
+    // e.g. "id","name" => '"id"': 1, "'name'": "foo"
+    "strip_quotes": true,
+
+    // If true: after converting, deselects and moves the pointer to the top.
+    // If false: leaves selection(s) in place
+    "deselect_after": false,
+
+    /**************************************************************************
+     * GitGutter
+     **************************************************************************/
+    // Live mode evaluates changes every time file is modified. Set false to
+    // disable evaluation after each input.
+    "live_mode": true,
+
+    // Focus Change mode evaluates changes every time a view gets the focus. Set
+    // false to disable evaluation when changing views.
+    "focus_change_mode": true,
+
+    // When set to true GitGutter runs asynchronously in a seperate thread. This
+    // This may cause a small delay between a modification and the icon change
+    // but can increase performance greatly if needed.
+    "non_blocking": true,
+
+    /**************************************************************************
+     * Githubinator
+     **************************************************************************/
+    "default_remote": "origin",
+
+    /**************************************************************************
+     * MarkdownPreview
+     **************************************************************************/
+    "browser": "default",
+
+    // Sets the default parser for converting markdown to html.
+    //
+    // Warning for GitHub API: If you have a ST2 Linux build, Python is not
+    // built with SSL so it may not work.
+    //
+    // default - Use the built-in python-markdown2 parser.
+    // github - User GitHub API to convert markdown, so you can use GitHub
+    //     flavored Markdown, see
+    //     {@link http://github.github.com/github-flavored-markdown}.
+    "parser": "github",
+
+    // Default mode for the GitHub Markdown parser
+    // 
+    // "markdown" (documents)
+    // "gfm" (comments)
+    //
+    // @link http://developer.github.com/v3/markdown/#render-an-arbitrary-markdown-document
+    "github_mode": "markdown",
+
+    // Uses an OAuth token to when parsing markdown with GitHub API. To create
+    // one for Markdown Preview, see
+    // {@link https://help.github.com/articles/creating-an-oauth-token-for-command-line-use}.
+    //"github_oauth_token": "secret"
+
+    /**************************************************************************
+     * Package Control
+     **************************************************************************/
+	"auto_upgrade": true,
+	"install_missing": true,
+	"auto_upgrade_ignore": [],
+
+	/**************************************************************************
+	 * SublimeCodeIntel
+	 **************************************************************************/
+
+	// Sets the mode in which SublimeCodeIntel runs:
+    //
+    // true - Enabled (default).
+    // false - Disabled.
+    "codeintel": true,
+
+    // An array of language names which are disabled.
+    "codeintel_disabled_languages": [],
+
+    // Sets the mode in which SublimeCodeIntel's live autocomplete runs:
+    //
+    // true - Autocomplete popups as you type (default).
+    // false - Autocomplete popups only when you request it.
+    "codeintel_live": true,
+
+    // An array of language names to disable.
+    "codeintel_live_disabled_languages": [],
+
+    /**************************************************************************
+     * SublimeLinter
+     **************************************************************************/
+
+    // Sets the mode in which SublimeLinter runs:
+    //
+    // true (default) - Linting occurs in the background as you type.
+    // false - Linting only occurs when you initiate it.
+    // "load-save" - Linting occurs only when a file is loaded and saved.
+    // "save-only" - Linting occurs only when a file is saved.
+    "sublimelinter": true,
+
+    // An array of linter names to disable. Names should be lowercase.
+    "sublimelinter_disable": [],
+
+    // Selects the way the lines with errors or warnings are marked:
+    //
+    // "outline" (default) - Draws outline boxes around the lines.
+    // "fill" - Fills the lines with the outline color.
+    // "none" - Disables all outline styles (useful if
+    //     "sublimelinter_gutter_marks" is set).
+    "sublimelinter_mark_style": "none",
+
+    // If true, lines with errors or warnings will have a gutter mark.
+    "sublimelinter_gutter_marks": true,
+
+    // If true, the find next/previous error commands will wrap.
+    "sublimelinter_wrap_find": true,
+
+    // If true, when the file is saved any errors will appear in a popup list.
+    "sublimelinter_popup_errors_on_save": false,
+
+    // Set to true to highlight annotations.
+    "sublimelinter_notes": false,
+
+    // The set of annotation phrases to highlight.
+    "annotations": ["TODO", "README", "FIXME"]
 }

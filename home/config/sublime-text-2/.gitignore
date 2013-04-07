@@ -1,5 +1,2 @@
-Backup/
-Packages/
+*
 !Packages/User/
-Pristine Packages/
-Settings/

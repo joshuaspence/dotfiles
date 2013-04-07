@@ -3,23 +3,23 @@
 	"installed_packages":
 	[
 		"Alignment",
-		"Ant",
+		"ApplySyntax",
 		"ChangeQuotes",
 		"Clickable URLs",
 		"Clipboard History",
 		"Comments Aware Enter",
 		"DataConverter",
+		"DocBlockr",
 		"Dotfiles Syntax Highlighting",
+		"Emmet",
 		"FileSystem Autocompletion",
 		"Git",
+		"GitGutter",
+		"GitHubinator",
 		"Gitignore",
 		"Markdown Preview",
 		"Package Control",
-		"PhpDoc",
-		"SideBarEnhancements",
 		"SublimeCodeIntel",
-		"SublimeEvernote",
-		"sublimelint",
 		"SublimeLinter",
 		"Wrap Plus"
 	]

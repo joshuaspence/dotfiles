@@ -1,2 +1,9 @@
 [
+    { "keys": ["super+ctrl+a"], "command": "alignment" },
+    { "keys": ["super+ctrl+'"], "command": "change_quotes" },
+    { "keys": ["super+\\"], "command": "githubinator", "args" : { "permalink": false }},
+    { "keys": ["shift+super+\\"], "command": "githubinator", "args" : { "permalink": true }},
+    { "keys": ["alt+m"], "command": "markdown_preview", "args": {"target": "browser"} },
+    { "keys": ["super+option+enter"], "command": "open_url" },
+    { "keys": ["super+alt+q"], "command": "wrap_lines_plus" }
 ]
