@@ -1,0 +1,6 @@
+[ -z $SHELL ] && source $HOME/.shell/environment/shell
+
+if [ $SHELL = 'zsh' ]; then
+    export DISABLE_AUTO_UPDATE=false
+    export UPDATE_ZSH_DAYS=13
+fi

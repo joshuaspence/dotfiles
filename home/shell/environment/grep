@@ -1,9 +1,7 @@
-#!/bin/sh
-
 # Check for color support.
-source "$HOME/.shell/environment/color"
+[ -z $HAS_COLOR ] && source $HOME/.shell/environment/color
 
-if [ -n $HAS_COLOR ]; then
+if $HAS_COLOR; then
     export GREP_COLOR='1;33'
     export GREP_OPTIONS='--color=auto'
 fi

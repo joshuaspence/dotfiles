@@ -1,8 +1,6 @@
-#!/bin/sh
-
 # Use `less` as the default pager.
 if command -v less; then
-    PAGER=less
+    PAGER=$(command -v less
 elif command -v more; then
     PAGER=more
 else

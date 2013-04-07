@@ -1,6 +1,0 @@
-#!/bin/sh
-
-# Check is this is an SSH connection.
-if [ -n $SSH_TTY ] || [ -n $SSH_CLIENT ] || [ -n $SSH_CONNECTION ]; then
-    export IS_SSH=1
-fi

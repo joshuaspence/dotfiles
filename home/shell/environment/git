@@ -1,0 +1,2 @@
+export GIT_EDITOR=$EDITOR
+export GIT_SSH=$(command -v ssh)

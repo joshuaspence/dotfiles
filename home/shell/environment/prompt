@@ -1,0 +1,10 @@
+#!/bin/sh
+
+export PS1=
+export PS2='> '
+export PS3='#? '
+export PS4='+'
+
+xtitle() {
+    echo -ne "\033]0;$1\007"
+}

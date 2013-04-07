@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # Use the `locale` command to set language environment variables.
 if [ -z $LANG ] && command -v locale; then
     eval $(locale)

@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # The Python commands in this file are executed before the first prompt is
 # displayed in interactive mode.
 if [ -f "$HOME/.pythonrc" ]; then

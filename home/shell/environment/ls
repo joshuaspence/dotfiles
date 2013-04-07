@@ -4,3 +4,7 @@
 if command -v dircolors; then
     eval $(dircolors)
 fi
+
+if [ $SHELL = 'zsh' ]; then
+    export DISABLE_LS_COLORS='false'
+fi

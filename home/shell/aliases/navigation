@@ -3,6 +3,8 @@
 ##
 # Easier navigation.
 #
+# @link https://github.com/mathiasbynens/dotfiles/blob/master/.aliases
+#
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'

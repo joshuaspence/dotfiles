@@ -3,7 +3,7 @@
 ##
 # ROT13 encoder/decoder.
 #
-# @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases
+# @link https://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 #
 alias rot13='tr a-zA-Z n-za-mN-ZA-M'
 
@@ -17,7 +17,7 @@ alias unescape='sed '\''s/\[^[[0-9;]*[a-zA-Z]//gi'\'''
 ##
 # URL-encode a string.
 #
-# @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases
+# @link https://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 #
 alias urlencode='python -c '\''
 import sys;

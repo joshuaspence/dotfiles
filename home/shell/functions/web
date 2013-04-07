@@ -86,3 +86,8 @@ httpdump() {
     fi
     sudo tcpdump $iface -n -s 0 -w - | grep -a -o -E "Host\: .*|GET \/.*"
 }
+
+monitor_traffic(){
+  # install ngrep with sudo port install ngrep
+  sudo ngrep -W byline -qld en1 "$1"
+}
