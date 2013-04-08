@@ -73,33 +73,6 @@ set undoreload=10000
 " Vundle
 "===============================================================================
 
-filetype off
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
-filetype plugin indent on
-Bundle 'gmarik/vundle'
-
-"===============================================================================
-" Plugins
-"===============================================================================
-
-Bundle 'tpope/vim-fugitive'
-Bundle 'mattn/webapi-vim'
-Bundle 'mattn/gist-vim'
-Bundle 'henrik/vim-indexed-search'
-Bundle 'scrooloose/nerdtree'
-Bundle 'Valloric/YouCompleteMe'
-Bundle 'godlygeek/tabular'
-Bundle 'tomtom/tcomment_vim'
-Bundle 'motemen/git-vim'
-Bundle 'airblade/vim-gitgutter'
-Bundle 'tpope/vim-surround'
-Bundle 'sickill/vim-pasta'
-Bundle 'tpope/vim-markdown'
-Bundle 'Valloric/MatchTagAlways'
-Bundle 'mileszs/ack.vim'
-Bundle 'scrooloose/syntastic'
-
 " Gist
 " https://github.com/mattn/gist-vim
 let g:gist_clip_command = 'xclip -selection clipboard'
@@ -463,3 +436,107 @@ imap <C-F> <C-R>=expand("%")<CR>
 imap <Tab> <C-N>
 
 imap <C-L> <Space>=><Space>
+
+" https://github.com/myfreeweb/dotfiles/blob/master/vim/vimrc
+"
+" This came from Greg V's dotfiles:
+"      https://github.com/myfreeweb/dotfiles
+" Feel free to steal it, but attribution is nice
+"
+" thanks:
+" http://bitbucket.org/sjl/dotfiles
+" https://github.com/daveray/vimfiles
+" https://github.com/erynofwales/dotfiles
+" https://github.com/rmurphey/dotfiles
+" https://github.com/holman/dotfiles
+" https://github.com/spf13/spf13-vim
+" https://github.com/garybernhardt/dotfiles
+" https://github.com/mutewinter/dot_vim
+
+set nocompatible
+source ~/.vim/bundles.vim
+syntax on
+
+" basics
+set noswapfile backup undofile undoreload=5000 history=500
+set noequalalways
+set wrapscan incsearch ignorecase smartcase
+set clipboard+=unnamed
+set autoread autowrite
+set magic
+set nojoinspaces
+set modelines=3
+set synmaxcol=500 " don't highlight minified js and stuff
+set switchbuf=usetab
+
+" formatting
+set nowrap
+set expandtab
+set tabstop=2 shiftwidth=2 softtabstop=2
+set autoindent smartindent
+set encoding=utf-8 nobomb
+set whichwrap+=<,>,[,]
+set virtualedit=block
+
+" ui
+set notimeout ttimeout ttimeoutlen=10
+set relativenumber
+set hlsearch
+set backspace=indent,eol,start
+set noerrorbells
+set showbreak=↪
+set list listchars=tab:▸\ ,eol:¬,extends:❯,precedes:❮
+set fillchars=diff:⣿,vert:│
+set ttyfast lazyredraw title
+set cursorline
+set hidden
+set mouse=a
+set shortmess=filtIoOA
+set laststatus=2
+set nostartofline
+set visualbell
+set showmatch
+set mat=5
+set virtualedit=onemore
+set viewoptions=folds,options,cursor,unix,slash
+set t_ti= t_te= " http://www.shallowsky.com/linux/noaltscreen.html
+
+" completion
+set complete=.,w,b,u,t completeopt=longest,menuone,preview
+set wildmenu wildmode=list:longest,list:full
+set wildignore+=.hg,.git,.bzr,.svn                 " Version control
+set wildignore+=*.aux,*.out,*.toc                  " LaTeX intermediate files
+set wildignore+=*.jpg,*.bmp,*.gif,*.png,*.jpeg     " binary images
+set wildignore+=*.luac,*.pyc,*.rbc,*.class,classes " Byte code and stuff
+set wildignore+=*.o,*.obj,*.exe,*.dll,*.manifest   " compiled object files
+set wildignore+=*.spl                              " compiled spelling word lists
+set wildignore+=*.sw?                              " Vim swap files
+set wildignore+=.DS_Store,Thumbs.db                " Shit
+set wildignore+=target                             " JVM compiled stuff
+set wildignore+=node_modules,build
+
+" paths
+set shell=zsh
+set formatprg=par\ -eq
+set tags=./tags;
+set dictionary=/usr/share/dict/words
+set backupskip=/tmp/*,/private/tmp/*
+set backupdir=~/.vim/tmp/backups/
+set undodir=~/.vim/tmp/undo/
+
+" ////////////////////////////
+
+source ~/.vim/bindings.vim
+source ~/.vim/autocmd.vim
+
+let vimclojure#SplitPos='bottom'
+let g:vimclojure#DynamicHighlighting=1
+let g:SuperTabDefaultCompletionType='context'
+let delimitMate_excluded_ft='clojure'
+let g:flake8_ignore='E128'
+set background=dark
+colorscheme railscasts
+
+if filereadable(expand("~/.vimrc.local"))
+  source ~/.vimrc.local
+endif
