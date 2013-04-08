@@ -13,4 +13,4 @@ export HISTFILESIZE="$HISTSIZE"
 export HISTFILE="$HOME/.shell_history"
 
 # Exclude commands starting with whitespace from the history file.
-export HISTIGNORE='[ \t]*'
+export HISTIGNORE='cd:history:ls:pwd:[ \t]*'
