@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v loc >/dev/null && return
-
 # Check for the prerequisite functions.
 (
     command -v cut >/dev/null &&
@@ -26,8 +23,8 @@ loc() {
         local lines=$(find . -type f -name "*$ext" | xargs cat | wc -l)
         lines=${lines// /}
         total=$(($total + $lines))
-        echo "Lines of code for $(colorize bold-green)$ext$(colorize-none): $(colorize cyan)$lines$(colorize none)"
+        echo "Lines of code for $ext: $lines"
     done
-    echo "Total lines of code: $(colorize bold-yellow)$total$(colorize none)"
+    echo "Total lines of code: $total"
     return 0
 }

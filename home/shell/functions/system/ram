@@ -1,8 +1,10 @@
-# Don't redefine this function.
-command -v ram >/dev/null && return
-
 # Check for the prerequisite functions.
-command -v ngrep >/dev/null || return 1
+(
+    command -v awk >/dev/null &&
+    command -v bc >/dev/null &&
+    command -v grep >/dev/null &&
+    command -v ps >/dev/null
+) || return 1
 
 ##
 # Show how much RAM an application uses.

@@ -1,19 +1,18 @@
-# Don't redefine this function.
-#command -v sniff >/dev/null && return
-
 # Check for the prerequisite functions.
-command -v ngrep >/dev/null || return 1
-command -v sudo >/dev/null || return 1
+(
+    command -v ngrep >/dev/null &&
+    command -v sudo >/dev/null
+) || return 1
 
 ##
 # View HTTP traffic.
 #
 # @param [String] The interface on which to sniff for HTTP traffic.
 #
-# @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases
+# @link http://github.com/stevehodgkiss/dotfiles/blob/master/aliases
 #
 sniff() {
-    if [ $# != 1 ] || [ -z "$1" ]; then
+    if [ $# -ne 1 ] || [ -z "$1" ]; then
         echo "Usage: sniff <interface>" >&2
         return 1
     fi

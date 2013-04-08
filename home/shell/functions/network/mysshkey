@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v mysshkey >/dev/null && return
-
 # Check for the prerequisite functions.
 (
     command -v awk >/dev/null &&

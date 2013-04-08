@@ -1,15 +1,12 @@
-# Don't redefine this function.
-command -v unidecode >/dev/null && return
-
 # Check for the prerequisite functions.
 command -v perl >/dev/null || return 1
 
 ##
 # Decode \x{ABCD}-style Unicode escape sequences.
 #
-# @param
+# @param @todo
 #
-# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+# @link http://github.com/stevehodgkiss/dotfiles/blob/master/functions
 #
 unidecode() {
     perl -e "binmode(STDOUT, ':utf8'); print \"$@\""

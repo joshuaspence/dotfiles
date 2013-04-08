@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v hg_state >/dev/null && return
-
 ##
 # Prints out contextual hg state for the command prompt.
 #

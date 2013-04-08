@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v httpdump >/dev/null && return
-
 # Check for the prerequisite functions.
 (
     command -v grep >/dev/null &&
@@ -23,5 +20,5 @@ httpdump() {
 
     local iface=
     [ -n "$1" ] && iface="-i $1"
-    sudo tcpdump $iface -n -s 0 -w - | grep -a -o -E "Host\: .*|GET \/.*"
+    sudo tcpdump $iface -n -s 0 -w - | grep -a -o -E 'Host\: .*|GET \/.*'
 }

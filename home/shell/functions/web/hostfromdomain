@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v hostfromdomain >/dev/null && return
-
 # Check for the prerequisite functions.
 command -v dig >/dev/null || return 1
 
@@ -11,10 +8,10 @@ command -v dig >/dev/null || return 1
 #
 # @params [String] Domain name to look up.
 #
-# @link https://github.com/fnichol/bashrc/blob/master/bashrc
+# @link http://github.com/fnichol/bashrc/blob/master/bashrc
 #
 hostfromdomain() {
-    if [ $# != 1 ] || [ -z "$1" ]; then
+    if [ $# -ne 1 ] || [ -z "$1" ]; then
         echo "Usage: hostfromdomain <domainname>" >&2
         return 1
     fi

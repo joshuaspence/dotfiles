@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v down4me >/dev/null && return
-
 # Check for the prerequisite functions.
 command -v curl >/dev/null || return 1
 
@@ -10,7 +7,7 @@ command -v curl >/dev/null || return 1
 # @param [String] The URL.
 #
 down4me() {
-    if [ $# != 1 ] || [ -z "$1" ]; then
+    if [ $# -ne 1 ] || [ -z "$1" ]; then
         echo "Usage: down4me <url>" >&2
         return 1
     fi

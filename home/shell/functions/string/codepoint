@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v codepoint >/dev/null && return
-
 # Check for the prerequisite functions.
 command -v perl >/dev/null || return 1
 
@@ -9,7 +6,7 @@ command -v perl >/dev/null || return 1
 #
 # @param [Character] The input character.
 #
-# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+# @link http://github.com/stevehodgkiss/dotfiles/blob/master/functions
 #
 function codepoint() {
     if [ $# -lt 1 ] || [ -z "$1" ]; then

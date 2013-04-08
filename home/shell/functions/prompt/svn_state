@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v svn_state >/dev/null && return
-
 ##
 # TODO
 #

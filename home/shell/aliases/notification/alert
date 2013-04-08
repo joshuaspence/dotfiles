@@ -9,7 +9,7 @@
 # @link @todo
 #
 alias alert='
-	notify-send --urgency=low \
-    	-i $([ $? -eq 0 ] && echo '\''terminal'\'' || echo '\''error'\'') \
-    	"$(history | tail -1 | sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"
+    notify-send --urgency=low \
+        -i $([ $? -eq 0 ] && echo '\''terminal'\'' || echo '\''error'\'') \
+        "$(history | tail -1 | sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"
 '

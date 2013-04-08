@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v short_pwd >/dev/null && return
-
 # Check for the prerequisite functions.
 (
     command -v pwd >/dev/null &&
@@ -13,7 +10,7 @@ command -v short_pwd >/dev/null && return
 # Calculates a truncated `pwd`. Overriding of the truncation length can be done
 # by setting "PROMPT_LEN".
 #
-# @link https://gist.github.com/548242
+# @link http://gist.github.com/548242
 #
 short_pwd() {
     local pwd_length=${PROMPT_LEN-35}

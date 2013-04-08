@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v box >/dev/null && return
-
 ##
 # Create box of '#' characters around given string.
 #

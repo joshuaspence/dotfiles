@@ -1,13 +1,13 @@
-# Don't redefine this function.
-command -v escape >/dev/null && return
-
 # Check for the prerequisite functions.
-command -v ngrep >/dev/null || return 1
+command -v printf >/dev/null || return 1
 
 ##
 # Escape UTF-8 characters into their 3-byte format.
 #
-# @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
+# @param @todo
+#
+# @link http://github.com/stevehodgkiss/dotfiles/blob/master/functions
+#
 escape() {
     printf "\\\x%s" $(printf "$@" | xxd -p -c1 -u)
     echo # newline

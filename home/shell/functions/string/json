@@ -1,11 +1,11 @@
-# Don't redefine this function.
-command -v monitor_traffic >/dev/null && return
-
 # Check for the prerequisite functions.
-command -v ngrep >/dev/null || return 1
+(
+     command -v pygmentize >/dev/null &&
+     command -v python >/dev/null 
+) || return 1
 
 # Syntax-highlight JSON strings or files
-function json() {
+json() {
     if [ -p /dev/stdin ]; then
         # piping, e.g. `echo '{"foo":42}' | json`
         python -mjson.tool | pygmentize -l javascript

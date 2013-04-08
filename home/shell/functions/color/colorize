@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v colorize >/dev/null && return
-
 # Check for color support.
 source "$HOME/.shell/environment/color"
 

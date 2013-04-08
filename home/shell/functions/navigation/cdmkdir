@@ -1,6 +1,3 @@
-# Don't redefine this function.
-command -v cdmkdir >/dev/null && return
-
 # Check for the prerequisite functions.
 (
     command -v mkdir >/dev/null &&

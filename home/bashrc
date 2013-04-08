@@ -14,5 +14,5 @@ sh_source_r "$HOME/.shell/functions"
 
 # If PS1 is defined then the shell should be interactive.
 if [ -n "$PS1" ]; then
-    [ -f "$HOME/.shell/completion.bash" ] && "$HOME/.shell/completion.bash"
+    [ -f "$HOME/.shell/completion.bash" ] && source "$HOME/.shell/completion.bash"
 fi
