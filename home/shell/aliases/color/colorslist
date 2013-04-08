@@ -1,0 +1,4 @@
+##
+# @link http://github.com/twerth/dotfiles/blob/master/etc/bashrc
+#
+alias colorslist="set | egrep 'COLOR_\w*'"
