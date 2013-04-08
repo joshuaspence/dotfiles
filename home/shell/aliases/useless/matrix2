@@ -1,6 +1,3 @@
-# Don't overwrite alias.
-command -v matrix2 >/dev/null && return
-
 ##
 # Cool "The Matrix" type screens.
 #

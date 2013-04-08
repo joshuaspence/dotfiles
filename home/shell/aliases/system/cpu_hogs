@@ -1,6 +1,3 @@
-# Don't overwrite alias.
-command -v cpu_hogs >/dev/null && return
-
 ##
 # Display the processes that are using the most processing resources.
 #

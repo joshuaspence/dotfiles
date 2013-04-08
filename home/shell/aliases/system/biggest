@@ -1,6 +1,3 @@
-# Don't overwrite alias.
-command -v biggest >/dev/null && return
-
 ##
 # Displays the largest files/directories in the current directory.
 #

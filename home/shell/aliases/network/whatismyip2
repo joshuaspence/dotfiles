@@ -1,6 +1,3 @@
-# Don't overwrite alias.
-command -v whatismyip2 >/dev/null && return
-
 ##
 # Get my public IP address.
 #

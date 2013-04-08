@@ -1,6 +1,3 @@
-# Don't overwrite alias.
-command -v rbiggest >/dev/null && return
-
 ##
 # Recursively displays the largest files/directories in the current directory.
 #

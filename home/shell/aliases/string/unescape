@@ -1,6 +1,3 @@
-# Don't overwrite alias.
-command -v unescape >/dev/null && return
-
 ##
 # Remove escape characters from a string. The input should be piped into this
 # command.

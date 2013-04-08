@@ -1,6 +1,3 @@
-# Don't overwrite alias.
-command -v urlencode >/dev/null && return
-
 ##
 # URL-encode a string.
 #

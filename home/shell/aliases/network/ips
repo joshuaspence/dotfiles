@@ -1,9 +1,6 @@
-# Don't overwrite alias.
-command -v ips >/dev/null && return
-
 ##
 # Prints IP addresses.
 #
 # @link @todo
 #
-alias ips='ifconfig | grep "inet " | awk "{print \$2}"'
+alias ips="ifconfig | grep 'inet ' | awk '{print \$2}'"
