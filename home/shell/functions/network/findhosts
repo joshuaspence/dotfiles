@@ -1,0 +1,9 @@
+##
+# @link https://github.com/twerth/dotfiles/blob/master/etc/bashrc
+#
+findhosts() {
+    nmap -sP -n -oG - "$1"/24 | grep "Up" | awk '{print $2}' -
+    echo "To scan those do: nmap $1-254" 
+    echo "To scan and OS detect those do: sudo nmap -O $1-254" 
+    echo "To intensly scan one do: sudo nmap -sV -vv -PN $1"
+}
