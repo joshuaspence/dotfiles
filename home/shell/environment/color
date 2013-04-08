@@ -1,5 +1,5 @@
 if [ -n "$COLORTERM" ] || [ $(tput colors) -gt 2 ]; then
     HAS_COLOR='true'
 else
-	HAS_COLOR='false'
+    HAS_COLOR='false'
 fi

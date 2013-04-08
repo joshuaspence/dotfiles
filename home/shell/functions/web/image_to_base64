@@ -3,8 +3,8 @@ command -v image_to_base64 >/dev/null && return
 
 # Check for the prerequisite functions.
 (
-	command -v openssl >/dev/null &&
-	command -v tr >/dev/null
+    command -v openssl >/dev/null &&
+    command -v tr >/dev/null
 ) || return 1
 
 ##

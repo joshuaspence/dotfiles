@@ -3,6 +3,8 @@
 #
 # @link @todo
 #
-alias mem_hogs='ps -e -o %mem,pid,ppid,user,cmd |
-    awk '\''NR == 1; NR > 1 {print $0 | "sort -nr"}'\'' |
-    head'
+alias mem_hogs='
+    ps -e -o %mem,pid,ppid,user,cmd |
+    awk '\''NR == 1; NR > 1 {print $0 | "sort -n -r"}'\'' |
+    head
+'

@@ -1,49 +1,49 @@
 ps1() {
-	# Some useful unicode sequences.
-	local joiner_topleft="\0342\0224\0214" 	    # ┌
-	local joiner_bottomleft="\0342\0224\0224"   # └
-	local separator="\0342\0224\0200"		    # ─
-	local separator_tail="\0342\0225\0274"	    # ╼
-	local cross="\0342\0234\0227" 			    # ✗
-	local tick="\0342\0234\0223" 			    # ✓
+    # Some useful unicode sequences.
+    local joiner_topleft="\0342\0224\0214"      # ┌
+    local joiner_bottomleft="\0342\0224\0224"   # └
+    local separator="\0342\0224\0200"           # ─
+    local separator_tail="\0342\0225\0274"      # ╼
+    local cross="\0342\0234\0227"               # ✗
+    local tick="\0342\0234\0223"                # ✓
 
-	# Joiner.
-	echo -ne "$(colorize white)${joiner_topleft}${separator}"
+    # Joiner.
+    echo -ne "$(colorize white)${joiner_topleft}${separator}"
 
-	# Status of previous command
-	local fail_status="$(colorize red)${cross}$(colorize white)"
-	local success_status="$(colorize green)${tick}$(colorize white)"
-	local status="\$([[ \$? != 0 ]] && echo '${fail_status}' || echo '${success_status}')"
-	echo -ne "[${status}]"
+    # Status of previous command
+    local fail_status="$(colorize red)${cross}$(colorize white)"
+    local success_status="$(colorize green)${tick}$(colorize white)"
+    local status="\$([[ \$? != 0 ]] && echo '${fail_status}' || echo '${success_status}')"
+    echo -ne "[${status}]"
 
-	# Separator.
-	echo -ne "${separator}"
+    # Separator.
+    echo -ne "${separator}"
 
-	# User and hostname.
-	local user="\$([[ \${EUID} == 0 ]] && echo '$(colorize red)\h$(colorize white)' || echo '$(colorize yellow)\u$(colorize white)')"
-	local host="$(colorize cyan)\H$(colorize white)"
-	echo -ne "[${user}@${host}]"
+    # User and hostname.
+    local user="\$([[ \${EUID} == 0 ]] && echo '$(colorize red)\h$(colorize white)' || echo '$(colorize yellow)\u$(colorize white)')"
+    local host="$(colorize cyan)\H$(colorize white)"
+    echo -ne "[${user}@${host}]"
 
-	# Separator.
-	echo -ne "${straight_join}"
+    # Separator.
+    echo -ne "${straight_join}"
 
-	# Working directory.
-	local pwd="$(colorize green)\w$(colorize white)"
-	echo -ne "[${pwd}]\n"
+    # Working directory.
+    local pwd="$(colorize green)\w$(colorize white)"
+    echo -ne "[${pwd}]\n"
 
-	# Separator.
-	echo -ne "${joiner_bottomleft}${separator}${separator}"
+    # Separator.
+    echo -ne "${joiner_bottomleft}${separator}${separator}"
 
-	# End.
-	echo -ne "${separator_tail} $(colorize reset)"
+    # End.
+    echo -ne "${separator_tail} $(colorize reset)"
 }
 
 xtitle() {
     case $TERM in
-    	xterm* | rxvt*)
-			echo -e "\[\e]0;\u@\H:\w [\$(tty):\$SHLVL]\007\]"
-			;;
-	esac
+        xterm* | rxvt*)
+            echo -e "\[\e]0;\u@\H:\w [\$(tty):\$SHLVL]\007\]"
+            ;;
+    esac
 }
 
 export PS1="$(xtitle)$(ps1)"

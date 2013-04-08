@@ -3,9 +3,9 @@ command -v httpdump >/dev/null && return
 
 # Check for the prerequisite functions.
 (
-	command -v grep >/dev/null &&
-	command -v sudo >/dev/null &&
-	command -v tcpdump >/dev/null
+    command -v grep >/dev/null &&
+    command -v sudo >/dev/null &&
+    command -v tcpdump >/dev/null
 ) || return 1
 
 ##
@@ -16,8 +16,8 @@ command -v httpdump >/dev/null && return
 # @link https://github.com/stevehodgkiss/dotfiles/blob/master/aliases
 #
 httpdump() {
-	if [ $# -gt 1 ]; then
-    	echo "Usage: httpdump [<interface>]" >&2
+    if [ $# -gt 1 ]; then
+        echo "Usage: httpdump [<interface>]" >&2
         return 1
     fi
 

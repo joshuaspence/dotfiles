@@ -6,12 +6,12 @@ SHELL="$0"
 if echo $- | grep -q 'i'; then
     IS_INTERACTIVE='true'
 else
-	IS_INTERACTIVE='false'
+    IS_INTERACTIVE='false'
 fi
 
 # Check is this is a remote (SSH) connection.
 if [ $SSH_TTY ] || [ $SSH_CLIENT ] || [ $SSH_CONNECTION ]; then
     IS_REMOTE='true'
 else
-	IS_REMOTE='false'
+    IS_REMOTE='false'
 fi

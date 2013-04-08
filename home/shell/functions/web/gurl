@@ -3,8 +3,8 @@ command -v gurl >/dev/null && return
 
 # Check for the prerequisite functions.
 (
-	command -v curl >/dev/null &&
-	command -v gunzip >/dev/null
+    command -v curl >/dev/null &&
+    command -v gunzip >/dev/null
 ) || return 1
 
 ##
@@ -15,7 +15,7 @@ command -v gurl >/dev/null && return
 # @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
 #
 function gurl() {
-	if [ $# != 1 ] || [ -z "$1" ]; then
+    if [ $# != 1 ] || [ -z "$1" ]; then
         echo "Usage: gurl <url>" >&2
         return 1
     fi

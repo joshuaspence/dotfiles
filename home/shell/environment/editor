@@ -12,7 +12,7 @@ elif ! $IS_REMOTE && command -v sublime-text-2 >/dev/null; then
 elif command -v vim >/dev/null; then
     export EDITOR="$(command -v vim)"
 elif command -v vi >/dev/null; then
-	export EDITOR="$(command -v vi)"
+    export EDITOR="$(command -v vi)"
 else
     echo "No command set for EDITOR environment variable" >&2
 fi

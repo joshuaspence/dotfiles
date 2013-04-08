@@ -3,6 +3,8 @@
 #
 # @link @todo
 #
-alias whatismyip3='curl -s jsonip.com |
-    grep --color=none -Eo '\''"ip":"[0-9]{1,4}(.[0-9]{1,4}){3}"'\'' |
-    grep --color=none -Eo '\''[0-9]{1,4}(.[0-9]{1,4}){3}'\'''
+alias whatismyip3="
+	curl -s jsonip.com |
+    grep --color=none -E -o '\"ip\":\"[0-9]{1,4}(.[0-9]{1,4}){3}\"' |
+    grep --color=none -E -o '[0-9]{1,4}(.[0-9]{1,4}){3}'
+"

@@ -3,4 +3,4 @@
 #
 # @link @todo
 #
-alias rbiggest='BLOCKSIZE=1048576; du -hx | sort -nr | head -10'
+alias rbiggest='BLOCKSIZE=1048576; du -h -x | sort -n -r | head -10'

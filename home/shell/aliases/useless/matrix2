@@ -3,8 +3,12 @@
 #
 # @link @todo
 #
-alias matrix2='(echo -ne "\e[32m"
-    while true; do
-        echo -ne "\e[$(($RANDOM % 2 + 1))m"
-        tr -c "[:print:]" " " </dev/urandom | dd count=1 bs=50 2>/dev/null
-    done)'
+alias matrix2="
+    (
+        echo -n -e '\e[32m'
+        while true; do
+            echo -n -e \"\e[\$((\$RANDOM % 2 + 1))m\"
+            tr -c '[:print:]' ' ' </dev/urandom | dd count=1 bs=50 2>/dev/null
+        done
+    )
+"

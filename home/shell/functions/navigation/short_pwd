@@ -3,10 +3,10 @@ command -v short_pwd >/dev/null && return
 
 # Check for the prerequisite functions.
 (
-	command -v pwd >/dev/null &&
-	command -v sed >/dev/null &&
-	command -v tr >/dev/null &&
-	command -v wc >/dev/null
+    command -v pwd >/dev/null &&
+    command -v sed >/dev/null &&
+    command -v tr >/dev/null &&
+    command -v wc >/dev/null
 ) || return 1
 
 ##

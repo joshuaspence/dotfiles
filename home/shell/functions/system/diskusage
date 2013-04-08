@@ -3,9 +3,9 @@ command -v diskusage >/dev/null && return
 
 # Check for the prerequisite functions.
 (
-	command -v awk >/dev/null
-	command -v du >/dev/null &&
-	command -v sort >/dev/null
+    command -v awk >/dev/null
+    command -v du >/dev/null &&
+    command -v sort >/dev/null
 ) || return 1
 
 ##

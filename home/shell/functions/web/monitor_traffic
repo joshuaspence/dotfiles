@@ -3,8 +3,8 @@
 
 # Check for the prerequisite functions.
 (
-	command -v ngrep >/dev/null &&
-	command -v sudo >/dev/null
+    command -v ngrep >/dev/null &&
+    command -v sudo >/dev/null
 ) || return 1
 
 ##
@@ -16,7 +16,7 @@
 # @link @todo
 #
 monitor_traffic() {
-	if [ $# -lt 1 ] || [ $# -gt 2 ] || [ -z "$1" ]; then
+    if [ $# -lt 1 ] || [ $# -gt 2 ] || [ -z "$1" ]; then
         echo "Usage: monitor_traffic <interface> [<pattern>]" >&2
         return 1
     fi

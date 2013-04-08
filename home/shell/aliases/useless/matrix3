@@ -3,6 +3,8 @@
 #
 # @link @todo
 #
-alias matrix3='tr -c "[:digit:]" " " </dev/urandom |
-    dd cbs=$(tput cols) conv=lcase,unblock |
-    GREP_COLOR="1;32" grep --color "[^ ]"'
+alias matrix3="
+    tr -c '[:digit:]' ' ' </dev/urandom |
+    dd cbs=\$(tput cols) conv=lcase,unblock |
+    GREP_COLOR='1;32' grep --color '[^ ]'
+"

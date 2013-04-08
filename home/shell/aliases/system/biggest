@@ -3,4 +3,4 @@
 #
 # @link @todo
 #
-alias biggest='du -hsk $(ls -A) | sort -rn | head -10'
+alias biggest='du -h -s -k $(ls -A) | sort -r -n | head -10'

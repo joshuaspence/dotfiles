@@ -5,9 +5,9 @@ unset MANPAGER
 command -v man >/dev/null || return
 
 if command -v most >/dev/null; then
-	# Use `most` to colorize man pages.
-	export MANPAGER="$(command -v most)"
+    # Use `most` to colorize man pages.
+    export MANPAGER="$(command -v most)"
 else
-	[ -n "$PAGER"] || source "$HOME/.shell/environment/pager"
-	export MANPAGER="$PAGER"
+    [ -n "$PAGER"] || source "$HOME/.shell/environment/pager"
+    export MANPAGER="$PAGER"
 fi

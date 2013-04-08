@@ -12,7 +12,7 @@ command -v perl >/dev/null || return 1
 # @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
 #
 function codepoint() {
-	if [ $# -lt 1 ] || [ -z "$1" ]; then
+    if [ $# -lt 1 ] || [ -z "$1" ]; then
         echo "Usage: codepoint <character>" >&2
         return 1
     fi

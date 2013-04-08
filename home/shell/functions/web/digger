@@ -12,7 +12,7 @@ command -v dig >/dev/null || return 1
 # @link https://github.com/stevehodgkiss/dotfiles/blob/master/functions
 #
 digger() {
-	if [ $# != 1 ] || [ -z "$1" ]; then
+    if [ $# != 1 ] || [ -z "$1" ]; then
         echo "Usage: digger <domainname>" >&2
         return 1
     fi
