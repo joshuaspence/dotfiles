@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby -w
 
+# https://github.com/twerth/dotfiles/blob/master/bin/rstakeout
+
 # Originally by Mike Clark.
 #
 # From http://www.pragmaticautomation.com/cgi-bin/pragauto.cgi/Monitor/StakingOutFileChanges.rdoc
