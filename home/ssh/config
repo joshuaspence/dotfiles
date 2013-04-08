@@ -1,3 +1,8 @@
+# http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
+ControlMaster auto
+ControlPath /tmp/ssh_mux_%h_%p_%r
+ControlPersist 4h
+
 #===============================================================================
 # EC2
 #===============================================================================
@@ -76,3 +81,6 @@ Host *
     Compression yes
     PasswordAuthentication yes
     CheckHostIP yes
+
+# Host www* mail
+#  HostName %h.example.com
