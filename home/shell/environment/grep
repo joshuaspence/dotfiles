@@ -5,13 +5,11 @@ unset GREP_OPTIONS
 # Make sure `grep` is installed.
 command -v grep >/dev/null || return
 
-source "$HOME/.shell/environment/color"
+# Check for color support.
+[ -n $HAS_COLOR ] || source "$HOME/.shell/environment/color"
 
+# Set environment variables.
 if $HAS_COLOR; then
-    GREP_COLOR='1;33'
-    GREP_OPTIONS='--color=auto'
+    export GREP_COLOR='1;33'
+    export GREP_OPTIONS='--color=auto'
 fi
-
-# Export environment variables.
-export GREP_COLOR
-export GREP_OPTIONS

@@ -1,11 +1,5 @@
-# Unset environment variables.
-unset HAS_COLOR
-
-if [ $COLORTERM ] || [ $(tput colors) -gt 2 ]; then
+if [ -n "$COLORTERM" ] || [ $(tput colors) -gt 2 ]; then
     HAS_COLOR='true'
 else
 	HAS_COLOR='false'
 fi
-
-# Export environment variables.
-export HAS_COLOR

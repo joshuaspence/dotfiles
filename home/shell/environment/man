@@ -1,38 +1,13 @@
 # Unset environment variables.
-unset LESS_TERMCAP_mb
-unset LESS_TERMCAP_md
-unset LESS_TERMCAP_me
-unset LESS_TERMCAP_se
-unset LESS_TERMCAP_so
-unset LESS_TERMCAP_ue
-unset LESS_TERMCAP_us
+unset MANPAGER
 
 # Make sure `man` is installed.
 command -v man >/dev/null || return
 
-# Source prerequisite environment variables.
-source "$HOME/.shell/environment/color"
-source "$HOME/.shell/environment/pager"
-
-if $HAS_COLOR; then
-    # `less` colors for `man` pages.
-    LESS_TERMCAP_mb=$'\e[1;31m'        # begin blinking
-    LESS_TERMCAP_md=$'\e[1;38;5;74m'   # begin bold
-    LESS_TERMCAP_me=$'\e[0m'           # end mode
-    LESS_TERMCAP_se=$'\e[0m'           # end standout-mode
-    LESS_TERMCAP_so=$'\e[38;5;246m'    # begin standout-mode - info box
-    LESS_TERMCAP_ue=$'\e[0m'           # end underline
-    LESS_TERMCAP_us=$'\e[04;38;5;146m' # begin underline
+if command -v most >/dev/null; then
+	# Use `most` to colorize man pages.
+	export MANPAGER="$(command -v most)"
+else
+	[ -n "$PAGER"] || source "$HOME/.shell/environment/pager"
+	export MANPAGER="$PAGER"
 fi
-
-MANPAGER=$PAGER
-
-# Export environment variables.
-export LESS_TERMCAP_mb
-export LESS_TERMCAP_md
-export LESS_TERMCAP_me
-export LESS_TERMCAP_se
-export LESS_TERMCAP_so
-export LESS_TERMCAP_ue
-export LESS_TERMCAP_us
-export MANPAGER

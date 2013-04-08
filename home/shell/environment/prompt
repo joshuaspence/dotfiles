@@ -1,21 +1,52 @@
-# Unset environment variables.
-unset PS1
-unset PS2
-unset PS3
-unset PS4
+ps1() {
+	# Some useful unicode sequences.
+	local joiner_topleft="\0342\0224\0214" 	    # ┌
+	local joiner_bottomleft="\0342\0224\0224"   # └
+	local separator="\0342\0224\0200"		    # ─
+	local separator_tail="\0342\0225\0274"	    # ╼
+	local cross="\0342\0234\0227" 			    # ✗
+	local tick="\0342\0234\0223" 			    # ✓
 
-# Set environment variables.
-PS1="\[\033[0;37m\]\342\224\214\342\224\200\$([[ \$? != 0 ]] && echo \"[\[\033[0;31m\]\342\234\227\[\033[0;37m\]]\342\224\200\")[$(if [[ ${EUID} == 0 ]]; then echo '\[\033[0;31m\]\h'; else echo '\[\033[0;33m\]\u\[\033[0;37m\]@\[\033[0;96m\]\h'; fi)\[\033[0;37m\]]\342\224\200[\[\033[0;32m\]\w\[\033[0;37m\]]\n\[\033[0;37m\]\342\224\224\342\224\200\342\224\200\342\225\274 \[\033[0m\]"
-PS2='> '
-PS3='#? '
-PS4='+'
+	# Joiner.
+	echo -ne "$(colorize white)${joiner_topleft}${separator}"
 
-xtitle() {
-    echo -ne "\033]0;$1\007"
+	# Status of previous command
+	local fail_status="$(colorize red)${cross}$(colorize white)"
+	local success_status="$(colorize green)${tick}$(colorize white)"
+	local status="\$([[ \$? != 0 ]] && echo '${fail_status}' || echo '${success_status}')"
+	echo -ne "[${status}]"
+
+	# Separator.
+	echo -ne "${separator}"
+
+	# User and hostname.
+	local user="\$([[ \${EUID} == 0 ]] && echo '$(colorize red)\h$(colorize white)' || echo '$(colorize yellow)\u$(colorize white)')"
+	local host="$(colorize cyan)\H$(colorize white)"
+	echo -ne "[${user}@${host}]"
+
+	# Separator.
+	echo -ne "${straight_join}"
+
+	# Working directory.
+	local pwd="$(colorize green)\w$(colorize white)"
+	echo -ne "[${pwd}]\n"
+
+	# Separator.
+	echo -ne "${joiner_bottomleft}${separator}${separator}"
+
+	# End.
+	echo -ne "${separator_tail} $(colorize reset)"
 }
 
-# Export environment variables.
-export PS1
-export PS2
-export PS3
-export PS4
+xtitle() {
+    case $TERM in
+    	xterm* | rxvt*)
+			echo -e "\[\e]0;\u@\H:\w [\$(tty):\$SHLVL]\007\]"
+			;;
+	esac
+}
+
+export PS1="$(xtitle)$(ps1)"
+export PS2='... > '
+export PS3='#? '
+export PS4='+'

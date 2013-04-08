@@ -2,17 +2,14 @@
 unset BROWSER
 
 # Source prerequisite environment variables.
-source "$HOME/.shell/environment/shell"
+[ -n $IS_REMOTE ] || source "$HOME/.shell/environment/shell"
 
 if ! $IS_REMOTE && command -v google-chrome >/dev/null; then
-    BROWSER=$(command -v google-chrome)
+    export BROWSER="$(command -v google-chrome)"
 elif ! $IS_REMOTE && command -v firefox >/dev/null; then
-    BROWSER=$(command -v firefox)
+    export BROWSER="$(command -v firefox)"
 elif command -v lynx >/dev/null; then
-    BROWSER=$(command -v lynx)
+    export BROWSER="$(command -v lynx)"
 else
     echo "No command set for BROWSER environment variable" >&2
 fi
-
-# Export environment variables.
-export BROWSER

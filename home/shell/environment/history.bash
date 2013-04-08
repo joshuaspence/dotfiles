@@ -1,32 +1,16 @@
-# Unset environment variables.
-unset HISTCONTROL
-unset HISTTIMEFORMAT
-unset HISTSIZE
-unset HISTFILESIZE
-unset HISTFILE
-unset HISTIGNORE
-
 # Entries beginning with space aren't added into history, and duplicate entries
 # will be erased (leaving the most recent entry).
-HISTCONTROL='ignorespace:erasedups'
+export HISTCONTROL='ignorespace:erasedups'
 
 # Give history timestamps.
-HISTTIMEFORMAT='[%F %T] '
+export HISTTIMEFORMAT='[%F %T] '
 
 # Lots of history.
-HISTSIZE=10000000000
-HISTFILESIZE=$HISTSIZE
+export HISTSIZE=10000000000
+export HISTFILESIZE=$HISTSIZE
 
 # File where history is stored.
-HISTFILE=$HOME/.shell_history
+export HISTFILE="$HOME/.shell_history"
 
 # Exclude commands starting with whitespace from the history file.
-HISTIGNORE='[ \t]*'
-
-# Export environment variables.
-export HISTCONTROL
-export HISTTIMEFORMAT
-export HISTSIZE
-export HISTFILESIZE
-export HISTFILE
-export HISTIGNORE
+export HISTIGNORE='[ \t]*'
