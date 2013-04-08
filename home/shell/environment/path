@@ -1,8 +1,8 @@
 # Unset environment variables.
 unset MANPATH
 
-# We need the path functions!
-[ -r "$HOME/.shell/functions/path/prepend" ] && source "$HOME/.shell/functions/path/prepend" || return 1
+# We need the prepend-path function.
+command -v prepend-path >/dev/null || source "$HOME/.shell/functions/path/prepend"
 
 # ~/bin should be in the front of PATH if it exists.
 if [ -d "$HOME/bin" ]; then
@@ -11,7 +11,7 @@ fi
 
 # ~/man should be in the front of MANPATH if it exists.
 if [ -d "$HOME/man" ]; then
-    MANPATH="$HOME/man:"
+    prepend-path MANPATH "$HOME/man:"
 fi
 
 # Export environment variables.

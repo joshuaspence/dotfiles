@@ -6,8 +6,8 @@ export HISTCONTROL='ignorespace:erasedups'
 export HISTTIMEFORMAT='[%F %T] '
 
 # Lots of history.
-export HISTSIZE=10000000000
-export HISTFILESIZE=$HISTSIZE
+export HISTSIZE='10000000000'
+export HISTFILESIZE="$HISTSIZE"
 
 # File where history is stored.
 export HISTFILE="$HOME/.shell_history"

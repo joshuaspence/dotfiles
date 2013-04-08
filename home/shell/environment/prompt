@@ -1,41 +1,33 @@
-ps1() {
+ps1_prompt() {
     # Some useful unicode sequences.
-    local joiner_topleft="\0342\0224\0214"      # ┌
-    local joiner_bottomleft="\0342\0224\0224"   # └
-    local separator="\0342\0224\0200"           # ─
-    local separator_tail="\0342\0225\0274"      # ╼
-    local cross="\0342\0234\0227"               # ✗
-    local tick="\0342\0234\0223"                # ✓
+    local cross='\0342\0234\0227'               # ✗
+    local joiner_bottomleft='\0342\0224\0224'   # └
+    local joiner_topleft='\0342\0224\0214'      # ┌
+    local separator='\0342\0224\0200'           # ─
+    local separator_tail='\0342\0225\0274'      # ╼
+    local tick='\0342\0234\0223'                # ✓
 
-    # Joiner.
-    echo -ne "$(colorize white)${joiner_topleft}${separator}"
+    # Color configuration.
+    local default_color="${NO_STYLE}${WHITE}"
+    local cross_color="${RED}"
+    local tick_color="${GREEN}"
+    local root_user_color="${RED}"
+    local user_color="${YELLOW}"
+    local host_color="${CYAN}"
+    local pwd_color="${GREEN}"
 
-    # Status of previous command
-    local fail_status="$(colorize red)${cross}$(colorize white)"
-    local success_status="$(colorize green)${tick}$(colorize white)"
-    local status="\$([[ \$? != 0 ]] && echo '${fail_status}' || echo '${success_status}')"
-    echo -ne "[${status}]"
+    # Prompt components.
+    local status="\$([[ \$? != 0 ]] && echo '${cross_color}${cross}' || echo '${tick_color}${tick}')"
+    local user="\$([[ \${EUID} == 0 ]] && echo '${root_user_color}\h' || echo '${user_color}\u')"
+    local host="${host_color}\H"
+    local pwd="${pwd_color}\w${default_color}"
 
-    # Separator.
-    echo -ne "${separator}"
-
-    # User and hostname.
-    local user="\$([[ \${EUID} == 0 ]] && echo '$(colorize red)\h$(colorize white)' || echo '$(colorize yellow)\u$(colorize white)')"
-    local host="$(colorize cyan)\H$(colorize white)"
-    echo -ne "[${user}@${host}]"
-
-    # Separator.
-    echo -ne "${straight_join}"
-
-    # Working directory.
-    local pwd="$(colorize green)\w$(colorize white)"
-    echo -ne "[${pwd}]\n"
-
-    # Separator.
-    echo -ne "${joiner_bottomleft}${separator}${separator}"
-
-    # End.
-    echo -ne "${separator_tail} $(colorize reset)"
+    # The prompt.
+    echo -n -e "${default_color}${joiner_topleft}${separator}"
+    echo -n -e "[${status}${default_color}]${separator}"
+    echo -n -e "[${user}${default_color}@${host}${default_color}]${separator}"
+    echo -n -e "[${pwd}]"
+    echo -n -e "\n${joiner_bottomleft}${separator}${separator}${separator_tail} ${NO_STYLE}"
 }
 
 xtitle() {
@@ -50,3 +42,5 @@ export PS1="$(xtitle)$(ps1)"
 export PS2='... > '
 export PS3='#? '
 export PS4='+'
+
+export -f ps1_prompt

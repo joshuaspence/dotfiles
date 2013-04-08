@@ -1,5 +1,7 @@
+# Set environment variables.
 if [ -n "$COLORTERM" ] || [ $(tput colors) -gt 2 ]; then
     HAS_COLOR='true'
+    source "$HOME/.shell/environment/colors"
 else
     HAS_COLOR='false'
 fi

@@ -5,9 +5,8 @@ unset GIT_SSH
 # Make sure `git` is installed.
 command -v git >/dev/null || return
 
-# Source prerequisite environment variables.
+# Set and export environment variables.
 [ -n "$EDITOR" ] || source "$HOME/.shell/environment/editor"
-
-# Set environment variables.
 export GIT_EDITOR="$EDITOR"
+
 export GIT_SSH="$(command -v ssh)"

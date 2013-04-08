@@ -1,2 +1,2 @@
 export DISABLE_AUTO_UPDATE='false'
-export UPDATE_ZSH_DAYS=13
+export UPDATE_ZSH_DAYS='13'
