@@ -1,0 +1,7 @@
+shell_prompt__pwd() {
+    if [ $# -gt 0 ] && ([ "$@" == "-c" ] || [ "$@" == "--color" ]); then
+        echo -n -e "${GREEN}\w${NO_STYLE}"
+    else
+        echo -n -e "\w"
+    fi
+}

@@ -1,0 +1,7 @@
+shell_prompt__tty() {
+    if [ $# -gt 0 ] && ([ "$@" == "-c" ] || [ "$@" == "--color" ]); then
+        echo -n -e "${MAGENTA}\$(tty)${NO_STYLE}"
+    else
+        echo -n -e "\$(tty)"
+    fi
+}

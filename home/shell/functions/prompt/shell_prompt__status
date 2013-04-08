@@ -1,0 +1,10 @@
+shell_prompt__status() {
+    local cross='\0342\0234\0227'
+    local tick='\0342\0234\0223'
+
+    if [ $# -gt 0 ] && ([ "$@" == "-c" ] || [ "$@" == "--color" ]); then
+        echo -n -e "\$([[ \$? != 0 ]] && echo '${RED}${cross}${NO_STYLE}' || echo '${GREEN}${tick}${NO_STYLE}')"
+    else
+        echo -n -e "\$([[ \$? != 0 ]] && echo '${cross}' || echo '${tick}')"
+    fi
+}
