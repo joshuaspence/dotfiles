@@ -2,8 +2,7 @@
 SHELL="$0"
 
 # Check if this is an interactive shell.
-#if [[ $- =~ *i* ]]; then
-if echo $- | grep -q 'i'; then
+if [[ $- =~ *i* ]]; then
     IS_INTERACTIVE='true'
 else
     IS_INTERACTIVE='false'
