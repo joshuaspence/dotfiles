@@ -1,33 +1,29 @@
-# http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
+# @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
 ControlMaster auto
 ControlPath /tmp/ssh_mux_%h_%p_%r
 ControlPersist 4h
+GSSAPIAuthentication no
+
+ForwardAgent yes
+Compression yes
+PasswordAuthentication yes
+CheckHostIP yes
+VisualHostKey yes
 
 #===============================================================================
 # EC2
 #===============================================================================
-Host gunwatcher
-    Hostname gunwatcher.joshuaspence.com
+Host pear gunwatcher
+    Hostname %h.joshuaspence.com
     User ec2-user
     IdentityFile ~/.ssh/ec2
-    PasswordAuthentication no
+    IdentitiesOnly yes
 
-Host pear
-    Hostname pear.joshuaspence.com
-    User ec2-user
-    IdentityFile ~/.ssh/ec2
-    PasswordAuthentication no
 
 #===============================================================================
 # Personal
 #===============================================================================
-Host git
-    Hostname git.joshuaspence.com
-    User josh
-    IdentityFile ~/.ssh/git.joshuaspence.com
 
-Host beretta
-    Hostname beretta.ddns.joshuaspence.com
 
 #===============================================================================
 # Home
@@ -36,51 +32,44 @@ Host RT-N16
     Hostname home.ddns.joshuaspence.com
     User root
     IdentityFile ~/.ssh/home
+    IdentitiesOnly yes
 
 Host WRT54GL
     Hostname home.ddns.joshuaspence.com
     Port 2222
     User root
     IdentityFile ~/.ssh/home
+    IdentitiesOnly yes
+
 
 #===============================================================================
 # Launchpad
 #===============================================================================
 Host launchpad
     Hostname bazaar.launchpad.net
-    IdentityFile  ~/.ssh/launchpad
     User joshuaspence
+    IdentityFile  ~/.ssh/launchpad
+    IdentitiesOnly yes
     ForwardAgent no
-    PasswordAuthentication no
+
 
 #===============================================================================
 # ScribTex
 #===============================================================================
 Host scribtex
     Hostname git.scribtex.com
-    IdentityFile  ~/.ssh/scribtex
     User joshuaspence
+    IdentityFile  ~/.ssh/scribtex
+    IdentitiesOnly yes
     ForwardAgent no
-    PasswordAuthentication no
+
 
 #===============================================================================
 # GitHub
 #===============================================================================
 Host github
     Hostname git.github.com
-    IdentityFile  ~/.ssh/github
     User joshuaspence
+    IdentityFile  ~/.ssh/github
+    IdentitiesOnly yes
     ForwardAgent no
-    PasswordAuthentication no
-
-#===============================================================================
-# Global settings
-#===============================================================================
-Host *
-    ForwardAgent yes
-    Compression yes
-    PasswordAuthentication yes
-    CheckHostIP yes
-
-# Host www* mail
-#  HostName %h.example.com
