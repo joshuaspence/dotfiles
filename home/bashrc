@@ -1,18 +1,19 @@
 #!/bin/bash
 
 # We need the sh_source_r function!
-source "$HOME/.shell/functions/source/sh_source_r"
+command -v sh_source_r >/dev/null || source "$HOME/.shell/functions/source/sh_source_r"
 
-# We run the environment settings for all shells to ensure it's always set up.
-sh_source_r "$HOME/.shell/environment"
-
-# Set up command aliases.
+# Import command aliases.
 sh_source_r "$HOME/.shell/aliases"
 
 # Import user-defined functions.
 sh_source_r "$HOME/.shell/functions"
 
-# If PS1 is defined then the shell should be interactive.
-if [ -n "$PS1" ]; then
-    [ -f "$HOME/.shell/completion.bash" ] && source "$HOME/.shell/completion.bash"
-fi
+# Set up completion.
+sh_source_r "$HOME/.shell/completion"
+
+# In addition, source the following scripts since the variables that they define
+# aren't exported.
+[[ -r "$HOME/.shell/environment/color" ]] && source "$HOME/.shell/environment/color"
+[[ -r "$HOME/.shell/environment/history.bash" ]] && source "$HOME/.shell/environment/history.bash"
+[[ -r "$HOME/.shell/environment/shell" ]] && source "$HOME/.shell/environment/shell"

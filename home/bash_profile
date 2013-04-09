@@ -1,11 +1,15 @@
 #!/bin/bash
 
-# We need the path functions!
-source "$HOME/.shell/functions/source"
-
 # Pull in any system defaults first so they can be overridden later.
-[ -f /etc/profile ] && source /etc/profile
+[[ -r /etc/profile ]] && source /etc/profile
+
+# We run the environment settings for all shells to ensure it's always set up.
+command -v sh_source_r >/dev/null || source "$HOME/.shell/functions/source/sh_source_r"
+sh_source_r "$HOME/.shell/environment"
 
 # If running bash, source bashrc. According to `man bash`, "$-" includes "i" if
 # bash is interactive.
-[[ $- == *i* ]] && [ -e "$HOME/.bashrc" ] && source_r "$HOME/.bashrc"
+if [[ $- =~ *i* ]]; then
+	command -v source_r >/dev/null || source "$HOME/.shell/functions/source/source_r"
+	source_r "$HOME/.bashrc"
+fi
