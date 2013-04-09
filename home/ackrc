@@ -5,6 +5,7 @@
 --group
 
 # Follow or don't follow symlinks.
+#--follow
 --nofollow
 
 # Operate on all files, regardless of type.
