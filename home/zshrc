@@ -42,4 +42,8 @@ bindkey "^[[7~" beginning-of-line
 bindkey "^[[8~" end-of-line
 
 # Shell options.
-source "$HOME/.shell/shopt/$SHELL"
+source "$HOME/.shell/shopt.zsh"
+
+source "$HOME/.shell/environment/ls.zsh"
+source "$HOME/.shell/environment/update.zsh"
+source "$HOME/.shell/environment/shell"
