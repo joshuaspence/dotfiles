@@ -42,14 +42,34 @@ def _pythonrc_enable_history():
 def _pythonrc_enable_completion():
     import sys
 
-    # Bind the tab key to readline completion.
     try:
         import readline
         import rlcompleter
     except ImportError as e:
         sys.stderr.write(str(e) + " - Tab completion is disabled.\n")
     else:
-        readline.parse_and_bind("tab: complete")
+        class IrlCompleter(rlcompleter.Completer):
+            '''Identical to rlcompleter.Completer except that a "tab" insertion
+            is enabled if there's no text for completion.
+
+            The default "tab" is four spaces. You can initialize this class with
+            "\t" as the tab if you wish to use a genuine tab instead.
+            '''
+
+            def __init__(self, tab='    '):
+                self.tab = tab
+                rlcompleter.Completer.__init__(self)
+
+            def complete(self, text, state):
+                if text == '':
+                    readline.insert_text(self.tab)
+                    return None
+                else:
+                    return rlcompleter.Completer.complete(self, text, state)
+
+        # You could change this line to bind another key instead of tab.
+        readline.parse_and_bind('tab: complete')
+        readline.set_completer(IrlCompleter().complete)
 
 
 ##
@@ -62,15 +82,13 @@ def _pythonrc_set_prompt():
     import sys
 
     if os.getenv('TERM') in ('xterm', 'vt100', 'rxvt', 'Eterm', 'putty'):
-        # Set a colored prompt.
-        try:
-            import readline
-        except ImportError:
-            sys.ps1 = '\033[0;32m>>> \033[0m'
-            sys.ps2 = '\033[0;32m... \033[0m'
-        else:
+        if 'readline' in sys.modules:
+            # ^A and ^B delimit invisible characters for readline to count right.
             sys.ps1 = '\001\033[0;32m\002>>> \001\033[0m\002'
             sys.ps2 = '\001\033[0;32m\002... \001\033[0m\002'
+        else:
+            sys.ps1 = '\033[0;32m>>> \033[0m'
+            sys.ps2 = '\033[0;32m... \033[0m'
 
 
 ##
@@ -103,10 +121,9 @@ def _pythonrc_enable_pprint():
         _old_excepthook = sys.excepthook
 
         def excepthook(exctype, value, traceback):
-            """Prints exceptions to sys.stderr and colorizes them."""
+            '''Prints exceptions to sys.stderr and colorizes them.'''
 
-            # traceback.format_exception() isn't used because it's inconsistent
-            # with the built-in formatter.
+            # traceback.format_exception() isn't used because it's inconsistent with the built-in formatter.
             old_stderr = sys.stderr
             sys.stderr = StringIO()
             try:
@@ -148,7 +165,7 @@ def _pythonrc_enable_pprint():
         return unpack('HHHH', ioctl(fd, TIOCGWINSZ, pack('HHHH', 0, 0, 0, 0)))[1]
 
     def get_width():
-        """Returns terminal width."""
+        '''Returns terminal width.'''
 
         width = 0
         try:
@@ -166,9 +183,9 @@ def _pythonrc_enable_pprint():
         getargspec = inspect.getargspec
 
     def pprinthook(value):
-        """Pretty print an object to sys.stdout and also save it in
+        '''Pretty print an object to sys.stdout and also save it in
         __builtin__.
-        """
+        '''
 
         if value is None:
             return
@@ -218,6 +235,7 @@ if __name__ == '__main__':
             _pythonrc_enable_completion()
             _pythonrc_set_prompt()
             _pythonrc_enable_pprint()
+
             del _pythonrc_enable_history
             del _pythonrc_enable_completion
             del _pythonrc_set_prompt
