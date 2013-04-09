@@ -1,4 +1,4 @@
 ##
-# @link http://github.com/twerth/dotfiles/blob/master/etc/bashrc
+# Aliases to list the defined colors.
 #
-alias colorslist="set | egrep 'COLOR_\w*'"
+alias colorlist="set | egrep 'COLOR_\w*' | sort"

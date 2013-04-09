@@ -1,0 +1,4 @@
+##
+# Aliases to list the defined styles.
+#
+alias stylelist="set | egrep 'STYLE_\w*' | sort"
