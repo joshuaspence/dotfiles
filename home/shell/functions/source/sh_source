@@ -1,0 +1,23 @@
+# Check for the prerequisite functions.
+(
+ 	command -v basename >/dev/null &&
+	command -v source >/dev/null
+) || return 1
+
+##
+# Shell-specific source function.
+#
+# This function sources the specified file (if it exists), as well as sourcing
+# the shell-specific version of the specific file (if one exists). The
+# shell-specific file is prefixed with ".$(basename $SHELL)".
+#
+# @param [String] The path of the file to source.
+#
+sh_source() {
+    # Source the specified file, if it exists.
+    [[ -r $1 ]] && source "$1"
+
+    # Source the shell-specific file, if one exists.
+    [[ -n $SHELL ]] || source "$HOME/.shell/environment/shell"
+    [[ -r $1.$(basename $SHELL) ]] && source "$1.$(basename $SHELL)"
+}
