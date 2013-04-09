@@ -11,8 +11,6 @@ command -v sh_source >/dev/null || source "$HOME/.shell/functions/source/sh_sour
 # @param [String] The path of the file or directory to source.
 #
 sh_source_r() {
-	[[ -e $1 ]] || return
-
 	[[ -n $SHELL ]] || source "$HOME/.shell/environment/shell"
 	if [[ -d $1 ]]; then
 	    local file
