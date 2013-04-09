@@ -73,20 +73,17 @@
     lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
     lc = log ORIG_HEAD.. --stat --no-merges
 
-    # From http://blog.kfish.org/2010/04/git-lola.html
+    # @link http://blog.kfish.org/2010/04/git-lola.html
     lol = log --graph --decorate --pretty=oneline --abbrev-commit
     lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
     ll = log --graph --date=short
 
-    # From https://git.wiki.kernel.org/index.php/Aliases
+    # @link http://git.wiki.kernel.org/index.php/Aliases
     whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 
-    # Update current branch and master.
-    sync = !git update && git checkout master && git pull && git checkout @{-1}
-
     # Attempt to cleanup some common problems.
-    unfuck = !git fsck && git remote prune origin && git gc --aggressive --auto
+    unfuck = !git fsck && git remote prune $(git remote) && git gc --aggressive --auto
 
-    # From https://github.com/cypher/dotfiles/blob/master/gitconfig
+    # @link https://github.com/cypher/dotfiles/blob/master/gitconfig
     ls-ignored = ls-files --exclude-standard --ignored --others
