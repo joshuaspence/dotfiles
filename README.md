@@ -12,4 +12,3 @@ directory. Running the script with the without any arguments will recurse
 through all subdirectories in the root directory and will *install* the ...
 
 # Todo
-
