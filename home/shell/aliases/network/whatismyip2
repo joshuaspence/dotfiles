@@ -3,7 +3,7 @@
 #
 # @link @todo
 #
-alias whatismyip2="
+alias whatismyip2="(
     curl -s checkip.dyndns.org |
     grep --color=none -E -o '[0-9]{1,4}(.[0-9]{1,4}){3}'
-"
+)"
