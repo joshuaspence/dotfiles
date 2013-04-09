@@ -12,6 +12,9 @@ sh_source_r "$HOME/.shell/functions"
 # Set up completion.
 sh_source_r "$HOME/.shell/completion"
 
+# Set up shell options.
+sh_source_r "$HOME/.shell/shopt"
+
 # In addition, source the following scripts since the variables that they define
 # aren't exported.
 [[ -r "$HOME/.shell/environment/color" ]] && source "$HOME/.shell/environment/color"
