@@ -110,7 +110,7 @@ $if mode=emacs
 	#"\eOH": beginning-of-line
 	#"\eOF": end-of-line
 
-	# For freebsd console.
+	# For FreeBSD console.
 	#"\e[H": beginning-of-line
 	#"\e[F": end-of-line
 $endif
