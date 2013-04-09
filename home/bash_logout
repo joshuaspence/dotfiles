@@ -2,6 +2,6 @@
 
 # When leaving the console clear the screen to increase privacy. This first
 # checks that shell level is equal to 1.
-if [ $SHLVL -eq 1 ]; then
+if [[ $SHLVL == 1 ]]; then
     command -v clear_console >/dev/null && clear_console -q
 fi
