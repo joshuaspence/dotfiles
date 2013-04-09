@@ -2,5 +2,5 @@
 unset VISUAL
 
 # Set and export environment variables.
-[ -n "$EDITOR" ] || source "$HOME/.shell/environment/editor"
+[[ -n $EDITOR ]] || source "$HOME/.shell/environment/editor"
 export VISUAL="$EDITOR"

@@ -5,4 +5,4 @@ unset DISABLE_LS_COLORS
 command -v ls >/dev/null || return
 
 # Set and export environment variables.
-export DISABLE_LS_COLORS='false'
+DISABLE_LS_COLORS='false'

@@ -9,7 +9,7 @@ else
 fi
 
 # Check is this is a remote (SSH) connection.
-if [ $SSH_TTY ] || [ $SSH_CLIENT ] || [ $SSH_CONNECTION ]; then
+if [[ -n $SSH_TTY || -n $SSH_CLIENT || -n $SSH_CONNECTION ]]; then
     IS_REMOTE='true'
 else
     IS_REMOTE='false'

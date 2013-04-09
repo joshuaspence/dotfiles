@@ -2,15 +2,15 @@
 unset EDITOR
 
 # Set environment variables.
-[ -n $IS_REMOTE ] || source "$HOME/.shell/environment/shell"
+[[ -n $IS_REMOTE ]] || source "$HOME/.shell/environment/shell"
 if ! $IS_REMOTE && command -v subl >/dev/null; then
     EDITOR="$(command -v subl) -n -w"
 elif ! $IS_REMOTE && command -v sublime-text-2 >/dev/null; then
     EDITOR="$(command -v sublime-text-2) -n -w"
 elif command -v vim >/dev/null; then
-    EDITOR="$(command -v vim)"
+    EDITOR=$(command -v vim)
 elif command -v vi >/dev/null; then
-    EDITOR="$(command -v vi)"
+    EDITOR=$(command -v vi)
 else
     echo "No command set for EDITOR environment variable" >&2
 fi

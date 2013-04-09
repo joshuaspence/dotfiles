@@ -11,7 +11,7 @@ command -v less >/dev/null || return
 export LESS='-R'
 
 # The `less` pager supports editing the file being viewed by pressing "v".
-[ -n "$EDITOR" ] || source "$HOME/.shell/environment/editor"
+[[ -n $EDITOR ]] || source "$HOME/.shell/environment/editor"
 export LESSEDIT="$EDITOR"
 
 # Set the less input preprocessor.

@@ -6,7 +6,7 @@ unset GREP_OPTIONS
 command -v grep >/dev/null || return
 
 # Set and export environment variables.
-[ -n $HAS_COLOR ] || source "$HOME/.shell/environment/color"
+[[ -n $HAS_COLOR ]] || source "$HOME/.shell/environment/color"
 if $HAS_COLOR; then
     export GREP_COLOR='1;33' # bold red
     export GREP_OPTIONS='--color=auto'

@@ -2,13 +2,13 @@
 unset BROWSER
 
 # Set environment variables.
-[ -n $IS_REMOTE ] || source "$HOME/.shell/environment/shell"
+[[ -n $IS_REMOTE ]] || source "$HOME/.shell/environment/shell"
 if ! $IS_REMOTE && command -v google-chrome >/dev/null; then
-    BROWSER="$(command -v google-chrome)"
+    BROWSER=$(command -v google-chrome)
 elif ! $IS_REMOTE && command -v firefox >/dev/null; then
-    BROWSER="$(command -v firefox)"
+    BROWSER=$(command -v firefox)
 elif command -v lynx >/dev/null; then
-    BROWSER="$(command -v lynx)"
+    BROWSER=$(command -v lynx)
 else
     echo "No command set for BROWSER environment variable" >&2
 fi

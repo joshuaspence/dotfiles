@@ -6,7 +6,6 @@ unset GIT_SSH
 command -v git >/dev/null || return
 
 # Set and export environment variables.
-[ -n "$EDITOR" ] || source "$HOME/.shell/environment/editor"
+[[ -n $EDITOR ]] || source "$HOME/.shell/environment/editor"
 export GIT_EDITOR="$EDITOR"
-
-export GIT_SSH="$(command -v ssh)"
+export GIT_SSH=$(command -v ssh)

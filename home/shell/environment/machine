@@ -1,1 +1,0 @@
-export MACHINE_NAME="$(uname -n)"
