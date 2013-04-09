@@ -33,3 +33,7 @@ au FileType {vim,javascript} setlocal foldmethod=marker
 au BufWinEnter *.txt if &ft == 'help' | wincmd L | endif
 au InsertEnter * set number
 au InsertLeave * set relativenumber
+
+autocmd BufNewFile,BufRead *.css set fdm=marker fmr={,}
+autocmd BufNewFile,BufRead *.md set spell
+autocmd BufNewFile,BufRead *.markdown set spell

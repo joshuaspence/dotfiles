@@ -8,8 +8,10 @@ set nocompatible
 " We plan to use a dark background.
 set background=dark
 
-" Turn on color syntax highlighting.
-syntax on
+if &t_Co > 2 || has("gui_running")
+  " Turn on color syntax highlighting.
+  syntax on
+endif
 
 " Always switch to the current file directory.
 set autochdir
@@ -17,17 +19,18 @@ set autochdir
 " Allow backspace in insert mode.
 set backspace=indent,eol,start
 
-" Use the OS clipboard by default (on versions compiled with `+clipboard`).
-set clipboard=unnamed
+" Use the OS clipboard by default.
+set clipboard+=unnamedplus
 
 " Enhance command-line completion.
 set wildmenu
-set wildmode=longest,list
+set wildmode=longest:full,full
 
 " Allow cursor keys in insert mode.
 set esckeys
 
 " Disable error bells.
+set visualbell
 set noerrorbells
 
 " Don’t reset cursor to start of line when moving around.
@@ -43,9 +46,6 @@ set history=1000
 " Use UTF-8 without BOM.
 set encoding=utf-8 nobomb
 
-" Use ack-grep  instead of grep.
-set grepprg=ack-grep\ -a
-
 "===============================================================================
 " Advanced
 "===============================================================================
@@ -53,21 +53,22 @@ set grepprg=ack-grep\ -a
 " Optimize for fast terminal connections. Sends more characters for redraws.
 set ttyfast
 
-" Keep a backup file.
-set backup
-set backupdir=~/.vim/backups
+" Don't keep backups.
+set nobackup
+set nowritebackup
 
-" Centralize backups and swapfiles
-set backupdir=~/.vim/backups
-"set directory=~/.vim/swaps
+" Don't use swap files.
+set noswapfile
 
-" Use the persistent undo feature (see :h `persistent-undo`).
-" NOTE: the directory listed in undodir must exist; Vim will not create this
-" directory itself!
+" Use the persistent undo feature. NOTE: the directory listed in undodir must
+" exist; Vim will not create this directory itself!
 set undodir=~/.vim/undo
 set undofile
 set undolevels=1000
 set undoreload=10000
+
+" Ignore some file extensions when completing names by pressing tab.
+set wildignore=*.swp,*.bak,*.pyc,*.class
 
 "===============================================================================
 " Vundle
@@ -93,7 +94,7 @@ let g:surround_60 = "<\r>"
 set cursorcolumn
 
 " Highlight current line.
-"set cursorline
+set cursorline
 
 " Do highlight as you type you search phrase.
 set incsearch
@@ -116,9 +117,6 @@ set statusline+=[%04l,%04v]   " current row, current column
 " Do not redraw while running macros.
 set lazyredraw
 
-" We do want to show tabs.
-set list
-
 " How many tenths of a second to blink matching brackets for.
 set matchtime=5
 
@@ -135,12 +133,15 @@ set showmatch
 set title
 
 " Enable mouse use in all modes.
-set mouse=a
-set ttymouse=xterm2
+"set mouse=a
+"set ttymouse=xterm2
 
 " The completion menu is controlled by completeopt. You can set multiple values
 " to combine behaviours.
 set completeopt=menu,menuone,preview
+
+" Temporarily switch to "paste mode" when pasteing with a right click.
+set pastetoggle=<F2>
 
 "===============================================================================
 " Text formatting and layout
@@ -155,6 +156,9 @@ set nowrap
 " Auto-indent amount when using cindent, >>, << and stuff like that.
 set shiftwidth=4
 
+" Use multiple of shiftwidth when indenting with '<' and '>'.
+set shiftround
+
 " When hitting tab or backspace, how many spaces should a tab be (see expandtab).
 set softtabstop=4
 
@@ -163,19 +167,35 @@ set tabstop=4
 
 " Highlight unwanted spaces.
 set listchars=tab:▸\ ,trail:·,eol:¬,nbsp:_
+set list
+
+" Always set autoindenting on.
+set autoindent
+
+" Copy the previous indentation on autoindenting.
+set copyindent
+
+" Insert tabs on the start of a line according to shiftwidth, not tabstop.
+set smarttab
 
 "===============================================================================
-" Automatic commands
+" Other
 "===============================================================================
 
-autocmd BufNewFile,BufRead *.css set fdm=marker fmr={,}
-autocmd BufNewFile,BufRead *.md set spell
-autocmd BufNewFile,BufRead *.markdown set spell
+" Vim can detect file types (by their extension, or by peeking inside the file).
+filetype plugin indent on
+
+source ~/.vim/bundles.vim
+source ~/.vim/autocmd.vim
+source ~/.vim/bindings.vim
+
+
+
+
 
 "===============================================================================
 " TODO
 "===============================================================================
-
 set cf                                " error files / jumping
 set ffs=unix,dos,mac                  " support these files
 set isk+=_,$,@,%,#,-                  " none word dividers
@@ -186,10 +206,6 @@ set tabpagemax=50                     " open 50 tabs max
 " Highlight trailing whitespace
 set list listchars=trail:.,tab:>.
 highlight SpecialKey ctermfg=DarkGray ctermbg=Black
-
-set nobackup                           " do not keep backups after close
-set nowritebackup                      " do not keep a backup while working
-set noswapfile                         " don't keep swp files either
 
 set backupcopy=yes                     " keep attributes of original file
 set backupskip=/tmp/*,$TMPDIR/*,$TMP/*,$TEMP/*
@@ -453,15 +469,13 @@ imap <C-L> <Space>=><Space>
 " https://github.com/garybernhardt/dotfiles
 " https://github.com/mutewinter/dot_vim
 
-set nocompatible
-source ~/.vim/bundles.vim
+
 syntax on
 
 " basics
 set noswapfile backup undofile undoreload=5000 history=500
 set noequalalways
 set wrapscan incsearch ignorecase smartcase
-set clipboard+=unnamed
 set autoread autowrite
 set magic
 set nojoinspaces
@@ -514,29 +528,3 @@ set wildignore+=*.sw?                              " Vim swap files
 set wildignore+=.DS_Store,Thumbs.db                " Shit
 set wildignore+=target                             " JVM compiled stuff
 set wildignore+=node_modules,build
-
-" paths
-set shell=zsh
-set formatprg=par\ -eq
-set tags=./tags;
-set dictionary=/usr/share/dict/words
-set backupskip=/tmp/*,/private/tmp/*
-set backupdir=~/.vim/tmp/backups/
-set undodir=~/.vim/tmp/undo/
-
-" ////////////////////////////
-
-source ~/.vim/bindings.vim
-source ~/.vim/autocmd.vim
-
-let vimclojure#SplitPos='bottom'
-let g:vimclojure#DynamicHighlighting=1
-let g:SuperTabDefaultCompletionType='context'
-let delimitMate_excluded_ft='clojure'
-let g:flake8_ignore='E128'
-set background=dark
-colorscheme railscasts
-
-if filereadable(expand("~/.vimrc.local"))
-  source ~/.vimrc.local
-endif

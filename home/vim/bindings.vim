@@ -4,14 +4,14 @@
 " 
 " Thanks: see vimrc
 
-let mapleader = ","
+let mapleader=","
 let maplocalleader = "\\"
 
 " j and k inverted for colemak
 noremap k gj
 noremap j gk
 
-" less keystrokes
+" Less keystrokes
 nnoremap ; :
 vnoremap ; :
 nnoremap ' i
@@ -48,7 +48,8 @@ inoremap <c-]> <c-x><c-]>}
 " don't move on *
 nnoremap * *<C-o>
 
-" windows
+" Easy window navigation
+" @link http://nvie.com/posts/how-i-boosted-my-vim/
 map <C-h> <C-w>h
 map <C-k> <C-w>j
 map <C-j> <C-w>k
@@ -118,3 +119,7 @@ function! s:NumberTextObject(whole)
         endwhile
     endif
 endfunction
+
+" Tired of clearing highlighted searches by searching for “ldsfhjkhgakjks”? Use this:
+" @link http://nvie.com/posts/how-i-boosted-my-vim/
+nmap <silent> ,/ :nohlsearch<CR>

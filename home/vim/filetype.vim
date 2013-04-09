@@ -1,7 +1,7 @@
 " https://github.com/norman/vim-files/blob/master/filetype.vim
 
 if exists("did_load_filetypes")
-  finish
+    finish
 endif
 
 augroup filetypedetect
