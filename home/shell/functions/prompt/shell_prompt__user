@@ -1,6 +1,6 @@
 shell_prompt__user() {
     if [ $# -gt 0 ] && ([ "$@" == "-c" ] || [ "$@" == "--color" ]); then
-        echo -n -e "\$([[ \${EUID} == 0 ]] && echo '${RED}' || echo '${YELLOW}')\u${NO_STYLE}"
+        echo -n -e "\$([[ \${EUID} == 0 ]] && echo '${COLOR_RED}' || echo '${COLOR_YELLOW}')\u${COLOR_NC}"
     else
         echo -n -e "\u"
     fi
