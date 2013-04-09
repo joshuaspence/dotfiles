@@ -8,7 +8,7 @@ command -v source >/dev/null || return 1
 #
 source_r() {
     local file
-    for file in $(find "$1" -type f -readable 2>/dev/null); do
+    for file in $(find "$1" ! -type d -readable 2>/dev/null); do
         source "$file"
     done
 }
