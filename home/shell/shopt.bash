@@ -71,7 +71,7 @@ shopt -s no_empty_cmd_completion
 
 # The programmable completion facilities are enabled. This option is enabled by
 # default.
-shopt -s progcomp
+#shopt -s progcomp
 
 # Prompt strings undergo parameter expansion, command substitution, arithmetic
 # expansion, and quote removal after being expanded. This option is enabled by
