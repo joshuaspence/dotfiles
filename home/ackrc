@@ -20,16 +20,22 @@
 --smart-case
 
 # Types.
---type-add=css=.less,.sass
+--type-add=css=.less,.sass,.scss
 --type-add=html=.html.erb,.html.haml
---type-add=js=.js.erb
---type-add=ruby=Gemfile,.builder,.haml,.rake
+--type-add=js=.coffee,.js.erb
+--type-add=php=.php.inc
+--type-add=ruby=.builder,.haml,.rake,.rspec,.ruby-version
+--type-add=ruby=Gemfile,Rakefile
 
 # Add types ack doesn't know about.
---type-set=coffeescript=.coffee
+--type-set=coffee=.coffee
 --type-set=config=.cfg,.conf,.config
+--type-set=csv=.csv
+--type-set=log=.log
 --type-set=json=.json
 --type-set=markdown=.md,.markdown
+--type-set=puppet=.pp
+--type-set=txt=.txt
 
 # Ignore these directories.
 --ignore-dir=doc
