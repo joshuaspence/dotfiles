@@ -1,422 +1,230 @@
 #!/usr/bin/env python
 
-"""Best goddamn .pythonrc file in the whole world.
 
-This file is executed when the Python interactive shell is started if
-$PYTHONSTARTUP is in your environment and points to this file. It's just
-regular Python commands, so do what you will. Your ~/.inputrc file can greatly
-complement this file.
-
-"""
-
-import atexit
-import os.path
-
-try:
-    import readline
-except ImportError:
-    pass
-else:
-    import rlcompleter
-
-    class IrlCompleter(rlcompleter.Completer):
-        """
-        This class enables a "tab" insertion if there's no text for
-        completion.
-
-        The default "tab" is four spaces. You can initialize with '\t' as
-        the tab if you wish to use a genuine tab.
-
-        """
-
-        def __init__(self, tab='    '):
-            self.tab = tab
-            rlcompleter.Completer.__init__(self)
-
-
-        def complete(self, text, state):
-            if text == '':
-                readline.insert_text(self.tab)
-                return None
-            else:
-                return rlcompleter.Completer.complete(self,text,state)
-
-
-    # You could change this line to bind another key instead tab.
-    readline.parse_and_bind('tab: complete')
-    readline.set_completer(IrlCompleter().complete)
-
-# Color Support
-###############
-
-class TermColors(dict):
-    """Gives easy access to ANSI color codes. Attempts to fall back to no color
-    for certain TERM values. (Mostly stolen from IPython.)"""
-
-    COLOR_TEMPLATES = (
-        ("Black"       , "0;30"),
-        ("Red"         , "0;31"),
-        ("Green"       , "0;32"),
-        ("Brown"       , "0;33"),
-        ("Blue"        , "0;34"),
-        ("Purple"      , "0;35"),
-        ("Cyan"        , "0;36"),
-        ("LightGray"   , "0;37"),
-        ("DarkGray"    , "1;30"),
-        ("LightRed"    , "1;31"),
-        ("LightGreen"  , "1;32"),
-        ("Yellow"      , "1;33"),
-        ("LightBlue"   , "1;34"),
-        ("LightPurple" , "1;35"),
-        ("LightCyan"   , "1;36"),
-        ("White"       , "1;37"),
-        ("Normal"      , "0"),
-    )
-
-    NoColor = ''
-    _base  = '\001\033[%sm\002'
-
-    def __init__(self):
-        if os.environ.get('TERM') in ('xterm-color', 'xterm-256color', 'linux',
-                                    'screen', 'screen-256color', 'screen-bce'):
-            self.update(dict([(k, self._base % v) for k,v in self.COLOR_TEMPLATES]))
-        else:
-            self.update(dict([(k, self.NoColor) for k,v in self.COLOR_TEMPLATES]))
-_c = TermColors()
-
-# Restore our command-line history, and save it when Python exits.
-PYHISTORY = os.path.expanduser('~/.pyhistory')
-
-def read_pyhistory():
-    if os.path.isfile(PYHISTORY):
-        readline.read_history_file(PYHISTORY)
-
-def save_pyhistory():
-    readline.write_history_file(PYHISTORY)
-
-atexit.register(save_pyhistory)
-
-# Enable Pretty Printing for stdout
-###################################
-
-def my_displayhook(value):
-    if value is not None:
-        try:
-            import __builtin__
-            __builtin__._ = value
-        except ImportError:
-            __builtins__._ = value
-
-        pprint.pprint(value)
-sys.displayhook = my_displayhook
-
-# Enable Color Prompts
-######################
-
-sys.ps1 = '%s>>> %s' % (_c['Green'], _c['Normal'])
-sys.ps2 = '%s... %s' % (_c['Red'], _c['Normal'])
-
-
-# save this to "~/.pythonrc" 
-# and set an environment variable to point to it:
-# "export PYTHONSTARTUP=${HOME}/.pythonrc" in bash.
+##
+# Command-line history.
 #
-# References:
-#     Guido van Rossum. Python Tutorial. Python Sfotware Foundation, 2005. 86
-#     Jian Ding Chen. Indentable rlcompleter. Python Cookbook Recipe 496812
-#     Guido van Rossum. rlcompleter.py. Python Sfotware Foundation, 2005
+# @link http://valueerror.wordpress.com/2009/11/03/python-shell-history-autocompletion-and-rc-file/
 #
-# 2006.06.29 Sunjoong LEE <sunjoong@gmail.com>
-#
-#__author__ = 'Sunjoong LEE <sunjoong@gmail.com>'
-#__date__ = '2006-06-29'
-#__version__ = '1.0'
+def _pythonrc_enable_history():
+    import os
+    import sys
 
-# XXX
-# modified by Bruno Desthuilliers <bruno.desthuilliers@gmail.com>
-# to play well with django shell
-# (requires some patching in Django shell command too)
-#
-# ref : http://code.activestate.com/recipes/496822/
-import sys, os, pdb, readline
-
-def __my_py_init():
-    from atexit import register
-    from itertools import count as icount, ifilter, imap
-    from os import listdir, remove
-    from os.path import exists, expanduser, split as psplit
-    from readline import clear_history, get_current_history_length, \
-         get_completer_delims, get_history_item, get_line_buffer, \
-         insert_text, parse_and_bind, read_history_file, redisplay, \
-         set_completer, set_completer_delims, set_history_length, \
-         set_pre_input_hook, write_history_file
-    from pwd import getpwall
-    from rlcompleter import Completer
-    from tempfile import mktemp
-
-    historyPath = expanduser('~/.pyhistory')
-    HISTORY_LENGTH = 100
-    
-    class History(object):
-        def __init__(self):
-            self.recall()
-            set_history_length(HISTORY_LENGTH)
-
-            parse_and_bind('tab: complete')
-            # delims = get_completer_delims()
-            delims = ' \t\n`!@#$%^&*()-=+[{]}\\|;:,<>?'
-            set_completer_delims(delims)
-            set_completer(irlcompleter(globals()).complete)
-
-        def __repr__(self):
-            """print out current history information"""
-            command = get_history_item(get_current_history_length())
-            if command == 'history':
-                length = get_current_history_length()
-                if length > 1:
-                    return reduce(lambda x, y: '%s\n%s' % (x, y),
-                                  imap(get_history_item, xrange(1, length)))
-                else:
-                    return ''
-            else:
-                return '<%s instance>' % __name__
-
-        def __call__(self):
-            """print out current history information with line number"""
-            length = get_current_history_length()
-            if length > 1:
-                kount = icount(1).next
-                for command in imap(get_history_item, xrange(1, length)):
-                    print '%s\t%s' % (kount(), command)
-
-        def save(self, filename, pos = None, end = None):
-            """write history number from pos to end into filename file"""
-            length = get_current_history_length()
-            if length > 1:
-                if not pos:
-                    pos = 1
-                elif pos >= length - 1:
-                    pos = length - 1
-                elif pos < 1:
-                    pos = length + pos - 1
-                if not end:
-                    end = length
-                elif end >= length:
-                    end = length
-                if end < 0:
-                    end = length + end
-                else:
-                    end = end + 1
-
-                fp = open(filename, 'w')
-                write = fp.write
-                if pos < end:
-                    map(lambda x: write('%s\n' %  x),
-                        imap(get_history_item, xrange(pos, end)))
-                else:
-                    write('%s\n' % get_history_item(pos))
-                fp.close()
-
-        def clear(self):
-            """save the current history and clear it"""
-            write_history_file(historyPath)
-            clear_history()
-
-        def recall(self, historyPath = historyPath):
-            """clear the current history and recall it from saved"""
-            clear_history()
-            if exists(historyPath):
-                read_history_file(historyPath)
-
-        def execute(self, pos, end = None):
-            """execute history number from pos to end"""
-            length = get_current_history_length()
-            if length > 1:
-                if pos >= length - 1:
-                    pos = length - 1
-                elif pos < 1:
-                    pos = length + pos - 1
-                if not end:
-                    end = pos + 1
-                elif end >= length:
-                    end = length
-                if end < 0:
-                    end = length + end
-                else:
-                    end = end + 1
-
-                to_execute = map(get_history_item, xrange(pos, end))
-
-                filename = mktemp()
-                fp = open(filename, 'w')
-                write = fp.write
-                map(lambda x: write('%s\n' % x), to_execute.__iter__())
-                fp.close()
-
-                try:
-                    # execfile(filename, __main__.__dict__)
-                    execfile(filename, globals())
-                    read_history_file(filename)
-                    remove(filename)
-                except:
-                    remove(filename)
-
-    class irlcompleter(Completer):
-        def complete(self, text, state):
-            if text == '':
-                # you could replace '    ' to \t if you indent via tab
-                return ['    ', None][state]
-            elif text.count("'") == 1:
-                if not state:
-                    self.file_matches(text, "'")
-                try:
-                    return self.matches[state]
-                except IndexError:
-                    return None
-            elif text.count('"') == 1:
-                if not state:
-                    self.file_matches(text, '"')
-                try:
-                    return self.matches[state]
-                except IndexError:
-                    return None
-            else:
-                return Completer.complete(self, text, state)
-
-        def file_matches(self, text, mark):
-            if '~' in text:
-                if '/' in text:
-                    text = '%s%s%s' % (mark, expanduser(
-                        text[text.find('~'):text.find('/')]),
-                                       text[text.find('/'):])
-                else:
-                    self.user_matches(text, mark)
-                    return
-
-            text1 = text[1:]
-            delim = '/'
-
-            if not text1:
-                directory = ''
-            elif text1 == '.':
-                directory = '.'
-            elif text1 == '..':
-                directory = '..'
-            elif text1 == '/':
-                directory = '/'
-                delim = ''
-            elif text1[-1] == '/':
-                directory = text1[:-1]
-                delim = text1[len(directory):]
-            else:
-                directory, partial = psplit(text1)
-                delim = text1[len(directory):][:-len(partial)]
-
-            if directory:
-                listing = map(lambda x: '%s%s%s%s' % (mark, directory, delim, x),
-                              listdir(directory).__iter__())
-            else:
-                listing = map(lambda x: '%s%s' % (mark, x),
-                              listdir('.').__iter__())
-
-            n = len(text)
-            self.matches = filter(lambda x: x[:n] == text, listing.__iter__())
-
-
-        def user_matches(self, text, mark):
-            n = len(text)
-            self.matches = filter(lambda x: x[:n] == text,
-                                  imap(lambda x: '%s~%s' % (mark, x[0]),
-                                       getpwall().__iter__()))
-
-
-    def save_history(historyPath = historyPath):
-        from readline import write_history_file
-        write_history_file(historyPath)
-    register(save_history)
-
-    return History()
-    
-try:
-    print "pythonrc start"
-    history = __my_py_init()
-    print "pythonrc done"
-except Exception, e:
-    print "error in pythonrc : %s" % e
-
-# This came from Greg V's dotfiles:
-#      https://github.com/myfreeweb/dotfiles
-# Feel free to steal it, but attribution is nice
-#
-# thanks:
-# https://github.com/zacharyvoase/dotfiles/blob/master/pythonrc
-# https://github.com/sontek/dotfiles/blob/master/_pythonrc.py
-# http://brianlyttle.com/2011/10/python-interpreter-tab-completion-on-os-x/
-# http://stackoverflow.com/questions/7116038/python-tab-completion-mac-osx-10-7-lion
-
-import rlcompleter
-import subprocess
-import readline
-import inspect
-import atexit
-import sys
-import os
-home = os.environ["HOME"]
-
-try:
-    from see import see
-except ImportError:
-    print >>sys.stderr, "Please pip install see"
-
-def src(obj):
-    def highlight(source):
-        try:
-            import pygments
-            import pygments.formatters
-            import pygments.lexers
-        except ImportError:
-            return source
-        lexer = pygments.lexers.get_lexer_by_name('python')
-        formatter = pygments.formatters.terminal.TerminalFormatter()
-        return pygments.highlight(source, lexer, formatter)
-    source = inspect.getsource(obj)
-    pager = subprocess.Popen(['less', '-R'], stdin=subprocess.PIPE)
-    pager.communicate(highlight(source))
-    pager.wait()
-
-try:
-    class TabCompleter(rlcompleter.Completer):
-        """Completer that supports indenting"""
-        def complete(self, text, state):
-            if not text:
-                return ('    ', None)[state]
-            else:
-                return rlcompleter.Completer.complete(self, text, state)
-    readline.set_completer(TabCompleter().complete)
-    readline.set_history_length(1000)
-    if 'libedit' in readline.__doc__:
-        readline.parse_and_bind("bind '\t' rl_complete")
-    else:
-        readline.parse_and_bind(open("%s/.inputrc" % home).read())
-    HISTFILE = "%s/.pyhistory." % home
     try:
-        readline.read_history_file(HISTFILE)
-    except: pass
-    atexit.register(readline.write_history_file, HISTFILE)
-except:
-    print >>sys.stderr, "Couldn't get rlcompleter + readline working."
+        import readline
+    except ImportError as e:
+        sys.stderr.write(str(e) + " - Command-line history is disabled.\n")
+    else:
+        # The history file.
+        PYHISTORY = os.path.expanduser('~/.pyhistory')
 
-if "DJANGO_SETTINGS_MODULE" in os.environ:
-    from django.db.models.loading import get_models
-    from django.test.client import Client
-    from django.test.utils import setup_test_environment, teardown_test_environment
-    from django.conf import settings as S
+        # Restore command-line history.
+        if os.path.isfile(PYHISTORY):
+            readline.read_history_file(PYHISTORY)
 
-    class DjangoModels(object):
-        """Loop through all the models in INSTALLED_APPS and import them."""
-        def __init__(self):
-            for m in get_models():
-                setattr(self, m.__name__, m)
+        # Save command-line history when Python exits.
+        try:
+            import atexit
+        except ImportError as e:
+            sys.stderr.write(str(e) + " - Command-line history will not be saved when Python exits.\n")
+        else:
+            atexit.register(readline.write_history_file, PYHISTORY)
 
-    M = DjangoModels()
-    C = Client()
+        # Set history size.
+        readline.set_history_length(10000000)
+
+
+##
+# Tab completion.
+#
+# @link http://docs.python.org/2/library/rlcompleter.html
+#
+def _pythonrc_enable_completion():
+    import sys
+
+    # Bind the tab key to readline completion.
+    try:
+        import readline
+        import rlcompleter
+    except ImportError as e:
+        sys.stderr.write(str(e) + " - Tab completion is disabled.\n")
+    else:
+        readline.parse_and_bind("tab: complete")
+
+
+##
+# Colored prompt.
+#
+# @link http://gist.github.com/mgedmin/760273
+#
+def _pythonrc_set_prompt():
+    import os
+    import sys
+
+    if os.getenv('TERM') in ('xterm', 'vt100', 'rxvt', 'Eterm', 'putty'):
+        # Set a colored prompt.
+        try:
+            import readline
+        except ImportError:
+            sys.ps1 = '\033[0;32m>>> \033[0m'
+            sys.ps2 = '\033[0;32m... \033[0m'
+        else:
+            sys.ps1 = '\001\033[0;32m\002>>> \001\033[0m\002'
+            sys.ps2 = '\001\033[0;32m\002... \001\033[0m\002'
+
+
+##
+# Enable pretty printing of evaluated expressions.
+#
+# @link http://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/python/pythonrc.py
+#
+def _pythonrc_enable_pprint():
+    import pprint
+    import sys
+
+    # Set the exception hook (sys.excepthook).
+    try:
+        if sys.platform == 'win32':
+            raise ImportError
+
+        from cStringIO import StringIO
+        from pygments import highlight
+        from pygments.lexers import PythonLexer, PythonTracebackLexer
+        from pygments.formatters import TerminalFormatter
+
+        def pphighlight(o, *a, **kw):
+            s = pprint.pformat(o, *a, **kw)
+            try:
+                sys.stdout.write(highlight(s, PythonLexer(), TerminalFormatter()))
+            except UnicodeError:
+                sys.stdout.write(s + '\n')
+
+        # Save the old excepthook.
+        _old_excepthook = sys.excepthook
+
+        def excepthook(exctype, value, traceback):
+            """Prints exceptions to sys.stderr and colorizes them."""
+
+            # traceback.format_exception() isn't used because it's inconsistent
+            # with the built-in formatter.
+            old_stderr = sys.stderr
+            sys.stderr = StringIO()
+            try:
+                _old_excepthook(exctype, value, traceback)
+                s = sys.stderr.getvalue()
+                try:
+                    s = highlight(s, PythonTracebackLexer(), TerminalFormatter())
+                except UnicodeError:
+                    pass
+                old_stderr.write(s)
+            finally:
+                sys.stderr = old_stderr
+
+        # Set the exception hook.
+        sys.excepthook = excepthook
+    except ImportError:
+        pphighlight = pprint.pprint
+
+    try:
+        import __builtin__
+    except ImportError:
+        import builtins as __builtin__
+    import inspect
+    import pydoc
+    import sys
+    import types
+
+    help_types = [types.BuiltinFunctionType, types.BuiltinMethodType,
+                  types.FunctionType, types.MethodType, types.ModuleType,
+                  type, type(list.remove)]
+    if hasattr(types, 'UnboundMethodType'):
+        help_types.append(types.UnboundMethodType)
+    help_types = tuple(help_types)
+
+    def _ioctl_width(fd):
+        from fcntl import ioctl
+        from struct import pack, unpack
+        from termios import TIOCGWINSZ
+        return unpack('HHHH', ioctl(fd, TIOCGWINSZ, pack('HHHH', 0, 0, 0, 0)))[1]
+
+    def get_width():
+        """Returns terminal width."""
+
+        width = 0
+        try:
+            width = _ioctl_width(0) or _ioctl_width(1) or _ioctl_width(2)
+        except ImportError:
+            pass
+        if not width:
+            import os
+            width = os.environ.get('COLUMNS', 0)
+        return width
+
+    if hasattr(inspect, 'getfullargspec'):
+        getargspec = inspect.getfullargspec
+    else:
+        getargspec = inspect.getargspec
+
+    def pprinthook(value):
+        """Pretty print an object to sys.stdout and also save it in
+        __builtin__.
+        """
+
+        if value is None:
+            return
+        __builtin__._ = value
+
+        if isinstance(value, help_types):
+            reprstr = repr(value)
+            try:
+                if inspect.isfunction(value):
+                    parts = reprstr.split(' ')
+                    parts[1] += inspect.formatargspec(*getargspec(value))
+                    reprstr = ' '.join(parts)
+                elif inspect.ismethod(value):
+                    parts = reprstr[:-1].split(' ')
+                    parts[2] += inspect.formatargspec(*getargspec(value))
+                    reprstr = ' '.join(parts) + '>'
+            except TypeError:
+                pass
+            sys.stdout.write(reprstr)
+            sys.stdout.write('\n')
+            if getattr(value, '__doc__', None):
+                sys.stdout.write('\n')
+                sys.stdout.write(pydoc.getdoc(value))
+                sys.stdout.write('\n')
+        else:
+            pphighlight(value, width=get_width() or 80)
+
+    # Set the display hook.
+    sys.displayhook = pprinthook
+
+
+if __name__ == '__main__':
+    __doc__ = None
+
+    # Make sure modules in the current directory can't interfere.
+    import sys
+    try:
+        try:
+            cwd = sys.path.index('')
+            sys.path.pop(cwd)
+        except ValueError:
+            cwd = None
+
+        # Run installation functions and don't taint the global namespace.
+        try:
+            _pythonrc_enable_history()
+            _pythonrc_enable_completion()
+            _pythonrc_set_prompt()
+            _pythonrc_enable_pprint()
+            del _pythonrc_enable_history
+            del _pythonrc_enable_completion
+            del _pythonrc_set_prompt
+            del _pythonrc_enable_pprint
+        finally:
+            if cwd is not None:
+                sys.path.insert(cwd, '')
+            del cwd
+    finally:
+        pass
