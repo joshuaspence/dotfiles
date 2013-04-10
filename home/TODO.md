@@ -7,9 +7,7 @@ shell/functions/
 shell/functions/README.md
 shell/README.md
 shell/shopt.zsh
-ssh/
 vim/
-ackrc
 dotfilesrc
 gitconfig
 README.md
