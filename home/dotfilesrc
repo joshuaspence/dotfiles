@@ -5,4 +5,7 @@ ignore = [
 	'.git',
 	'.gitignore',
 	'.gitmodules',
-	'README.md']
+	'README.md',
+	'TODO.md',
+	'*.gituser']
+externals = {}
