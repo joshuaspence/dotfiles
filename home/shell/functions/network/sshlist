@@ -1,0 +1,8 @@
+##
+# List hosts defined in ~/.ssh/config.
+#
+# @link @todo
+#
+function sshlist() {
+	awk '$1 ~ /Host$/ && $2 != "*" {print $2}' $HOME/.ssh/config
+}
