@@ -1,6 +1,0 @@
-##
-# Shows most used commands.
-#
-# @link http://lifehacker.com/274317/turbocharge-your-terminal?tag=softwarehowto
-#
-alias profileme="(history | awk '{print \$2}' | awk 'BEGIN{FS=\"|\"}{print \$1}' | sort | uniq -c | sort -n | tail -n 20 | sort -nr)"
