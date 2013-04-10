@@ -10,6 +10,6 @@ sh_source_r "$HOME/.shell/environment"
 # If running bash, source bashrc. According to `man bash`, "$-" includes "i" if
 # bash is interactive.
 if [[ $- == *i* ]]; then
-	command -v source_r >/dev/null || source "$HOME/.shell/functions/source/source_r"
-	source_r "$HOME/.bashrc"
+    command -v source_r >/dev/null || source "$HOME/.shell/functions/source/source_r"
+    source_r "$HOME/.bashrc"
 fi

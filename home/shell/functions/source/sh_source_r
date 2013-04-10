@@ -1,7 +1,7 @@
 # Check for the prerequisite functions.
 (
- 	command -v basename >/dev/null &&
- 	command -v source >/dev/null
+     command -v basename >/dev/null &&
+     command -v source >/dev/null
 ) || return 1
 command -v sh_source >/dev/null || source "$HOME/.shell/functions/source/sh_source"
 
@@ -11,13 +11,13 @@ command -v sh_source >/dev/null || source "$HOME/.shell/functions/source/sh_sour
 # @param [String] The path of the file or directory to source.
 #
 sh_source_r() {
-	[[ -n $SHELL ]] || source "$HOME/.shell/environment/shell"
-	if [[ -d $1 ]]; then
-	    local file
-	    for file in $(find "$1" ! -type d -readable -regex '.*/[^.]*' -o -regex ".*\.$(basename $SHELL)" 2>/dev/null); do
-	        source "$file"
-	    done
-	else
-		sh_source "$1"
-	fi
+    [[ -n $SHELL ]] || source "$HOME/.shell/environment/shell"
+    if [[ -d $1 ]]; then
+        local file
+        for file in $(find "$1" ! -type d -readable -regex '.*/[^.]*' -o -regex ".*\.$(basename $SHELL)" 2>/dev/null); do
+            source "$file"
+        done
+    else
+        sh_source "$1"
+    fi
 }

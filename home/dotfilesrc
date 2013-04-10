@@ -2,10 +2,10 @@
 repository = ~/dotfiles/home
 packages = ['config']
 ignore = [
-	'.git',
-	'.gitignore',
-	'.gitmodules',
-	'README.md',
-	'TODO.md',
-	'*.gituser']
+    '.git',
+    '.gitignore',
+    '.gitmodules',
+    'README.md',
+    'TODO.md',
+    '*.gituser']
 externals = {}
