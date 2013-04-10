@@ -61,17 +61,13 @@ shopt -u lithist
 # Case-insensitive globbing (used in pathname expansion).
 shopt -s nocaseglob
 
-# Bash allows filename patterns which match no files to expand to a null string,
-# rather than themselves.
-shopt -s nullglob
-
 # Will not attempt to search the PATH for possible completions when completion
 # is attempted on an empty line.
 shopt -s no_empty_cmd_completion
 
 # The programmable completion facilities are enabled. This option is enabled by
 # default.
-shopt -u progcomp
+shopt -s progcomp
 
 # Prompt strings undergo parameter expansion, command substitution, arithmetic
 # expansion, and quote removal after being expanded. This option is enabled by
