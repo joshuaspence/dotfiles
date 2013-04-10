@@ -1,6 +1,5 @@
 config/
 oh-my-zsh/
-shell/aliases/
 shell/aliases/README.md
 shell/environment/README.md
 shell/functions/
