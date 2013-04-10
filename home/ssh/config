@@ -73,3 +73,52 @@ Host github
     IdentityFile  ~/.ssh/github
     IdentitiesOnly yes
     ForwardAgent no
+
+#===============================================================================
+# Freelancer
+#===============================================================================
+Host analytics01.freelancer
+    HostName analytics01.freelancer.com
+    User joshua
+    IdentityFile ~/.ssh/freelancer
+    IdentitiesOnly yes
+    ForwardAgent yes
+
+Host local-staging.freelancer
+    HostName josh.syd.local
+    User freelancer
+    IdentityFile ~/.ssh/vagrant
+    IdentitiesOnly yes
+    ForwardAgent yes
+
+Host staging3.freelancer
+    HostName staging3.freelancer.com
+    User staging-josh
+    IdentityFile ~/.ssh/freelancer
+    IdentitiesOnly yes
+    ForwardAgent yes
+
+Host db-slave-stats-tunnel.freelancer
+    HostName analytics01.freelancer.com
+    User joshua
+    IdentityFile ~/.ssh/freelancer
+    IdentitiesOnly yes
+    ForwardAgent yes
+    Compression yes
+    
+    # Port forwarding
+    ExitOnForwardFailure yes
+    
+    # MySQL
+    LocalForward 3306 db-slave-stats.freelancer.com:3306
+    
+    # Refresh connection every 30 seconds for a maximum of one hour
+    ServerAliveInterval 30
+    ServerAliveCountMax 120
+
+Host git.freelancer
+    HostName git.freelancer.com
+    User josh
+    IdentityFile ~/.ssh/git.freelancer.com
+    IdentitiesOnly yes
+    ForwardAgent yes
