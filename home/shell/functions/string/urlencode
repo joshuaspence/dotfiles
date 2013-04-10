@@ -5,8 +5,6 @@
 #
 # @link http://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 #
-alias urlencode="python -c '
-import sys;
-import urllib;
-print urllib.quote_plus(sys.argv[1]);'
-"
+function urlencode() {
+	python -c 'import sys; import urllib; print urllib.quote_plus(sys.argv[1]);' $@
+}
