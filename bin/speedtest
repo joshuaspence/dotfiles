@@ -1,0 +1,6 @@
+##
+# Speedtest.
+#
+# @link https://github.com/jacobwg/dotfiles/blob/master/zsh/aliases.zsh
+#
+alias speedtest="wget --config=/dev/null --output-document=/dev/null 'http://speedtest.wdc01.softlayer.com/downloads/test500.zip'"
