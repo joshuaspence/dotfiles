@@ -1,0 +1,6 @@
+function _go_complete() {
+    # Get a list of bookmark names, then grep for what was entered to narrow the list.
+    cat $bookmarks_file | cut -d\| -f2 | grep "$2.*"
+}
+
+complete -C _go_complete -o default go
