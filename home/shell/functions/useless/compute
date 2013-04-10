@@ -3,4 +3,8 @@
 #
 # @link @todo
 #
-alias compute="cat /dev/urandom | hexdump -C | grep --color 'ca fe'"
+function compute() {
+	cat /dev/urandom |
+	hexdump -C |
+	grep --color 'ca fe'
+}
