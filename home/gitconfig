@@ -87,3 +87,26 @@
 
     # @link https://github.com/cypher/dotfiles/blob/master/gitconfig
     ls-ignored = ls-files --exclude-standard --ignored --others
+
+[help]
+  autocorrect = 1
+
+[mergetool]
+  keepBackup = false
+[difftool]
+  prompt = false
+[alias]
+  # Display current status of repository
+  wtf = !$ZSH/bin/git-wtf
+
+  # Count commits by author
+  count = !git shortlog -sn
+
+  # Undo a `git push`
+  undopush = push -f origin HEAD^:master
+  undo-push = !git push -f origin HEAD^:master
+
+  # Show verbose output about tags, branches, or remotes
+  tags = tag -l
+  branches = branch -a
+  remotes = remote -v
