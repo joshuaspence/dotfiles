@@ -1,4 +1,3 @@
-config/
 oh-my-zsh/
 shell/aliases/README.md
 shell/environment/README.md
