@@ -5,17 +5,8 @@ all: git-extras hosts hub
 # Git-Extras
 #===============================================================================
 .PHONY: git-extras
-git-extras: install-git-extras
-
-.PHONY: install-git-extras
-install-git-extras: update-git-extras
-	sudo make -C git-extras install
-
-.PHONY: update-git-extras
-update-git-extras:
-	cd git-extras && \
-	git fetch --all && \
-	git reset --hard origin/master
+git-extras:
+	sudo make --no-print-directory -C $@ install
 
 #===============================================================================
 # Hosts
@@ -37,4 +28,4 @@ hosts/hosts:
 hub: /usr/local/bin/hub
 
 /usr/local/bin/hub: hub/hub
-	cd $(hub_dir) && sudo rake install
+	cd hub && sudo rake install
