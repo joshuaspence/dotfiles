@@ -1,4 +1,6 @@
+##
 # Check for the prerequisite functions.
+##
 command -v eval >/dev/null || return 1
 
 ##
@@ -8,33 +10,22 @@ command -v eval >/dev/null || return 1
 #
 # @link http://github.com/fnichol/bashrc/blob/master/bashrc
 # @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
-#
+##
 function colorize() {
-    if [ $# -ne 1 ]; then
+    if [[ $# < 1 ]]; then
         echo "Usage: colorize <color_spec>" >&2
         return 1
     fi
 
-    local capname='setaf' # foreground
+    # "setaf" for foreground.
+    # "setab" for background.
+    local capname='setaf'
 
     case "$1" in
-        # Emphasized (bolded) colors.
-        b-* | bold-* | e-* | emph-*)
-            tput bold
-            ;;
-
-        # Underlined colors.
-        u-* | underline-*)
-            set smul
-            unset rmul
-            ;;
-
-        # Background colours.
-        bg-* | background-*)
-            capname='setab' # background
-            ;;
+        b-* | bold-*)        tput bold       ;;
+        u-* | underline-*)   set smul         ; unset rmul ;;
+        bg-* | background-*) capname='setab' ;;
     esac
-
     case "$1" in
         black   | *-black  ) tput $capname 0 ;;
         red     | *-red    ) tput $capname 1 ;;
@@ -49,6 +40,6 @@ function colorize() {
         default | *-default) tput $capname 9 ;;
         none)                tput sgr0       ;;
 
-        *)                   tput sgr0 ; return 1 ;;
+        *)                   tput sgr0        ; return 1 ;;
     esac
 }

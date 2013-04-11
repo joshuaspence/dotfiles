@@ -1,4 +1,6 @@
+##
 # Check for the prerequisite functions.
+##
 (
     command -v bunzip2 >/dev/null ||
     (command -v cat >/dev/null && command -v pax >/dev/null) ||
@@ -16,9 +18,9 @@
 # @param [String] The path to the archive file.
 #
 # @link http://nparikh.org/notes/zshrc.txt
-#
+##
 function extract() {
-    if [[ $# < 1 ] || [[ -z $1 ]]; then
+    if [[ $# < 1 || -z $1 ]]; then
         echo "Usage: extract <path>" >&2
         return 1
     elif [[ ! -f $1 ]]; then

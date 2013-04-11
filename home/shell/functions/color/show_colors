@@ -3,7 +3,7 @@
 #
 # @author Nico Golde
 # @link http://github.com/twerth/dotfiles/blob/master/bin/show_colors
-#
+##
 function show_colors() {
     echo -e "${COLOR_NC}COLOR_NC (No color)"
     echo -e "${COLOR_BLACK}COLOR_BLACK\t${BOLDCOLOR_BLACK}BOLDCOLOR_BLACK"
