@@ -5,6 +5,7 @@ ignore = [
     '.git',
     '.gitignore',
     '.gitmodules',
+    'Makefile',
     'README.md',
     'TODO.md',
     '*.gituser']

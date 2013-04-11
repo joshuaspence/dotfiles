@@ -6,7 +6,6 @@ shell/functions/README.md
 shell/README.md
 shell/shopt.zsh
 vim/
-dotfilesrc
 gitconfig
 README.md
 vimrc
