@@ -3,5 +3,5 @@
 # command.
 #
 # @link http://unix.stackexchange.com/questions/148/colorizing-your-terminal-and-shell-environment
-#
+##
 alias unescape="sed -e 's/\[^[[0-9;]*[a-zA-Z]//gi'"

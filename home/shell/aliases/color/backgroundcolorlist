@@ -1,4 +1,4 @@
 ##
 # Alias to list the defined background colors.
-#
+##
 alias backgroundcolorlist="set | egrep '^BG_\w*' | sort"

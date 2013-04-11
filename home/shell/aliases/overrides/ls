@@ -1,4 +1,6 @@
+##
 # Make sure `ls` is installed.
+##
 command -v ls >/dev/null || return
 
 alias ls='ls --color=auto'
