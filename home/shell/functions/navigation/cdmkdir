@@ -11,7 +11,7 @@
 #
 # @link @todo
 #
-cdmkdir() {
+function cdmkdir() {
     if [ -z "$1" ]; then
         echo "Usage: cdmkdir <path>" >&2
         return 1

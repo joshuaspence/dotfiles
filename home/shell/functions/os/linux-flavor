@@ -1,18 +1,19 @@
 # Check for the prerequisite functions.
 (
     command -v awk >/dev/null &&
+    command -v echo >/dev/null &&
     command -v head >/dev/null
 ) || return 1
 
 ##
 # The flavor of Linux that we are using.
 #
-# @link @todo
+# @link @todo I am not sure where I got this from...
 #
-linux_flavor() {
-    if [ -f /etc/redhat-release ]; then
+function linux-flavor() {
+    if [[ -f /etc/redhat-release ]]; then
         awk '{print $1}' /etc/redhat-release
-    elif [ -f /etc/lsb-release ]; then
+    elif [[ -f /etc/lsb-release ]]; then
         head -n 1 /etc/lsb-release | awk -F= '{print $2}'
     else
         echo "Unable to determine Linux flavor" >&2

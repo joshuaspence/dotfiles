@@ -11,7 +11,7 @@
 #
 # @link @todo
 #
-iface() {
+function iface() {
     case $(uname -s) in
         Darwin)
             netstat -nr | grep ^default | grep -v 'link#' | awk '{print $6}'

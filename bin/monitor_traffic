@@ -12,8 +12,8 @@
 #
 # @link @todo
 #
-monitor_traffic() {
-    if [ $# -lt 1 ] || [ $# -gt 2 ] || [ -z "$1" ]; then
+function monitor_traffic() {
+    if [[ $# < 1 ]] || [[ $# > 2 ] || [[ -z $1 ]]; then
         echo "Usage: monitor_traffic <interface> [<pattern>]" >&2
         return 1
     fi

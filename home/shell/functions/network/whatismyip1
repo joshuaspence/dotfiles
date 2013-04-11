@@ -1,8 +1,0 @@
-##
-# Get my public IP address.
-#
-# @link @todo
-#
-function whatismyip1() {
-	dig +short 'myip.opendns.com' '@resolver1.opendns.com'
-}

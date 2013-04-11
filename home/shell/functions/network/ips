@@ -1,7 +1,14 @@
+# Check for the prerequisite functions.
+(
+    command -v awk >/dev/null &&
+    command -v grep >/dev/null &&
+    command -v ifconfig >/dev/null
+) || return 1
+
 ##
 # Prints IP addresses.
 #
-# @link @todo
+# @link @todo I am not sure where I got this from...
 #
 function ips() {
 	ifconfig |

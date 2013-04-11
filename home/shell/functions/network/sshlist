@@ -1,7 +1,10 @@
+# Check for the prerequisite functions.
+command -v awk >/dev/null || return 1
+
 ##
 # List hosts defined in ~/.ssh/config.
 #
-# @link @todo
+# @link @todo I am not sure where I got this from...
 #
 function sshlist() {
 	awk '$1 ~ /Host$/ && $2 != "*" {print $2}' $HOME/.ssh/config

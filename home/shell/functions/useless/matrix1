@@ -1,7 +1,15 @@
+# Check for the prerequisite functions.
+(
+    command -v echo >/dev/null &&
+    command -v true >/dev/null &&
+    command -v seq >/dev/null &&
+    [[ -r /dev/urandom ]]
+) || return 1
+
 ##
 # Cool "The Matrix" type screens.
 #
-# @link @todo
+# @link @todo I am not sure where I got this from...
 #
 function matrix1() {
     echo -e '\e[32m'
