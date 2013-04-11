@@ -1,11 +1,28 @@
+##
 # Unset environment variables.
+##
 unset GIT_EDITOR
 unset GIT_SSH
 
+##
 # Make sure `git` is installed.
+##
 command -v git >/dev/null || return
 
-# Set and export environment variables.
-[[ -n $EDITOR ]] || source "$HOME/.shell/environment/editor"
-export GIT_EDITOR="$EDITOR"
-export GIT_SSH=$(command -v ssh)
+##
+# Set environment variables.
+##
+if command -v vim >/dev/null; then
+    GIT_EDITOR=$(command -v vim)
+elif command -v vi >/dev/null; then
+    GIT_EDITOR=$(command -v vi)
+else
+    echo "No command set for GIT_EDITOR environment variable" >&2
+fi
+GIT_SSH=$(command -v ssh)
+
+##
+# Export environment variables.
+##
+export GIT_EDITOR
+export GIT_SSH
