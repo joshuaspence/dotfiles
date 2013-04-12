@@ -1,4 +1,6 @@
+##
 # Check for the prerequisite functions.
+##
 (
     command -v bunzip2 >/dev/null ||
     (command -v cat >/dev/null && command -v pax >/dev/null) ||
@@ -11,19 +13,17 @@
 ) || return 1
 
 ##
-# Extracts archived files / mounts disk images.
+# Extracts archived files and mounts disk images.
 #
 # @param [String] The path to the archive file.
 #
 # @link http://nparikh.org/notes/zshrc.txt
-#
-extract() {
-    if [ $# -ne 1 ] || [ -z "$1" ]; then
+##
+function extract() {
+    if [[ $# < 1 || -z $1 ]]; then
         echo "Usage: extract <path>" >&2
         return 1
-    fi
-
-    if [ ! -f "$1" ]; then
+    elif [[ ! -f $1 ]]; then
         echo "'$1' is not a valid file" >&2
         return 2
     fi
@@ -38,7 +38,6 @@ extract() {
         *.tbz2)     tar -jxvf "$1"                    ;;
         *.tgz)      tar -zxvf "$1"                    ;;
         *.zip)      unzip "$1"                        ;;
-        *.ZIP)      unzip "$1"                        ;;
         *.pax)      cat "$1" | pax -r                 ;;
         *.pax.Z)    uncompress "$1" --stdout | pax -r ;;
         *.Z)        uncompress "$1"                   ;;

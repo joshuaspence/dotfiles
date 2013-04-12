@@ -1,6 +1,0 @@
-##
-# Prints IP addresses.
-#
-# @link @todo
-#
-alias ips="ifconfig | grep 'inet ' | awk '{print \$2}'"

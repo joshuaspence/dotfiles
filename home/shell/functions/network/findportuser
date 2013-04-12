@@ -1,6 +1,0 @@
-##
-# @link https://github.com/twerth/dotfiles/blob/master/etc/bashrc
-#
-findportuser() {
-    lsof -i :"$1"
-}

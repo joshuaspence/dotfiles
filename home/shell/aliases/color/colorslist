@@ -1,4 +1,4 @@
 ##
-# Aliases to list the defined colors.
-#
-alias colorlist="set | egrep 'COLOR_\w*' | sort"
+# Alias to list the defined colors.
+##
+alias colorlist="set | egrep '^COLOR_\w*' | sort"

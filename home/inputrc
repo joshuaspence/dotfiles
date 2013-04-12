@@ -76,41 +76,41 @@ set visible-stats on
 #===============================================================================
 
 $if mode=emacs
-	"\e[3;3~": kill-word                # Alt+Delete
+    "\e[3;3~": kill-word                # Alt+Delete
 
-	"\e[1~": beginning-of-line          # Home
-	"\e[2~": quoted-insert              # Insert
-	"\e[3~": delete-char                # Delete
-	"\e[4~": end-of-line                # End
-	"\e[5~": beginning-of-history       # PgUp
-	"\e[6~": end-of-history             # PgDown
+    "\e[1~": beginning-of-line          # Home
+    "\e[2~": quoted-insert              # Insert
+    "\e[3~": delete-char                # Delete
+    "\e[4~": end-of-line                # End
+    "\e[5~": beginning-of-history       # PgUp
+    "\e[6~": end-of-history             # PgDown
 
-	"\e[A": history-search-backward     # Up
-	"\eOA": history-search-backward     # Up
-	"\e[B": history-search-forward      # Down
-	"\eOB": history-search-forward      # Down
-	"\e[C": forward-char                # Right
-	"\e[D": backward-char               # Left
+    "\e[A": history-search-backward     # Up
+    "\eOA": history-search-backward     # Up
+    "\e[B": history-search-forward      # Down
+    "\eOB": history-search-forward      # Down
+    "\e[C": forward-char                # Right
+    "\e[D": backward-char               # Left
 
-	"\e[5C": forward-word               # Ctrl+Right
-	"\e[1;5C": forward-word             # Ctrl+Right
-	"\e\e[C": forward-word              # Ctrl+Right
+    "\e[5C": forward-word               # Ctrl+Right
+    "\e[1;5C": forward-word             # Ctrl+Right
+    "\e\e[C": forward-word              # Ctrl+Right
 
-	"\e[5D": backward-word              # Ctrl+Left
-	"\e[1;5D": backward-word            # Ctrl+Left
-	"\e\e[D": backward-word             # Ctrl+Left
+    "\e[5D": backward-word              # Ctrl+Left
+    "\e[1;5D": backward-word            # Ctrl+Left
+    "\e\e[D": backward-word             # Ctrl+Left
 
-	$if term=rxvt
-		"\e[8~": end-of-line
-		"\eOc": forward-word
-		"\eOd": backward-word
-	$endif
+    $if term=rxvt
+        "\e[8~": end-of-line
+        "\eOc": forward-word
+        "\eOd": backward-word
+    $endif
 
-	# For non RH/Debian xterm, can't hurt for RH/Debian xterm.
-	#"\eOH": beginning-of-line
-	#"\eOF": end-of-line
+    # For non RH/Debian xterm, can't hurt for RH/Debian xterm.
+    #"\eOH": beginning-of-line
+    #"\eOF": end-of-line
 
-	# For FreeBSD console.
-	#"\e[H": beginning-of-line
-	#"\e[F": end-of-line
+    # For FreeBSD console.
+    #"\e[H": beginning-of-line
+    #"\e[F": end-of-line
 $endif

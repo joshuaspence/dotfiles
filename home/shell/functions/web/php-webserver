@@ -6,6 +6,6 @@ command -v php >/dev/null || return 1
 #
 # @param [optional, Integer] Bind port number, default 8000.
 #
-php-webserver() {
+function php-webserver() {
     php -S localhost:${1:-8000}
 }

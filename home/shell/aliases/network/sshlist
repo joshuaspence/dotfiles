@@ -1,6 +1,0 @@
-##
-# List hosts defined in ~/.ssh/config.
-#
-# @link @todo
-#
-alias sshlist='awk '\''$1 ~ /Host$/ && $2 != "*" {print $2}'\'' $HOME/.ssh/config'

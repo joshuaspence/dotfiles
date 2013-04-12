@@ -1,0 +1,10 @@
+##
+# Outputs random hexadecimal stuff that makes the screen look busy.
+#
+# @link @todo
+#
+function compute() {
+	cat /dev/urandom |
+	hexdump -C |
+	grep --color 'ca fe'
+}

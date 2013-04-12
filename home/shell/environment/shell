@@ -1,14 +1,20 @@
+##
 # Store the name of the shell.
+##
 SHELL="$0"
 
+##
 # Check if this is an interactive shell.
+##
 if [[ $- == *i* ]]; then
     IS_INTERACTIVE='true'
 else
     IS_INTERACTIVE='false'
 fi
 
+##
 # Check is this is a remote (SSH) connection.
+##
 if [[ -n $SSH_TTY || -n $SSH_CLIENT || -n $SSH_CONNECTION ]]; then
     IS_REMOTE='true'
 else

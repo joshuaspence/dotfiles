@@ -1,6 +1,0 @@
-##
-# Get my public IP address.
-#
-# @link @todo
-#
-alias whatismyip1='dig +short myip.opendns.com @resolver1.opendns.com'

@@ -4,12 +4,11 @@ Shell environment variables
 Overview
 ---------
 The scripts in this directory are used to set various environment variables for
-the shell environment. Generally, each script should perform the following
-actions:
+the shell. Generally, each script should perform the following actions:
 
 - Unset any environment variables which the script intends to set.
 - Set the new values for the environment variables.
-- Export the environment variables.
+- Export the environment variables (if applicable).
 
 Ideally, each of the scripts in this directory has no dependencies on any other
 scripts. Otherwise there is a risk of a circular dependency.

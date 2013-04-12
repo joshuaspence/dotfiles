@@ -1,4 +1,6 @@
+##
 # Normal colors.
+##
 COLOR_NC='\e[0m'
 COLOR_BLACK='\e[0;30m'
 COLOR_RED='\e[0;31m'
@@ -9,7 +11,9 @@ COLOR_MAGENTA='\e[0;35m'
 COLOR_CYAN='\e[0;36m'
 COLOR_WHITE='\e[0;37m'
 
+##
 # Bold colors.
+##
 BOLDCOLOR_BLACK='\e[1;30m'
 BOLDCOLOR_RED='\e[1;31m'
 BOLDCOLOR_GREEN='\e[1;32m'
@@ -19,7 +23,9 @@ BOLDCOLOR_MAGENTA='\e[1;35m'
 BOLDCOLOR_CYAN='\e[1;36m'
 BOLDCOLOR_WHITE='\e[1;37m'
 
+##
 # Backgrounds.
+##
 BG_BLACK='\e[40m'
 BG_RED='\e[41m'
 BG_GREEN='\e[42m'
@@ -29,10 +35,25 @@ BG_MAGENTA='\e[45m'
 BG_CYAN='\e[46m'
 BG_WHITE='\e[47m'
 
+##
 # Styles.
+##
 STYLE_PLAIN='\e[0m'
 STYLE_BOLD='\e[1m'
+STYLE_NOBOLD='\e[22m'
+STYLE_ITALIC='\e[3m'
+STYLE_NOITALIC='\e[23m'
 STYLE_UNDERLINE='\e[4m'
+STYLE_NOUNDERLINE='\e[24m'
 STYLE_BLINKING='\e[5m'
-STYLE_REVERSE='\e[7m'
+STYLE_NOBLINKING='\e[25m'
+STYLE_INVERSE='\e[7m'
+STYLE_NOINVERSE='\e[27m'
 STYLE_STRIKETHROUGH='\e[9m'
+STYLE_NOSTRIKETHROUGH='\e[29m'
+
+##
+# Miscellaneous.
+##
+XTITLE_START='\\[\\e]0;'
+XTITLE_FINISH='\\007\\]'

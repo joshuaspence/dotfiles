@@ -1,0 +1,18 @@
+# Check for the prerequisite functions.
+(
+    command -v dd >/dev/null &&
+    command -v grep >/dev/null &&
+    command -v tr >/dev/null &&
+    [[ -r /dev/urandom ]]
+) || return 1
+
+##
+# Cool "The Matrix" type screens.
+#
+# @link @todo I am not sure where I got this from...
+#
+function matrix3() {
+	tr -c '[:digit:]' ' ' </dev/urandom |
+	dd cbs=$(tput cols) conv=lcase,unblock |
+	GREP_COLOR='1;32' grep --color '[^ ]'
+}

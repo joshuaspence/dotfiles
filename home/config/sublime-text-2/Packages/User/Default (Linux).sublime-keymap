@@ -1,70 +1,75 @@
 [
+    {"keys": ["ctrl+alt+n"], "command": "clone_file"},
+
     /**************************************************************************
-     * Alignment
+     * Package: Alignment
      **************************************************************************/
     {"keys": ["ctrl+alt+a"], "command": "alignment"},
 
     /**************************************************************************
-     * ChangeQuotes
+     * Package: ChangeQuotes
      **************************************************************************/
     {"keys": ["ctrl+shift+'"], "command": "change_quotes"},
 
     /**************************************************************************
-     * Clickable URLs
+     * Package: Clickable URLs
      **************************************************************************/
     {"keys": ["ctrl+alt+enter"], "command": "open_url"},
 
     /**************************************************************************
-     * Clipboard History
+     * Package: Clipboard History
      **************************************************************************/
     {"keys": ["ctrl+alt+v"], "command": "clipboard_display"},
-	{"keys": ["ctrl+alt+d"], "command": "clipboard_clear_history"},
-	{"keys": ["ctrl+shift+v"], "command": "clipboard_paste_previous"},
-	{"keys": ["ctrl+shift+alt+v"], "command": "clipboard_paste_next"},
-
-	/**************************************************************************
-	 * DocBlockr
-	 **************************************************************************/
-	{"keys": ["alt+shift+tab"], "command": "jsdocs_reparse", "context": [{"key": "selector", "operator": "equal", "operand": "comment.block"}]},
+    {"keys": ["ctrl+alt+d"], "command": "clipboard_clear_history"},
+    {"keys": ["ctrl+shift+v"], "command": "clipboard_paste_previous"},
+    {"keys": ["ctrl+shift+alt+v"], "command": "clipboard_paste_next"},
 
     /**************************************************************************
-     * Git
+     * Package: DocBlockr
+     **************************************************************************/
+    {"keys": ["alt+shift+tab"], "command": "jsdocs_reparse", "context": [{"key": "selector", "operator": "equal", "operand": "comment.block"}]},
+
+    /**************************************************************************
+     * Package: Git
      **************************************************************************/
     {"keys": ["enter"], "command": "git_goto_diff", "context": [{"key": "selector", "operand": "markup.inserted.diff"}]},
     {"keys": ["enter"], "command": "git_goto_diff", "context": [{"key": "selector", "operand": "markup.deleted.diff"}]},
+    {"keys": ["ctrl+shift+g", "ctrl+g"], "command": "git_graph"},
+    {"keys": ["ctrl+shift+g", "ctrl+shift+g"], "command": "git_graph_all"},
+    {"keys": ["ctrl+shift+g", "ctrl+d"], "command": "git_diff_tool"},
 
     /**************************************************************************
-     * GitGutter
+     * Package: GitGutter
      **************************************************************************/
     {"keys": ["ctrl+shift+alt+j"], "command": "git_gutter_next_change"},
     {"keys": ["ctrl+shift+alt+k"], "command": "git_gutter_prev_change"},
 
     /**************************************************************************
-     * GitHubinator
+     * Package: GitHubinator
      **************************************************************************/
-    {"keys": ["ctrl+\\"], "command": "githubinator", "args": {"permalink": false}},
-    {"keys": ["ctrl+shift+\\"], "command": "githubinator", "args": {"permalink": true}},
+    {"keys": ["ctrl+shift+g", "ctrl+h"], "command": "githubinator", "args": {"permalink": false}},
+    {"keys": ["ctrl+shift+g", "ctrl+shift+h"], "command": "githubinator", "args": {"permalink": true}},
 
     /**************************************************************************
-     * Markdown Preview
+     * Package: Markdown Preview
      **************************************************************************/
     {"keys": ["alt+m"], "command": "markdown_preview", "args": {"target": "browser"}},
 
     /**************************************************************************
-     * SublimeCodeIntel
+     * Package: SublimeCodeIntel
      **************************************************************************/
     {"keys": ["ctrl+j"], "command": "code_intel_auto_complete"},
     {"keys": ["ctrl+f3"], "command": "goto_python_definition"},
 
     /**************************************************************************
-     * SublimeLinter
+     * Package: SublimeLinter
      **************************************************************************/
     {"keys": ["ctrl+alt+l"], "command": "sublimelinter", "args": {"action": "lint"}},
     {"keys": ["ctrl+alt+e"], "command": "find_next_lint_error"},
     {"keys": ["ctrl+alt+shift+e"], "command": "find_previous_lint_error"},
 
     /**************************************************************************
-     * Wrap Plus
+     * Package: Wrap Plus
      **************************************************************************/
     {"keys": ["alt+q"], "command": "wrap_lines_plus"}
 ]

@@ -8,6 +8,6 @@ command -v python >/dev/null || return 1
 #
 # @link http://github.com/fnichol/bashrc/blob/master/bashrc
 #
-python-webserver() {
+function python-webserver() {
     python -m SimpleHTTPServer ${1:-8000}
 }
