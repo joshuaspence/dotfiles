@@ -1,8 +1,18 @@
 #===============================================================================
-# EC2
+# Personal
 #===============================================================================
-Host pear gunwatcher
-    Hostname %h.joshuaspence.com
+Host gunwatcher gunwatcher.joshuaspence.com
+    Hostname gunwatcher.joshuaspence.com
+    User ec2-user
+    IdentityFile ~/.ssh/keys/ec2
+
+    ForwardAgent no
+    IdentitiesOnly yes
+    PasswordAuthentication no
+    PubkeyAuthentication yes
+
+Host pear pear.joshuaspence.com
+    Hostname pear.joshuaspence.com
     User ec2-user
     IdentityFile ~/.ssh/keys/ec2
 
@@ -12,13 +22,9 @@ Host pear gunwatcher
     PubkeyAuthentication yes
 
 #===============================================================================
-# Personal
-#===============================================================================
-
-#===============================================================================
 # Home
 #===============================================================================
-Host RT-N16
+Host home home.ddns.joshuaspence.com
     Hostname home.ddns.joshuaspence.com
     User root
     IdentityFile ~/.ssh/keys/home
@@ -28,20 +34,10 @@ Host RT-N16
     PasswordAuthentication no
     PubkeyAuthentication yes
 
-Host WRT54GL
-    Hostname home.ddns.joshuaspence.com
-    Port 2222
-    User root
-
-    ForwardAgent yes
-    IdentitiesOnly yes
-    PasswordAuthentication no
-    PubkeyAuthentication yes
-
 #===============================================================================
 # Launchpad
 #===============================================================================
-Host launchpad
+Host launchpad bazaar.launchpad.net
     Hostname bazaar.launchpad.net
     User joshuaspence
     IdentityFile  ~/.ssh/keys/launchpad
@@ -54,7 +50,7 @@ Host launchpad
 #===============================================================================
 # ScribTex
 #===============================================================================
-Host scribtex
+Host scribtex git.scribtex.com
     Hostname git.scribtex.com
     User joshuaspence
     IdentityFile  ~/.ssh/keys/scribtex
@@ -67,7 +63,7 @@ Host scribtex
 #===============================================================================
 # GitHub
 #===============================================================================
-Host github
+Host github git.github.com
     Hostname git.github.com
     User git
     IdentityFile  ~/.ssh/keys/github
@@ -80,7 +76,7 @@ Host github
 #===============================================================================
 # Freelancer
 #===============================================================================
-Host analytics01.freelancer
+Host analytics01 analytics01.freelancer.com
     HostName analytics01.freelancer.com
     User joshua
     IdentityFile ~/.ssh/keys/freelancer
@@ -90,7 +86,7 @@ Host analytics01.freelancer
     PasswordAuthentication no
     PubkeyAuthentication yes
 
-Host local-staging.freelancer
+Host local-staging josh.syd.local 10.0.0.2
     HostName josh.syd.local
     User freelancer
     IdentityFile ~/.ssh/keys/vagrant
@@ -100,7 +96,7 @@ Host local-staging.freelancer
     PasswordAuthentication no
     PubkeyAuthentication yes
 
-Host staging3.freelancer
+Host staging3 staging3.freelancer.com
     HostName staging3.freelancer.com
     User staging-josh
     IdentityFile ~/.ssh/keys/freelancer
@@ -110,7 +106,7 @@ Host staging3.freelancer
     PasswordAuthentication no
     PubkeyAuthentication yes
 
-Host db-slave-stats-tunnel.freelancer
+Host db-slave-stats-tunnel
     HostName analytics01.freelancer.com
     User joshua
     IdentityFile ~/.ssh/keys/freelancer
@@ -124,7 +120,7 @@ Host db-slave-stats-tunnel.freelancer
     ExitOnForwardFailure yes
     LocalForward 3306 db-slave-stats.freelancer.com:3306
 
-Host git.freelancer
+Host freelancer-git git.freelancer.com
     HostName git.freelancer.com
     User git
     IdentityFile ~/.ssh/keys/git.freelancer.com
@@ -142,7 +138,7 @@ Host *
     # Specifies whether user authentication based on GSSAPI is allowed.
     #
     # @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
-    #
+    ##
     GSSAPIAuthentication no
 
     ##
@@ -160,12 +156,12 @@ Host *
     # address in the "~/.ssh/known_hosts" file. This allows ssh to detect if a
     # host key changed due to DNS spoofing. If the option is set to "no", the
     # check will not be executed.
-    #
+    ##
     CheckHostIP yes
 
     ##
     # Specifies whether to use compression.
-    #
+    ##
     Compression no
 
     ##
@@ -179,7 +175,7 @@ Host *
     # listening.
     #
     # @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
-    #
+    ##
     ControlMaster auto
     ControlPath /tmp/ssh_mux_%h_%p_%r
 
@@ -199,65 +195,65 @@ Host *
     # (with no client connections) for the specified time.
     #
     # @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
-    #
+    ##
     ControlPersist 4h
 
     ##
     # Specifies whether the connection to the authentication agent (if any) will
     # be forwarded to the remote machine.
-    #
+    ##
     ForwardAgent no
 
     ##
     # Specifies whether X11 connections will be automatically redirected over
     # the secure channel and DISPLAY set.
-    #
+    ##
     ForwardX11 no
     ForwardX11Trusted yes
 
     ##
-    # Specifies that `ssh` should only use the authentication identity files
+    # lsSpecifies that `ssh` should only use the authentication identity files
     # configured in the ssh_config files, even if `ssh-agent` offers more
     # identities. The argument to this keyword must be "yes" or "no". This
     # option is intended for situations where `ssh-agent` offers many different
     # identities.
-    #
+    ##
     IdentitiesOnly no
 
     ##
     # Specifies whether to use password authentication. The argument to this
     # keyword must be "yes" or "no".
-    #
+    ##
     PasswordAuthentication yes
 
     ##
     # Allow local command execution via the LocalCommand option or using the
     # `!command` escape sequence in `ssh`. The argument must be "yes" or "no".
-    #
+    ##
     PermitLocalCommand no
 
     ##
     # Specifies the protocol versions ssh should support in order of preference.
     # The possible values are '1' and '2'. Multiple versions must be
     # comma-separated.
-    #
+    ##
     Protocol 2
 
     ##
     # Specifies whether to try public key authentication. The argument to this
     # keyword must be "yes" or "no".
-    #
+    ##
     PubkeyAuthentication no
 
     ##
     # Specifies what variables from the local environment should be sent to the
     # server.
-    #
+    ##
     SendEnv LANG LC_*
 
     ##
     # If this flag is set to "yes", an ASCII art representation of the remote
     # host key fingerprint is printed in addition to the hex fingerprint string
     # at login and for unknown host keys.
-    #
+    ##
     VisualHostKey yes
