@@ -37,3 +37,36 @@ au InsertLeave * set relativenumber
 autocmd BufNewFile,BufRead *.css set fdm=marker fmr={,}
 autocmd BufNewFile,BufRead *.md set spell
 autocmd BufNewFile,BufRead *.markdown set spell
+
+
+autocmd BufRead *.json set filetype=javascript " clojure filetype:
+autocmd BufRead *.as set filetype=actionscript " actionscript syntax:
+autocmd BufRead *.clj set filetype=clojure     " clojure filetype:
+autocmd BufRead *.mxml set filetype=mxml       " mxml files:
+
+
+au BufRead,BufNewFile *.rpdf       set ft=ruby
+au BufRead,BufNewFile *.rxls       set ft=ruby
+au BufRead,BufNewFile *.ru         set ft=ruby
+au BufRead,BufNewFile *.god        set ft=ruby
+au BufRead,BufNewFile *.rtxt       set ft=html spell
+au BufRead,BufNewFile *.sql        set ft=pgsql
+au BufRead,BufNewFile *.rl         set ft=ragel
+au BufRead,BufNewFile *.svg        set ft=svg
+au BufRead,BufNewFile *.haml       set ft=haml
+au BufRead,BufNewFile *.md         set ft=mkd tw=80 ts=2 sw=2 expandtab
+au BufRead,BufNewFile *.markdown   set ft=mkd tw=80 ts=2 sw=2 expandtab
+au BufRead,BufNewFile *.ronn       set ft=mkd tw=80 ts=2 sw=2 expandtab
+
+au Filetype gitcommit set tw=68  spell
+au Filetype ruby      set tw=80  ts=2
+au Filetype html,xml,xsl,rhtml source $HOME/.vim/scripts/closetag.vim
+
+" Set File type to 'text' for files ending in .txt
+autocmd BufNewFile,BufRead *.txt setfiletype text
+
+" Enable soft-wrapping for text files
+autocmd FileType text,markdown,html,xhtml,eruby setlocal wrap linebreak nolist
+
+" Automatically load .vimrc source when saved
+autocmd BufWritePost .vimrc source $MYVIMRC

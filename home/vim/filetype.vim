@@ -1,4 +1,4 @@
-" https://github.com/norman/vim-files/blob/master/filetype.vim
+" @link http://github.com/norman/vim-files/blob/master/filetype.vim
 
 if exists("did_load_filetypes")
     finish

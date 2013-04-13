@@ -2,63 +2,335 @@
 " General
 "===============================================================================
 
-" Behave like Vim instead of Vi.
+" Behave like `vim` instead of `vi`.
 set nocompatible
 
 " We plan to use a dark background.
 set background=dark
 
+" Vim can detect file types (by their extension, or by peeking inside the file).
+filetype plugin indent on
+
+" Vundle bundles.
+source ~/.vim/bundles.vim
+
+" Turn on color syntax highlighting.
 if &t_Co > 2 || has("gui_running")
-  " Turn on color syntax highlighting.
   syntax on
 endif
 
-" Always switch to the current file directory.
-set autochdir
-
-" Allow backspace in insert mode.
-set backspace=indent,eol,start
-
-" Use the OS clipboard by default.
-set clipboard+=unnamedplus
-
-" Enhance command-line completion.
-set wildmenu
-set wildmode=longest:full,full
-
-" Allow cursor keys in insert mode.
-set esckeys
-
-" Disable error bells.
-set visualbell
-set noerrorbells
-
-" Don’t reset cursor to start of line when moving around.
-set nostartofline
-
 " When a file has been detected to have been changed outside of Vim and it has
-" not been changed inside of Vim, automatically read it again.
+" not been changed inside of `vim`, automatically read it again.
 set autoread
 
-" Number of lines of command line history to keep.
-set history=1000
+" This will save the file when you switch buffers.
+set autowrite
 
 " Use UTF-8 without BOM.
 set encoding=utf-8 nobomb
 
+" Allow cursor keys in insert mode.
+set esckeys
+
+" Wrap at 80 chars by default.
+set textwidth=80
+
+" Don't clear the screen when exiting `vim`.
+" @link http://www.shallowsky.com/linux/noaltscreen.html
+set t_ti= t_te=
+
+" Support for numbered/bullet lists.
+set formatoptions+=n
+
+set viewoptions=folds,options,cursor,unix,slash
+
+
 "===============================================================================
-" Advanced
+" Appearance
 "===============================================================================
+
+" Highlight the current column.
+set cursorcolumn
+
+" Highlight the current line.
+set cursorline
+
+" Show line numbers.
+set number
+
+" Use relative line numbers.
+"set relativenumber
+
+" Show the ruler.
+set ruler
+
+" Don't wrap lines.
+set nowrap
+
+" Visual bell.
+set visualbell
+
+" Don't update while in macro.
+set lazyredraw
 
 " Optimize for fast terminal connections. Sends more characters for redraws.
+" Improves redrawing.
 set ttyfast
 
+" Display current column/line.
+set rulerformat=%l,%c ruler
+
+" Show commands at bottom right.
+set showcmd
+
+" Split windows below current window.
+set splitbelow
+
+" Window minimum height.
+set winminheight=1
+
+" Always have at least 8 lines before the window's bottom.
+set scrolloff=8
+
+" Folding.
+if has("folding")
+  set foldcolumn=3
+  set foldenable
+  set foldmethod=syntax
+  set foldlevel=1
+  set foldnestmax=2
+  set foldlevelstart=99
+endif
+
+" Show the filename title in xterms.
+set title
+
+" Nice statusbar.
+set laststatus=2
+set statusline=
+set statusline+=%F          " full path to file in the buffer
+set statusline+=%m          " modified flag in square brackets
+set statusline+=%r          " readonly flag in square brackets
+set statusline+=%h          " help flag in square brackets
+set statusline+=%w          " preview flag in square brackets
+set statusline+=%=          " right align
+set statusline+=[%L]        " number of lines
+set statusline+=[%{&ff}]    " current fileformat
+set statusline+=%y          " current syntax in square brackets
+set statusline+=[%p%%]      " current % into file
+set statusline+=[%04l,%04v] " current row, current column
+
+" Don't highlight minified js and stuff.
+set synmaxcol=500
+
+"===============================================================================
+" Search & Replace
+"===============================================================================
+
+" Highlight searches.
+set hlsearch
+
+" Make searches case-insensitive, unless they contain upper-case letters.
+set ignorecase smartcase
+
+" Show the "best match so far" as search strings are typed.
+set incsearch
+
+" Assume the /g flag on :s substitutions to replace all matches in a line.
+set gdefault
+
+set showmatch matchtime=5
+
+"===============================================================================
+" Whitespace settings
+"===============================================================================
+
+" Use multiple of shiftwidth when indenting with '<' and '>'.
+set shiftround
+
+" Highlight unwanted spaces.
+set list listchars=tab:▸\ ,trail:·,eol:¬,nbsp:_
+
+" Copy the previous indentation on autoindenting.
+set copyindent
+
+" Insert tabs on the start of a line according to shiftwidth, not tabstop.
+set smarttab
+
+" When hitting tab or backspace, how many spaces should a tab be (see
+" expandtab).
+set tabstop=4 shiftwidth=4 softtabstop=4
+
+" Always set autoindenting on.
+set autoindent smartindent
+
+" Expand tabs to space.
+set expandtab
+
+"===============================================================================
+" Menu completions
+"===============================================================================
+
+" Command-line tab completion.
+set wildmode=full wildmenu
+
+" Auto-complete in `vim`.
+set infercase
+
+" The popup menu doesn't select the first completion item, but rather just
+" inserts the longest common text of all matches; and the menu will come up even
+" if there's only one match.
+set complete=.,w,b,u,t completeopt=longest,menu,menuone,preview
+
+" `vim` will ignore file patterns specified in option "wildignore".
+set wildignore+=*.bmp,*.gif,*.jpg,*.jpeg,*.png     " binary images
+set wildignore+=*.class,classes,*.luac,*.pyc,*.rbc " byte code and stuff
+set wildignore+=*.dll,*.exe,*.manifest,*.o,*.obj   " compiled object files
+set wildignore+=*.aux,*.out,*.toc                  " LaTeX intermediate files
+set wildignore+=.bzr,.git,.hg,.svn                 " version control
+set wildignore+=*.sw?                              " vim swap files
+
+"===============================================================================
+" GUI Stuff
+"===============================================================================
+
+" Enable mouse support.
+set mousemodel=extend
+set selectmode=mouse
+set mouse=a
+"set ttymouse=xterm2
+
+" Mouse can control splits.
+if has("gui_running")
+  set mousefocus
+endif
+
+"===============================================================================
+" Keystrokes
+"===============================================================================
+
+" Backspace over anything.
+set backspace=indent,eol,start
+
+" Space is so much easier than ':'.
+noremap <space> :
+
+" Remap <LEADER> to ',' (instead of '\').
+let mapleader=","
+
+" Have the 'h' and 'l' cursor keys wrap between lines, and '~'' covert case over
+" line breaks; also have the cursor keys wrap in insert mode.
+set whichwrap=h,l,~,[,]
+
+" Show a list of recently opened files.
+nmap ,r :FuzzyFinderMruFile</cr><cr>
+
+" Show a list of files to be regex matched.
+nmap ,f :FuzzyFinderTextMate</cr><cr>
+
+" Task list bindings.
+let Tlist_WinWidth = 50
+map </cr></silent><silent> ,T :TaskList<cr>
+
+" Tag list.
+map </cr></silent><silent> ,t :Tlist<cr>
+
+" Joining lines.
+noremap ,j :join</cr><cr>
+
+" Change tabs with 'shift+tab'.
+nnoremap <s-tab> <c-w>w;
+
+" Scrolling.
+no J 20j
+no K 20k
+
+" List whitespace.
+nn </c-w></s-tab></cr></silent><silent> ,</silent></bkspc></space><space> :se nolist!<cr>
+
+" Buffer window focus.
+nn ,k <c-w>k</c-w><c-w>_
+nn ,= </c-w><c-w>=
+
+" ,nn will toggle NERDTree on and off.
+nmap ,nn :NERDTreeToggle</cr><cr>
+
+" @link http://vimrc-dissection.blogspot.com.au/2009/02/fixing-pageup-and-pagedown.html
+map <PageUp> <C-U>
+map <PageDown> <C-D>
+imap <PageUp> <C-O><C-U>
+imap <PageDown> <C-O><C-D>
+set nostartofline
+
+"===============================================================================
+" Tabs
+"===============================================================================
+
+" Open 50 tabs max.
+set tabpagemax=50
+
+" you can switch to the next buffer by pressing F8, or the previous buffer by pressing Shift-F8. If the target buffer is already displayed in a window in one of the tabs, that window will be displayed. Otherwise, the current window will be split, and the target buffer will be displayed in the new window.
+set switchbuf=usetab
+nnoremap <F8> :sbnext<CR>
+nnoremap <S-F8> :sbprevious<CR>
+
+" Duplicate current tab with same file and line.
+map ,t :tabnew %<CR>
+
+" Open directory dirname of current file, and in new tab.
+map ,d :e %:h/<CR>
+map ,dt :tabnew %:h/<CR>
+
+" Open gf under cursor in new tab.
+map ,f :tabnew <cfile><CR>
+
+" Open tag under cursor in new tab.
+map <C-\> :tab split<CR>:exec("tag ".expand("<cword>"))<CR>
+
+"===============================================================================
+" Spelling
+"===============================================================================
+
+set dictionary=/usr/share/dict/words
+if v:version >= 700
+  setlocal spell spelllang=en
+  nmap ,ll :set spell!</cr><cr>
+  nmap ,le :set spelllang=en</cr><cr>
+  nmap ,lp :set spelllang=pt</cr><cr>
+endif
+
+" Correct some spelling mistakes.
+ia teh      the
+ia htis     this
+ia tihs     this
+ia funciton function
+ia fucntion function
+ia funtion  function
+ia retunr   return
+ia reutrn   return
+ia sefl     self
+ia eslf     self
+
+"===============================================================================
+" Backup options
+"===============================================================================
+
 " Don't keep backups.
+set backupdir=~/tmp,/tmp
 set nobackup
 set nowritebackup
 
+"===============================================================================
+" Swap options
+"===============================================================================
+
 " Don't use swap files.
+set directory=~/tmp,/tmp
 set noswapfile
+
+"===============================================================================
+" Undo options
+"===============================================================================
 
 " Use the persistent undo feature. NOTE: the directory listed in undodir must
 " exist; Vim will not create this directory itself!
@@ -67,464 +339,43 @@ set undofile
 set undolevels=1000
 set undoreload=10000
 
-" Ignore some file extensions when completing names by pressing tab.
-set wildignore=*.swp,*.bak,*.pyc,*.class
-
 "===============================================================================
-" Vundle
+" History options
 "===============================================================================
 
-" Gist
-" https://github.com/mattn/gist-vim
-let g:gist_clip_command = 'xclip -selection clipboard'
-let g:gist_detect_filetype = 1
-let g:gist_browser_command = 'google-chrome %URL% &'
-let g:gist_open_browser_after_post = 1
-
-" Better surround.
-let g:surround_40 = "(\r)"
-let g:surround_91 = "[\r]"
-let g:surround_60 = "<\r>"
+" Number of lines of command line history to keep.
+set history=1000
 
 "===============================================================================
-" User Interface
+" Clipboard Management
 "===============================================================================
 
-" Highlight the current column.
-set cursorcolumn
+" Use the OS clipboard by default.
+set clipboard+=unnamed
 
-" Highlight current line.
-set cursorline
+" Use smart paste for preserving identation when copying and pasting.
+nmap <silent> ,p :SmartPaste</silent></esc></cr><cr>
+nmap <silent> ,p :SmartPaste<cr>
 
-" Do highlight as you type you search phrase.
-set incsearch
-
-" Nice statusbar.
-set laststatus=2
-set statusline=
-set statusline+=%F            " full path to file in the buffer
-set statusline+=%m            " modified flag in square brackets
-set statusline+=%r            " readonly flag in square brackets
-set statusline+=%h            " help flag in square brackets
-set statusline+=%w            " preview flag in square brackets
-set statusline+=%=            " right align
-set statusline+=[%L]          " number of lines
-set statusline+=[%{&ff}]      " current fileformat
-set statusline+=%y            " current syntax in square brackets
-set statusline+=[%p%%]        " current % into file
-set statusline+=[%04l,%04v]   " current row, current column
-
-" Do not redraw while running macros.
-set lazyredraw
-
-" How many tenths of a second to blink matching brackets for.
-set matchtime=5
-
-" Turn on line numbers.
-set number
-
-" Always show current positions along the bottom.
-set ruler
-
-" Show matching brackets.
-set showmatch
-
-" Show the filename title in xterms.
-set title
-
-" Enable mouse use in all modes.
-"set mouse=a
-"set ttymouse=xterm2
-
-" The completion menu is controlled by completeopt. You can set multiple values
-" to combine behaviours.
-set completeopt=menu,menuone,preview
-
-" Temporarily switch to "paste mode" when pasteing with a right click.
-set pastetoggle=<F2>
-
-"===============================================================================
-" Text formatting and layout
-"===============================================================================
-
-" No real tabs.
-set expandtab
-
-" Do not wrap lines.
-set nowrap
-
-" Auto-indent amount when using cindent, >>, << and stuff like that.
-set shiftwidth=4
-
-" Use multiple of shiftwidth when indenting with '<' and '>'.
-set shiftround
-
-" When hitting tab or backspace, how many spaces should a tab be (see expandtab).
-set softtabstop=4
-
-" Real tabs should be 8, and they will show with set list on.
-set tabstop=4
-
-" Highlight unwanted spaces.
-set listchars=tab:▸\ ,trail:·,eol:¬,nbsp:_
-set list
-
-" Always set autoindenting on.
-set autoindent
-
-" Copy the previous indentation on autoindenting.
-set copyindent
-
-" Insert tabs on the start of a line according to shiftwidth, not tabstop.
-set smarttab
+" Make sure paste mode is on before pasting.
+function! SmartPaste()
+  set paste
+  normal! p`[=`]
+  set nopaste
+endfunction
 
 "===============================================================================
 " Other
 "===============================================================================
 
-" Vim can detect file types (by their extension, or by peeking inside the file).
-filetype plugin indent on
-
-source ~/.vim/bundles.vim
-source ~/.vim/autocmd.vim
-source ~/.vim/bindings.vim
-
-
-
-
+"source ~/.vim/bindings.vim
+"source ~/.vim/autocmd.vim
 
 "===============================================================================
-" TODO
+" Functions
 "===============================================================================
-set cf                                " error files / jumping
-set ffs=unix,dos,mac                  " support these files
-set isk+=_,$,@,%,#,-                  " none word dividers
-set viminfo='1000,f1,:100,@100,/20
-set modeline                          " make sure modeline support is enabled
-set tabpagemax=50                     " open 50 tabs max
-
-" Highlight trailing whitespace
-set list listchars=trail:.,tab:>.
-highlight SpecialKey ctermfg=DarkGray ctermbg=Black
-
-set backupcopy=yes                     " keep attributes of original file
-set backupskip=/tmp/*,$TMPDIR/*,$TMP/*,$TEMP/*
-set directory=~/.vim/swap,~/tmp,.      " keep swp files under ~/.vim/swap
-
-set noshowcmd              " don't display incomplete commands
-set nolazyredraw           " turn off lazy redraw
-
-set ch=2                   " command line height
-set backspace=2            " allow backspacing over everything in insert mode
-set whichwrap+=<,>,h,l,[,] " backspace and cursor keys wrap to
-set shortmess=filtIoOA     " shorten messages
-set report=0               " tell us about changes
-set nostartofline          " don't jump to the start of line when scrolling
-
-" Visual cues
-set showmatch              " brackets/braces that is
-set mat=5                  " duration to show matching brace (1/10 sec)
-set incsearch              " do incremental searching
-set laststatus=2           " always show the status line
-set ignorecase             " ignore case when searching
-set nohlsearch             " don't highlight searches
-set visualbell             " shut the fuck up
-
-# Text formatting
-set autoindent             " automatic indent new lines
-set smartindent            " be smart about it
-set nowrap                 " do not wrap lines
-set softtabstop=2          " yep, two
-set shiftwidth=2           " ..
-set tabstop=4
-set expandtab              " expand tabs to spaces
-set nosmarttab             " fuck tabs
-set formatoptions+=n       " support for numbered/bullet lists
-set textwidth=80           " wrap at 80 chars by default
-set virtualedit=block      " allow virtual edit in visual block ..
-
-" ----------------------------------------------------------------------------
-"  Mappings
-" ----------------------------------------------------------------------------
-
-" remap <LEADER> to ',' (instead of '\')
-let mapleader = ","
-
-" quickfix mappings
-map <F7>  :cn<CR>
-map <S-F7> :cp<CR>
-map <A-F7> :copen<CR>
-
-" emacs movement keybindings in insert mode
-imap <C-a> <C-o>0
-imap <C-e> <C-o>$
-map <C-e> $
-map <C-a> 0
-
-" reflow paragraph with Q in normal and visual mode
-nnoremap Q gqap
-vnoremap Q gq
-
-" sane movement with wrap turned on
-nnoremap j gj
-nnoremap k gk
-vnoremap j gj
-vnoremap k gk
-nnoremap <Down> gj
-nnoremap <Up> gk
-vnoremap <Down> gj
-vnoremap <Up> gk
-inoremap <Down> <C-o>gj
-inoremap <Up> <C-o>gk
-
-" do not menu with left / right in command line
-cnoremap <Left> <Space><BS><Left>
-cnoremap <Right> <Space><BS><Right>
-
-" ---------------------------------------------------------------------------
-"  Misc mappings
-" ---------------------------------------------------------------------------
-
-" duplicate current tab with same file+line
-map ,t :tabnew %<CR>
-
-" open directory dirname of current file, and in new tab
-map ,d :e %:h/<CR>
-map ,dt :tabnew %:h/<CR>
-
-" open gf under cursor in new tab
-map ,f :tabnew <cfile><CR>
-
-" open tag under cursor in new tab
-map <C-\> :tab split<CR>:exec("tag ".expand("<cword>"))<CR>
-
-" I use these commands in my TODO file
-map ,a o<ESC>:r!date +'\%A, \%B \%d, \%Y'<CR>:r!date +'\%A, \%B \%d, \%Y' \| sed 's/./-/g'<CR>A<CR><ESC>
-map ,o o[ ]
-map ,O O[ ]
-map ,x :s/^\[ \]/[x]/<CR>
-map ,X :s/^\[x\]/[ ]/<CR>
-
-" ---------------------------------------------------------------------------
-"  Strip all trailing whitespace in file
-" ---------------------------------------------------------------------------
 
 function! StripWhitespace ()
     exec ':%s/ \+$//gc'
 endfunction
 map ,s :call StripWhitespace ()<CR>
-
-" ---------------------------------------------------------------------------
-" File Types
-" ---------------------------------------------------------------------------
-
-au BufRead,BufNewFile *.rpdf       set ft=ruby
-au BufRead,BufNewFile *.rxls       set ft=ruby
-au BufRead,BufNewFile *.ru         set ft=ruby
-au BufRead,BufNewFile *.god        set ft=ruby
-au BufRead,BufNewFile *.rtxt       set ft=html spell
-au BufRead,BufNewFile *.sql        set ft=pgsql
-au BufRead,BufNewFile *.rl         set ft=ragel
-au BufRead,BufNewFile *.svg        set ft=svg
-au BufRead,BufNewFile *.haml       set ft=haml
-au BufRead,BufNewFile *.md         set ft=mkd tw=80 ts=2 sw=2 expandtab
-au BufRead,BufNewFile *.markdown   set ft=mkd tw=80 ts=2 sw=2 expandtab
-au BufRead,BufNewFile *.ronn       set ft=mkd tw=80 ts=2 sw=2 expandtab
-
-au Filetype gitcommit set tw=68  spell
-au Filetype ruby      set tw=80  ts=2
-au Filetype html,xml,xsl,rhtml source $HOME/.vim/scripts/closetag.vim
-
-" --------------------------------------------------------------------------
-" ManPageView
-" --------------------------------------------------------------------------
-
-let g:manpageview_pgm= 'man -P "/usr/bin/less -is"'
-let $MANPAGER = '/usr/bin/less -is'
-
-" Only do this part when compiled with support for autocommands.
-if has("autocmd")
-  " Enable file type detection.
-  " Use the default filetype settings, so that mail gets 'tw' set to 72,
-  " 'cindent' is on in C files, etc.
-  " Also load indent files, to automatically do language-dependent indenting.
-  filetype plugin indent on
-
-  " Set File type to 'text' for files ending in .txt
-  autocmd BufNewFile,BufRead *.txt setfiletype text
-
-  " Enable soft-wrapping for text files
-  autocmd FileType text,markdown,html,xhtml,eruby setlocal wrap linebreak nolist
-
-  " Put these in an autocmd group, so that we can delete them easily.
-  augroup vimrcEx
-  au!
-
-  " For all text files set 'textwidth' to 78 characters.
-  " autocmd FileType text setlocal textwidth=78
-
-  " When editing a file, always jump to the last known cursor position.
-  " Don't do it when the position is invalid or when inside an event handler
-  " (happens when dropping a file on gvim).
-  autocmd BufReadPost *
-    \ if line("'\"") > 0 && line("'\"") <= line("$") |
-    \   exe "normal g`\"" |
-    \ endif
-
-  " Automatically load .vimrc source when saved
-  autocmd BufWritePost .vimrc source $MYVIMRC
-
-  augroup END
-
-else
-
-  set autoindent        " always set autoindenting on
-
-endif " has("autocmd")
-
-" Use Ack instead of Grep when available
-if executable("ack")
-  set grepprg=ack\ -H\ --nogroup\ --nocolor\ --ignore-dir=tmp\ --ignore-dir=coverage
-endif
-
-" Switch syntax highlighting on, when the terminal has colors
-" Also switch on highlighting the last used search pattern.
-if (&t_Co > 2 || has("gui_running")) && !exists("syntax_on")
-  syntax on
-  set hlsearch
-endif
-
-" Only do this part when compiled with support for autocommands.
-if has("autocmd")
-  " Enable file type detection.
-  " Use the default filetype settings, so that mail gets 'tw' set to 72,
-  " 'cindent' is on in C files, etc.
-  " Also load indent files, to automatically do language-dependent indenting.
-  filetype plugin indent on
-
-  " Set File type to 'text' for files ending in .txt
-  autocmd BufNewFile,BufRead *.txt setfiletype text
-
-  " Enable soft-wrapping for text files
-  autocmd FileType text,markdown,html,xhtml,eruby setlocal wrap linebreak nolist
-
-  " Put these in an autocmd group, so that we can delete them easily.
-  augroup vimrcEx
-  au!
-
-  " For all text files set 'textwidth' to 78 characters.
-  " autocmd FileType text setlocal textwidth=78
-
-  " When editing a file, always jump to the last known cursor position.
-  " Don't do it when the position is invalid or when inside an event handler
-  " (happens when dropping a file on gvim).
-  autocmd BufReadPost *
-    \ if line("'\"") > 0 && line("'\"") <= line("$") |
-    \   exe "normal g`\"" |
-    \ endif
-
-  " Automatically load .vimrc source when saved
-  autocmd BufWritePost .vimrc source $MYVIMRC
-
-  augroup END
-
-else
-
-  set autoindent    " always set autoindenting on
-
-endif " has("autocmd")
-
-" if has("folding")
-  " set foldenable
-  " set foldmethod=syntax
-  " set foldlevel=1
-  " set foldnestmax=2
-  " set foldtext=strpart(getline(v:foldstart),0,50).'\ ...\ '.substitute(getline(v:foldend),'^[\ #]*','','g').'\ '
-" endif
-
-" \ is the leader character
-let mapleader = ","
-
-" Press ^F from insert mode to insert the current file name
-imap <C-F> <C-R>=expand("%")<CR>
-
-" Maps autocomplete to tab
-imap <Tab> <C-N>
-
-imap <C-L> <Space>=><Space>
-
-" https://github.com/myfreeweb/dotfiles/blob/master/vim/vimrc
-"
-" This came from Greg V's dotfiles:
-"      https://github.com/myfreeweb/dotfiles
-" Feel free to steal it, but attribution is nice
-"
-" thanks:
-" http://bitbucket.org/sjl/dotfiles
-" https://github.com/daveray/vimfiles
-" https://github.com/erynofwales/dotfiles
-" https://github.com/rmurphey/dotfiles
-" https://github.com/holman/dotfiles
-" https://github.com/spf13/spf13-vim
-" https://github.com/garybernhardt/dotfiles
-" https://github.com/mutewinter/dot_vim
-
-
-syntax on
-
-" basics
-set noswapfile backup undofile undoreload=5000 history=500
-set noequalalways
-set wrapscan incsearch ignorecase smartcase
-set autoread autowrite
-set magic
-set nojoinspaces
-set modelines=3
-set synmaxcol=500 " don't highlight minified js and stuff
-set switchbuf=usetab
-
-" formatting
-set nowrap
-set expandtab
-set tabstop=2 shiftwidth=2 softtabstop=2
-set autoindent smartindent
-set encoding=utf-8 nobomb
-set whichwrap+=<,>,[,]
-set virtualedit=block
-
-" ui
-set notimeout ttimeout ttimeoutlen=10
-set relativenumber
-set hlsearch
-set backspace=indent,eol,start
-set noerrorbells
-set showbreak=↪
-set list listchars=tab:▸\ ,eol:¬,extends:❯,precedes:❮
-set fillchars=diff:⣿,vert:│
-set ttyfast lazyredraw title
-set cursorline
-set hidden
-set mouse=a
-set shortmess=filtIoOA
-set laststatus=2
-set nostartofline
-set visualbell
-set showmatch
-set mat=5
-set virtualedit=onemore
-set viewoptions=folds,options,cursor,unix,slash
-set t_ti= t_te= " http://www.shallowsky.com/linux/noaltscreen.html
-
-" completion
-set complete=.,w,b,u,t completeopt=longest,menuone,preview
-set wildmenu wildmode=list:longest,list:full
-set wildignore+=.hg,.git,.bzr,.svn                 " Version control
-set wildignore+=*.aux,*.out,*.toc                  " LaTeX intermediate files
-set wildignore+=*.jpg,*.bmp,*.gif,*.png,*.jpeg     " binary images
-set wildignore+=*.luac,*.pyc,*.rbc,*.class,classes " Byte code and stuff
-set wildignore+=*.o,*.obj,*.exe,*.dll,*.manifest   " compiled object files
-set wildignore+=*.spl                              " compiled spelling word lists
-set wildignore+=*.sw?                              " Vim swap files
-set wildignore+=.DS_Store,Thumbs.db                " Shit
-set wildignore+=target                             " JVM compiled stuff
-set wildignore+=node_modules,build

@@ -4,6 +4,7 @@
 " 
 " Thanks: see vimrc
 
+" Change the mapleader from '\' to ','.
 let mapleader=","
 let maplocalleader = "\\"
 
