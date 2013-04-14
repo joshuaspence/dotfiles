@@ -70,3 +70,18 @@ autocmd FileType text,markdown,html,xhtml,eruby setlocal wrap linebreak nolist
 
 " Automatically load .vimrc source when saved
 autocmd BufWritePost .vimrc source $MYVIMRC
+
+
+
+
+" Command and Auto commands " {{{
+" Sudo write
+comm! W exec 'w !sudo tee % > /dev/null' | e!
+
+"Auto commands
+au BufRead,BufNewFile {Gemfile,Rakefile,Capfile,*.rake,config.ru}     set ft=ruby
+au BufRead,BufNewFile {*.md,*.mkd,*.markdown}                         set ft=markdown
+au BufRead,BufNewFile {COMMIT_EDITMSG}                                set ft=gitcommit
+
+au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | execute "normal g'\"" | endif " restore position in file
+" " }}}

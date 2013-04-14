@@ -124,3 +124,7 @@ endfunction
 " Tired of clearing highlighted searches by searching for “ldsfhjkhgakjks”? Use this:
 " @link http://nvie.com/posts/how-i-boosted-my-vim/
 nmap <silent> ,/ :nohlsearch<CR>
+
+
+" Toggle between paste and normal: for 'safer' pasting from keyboard.
+set pastetoggle=<F10>
