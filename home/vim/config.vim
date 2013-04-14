@@ -1,6 +1,6 @@
-" Regular Vim Configuration (No Plugins Needed)
-"
-" @link http://github.com/gmarik/vimfiles/blob/master/vimrc
+"===============================================================================
+" Regular Vim Configuration (No plugins needed).
+"===============================================================================
 
 " General "{{{
     " Disable vi compatibility.
@@ -35,8 +35,7 @@
         set nowritebackup
         set nobackup
         
-        " prepend(^=) $HOME/.tmp/ to default path. Use full path as backup
-        " filename(//).
+        " prepend(^=) $HOME/.tmp/ to default path. Use full path as backup filename(//).
         set directory=/tmp//
     " "}}}
 
@@ -80,7 +79,7 @@
 
         " Display current column/line.
         set rulerformat=%l,%c ruler
-    " "}}}}
+    " "}}}
 
     " Highlight the current column.
     set cursorcolumn
@@ -111,15 +110,29 @@
 
     " Wild mode "{{{
         " Command-line tab completion.
-        set wildmode=full wildmenu
+        set wildmode=full
 
-        " vim will ignore file patterns specified in option 'wildignore'.
-        set wildignore+=*.bmp,*.gif,*.jpg,*.jpeg,*.png     " binary images
-        set wildignore+=*.class,classes,*.luac,*.pyc,*.rbc " byte code and stuff
-        set wildignore+=*.dll,*.exe,*.manifest,*.o,*.obj   " compiled object files
-        set wildignore+=*.aux,*.out,*.toc                  " LaTeX intermediate files
-        set wildignore+=.bzr,.git,.hg,.svn                 " version control
-        set wildignore+=*.sw?                              " vim swap files
+        set wildmenu
+
+        " vim will ignore certain file patterns. "{{{
+            " Binary images.
+            set wildignore+=*.bmp,*.gif,*.jpg,*.jpeg,*.png
+
+            " Byte code and stuff.
+            set wildignore+=*.class,classes,*.luac,*.pyc,*.rbc
+            
+            " Compiled object files.
+            set wildignore+=*.dll,*.exe,*.manifest,*.o,*.obj
+
+            " LaTeX intermediate files.
+            set wildignore+=*.aux,*.out,*.toc
+
+            " Version control.
+            set wildignore+=.bzr,.git,.hg,.svn
+
+            " vim swap files.
+            set wildignore+=*.sw?
+        " "}}}
     " "}}}
 
     " Completion "{{{
@@ -244,8 +257,6 @@
         " Enable mouse support.
         set mousemodel=extend
         set selectmode=mouse
-        set mouse=a
-        "set ttymouse=xterm2
 
         " Mouse can control splits.
         if has("gui_running")
@@ -254,29 +265,52 @@
     " "}}}
 
     " Folding "{{{
-    if has("folding")
-        " Turn on folding.
-        set foldenable
+       if has("folding")
+            " Turn on folding.
+            set foldenable
 
-        set foldcolumn=3
+            " A column with the specified width is shown at the side of the window which indicates open and closed folds.
+            set foldcolumn=3
 
-        " Fold on the marker.
-        set foldmethod=marker
-        
-        " Don't autofold anything (but I can still fold manually).
-        set foldlevel=100
+            " Fold on the marker.
+            set foldmethod=marker
+            
+            " Don't autofold anything (but I can still fold manually).
+            set foldlevel=100
 
-        " What movements open folds.
-        set foldopen=block,hor,mark,percent,quickfix,tag
-    endif
+            " What movements open folds "{{{
+                set foldopen=
+                set foldopen+=block
+                set foldopen+=hor
+                set foldopen+=mark
+                set foldopen+=percent
+                set foldopen+=quickfix
+                set foldopen+=tag
+            " "}}}
+        endif
     " "}}}
 
     " Window splitting "{{{
         " Split windows below current window.
         set splitbelow
 
+        " Split windows to the right of the current window.
         set splitright
     " "}}}
+
+    " "{{{
+        " Display unprintable characters (<F12> switches).
+        set nolist
+
+        " Unprintable chars mapping
+        set listchars=tab:·\ ,eol:¶,trail:·,extends:»,precedes:«
+    " "}}}
+
+    " Keep three lines below the last line when scrolling
+    set scrolloff=3
+
+    " Don't go to the start of the line after some commands.
+    set nostartofline
 " "}}}
 
 " Spelling "{{{
@@ -312,19 +346,23 @@
     set autoread
 
     " Buffers "{{{
-        " The current buffer can be put to the background without writing to
-        " disk.
+        " The current buffer can be put to the background without writing to disk.
         set hidden
     " "}}}
-
-    " Don't clear the screen when exiting `vim`.
-    " @link http://www.shallowsky.com/linux/noaltscreen.html
-    set t_ti= t_te=
 
     " Don't update while in macro.
     set lazyredraw
 
-    " Optimize for fast terminal connections. Sends more characters for redraws.
-    " Improves redrawing.
+    " Optimize for fast terminal connections. Sends more characters for redraws. Improves redrawing.
     set ttyfast
 " "}}}
+
+
+
+" Tell vim to remember certain things when we exit
+"  '10  :  marks will be remembered for up to 10 previously edited files
+"  "100 :  will save up to 100 lines for each register
+"  :20  :  up to 20 lines of command-line history will be remembered
+"  %    :  saves and restores the buffer list
+"  n... :  where to save the viminfo files
+set viminfo='10,\"100,:20,%,n~/.viminfo

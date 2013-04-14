@@ -19,3 +19,6 @@
 [submodule "modules/hosts"]
 	path = modules/hosts
 	url = git://github.com/StevenBlack/hosts.git
+[submodule "modules/vimpager"]
+	path = modules/vimpager
+	url = git://github.com/rkitover/vimpager.git
