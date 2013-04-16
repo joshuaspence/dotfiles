@@ -1,58 +1,70 @@
 " Set leader to ','. Note: This line MUST come before any '<leader>' mappings.
 let mapleader=","
+let maplocalleader = "\\"
 
+"===============================================================================
+" vimrc
+"===============================================================================
 nnoremap <silent> <LocalLeader>rs :source ~/.vimrc<CR>
-nnoremap <silent> <LocalLeader>rt :tabnew ~/.vim/vimrc<CR>
+nnoremap <silent> <LocalLeader>rt :tabnew ~/.vimrc<CR>
 nnoremap <silent> <LocalLeader>re :e ~/.vim/vimrc<CR>
 nnoremap <silent> <LocalLeader>rd :e ~/.vim/ <CR>
 
-" Tabs "{{{
-    nnoremap <silent> <LocalLeader>[ :tabprev<CR>
-    nnoremap <silent> <LocalLeader>] :tabnext<CR>
-" "}}}
+"===============================================================================
+" Tabs
+"===============================================================================
+nnoremap <silent> <LocalLeader>[ :tabprev<CR>
+nnoremap <silent> <LocalLeader>] :tabnext<CR>
 
-" Duplication "{{{
-    vnoremap <silent> <LocalLeader>= yP
-    nnoremap <silent> <LocalLeader>= YP
-" "}}}
+"===============================================================================
+" Duplication
+"===============================================================================
+" @todo What do these do?
+vnoremap <silent> <LocalLeader>= yP
+nnoremap <silent> <LocalLeader>= YP
 
-" Buffers "{{{
-    nnoremap <silent> <LocalLeader>- :bd<CR>
-" "}}}
+"===============================================================================
+" Buffers
+"===============================================================================
 
-" Split line(opposite to S-J joining line).
+" Unload current buffer and delete it from the buffer list.
+nnoremap <silent> <LocalLeader>- :bd<CR>
+
+
+" Split line (opposite to S-J joining line).
 nnoremap <silent> <C-J> gEa<CR><ESC>ew 
 
-"map <silent> <C-W>v :vnew<CR>
-"map <silent> <C-W>s :snew<CR>
+" show/Hide hidden Chars
+map <silent> <F12> :set invlist<CR>
+
+" Tired of clearing highlighted searches by searching for “ldsfhjkhgakjks”? Use this:
+" @link http://nvie.com/posts/how-i-boosted-my-vim/
+nmap <silent> ,/ :nohlsearch<CR>
+
+" http://vimbits.com/bits/16
+noremap H ^
+noremap L $
+
+
+
+
+
+
+
 
 nnoremap # :let @/='\<<C-R>=expand("<cword>")<CR>\>'<CR>:set hls<CR>
 nnoremap * #
 
 map <S-CR> A<CR><ESC>
-"
+
 " Control+S and Control+Q are flow-control characters: disable them in your terminal settings.
 " $ stty -ixon -ixoff
 noremap <C-S> :update<CR>
 vnoremap <C-S> <C-C>:update<CR>
 inoremap <C-S> <C-O>:update<CR>
-"
-" show/Hide hidden Chars
-map <silent> <F12> :set invlist<CR>     
-"
+
 " generate HTML version current buffer using current color scheme
 map <silent> <LocalLeader>2h :runtime! syntax/2html.vim<CR> 
-" " }}}
-
-" This came from Greg V's dotfiles:
-"      https://github.com/myfreeweb/dotfiles
-" Feel free to steal it, but attribution is nice
-" 
-" Thanks: see vimrc
-
-" Change the mapleader from '\' to ','.
-let mapleader=","
-let maplocalleader = "\\"
 
 " j and k inverted for colemak
 noremap k gj
@@ -66,10 +78,6 @@ vnoremap ' i
 nnoremap U <C-r>
 nnoremap Y y$
 map <Leader>d :bd<CR>
-
-" http://vimbits.com/bits/16
-noremap H ^
-noremap L $
 
 " folds
 nnoremap <Space> za
@@ -101,13 +109,6 @@ map <C-h> <C-w>h
 map <C-k> <C-w>j
 map <C-j> <C-w>k
 map <C-l> <C-w>l
-
-" case-insensitive
-command! E e
-command! W w
-command! Q q
-command! Wq wq
-command! WQ wq
 
 " emacs bindings in insert and command
 inoremap <C-a> <home>
@@ -145,28 +146,3 @@ nnoremap <Leader>b :silent !open <C-R>=escape("<C-R><C-F>", "#?&;\|%")<CR><CR> "
 autocmd FileType python map <Leader>8 :call Flake8()<CR>
 let g:ctrlp_map = '<Leader>p'
 nnoremap <Leader>t :CtrlPTag<CR>
-
-" Motion for numbers.  Great for CSS.  Lets you do things like this:
-" margin-top: 200px; -> daN -> margin-top: px;
-onoremap N :<c-u>call <SID>NumberTextObject(0)<cr>
-xnoremap N :<c-u>call <SID>NumberTextObject(0)<cr>
-onoremap aN :<c-u>call <SID>NumberTextObject(1)<cr>
-xnoremap aN :<c-u>call <SID>NumberTextObject(1)<cr>
-onoremap iN :<c-u>call <SID>NumberTextObject(1)<cr>
-xnoremap iN :<c-u>call <SID>NumberTextObject(1)<cr>
-function! s:NumberTextObject(whole)
-    normal! v
-    while getline('.')[col('.')] =~# '\v[0-9]'
-        normal! l
-    endwhile
-    if a:whole
-        normal! o
-        while col('.') > 1 && getline('.')[col('.') - 2] =~# '\v[0-9]'
-            normal! h
-        endwhile
-    endif
-endfunction
-
-" Tired of clearing highlighted searches by searching for “ldsfhjkhgakjks”? Use this:
-" @link http://nvie.com/posts/how-i-boosted-my-vim/
-nmap <silent> ,/ :nohlsearch<CR>

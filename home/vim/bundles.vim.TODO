@@ -255,6 +255,7 @@ endif
 " ---------------
 " NERDTree
 " ---------------
+nmap <silent> <leader>d :execute 'NERDTreeToggle ' . getcwd()<CR>
 nnoremap <leader>nn :NERDTreeToggle<CR>
 nnoremap <leader>nf :NERDTreeFind<CR>
 let g:NERDTreeShowBookmarks=1
@@ -465,3 +466,11 @@ nnoremap <leader>ss :%Subvert/
 nmap <Leader>bi :BundleInstall<CR>
 nmap <Leader>bu :BundleInstall!<CR>
 nmap <Leader>bc :BundleClean<CR>
+
+
+
+nmap <silent> <leader>g :GitGutterToggle<CR>
+nmap <C-c> <ESC>:TComment<CR>
+
+autocmd FileType make     set noexpandtab
+autocmd FileType python   set noexpandtab

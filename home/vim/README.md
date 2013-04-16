@@ -1,5 +1,6 @@
 @link http://github.com/gmarik/vimfiles/blob/master/vimrc
 @link http://github.com/norman/vim-files/blob/master/filetype.vim
+https://github.com/myfreeweb/dotfiles
 
 
 $ mkdir -p /tmp/vimtest && cd /tmp/vimtest                               # create and cd to test folder
