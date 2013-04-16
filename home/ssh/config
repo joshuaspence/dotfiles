@@ -176,8 +176,8 @@ Host *
     #
     # @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
     ##
-    ControlMaster auto
-    ControlPath /tmp/ssh_mux_%h_%p_%r
+    #ControlMaster auto
+    #ControlPath /tmp/ssh_mux_%h_%p_%r
 
     ##
     # When used in conjunction with ControlMaster, specifies that the master
@@ -218,7 +218,7 @@ Host *
     # option is intended for situations where `ssh-agent` offers many different
     # identities.
     ##
-    IdentitiesOnly no
+    #IdentitiesOnly no
 
     ##
     # Specifies whether to use password authentication. The argument to this
@@ -243,7 +243,7 @@ Host *
     # Specifies whether to try public key authentication. The argument to this
     # keyword must be "yes" or "no".
     ##
-    PubkeyAuthentication no
+    #PubkeyAuthentication no
 
     ##
     # Specifies what variables from the local environment should be sent to the
