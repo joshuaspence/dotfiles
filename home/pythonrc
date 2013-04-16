@@ -1,11 +1,17 @@
-#!/usr/bin/env python
-
-
 ##
-# Command-line history.
-#
-# @link http://valueerror.wordpress.com/2009/11/03/python-shell-history-autocompletion-and-rc-file/
-#
+## @author Joshua Spence
+## @file   ~/.pythonrc
+##
+## @link http://valueerror.wordpress.com/2009/11/03/python-shell-history-autocompletion-and-rc-file/
+## @link http://docs.python.org/2/library/rlcompleter.html
+## @link http://gist.github.com/mgedmin/760273
+## @link http://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/python/pythonrc.py
+##
+
+
+## Command-line history.
+##
+## @link http://valueerror.wordpress.com/2009/11/03/python-shell-history-autocompletion-and-rc-file/
 def _pythonrc_enable_history():
     import os
     import sys
@@ -34,11 +40,9 @@ def _pythonrc_enable_history():
         readline.set_history_length(10000000)
 
 
+## Tab completion.
 ##
-# Tab completion.
-#
-# @link http://docs.python.org/2/library/rlcompleter.html
-#
+## @link http://docs.python.org/2/library/rlcompleter.html
 def _pythonrc_enable_completion():
     import sys
 
@@ -72,11 +76,9 @@ def _pythonrc_enable_completion():
         readline.set_completer(IrlCompleter().complete)
 
 
+## Colored prompt.
 ##
-# Colored prompt.
-#
-# @link http://gist.github.com/mgedmin/760273
-#
+## @link http://gist.github.com/mgedmin/760273
 def _pythonrc_set_prompt():
     import os
     import sys
@@ -91,11 +93,9 @@ def _pythonrc_set_prompt():
             sys.ps2 = '\033[0;32m... \033[0m'
 
 
+## Enable pretty printing of evaluated expressions.
 ##
-# Enable pretty printing of evaluated expressions.
-#
-# @link http://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/python/pythonrc.py
-#
+## @link http://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/python/pythonrc.py
 def _pythonrc_enable_pprint():
     import pprint
     import sys

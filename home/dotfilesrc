@@ -1,3 +1,11 @@
+##
+## My configuration file for {@link http://github.com/jbernard/dotfiles dotfiles}.
+##
+## @author Joshua Spence
+## @file   ~/.dotfilesrc
+##
+
+
 [dotfiles]
 repository = ~/dotfiles/home
 packages = ['config']
@@ -7,6 +15,6 @@ ignore = [
     '.gitmodules',
     'Makefile',
     'README.md',
-    'TODO.md',
-    '*.gituser']
-externals = {}
+    'TODO.md']
+externals = {
+    '.ssh/keys': '~/.keys'}

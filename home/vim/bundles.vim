@@ -1,48 +1,33 @@
-filetype off
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
+" Vundle "{{{
+    set nocompatible
+    filetype off " required
 
-Bundle 'gmarik/vundle'
+    set rtp+=~/.vim/bundle/vundle/
+    call vundle#rc()
 
-" Languages
-Bundle 'othree/html5.vim'
-Bundle 'kchmck/vim-coffee-script'
-Bundle 'hail2u/vim-css3-syntax'
-Bundle 'tpope/vim-haml'
-Bundle 'pangloss/vim-javascript'
-Bundle 'tpope/vim-markdown'
-Bundle 'nelstrom/vim-markdown-folding'
+    " Let Vundle manage Vundle (required).
+    Bundle "gmarik/vundle"
+" "}}}
 
-" Features
-Bundle 'mileszs/ack.vim'
-Bundle 'vim-scripts/argtextobj.vim'
-Bundle 'vim-scripts/delimitMate.vim'
-Bundle 'troydm/easybuffer.vim'
-Bundle 'mattn/gist-vim'
-Bundle 'Valloric/MatchTagAlways'
-Bundle 'scrooloose/nerdtree'
-Bundle 'fs111/pydoc.vim'
-Bundle 'sjl/splice.vim'
-Bundle 'AndrewRadev/splitjoin.vim'
-Bundle 'ervandew/supertab'
-Bundle 'scrooloose/syntastic'
-Bundle 'godlygeek/tabular'
-Bundle 'tomtom/tcomment_vim'
-Bundle 'tpope/vim-commentary'
-Bundle 'tpope/vim-endwise'
-Bundle 'tpope/vim-eunuch'
-Bundle 'nvie/vim-flake8'
-Bundle 'tpope/vim-fugitive'
-Bundle 'mattsacks/vim-fuzzee'
-Bundle 'tpope/vim-git'
-Bundle 'airblade/vim-gitgutter'
-Bundle 'henrik/vim-indexed-search'
-Bundle 'sickill/vim-pasta'
-Bundle 'tpope/vim-rsi'
-Bundle 'tpope/vim-speeddating'
-Bundle 'tpope/vim-surround'
-Bundle 'mattn/webapi-vim'
-Bundle 'Valloric/YouCompleteMe'
-Bundle 'mattn/zencoding-vim'
+" Features "{{{
+    " Ack "{{{
+        Bundle "ack.vim"
+        noremap <LocalLeader># "ayiw:Ack <C-r>a<CR>
+        vnoremap <LocalLeader># "ay:Ack <C-r>a<CR>
+    " "}}}
+" "}}}
 
-filetype plugin indent on
+" "{{{
+    " Automatically detect file types. (must turn on after Vundle)
+    filetype plugin indent on
+
+    "
+    " Brief help
+    " :BundleList          - list configured bundles
+    " :BundleInstall(!)    - install(update) bundles
+    " :BundleSearch(!) foo - search(or refresh cache first) for foo
+    " :BundleClean(!)      - confirm(or auto-approve) removal of unused bundles
+    "
+    " see :h vundle for more details or wiki for FAQ
+    " NOTE: comments after Bundle command are not allowed.
+" "}}}

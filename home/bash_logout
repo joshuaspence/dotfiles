@@ -1,7 +1,11 @@
-#!/bin/bash
+##
+## @author Joshua Spence
+## @file   ~/.bash_logout
+##
 
-# When leaving the console clear the screen to increase privacy. This first
-# checks that shell level is equal to 1.
+
+## When leaving the console clear the screen to increase privacy. This first
+## checks that shell level is equal to 1.
 if [[ $SHLVL == 1 ]]; then
     command -v clear_console >/dev/null && clear_console -q
 fi

@@ -1,26 +1,50 @@
-# Always color, even if piping to a another program.
---color
+##
+## My configuration file for {@link http://betterthangrep.com/ ack-grep}.
+##
+## @author Joshua Spence
+## @file   ~/.ackrc
+##
 
-# Matches by file name with.
---group
 
-# Follow or don't follow symlinks.
-#--follow
---nofollow
-
-# Operate on all files, regardless of type.
+## Operate on all files, regardless of type.
 #--all
 
-# Print the filename for each match.
---with-filename
+## Always color, even if piping to a another program.
+--color
 
-# Ignore case in search strings.
-#--ignore-case
+## Specifies the color of the filename when it's printed in `--group` mode. By
+## default, it's "bold green".
+#--color-filename="bold green"
 
-# Ignore case in the search strings if PATTERN contains no uppercase characters.
+## Specifies the color of the line number when printed in `--color` mode. By
+## default, it's "bold yellow".
+#--color-lineno="bold yellow"
+
+## Specifies the color of the matching text when printed in `--color` mode. By
+## default, it's "black on_yellow".
+#--color-match="black_on_yellow"
+
+## Print NUM lines (default 2) of context around matching lines.
+#--context=2
+
+## Don't follow symlinks.
+--nofollow
+
+## Outputs the filetypes that `ack-grep` associates with each file.
+#--show-types
+
+## Ignore case in the search strings if the search pattern contains no uppercase
+## characters.
 --smart-case
 
-# Types.
+## Sorts the found files lexically. Use this if you want your file listings to
+## be deterministic between runs of `ack-grep`.
+--sort-files
+
+## Print the filename for each match.
+--with-filename
+
+## Types.
 --type-add=css=.less,.sass,.scss
 --type-add=html=.html.erb,.html.haml
 --type-add=js=.coffee,.js.erb
@@ -28,7 +52,7 @@
 --type-add=ruby=.builder,.haml,.rake,.rspec,.ruby-version
 --type-add=ruby=Gemfile,Rakefile
 
-# Add types ack doesn't know about.
+## Add types that `ack-grep` doesn't know about.
 --type-set=coffee=.coffee
 --type-set=config=.cfg,.conf,.config
 --type-set=csv=.csv
@@ -37,12 +61,12 @@
 --type-set=markdown=.md,.markdown
 --type-set=puppet=.pp
 
-# Ignore these directories.
+## Ignore these directories.
 --ignore-dir=doc
 --ignore-dir=log
 --ignore-dir=rdoc
 --ignore-dir=tmp
 --ignore-dir=vendor
 
-# Disable file types.
+## Disable file types.
 --nolog

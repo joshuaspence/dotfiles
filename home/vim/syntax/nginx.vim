@@ -1,6 +1,7 @@
-" https://raw.github.com/myfreeweb/dotfiles/master/vim/syntax/nginx.vim
 " Vim syntax file
 " Language: nginx.conf
+"
+" @link http://github.com/myfreeweb/dotfiles/blob/master/vim/syntax/nginx.vim
 
 if exists("b:current_syntax")
   finish

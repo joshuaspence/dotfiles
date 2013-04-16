@@ -1,0 +1,95 @@
+
+
+# complete hostnames from this file
+: ${HOSTFILE=~/.ssh/known_hosts}
+
+# ----------------------------------------------------------------------
+# ENVIRONMENT CONFIGURATION
+# ----------------------------------------------------------------------
+
+# ignore backups, CVS directories, python bytecode, vim swap files
+FIGNORE="~:CVS:#:.pyc:.swp:.swa:apache-solr-*"
+
+
+# PAGER
+if test -n "$(command -v less)" ; then
+    PAGER="less -FirSwX"
+    MANPAGER="less -FiRswX"
+else
+    PAGER=more
+    MANPAGER="$PAGER"
+fi
+export PAGER MANPAGER
+
+# Ack
+ACK_PAGER="$PAGER"
+ACK_PAGER_COLOR="$PAGER"
+
+# ----------------------------------------------------------------------
+# BASH COMPLETION
+# ----------------------------------------------------------------------
+
+test -z "$BASH_COMPLETION" && {
+    bash=${BASH_VERSION%.*}; bmajor=${bash%.*}; bminor=${bash#*.}
+    test -n "$PS1" && test $bmajor -gt 1 && {
+        # search for a bash_completion file to source
+        for f in /usr/local/etc/bash_completion \
+                 /usr/pkg/etc/bash_completion \
+                 /opt/local/etc/bash_completion \
+                 /etc/bash_completion
+        do
+            test -f $f && {
+                . $f
+                break
+            }
+        done
+    }
+    unset bash bmajor bminor
+}
+
+# ----------------------------------------------------------------------
+# LS AND DIRCOLORS
+# ----------------------------------------------------------------------
+
+# we always pass these to ls(1)
+LS_COMMON="-hBG"
+
+# setup the main ls alias if we've established common args
+test -n "$LS_COMMON" &&
+alias ls="command ls $LS_COMMON"
+
+# do not list implied entries ending with ~.
+LSFLAGS="-B"
+
+-F, --classify
+              append indicator (one of */=>@|) to entries
+
+       --file-type
+              likewise, except do not append `*'
+
+-G, --no-group
+              in a long listing, don't print group names
+
+ -h, --human-readable
+              with -l, print sizes in human readable format (e.g., 1K 234M 2G)
+
+
+# --------------------------------------------------------------------
+# PATH MANIPULATION FUNCTIONS
+# --------------------------------------------------------------------
+
+# Usage: pls [<var>]
+# List path entries of PATH or environment variable <var>.
+pls () { eval echo \$${1:-PATH} |tr : '\n'; }
+
+# Usage: puniq [<path>]
+# Remove duplicate entries from a PATH style value while retaining
+# the original order. Use PATH if no <path> is given.
+#
+# Example:
+#   $ puniq /usr/bin:/usr/local/bin:/usr/bin
+#   /usr/bin:/usr/local/bin
+puniq () {
+    echo "$1" |tr : '\n' |nl |sort -u -k 2,2 |sort -n |
+    cut -f 2- |tr '\n' : |sed -e 's/:$//' -e 's/^://'
+}

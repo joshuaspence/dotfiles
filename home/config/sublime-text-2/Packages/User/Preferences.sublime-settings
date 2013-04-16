@@ -70,7 +70,7 @@
     /*
      * Word list to use for spell checking.
      */
-    "dictionary": "Packages/Language - English/en_GB.dic",
+    "dictionary": "Packages/Language - English/en_US.dic",
 
     /*
      * If enabled, will highlight any line with a caret.
@@ -193,108 +193,15 @@
     "preview_on_click": true,
 
     /**************************************************************************
-     * Package: Alignment
-     **************************************************************************/
-
-    /*
-     * If the indent level of a multi-line selection should be aligned.
-     */
-    "align_indent": true,
-
-    /**************************************************************************
      * Package: ClipboardHistory
      **************************************************************************/
     "limit": 50,
     "paste_and_indent": true,
 
     /**************************************************************************
-     * Package: DataConverter
-     **************************************************************************/
-    
-    /*
-     * When true, the first row is treated as the header row. Set to false to
-     * always sniff for headers (sniffing isn't perfect!).
-     */
-    "assume_headers": false,
-
-    /*
-     * If false: Defaults to the OS line separator, which is "\r" in Windows.
-     */
-    "line_sep": false,
-
-    /**************************************************************************
-     * Package: Git
-     **************************************************************************/
-
-    /*
-     * Point this the installation location of `git-flow`.
-     */ 
-    "git_flow_command": "/usr/local/bin/git-flow",
-
-    /*
-     * Use the panel for diff output, rather than a new scratch window (new
-     * tab).
-     */
-    "diff_panel": false,
-
-    /*
-     * Use --verbose flag for commit messages.
-     */ 
-    "verbose_commits": true,
-
-    /*
-     * How many commit messages to store in the history. Set to 0 to disable.
-     */ 
-    "history_size": 5,
-
-    /*
-     * Show git flow commands.
-     */ 
-    "flow": true,
-
-    /**************************************************************************
-     * Package: GitGutter
-     **************************************************************************/
-
-    /*
-     * Live mode evaluates changes every time file is modified. Set false to
-     * disable evaluation after each input.
-     */
-    "live_mode": true,
-
-    /*
-     * When set to true GitGutter runs asynchronously in a separate thread. This
-     * This may cause a small delay between a modification and the icon change
-     * but can increase performance greatly if needed.
-     */
-    "non_blocking": true,
-
-    /**************************************************************************
      * Package: Githubinator
      **************************************************************************/
     "default_remote": "origin",
-
-    /**************************************************************************
-     * Package: Markdown Preview
-     **************************************************************************/
-
-    /*
-     * Sets the default parser for converting markdown to HTML.
-     *
-     * Warning for GitHub API: If you have a ST2 Linux build, Python is not
-     * built with SSL so it may not work.
-     *
-     * "default" - Use the built-in python-markdown2 parser.
-     * "github" - User GitHub API to convert markdown, so you can use GitHub
-     *     flavored Markdown, see {@link http://github.github.com/github-flavored-markdown}.
-     */
-    "parser": "github",
-
-    /*
-     * Uses an OAuth token to when parsing markdown with GitHub API. To create
-     * one for Markdown Preview, see {@link http://help.github.com/articles/creating-an-oauth-token-for-command-line-use}.
-     */
-    //"github_oauth_token": "secret",
     
     /**************************************************************************
      * Package: Package Control
@@ -320,70 +227,6 @@
      * Packages to not automatically upgrade.
      */
     "auto_upgrade_ignore": [],
-
-    /**************************************************************************
-     * Package: SublimeCodeIntel
-     **************************************************************************/
-
-    /*
-     * Sets the mode in which SublimeCodeIntel runs:
-     *
-     * true - Enabled (default).
-     * false - Disabled.
-     */
-    "codeintel": true,
-
-    /*
-     * An array of language names which are disabled.
-     */
-    "codeintel_disabled_languages": [],
-
-    /*
-     * Sets the mode in which SublimeCodeIntel's live autocomplete runs:
-     *
-     * true - Autocomplete popups as you type (default).
-     * false - Autocomplete popups only when you request it.
-     */
-    "codeintel_live": true,
-
-    /*
-     * An array of language names to disable.
-     */
-    "codeintel_live_disabled_languages": [],
-
-    /**************************************************************************
-     * Package: SublimeLinter
-     **************************************************************************/
-
-    /*
-     * Sets the mode in which SublimeLinter runs:
-     *
-     * true (default) - Linting occurs in the background as you type.
-     * false - Linting only occurs when you initiate it.
-     * "load-save" - Linting occurs only when a file is loaded and saved.
-     * "save-only" - Linting occurs only when a file is saved.
-     */
-    "sublimelinter": true,
-
-    /*
-     * An array of linter names to disable. Names should be lowercase.
-     */
-    "sublimelinter_disable": [],
-
-    /*
-     * Selects the way the lines with errors or warnings are marked:
-     *
-     * "outline" (default) - Draws outline boxes around the lines.
-     * "fill" - Fills the lines with the outline color.
-     * "none" - Disables all outline styles (useful if
-     *     "sublimelinter_gutter_marks" is set).
-     */
-    "sublimelinter_mark_style": "none",
-
-    /*
-     * If true, lines with errors or warnings will have a gutter mark.
-     */
-    "sublimelinter_gutter_marks": true,
 
     /**************************************************************************
      * Package: WrapPlus
