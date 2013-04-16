@@ -1,7 +1,7 @@
-##
+#/
 ## @author Joshua Spence
 ## @file   ~/.bash_logout
-##
+#\
 
 
 ## When leaving the console clear the screen to increase privacy. This first

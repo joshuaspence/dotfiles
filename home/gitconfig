@@ -1,9 +1,9 @@
-##
+#/
 ## My configuration file for `git`.
 ##
 ## @author Joshua Spence
 ## @file   ~/.gitconfig
-##
+#\
 
 
 [include]

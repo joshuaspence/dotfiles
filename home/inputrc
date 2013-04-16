@@ -1,9 +1,9 @@
-##
+#/
 ## This was largely based on the `/etc/inputrc` file from my current system.
 ##
 ## @author Joshua Spence
 ## @file   ~/.inputrc
-##
+#\
 
 
 ## Do not bell on tab-completion.
@@ -112,13 +112,13 @@ $if mode=emacs
     $endif
 
     ## For non RH/Debian xterm, can't hurt for RH/Debian xterm. #{{{
-    "\eOH": beginning-of-line
-    "\eOF": end-of-line
+        "\eOH": beginning-of-line
+        "\eOF": end-of-line
     ## #}}}
 
     ## For FreeBSD console. #{{{
-    "\e[H": beginning-of-line
-    "\e[F": end-of-line
+        "\e[H": beginning-of-line
+        "\e[F": end-of-line
     ## #}}}
 $endif
 ## #}}}

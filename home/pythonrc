@@ -1,4 +1,4 @@
-##
+#/
 ## @author Joshua Spence
 ## @file   ~/.pythonrc
 ##
@@ -6,7 +6,7 @@
 ## @link http://docs.python.org/2/library/rlcompleter.html
 ## @link http://gist.github.com/mgedmin/760273
 ## @link http://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/python/pythonrc.py
-##
+#\
 
 
 ## Command-line history.
