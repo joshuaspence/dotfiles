@@ -1,0 +1,4 @@
+# the basics
+: ${HOME=~}
+: ${LOGNAME=$(id -un)}
+: ${UNAME=$(uname)}

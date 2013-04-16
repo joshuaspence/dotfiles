@@ -1,42 +1,109 @@
+##
+## My configuration file for `git`.
+##
+## @author Joshua Spence
+## @file   ~/.gitconfig
+##
+
+
 [include]
     path = ~/.gituser
 
+[advice]
+    ## Advice shown when `git-push` refuses non-fast-forward refs.
+    pushNonFastForward = true
+
+    ## Directions on how to stage/unstage/add shown in the output of
+    ## `git-status` and the template shown when writing commit messages.
+    statusHints = true
+
+    ## Advice shown when `git-merge` refuses to merge to avoid overwriting local
+    ## changes.
+    commitBeforeMerge = true
+
+    ## Advices shown by various commands when conflicts prevent the operation
+    ## from being performed.
+    resolveConflict = true
+
+    ## Advice on how to set your identity configuration when your information is
+    ## guessed from the system username and domain name.
+    implicitIdentity = true
+
+    ## Advice shown when you used `git-checkout` to move to the detach HEAD
+    detachedHead = true
+
 [core]
+    ## If true, makes `git` convert CRLF at the end of lines in text files to LF
+    ## when reading from the work tree, and convert in reverse when writing to
+    ## the work tree. The variable can be set to "input", in which case the
+    ## conversion happens only while reading from the work tree but files are
+    ## written out to the work tree with LF at the end of lines.
     autocrlf = input
-    eol = lf
-    editor = vim
-    attributesfile = ~/.gitattributes
+
+    ## If true, makes `git` check if converting CRLF as controlled by
+    ## `core.autocrlf` is reversible. `git` will verify if a command modifies a
+    ## file in the work tree either directly or indirectly. For example,
+    ## committing a file followed by checking out the same file should yield the
+    ## original file in the work tree. If this is not the case for the current
+    ## setting of `core.autocrlf`, git will reject the file. The variable can be
+    ## set to "warn", in which case `git` will only warn about an irreversible
+    ## conversion but continue the operation.
+    safecrlf = warn
+
+    ## If false, symbolic links are checked out as small plain files that
+    ## contain the link text. `git-update-index` and `git-add` will not change
+    ## the recorded type to regular file. Useful on filesystems like FAT that do
+    ## not support symbolic links.
+    #symlinks = true
+
+    ## In addition to `.gitignore` (per-directory) and `.git/info/exclude`,
+    ## `git` looks into this file for patterns of files which are not meant to
+    ## be tracked.
     excludesfile = ~/.gitignore
-    pager = $PAGER
-    whitespace = blank-at-eol, space-before-tab,-indent-with-non-tab,-tab-in-indent,trailing-space,tabwidth=4
+
+    ## Commands such as `commit` and `tag` that lets you edit messages by
+    ## launching an editor uses the value of this variable when it is set, and
+    ## the environment variable `GIT_EDITOR` is not set. 
+    editor = 
+
+    ## The command that `git` will use to paginate output. Can be overridden
+    ## with the `GIT_PAGER` environment variable. Note that `git` sets the
+    ## `LESS` environment variable to `FRSX` if it is unset when it runs the
+    ## pager. One can change these settings by setting the `LESS` variable to
+    ## some other value.
+    pager = 
+
+    ## A comma separated list of common whitespace problems to notice.
+    ## `git diff` will use `color.diff.whitespace` to highlight them, and
+    # `git apply --whitespace=error` will consider them as errors. 
+    whitespace = space-before-tab,-indent-with-non-tab,trailing-space,cr-at-eol
 
 [apply]
     whitespace = fix,error
+
 [branch]
-  autosetupmerge = true
-[diff]
-    tool = meld
-    renames = copy
-    suppressBlankEmpty = true
-    #ignoreSubmodules = true
-    mnemonicprefix = true
-[merge]
-    summary = true
-    verbosity = 1
-    tool = meld
-[mergetool]
-    keepBackup = false
-[rerere]
-    # Remember my merges.
-    # http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
-    enabled = true
+    ## Tells `git branch` and `git checkout` to set up new branches so that
+    ## `git-pull` will appropriately merge from the starting point branch.
+    autosetupmerge = true
+
+    ## When a new branch is created with `git branch` or `git checkout` that
+    ## tracks another branch, this variable tells `git` to set up pull to rebase
+    ## instead of merge. When never, rebase is never automatically set to true.
+    ## When local, rebase is set to true for tracked branches of other local
+    ## branches. When remote, rebase is set to true for tracked branches of
+    ## remote branches. When always, rebase will be set to true for all tracking
+    ## branches.
+    autosetuprebase = never
 
 [color]
     branch = auto
     diff = auto
+    grep = auto
+    pager = true
     interactive = auto
+    showbranch = auto
     status = auto
-    ui = true
+    ui = always
 [color "branch"]
     current = yellow reverse
     local = yellow
@@ -51,113 +118,34 @@
     changed = green
     untracked = cyan
 
-[url "git@github.com:"]
-    insteadOf = "gh:"
-    pushInsteadOf = "github:"
-    pushInsteadOf = "git://github.com/"
-[url "git://github.com/"]
-    insteadOf = "github:"
-[url "git@gist.github.com:"]
-    insteadOf = "gist:"
-    pushInsteadOf = "gist:"
-    pushInsteadOf = "git://gist.github.com/"
-[url "git://gist.github.com/"]
-    insteadOf = "gist:"
-[url "git@heroku.com:"]
-    insteadOf = "heroku:"
-
-[alias]
-    amend = commit --amend
-
-    # Various pretty loggers from various places.
-    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
-    lc = log ORIG_HEAD.. --stat --no-merges
-
-    # @link http://blog.kfish.org/2010/04/git-lola.html
-    lol = log --graph --decorate --pretty=oneline --abbrev-commit
-    lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
-    ll = log --graph --date=short
-
-    # @link http://git.wiki.kernel.org/index.php/Aliases
-    whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
-    whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
-
-    # Attempt to cleanup some common problems.
-    unfuck = !git fsck && git remote prune $(git remote) && git gc --aggressive --auto
-
-    # @link https://github.com/cypher/dotfiles/blob/master/gitconfig
-    ls-ignored = ls-files --exclude-standard --ignored --others
+[commit]
+    ## A boolean to enable/disable inclusion of status information in the commit
+    ## message template when using an editor to prepare the commit message.
+    status = true
 
 [help]
-  autocorrect = 1
+    ## Specify the browser that will be used to display help in the web format.
+    browser = 
 
-[mergetool]
-  keepBackup = false
-[difftool]
-  prompt = false
-[alias]
-  # Display current status of repository
-  wtf = !$ZSH/bin/git-wtf
+    ## Override the default help format used by `git-help`. Values "man",
+    ## "info", "web" and "html" are supported.
+    format = web
 
-  # Count commits by author
-  count = !git shortlog -sn
+    ## Automatically correct and execute mistyped commands after waiting for the
+    ## given number of deciseconds (0.1 sec). If more than one command can be
+    ## deduced from the entered text, nothing will be executed. If the value of
+    ## this option is negative, the corrected command will be executed
+    ## immediately. If the value is 0 - the command will be just shown but not
+    ## executed (this is the default).
+    autocorrect = 0
 
-  # Undo a `git push`
-  undopush = push -f origin HEAD^:master
-  undo-push = !git push -f origin HEAD^:master
+[merge]
+    ## Controls which merge resolution program is used by `git-mergetool`.
+    tool = meld
 
-  # Show verbose output about tags, branches, or remotes
-  tags = tag -l
-  branches = branch -a
-  remotes = remote -v
-
-
-
-[alias]
-    browse       = !hub browse
-    w            = !hub browse
-    compare      = !hub compare
-    cb           = !git-cut-branch
-    sh           = !git-sh
-    grab         = !git-grab
-    thanks       = !git-thanks
-    track        = !git-track
-    ll           = log --pretty=oneline --abbrev-commit --max-count=15
-    wip          = !git add -u && git commit -m ...
-    wipc         = !date >> WIP && git add WIP && git commit -m ...
-    fp           = format-patch --stdout
-    ci           = commit
-    x            = checkout HEAD
-    bv           = !git branch --color -v | cut -c1-100
-    incoming     = !git-incoming
-    in           = !git-incoming
-    outgoing     = !git-outgoing
-    out          = !git-outgoing
-    s            = status -sb -uno --ignore-submodules=untracked
-    st           = status
-    sa           = status -sb --ignore-submodules=untracked
-
-[help]
-    browser = open
-
-[branch]
-    autosetupmerge = true
-
-[diff]
-    renames = copies
-    mnemonicprefix = true
-
-[push]
-    default = current
-
-[sendemail]
-    smtpserver = smtp.gmail.com
-    smtpserverport = 587
-    smtpencryption = tls
-    smtpuser = rtomayko@gmail.com
-
-[hub]
-    http-clone = true
-
-[browser "gitscm"]
-    cmd = sh -c 'open http://git-scm.com/docs/$(basename $1 .html)' --
+    ## Controls the amount of output shown by the recursive merge strategy.
+    ## Level 0 outputs nothing except a final error message if conflicts were
+    ## detected. Level 1 outputs only conflicts, 2 outputs conflicts and file
+    ## changes. Level 5 and above outputs debugging information. The default is
+    ## level 2.
+    verbosity = 2

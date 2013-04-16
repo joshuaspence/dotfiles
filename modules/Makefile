@@ -1,18 +1,34 @@
 .PHONY: all
 all: git-extras hosts hub
 
+submake = make --no-print-directory -C $(1) $(2)
+sudo-submake = sudo $(call submake,$(1),$(2))
+
 #===============================================================================
 # Git-Extras
 #===============================================================================
-.PHONY: git-extras
-git-extras:
-	sudo make --no-print-directory -C $@ install
+git-extras_SUBMODULE_DIR := git-extras
+
+clean-git-extras:
+	$(call submake,$(git-extras_SUBMODULE_DIR),clean)
+
+.PHONY: install-git-extras
+install-git-extras:
+	$(call sudo-submake,$(git-extras_SUBMODULE_DIR),install)
+
+uninstall-git-extras:
+	$(call sudo-submake,$(git-extras_SUBMODULE_DIR),uninstall)
 
 #===============================================================================
 # Hosts
 #===============================================================================
+hosts_SUBMODULE_DIR := hosts
+
 .PHONY: hosts
 hosts: /etc/hosts
+
+clean-hosts
+
 
 .PHONY: hosts/hosts
 hosts/hosts:

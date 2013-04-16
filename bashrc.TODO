@@ -1,49 +1,11 @@
-#!/bin/bash
-# A basically sane bash environment.
-#
-# Ryan Tomayko <http://tomayko.com/about> (with help from the internets).
 
-# the basics
-: ${HOME=~}
-: ${LOGNAME=$(id -un)}
-: ${UNAME=$(uname)}
 
 # complete hostnames from this file
 : ${HOSTFILE=~/.ssh/known_hosts}
 
-# readline config
-: ${INPUTRC=~/.inputrc}
-
-# notify of bg job completion immediately
-set -o notify
-
-# shell opts. see bash(1) for details
-shopt -s cdspell >/dev/null 2>&1
-shopt -s extglob >/dev/null 2>&1
-shopt -s histappend >/dev/null 2>&1
-shopt -s hostcomplete >/dev/null 2>&1
-shopt -s interactive_comments >/dev/null 2>&1
-shopt -u mailwarn >/dev/null 2>&1
-shopt -s no_empty_cmd_completion >/dev/null 2>&1
-
-# disable core dumps
-ulimit -S -c 0
-
 # ----------------------------------------------------------------------
 # ENVIRONMENT CONFIGURATION
 # ----------------------------------------------------------------------
-
-# detect interactive shell
-case "$-" in
-    *i*) INTERACTIVE=yes ;;
-    *)   unset INTERACTIVE ;;
-esac
-
-# detect login shell
-case "$0" in
-    -*) LOGIN=yes ;;
-    *)  unset LOGIN ;;
-esac
 
 # ignore backups, CVS directories, python bytecode, vim swap files
 FIGNORE="~:CVS:#:.pyc:.swp:.swa:apache-solr-*"
@@ -95,6 +57,22 @@ LS_COMMON="-hBG"
 # setup the main ls alias if we've established common args
 test -n "$LS_COMMON" &&
 alias ls="command ls $LS_COMMON"
+
+# do not list implied entries ending with ~.
+LSFLAGS="-B"
+
+-F, --classify
+              append indicator (one of */=>@|) to entries
+
+       --file-type
+              likewise, except do not append `*'
+
+-G, --no-group
+              in a long listing, don't print group names
+
+ -h, --human-readable
+              with -l, print sizes in human readable format (e.g., 1K 234M 2G)
+
 
 # --------------------------------------------------------------------
 # PATH MANIPULATION FUNCTIONS
