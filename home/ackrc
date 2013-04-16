@@ -1,24 +1,27 @@
+#===============================================================================
+# ackrc
+#-------------------------------------------------------------------------------
+# @author Joshua Spence
+#===============================================================================
+
+# Operate on all files, regardless of type.
+#--all
+
 # Always color, even if piping to a another program.
 --color
 
 # Matches by file name with.
 --group
 
-# Follow or don't follow symlinks.
-#--follow
+# Don't follow symlinks.
 --nofollow
 
-# Operate on all files, regardless of type.
-#--all
+# Ignore case in the search strings if the search pattern contains no uppercase
+# characters.
+--smart-case
 
 # Print the filename for each match.
 --with-filename
-
-# Ignore case in search strings.
-#--ignore-case
-
-# Ignore case in the search strings if PATTERN contains no uppercase characters.
---smart-case
 
 # Types.
 --type-add=css=.less,.sass,.scss
