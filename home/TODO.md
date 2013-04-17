@@ -9,7 +9,6 @@ dotfilesrc
 gitconfig
 Makefile
 README.md
-screenrc
 vimrc
 zsh*
 zshrc
