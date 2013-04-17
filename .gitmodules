@@ -1,6 +1,3 @@
-[submodule "home/vim/bundle/vundle"]
-	path = home/vim/bundle/vundle
-	url = git://github.com/gmarik/vundle.git
 [submodule "modules/git-extras"]
 	path = modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git
@@ -10,12 +7,6 @@
 [submodule "home/oh-my-zsh"]
 	path = home/oh-my-zsh
 	url = git://github.com/robbyrussell/oh-my-zsh.git
-[submodule "modules/rename"]
-	path = modules/rename
-	url = git://github.com/ap/rename.git
-[submodule "modules/spark"]
-	path = modules/spark
-	url = git://github.com/holman/spark.git
 [submodule "modules/hosts"]
 	path = modules/hosts
 	url = git://github.com/StevenBlack/hosts.git
@@ -28,3 +19,12 @@
 [submodule "modules/git-utils"]
 	path = modules/git-utils
 	url = git@github.com:joshuaspence/git-utils.git
+[submodule "modules/rename"]
+	path = modules/rename
+	url = git@github.com:joshuaspence/rename.git
+[submodule "modules/spark"]
+	path = modules/spark
+	url = git@github.com:joshuaspence/spark.git
+[submodule "home/vim/bundle/vundle"]
+	path = home/vim/bundle/vundle
+	url = git://github.com/gmarik/vundle.git

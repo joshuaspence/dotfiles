@@ -1,4 +1,7 @@
 #!/bin/sh
+
+## @link https://github.com/pengwynn/dotfiles/blob/master/bin/gxpr
+
 # Usage: gxpr <expression>
 # Like expr(1), but uses Google's calculator to evaluate <expression>.
 #
