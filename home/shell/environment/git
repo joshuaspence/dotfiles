@@ -1,18 +1,12 @@
-##
-# Unset environment variables.
-##
+## Unset environment variables.
 unset GIT_EDITOR
 unset GIT_PAGER
 unset GIT_SSH
 
-##
-# Make sure `git` is installed.
-##
+## Make sure `git` is installed.
 command -v git >/dev/null || return
 
-##
-# Set environment variables.
-##
+## Set environment variables.
 if command -v vim >/dev/null; then
     GIT_EDITOR=$(command -v vim)
 elif command -v vi >/dev/null; then
@@ -24,9 +18,7 @@ GIT_SSH=$(command -v ssh)
 
 ## TODO: Set GIT_PAGER
 
-##
-# Export environment variables.
-##
+## Export environment variables.
 export GIT_EDITOR
 export GIT_PAGER
 export GIT_SSH

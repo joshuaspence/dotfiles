@@ -1,16 +1,10 @@
-##
-# Unset environment variables.
-##
+## Unset environment variables.
 unset EDITOR
 
-##
-# Source prerequisite environment variables.
-##
+## Source prerequisite environment variables.
 [[ -n $IS_REMOTE ]] || source "$HOME/.shell/environment/shell"
 
-##
-# Set environment variables.
-##
+## Set environment variables.
 if ! $IS_REMOTE && command -v subl >/dev/null; then
     EDITOR="$(command -v subl) -n -w"
 elif ! $IS_REMOTE && command -v sublime-text-2 >/dev/null; then
@@ -23,7 +17,5 @@ else
     echo "No command set for EDITOR environment variable" >&2
 fi
 
-##
-# Export environment variables.
-##
+## Export environment variables.
 export EDITOR

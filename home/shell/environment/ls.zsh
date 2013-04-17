@@ -1,14 +1,8 @@
-##
-# Unset environment variables.
-##
+## Unset environment variables.
 unset DISABLE_LS_COLORS
 
-##
-# Make sure `ls` is installed.
-##
+## Make sure `ls` is installed.
 command -v ls >/dev/null || return
 
-##
-# Set environment variables.
-##
+## Set environment variables.
 DISABLE_LS_COLORS='false'

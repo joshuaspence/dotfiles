@@ -1,7 +1,0 @@
-# detect login shell
-case "$0" in
-    -*) LOGIN=yes ;;
-    *)  unset LOGIN ;;
-esac
-
-shopt -q login_shell

@@ -1,12 +1,8 @@
-##
-# Unset environment variables.
-##
+## Unset environment variables.
 unset PAGER
 
-##
-# "PAGER" defines the utility used to display long text by commands such as
-# `man`.
-##
+## "PAGER" defines the utility used to display long text by commands such as
+## `man`.
 if command -v less >/dev/null; then
     PAGER=$(command -v less)
 elif command -v more >/dev/null; then
@@ -15,7 +11,5 @@ else
     echo "No command set for PAGER environment variable" >&2
 fi
 
-##
-# Export environment variables.
-##
+## Export environment variables.
 export PAGER

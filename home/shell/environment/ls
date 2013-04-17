@@ -1,16 +1,10 @@
-##
-# Unset environment variables.
-##
+## Unset environment variables.
 unset LS_COLORS
 
-##
-# Make sure `ls` is installed.
-##
+## Make sure `ls` is installed.
 command -v ls >/dev/null || return
 
-##
-# The `dircolors` command provides color setup for `ls`.
-##
+## The `dircolors` command provides color setup for `ls`.
 if command -v dircolors >/dev/null; then
     eval "$(dircolors -b)"
 fi

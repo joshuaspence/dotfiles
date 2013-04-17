@@ -1,1 +1,4 @@
-INPUTRC=~/.inputrc
+if [[ -r $HOME/.inputrc ]]; then
+    INPUTRC="$HOME/.inputrc"
+fi
+

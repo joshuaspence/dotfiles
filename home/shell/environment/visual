@@ -1,14 +1,8 @@
-##
-# Unset environment variables.
-##
+## Unset environment variables.
 unset VISUAL
 
-##
-# Source prerequisite environment variables.
-##
+## Source prerequisite environment variables.
 [[ -n $EDITOR ]] || source "$HOME/.shell/environment/editor"
 
-##
-# Set and export environment variables.
-##
+## Set and export environment variables.
 export VISUAL="$EDITOR"

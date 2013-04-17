@@ -1,34 +1,22 @@
-##
-# Unset environment variables.
-##
+## Unset environment variables.
 unset LESS
 unset LESSEDIT
 unset LESSOPEN
 unset LESSCLOSE
 
-##
-# Make sure `less` is installed.
-##
+## Make sure `less` is installed.
 command -v less >/dev/null || return
 
-##
-# Source prerequisite environment variables.
-##
+## Source prerequisite environment variables.
 [[ -n $EDITOR ]] || source "$HOME/.shell/environment/editor"
 
-##
-# Allow `less` to show color escape sequences.
-##
+## Allow `less` to show color escape sequences.
 export LESS='-R'
 
-##
-# The `less` pager supports editing the file being viewed by pressing "v".
-##
+## The `less` pager supports editing the file being viewed by pressing "v".
 export LESSEDIT="$EDITOR"
 
-##
-# Set the less input preprocessor.
-##
+## Set the less input preprocessor.
 if command -v lesspipe >/dev/null; then
     eval "$(lesspipe)"
 fi

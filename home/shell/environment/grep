@@ -1,22 +1,14 @@
-##
-# Unset environment variables.
-##
+## Unset environment variables.
 unset GREP_COLOR
 unset GREP_OPTIONS
 
-##
-# Make sure `grep` is installed.
-##
+## Make sure `grep` is installed.
 command -v grep >/dev/null || return
 
-##
-# Source prerequisite environment variables.
-##
+## Source prerequisite environment variables.
 [[ -n $HAS_COLOR ]] || source "$HOME/.shell/environment/color"
 
-##
-# Set and export environment variables.
-##
+## Set and export environment variables.
 if $HAS_COLOR; then
     export GREP_COLOR='1;33' # bold red
     export GREP_OPTIONS='--color=auto'
