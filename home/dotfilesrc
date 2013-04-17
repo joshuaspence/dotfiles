@@ -7,14 +7,13 @@
 
 
 [dotfiles]
-    repository = ~/dotfiles/home
-    packages = ['config']
-    ignore = [
-        '.git',
-        '.gitignore',
-        '.gitmodules',
-        'Makefile',
-        'README.md',
-        'TODO.md']
-    externals = {
-        '.ssh/keys': '~/.keys'}
+repository = ~/dotfiles/home
+packages = ['config']
+ignore = [
+    '.git',
+    '.gitignore',
+    '.gitmodules',
+    'Makefile',
+    '*.md']
+externals = {
+    '.ssh/keys': '~/.keys'}

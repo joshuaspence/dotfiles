@@ -5,7 +5,6 @@ ssh/
 vim/
 bash_profile
 bashrc
-dotfilesrc
 gitconfig
 Makefile
 README.md
