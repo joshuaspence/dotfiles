@@ -25,3 +25,6 @@
 [submodule "modules/git-sh"]
 	path = modules/git-sh
 	url = git://github.com/rtomayko/git-sh.git
+[submodule "modules/git-utils"]
+	path = modules/git-utils
+	url = git@github.com:joshuaspence/git-utils.git
