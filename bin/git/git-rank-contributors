@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+## @link http://git-wt-commit.rubyforge.org/#git-rank-contributors
+
 ## git-rank-contributors: a simple script to trace through the logs and
 ## rank contributors by the total size of the diffs they're responsible for.
 ## A change counts twice as much as a plain addition or deletion.
@@ -8,7 +10,7 @@
 ## Probably not without some editing, because people often commit from more
 ## than one address.
 ##
-## git-rank-contributors Copyright 2008 William Morgan <wmorgan-git-wt-add@masanjin.net>.
+## git-rank-contributors Copyright 2008 William Morgan <wmorgan-git-wt-add@masanjin.net>. 
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or (at
@@ -34,7 +36,7 @@ htmlize = ARGV.delete("-h")
 
 author = nil
 state = :pre_author
-`git log -M -C -C -p --no-color`.split("\n").each do |l|
+`git log -M -C -C -p --no-color`.each do |l|
   case
   when (state == :pre_author || state == :post_author) && l =~ /Author: (.*)$/
     author = $1

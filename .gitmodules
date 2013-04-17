@@ -22,3 +22,6 @@
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
+[submodule "modules/git-sh"]
+	path = modules/git-sh
+	url = git://github.com/rtomayko/git-sh.git

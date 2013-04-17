@@ -33,46 +33,100 @@
     detachedHead = true
 
 [alias]
+    ## A shortcut to amend to the previous commit.
     amend = commit --amend
-    tags = tag -l
-    branches = branch -a
-    remotes = remote -v
 
-    ## @link https://github.com/cypher/dotfiles/blob/master/gitconfig
-    ls-ignored = ls-files --exclude-standard --ignored --others
+    ## List branches.
+    branches = branch -a   
 
-    # Various pretty loggers from various places.
-    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
-    lc = log ORIG_HEAD.. --stat --no-merges
+    ## List the files that have changed, and the status of these files.
+    ##
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    changes = diff --name-status -r
 
-    # @link http://blog.kfish.org/2010/04/git-lola.html
-    lol = log --graph --decorate --pretty=oneline --abbrev-commit
-    lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
-    ll = log --graph --date=short
+    ## Show list of files in a conflict state.
+    ## http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
+    conflicts = ls-files -u | awk '{print $4}' | sort -u
 
     ## Count commits by author.
-    count = !git shortlog -sn
+    count = shortlog -sn
 
-    # @link http://git.wiki.kernel.org/index.php/Aliases
-    whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
+    ## See the changes in a branch since it was forked from another branch, or
+    ## since the last merge with the origin branch.
+    ##
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    forkdiff = !bash -c 'git diff $(git merge-base "$1" "$2") "$2" "${@: 3}" ' -
+
+    ## Produces a graphical `git log`.
+    ##
+    ## <code>
+    ## git graphviz HEAD~100..HEAD~60 | dotty /dev/stdin
+    ## </code>
+    ##
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    graphviz = "!f() { echo 'digraph git {' ; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g' ; echo '}'; }; f"
+
+    ## List all new commits after you fetched, with stats, but excluding merges.
+    ##
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    lc = log ORIG_HEAD.. --stat --no-merges
+
+    ## An alternative to `git log` with the following features:
+    ##     - one commit per line
+    ##     - show graph of commits
+    ##     - abbreviated commit IDs
+    ##     - dates relative to now
+    ##     - show commit references (like `git log --decorate`)
+    ##     - lots of color
+    ##
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+
+    ## List files that are not under version control.
+    ##
+    ## @link http://github.com/cypher/dotfiles/blob/master/gitconfig
+    ls-ignored = ls-files --exclude-standard --ignored --others
+
+    ## Prune all stale remote branches.
+    ##
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    prune-all = !git remote | xargs -n 1 git remote prune
+
+    ## List remotes.
+    remotes = remote -v
+
+    ## Serve repo on the spot.
+    ##
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    serve = daemon --reuseaddr --verbose  --base-path=. --export-all ./.git
+
+    ## List tags.
+    tags = tag -l
+
+    ## Attempt to cleanup some common problems.
+    unfuck = !sh -c 'git fsck && for remote in $(git remote); do git remote prune $remote; done && git gc --aggressive --auto'
+
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 
-    # Attempt to cleanup some common problems.
-    unfuck = !git fsck && git remote prune $(git remote) && git gc --aggressive --auto
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
 
-    browse       = !hub browse
-    compare      = !hub compare
-    cb           = !git-cut-branch
-    sh           = !git-sh
-    grab         = !git-grab
-    thanks       = !git-thanks
-    track        = !git-track
-    
-    incoming     = !git-incoming
-    outgoing     = !git-outgoing
+    ## Aliases for {@link http://github.com/defunkt/hub hub}. #{{{
+        browse = !hub browse
+        compare = !hub compare
+        create = !hub create
+        fork = !hub fork
+        pull-request = !hub pull-request
+    ## #}}}
 
-    # Undo a `git push`
-    undo-push = push -f origin HEAD^:master
+    #cb = !git-cut-branch
+    #sh = !git-sh
+    #grab = !git-grab
+    #thanks = !git-thanks
+    #track = !git-track
+    #incoming = !git-incoming
+    #outgoing = !git-outgoing
 
 [core]
     ## If true, makes `git` convert CRLF at the end of lines in text files to LF
@@ -106,14 +160,14 @@
     ## Commands such as `commit` and `tag` that lets you edit messages by
     ## launching an editor uses the value of this variable when it is set, and
     ## the environment variable `GIT_EDITOR` is not set. 
-    editor = 
+    editor = vim
 
     ## The command that `git` will use to paginate output. Can be overridden
     ## with the `GIT_PAGER` environment variable. Note that `git` sets the
     ## `LESS` environment variable to `FRSX` if it is unset when it runs the
     ## pager. One can change these settings by setting the `LESS` variable to
     ## some other value.
-    pager = 
+    pager = less
 
     ## A comma separated list of common whitespace problems to notice.
     ## `git diff` will use `color.diff.whitespace` to highlight them, and
@@ -143,6 +197,7 @@
     grep = auto
     interactive = auto
     pager = true
+    sh = auto
     showbranch = auto
     status = auto
     ui = auto
@@ -173,6 +228,12 @@
     header = normal
     help = green
     error = red
+[color "sh"]
+    branch = yellow reverse
+    workdir = blue bold
+    dirty = red
+    dirty-stash = red
+    repo-state = red
 [color "status"]
     header = normal
     added = yellow
@@ -273,12 +334,14 @@
     pushInsteadOf = "git://github.com/"
 [url "git://github.com/"]
     insteadOf = "github:"
+
 [url "git@gist.github.com:"]
     insteadOf = "gist:"
     pushInsteadOf = "gist:"
     pushInsteadOf = "git://gist.github.com/"
 [url "git://gist.github.com/"]
     insteadOf = "gist:"
+
 [url "git@heroku.com:"]
     insteadOf = "heroku:"
 
