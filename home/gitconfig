@@ -32,6 +32,48 @@
     ## Advice shown when you used `git-checkout` to move to the detach HEAD
     detachedHead = true
 
+[alias]
+    amend = commit --amend
+    tags = tag -l
+    branches = branch -a
+    remotes = remote -v
+
+    ## @link https://github.com/cypher/dotfiles/blob/master/gitconfig
+    ls-ignored = ls-files --exclude-standard --ignored --others
+
+    # Various pretty loggers from various places.
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
+    lc = log ORIG_HEAD.. --stat --no-merges
+
+    # @link http://blog.kfish.org/2010/04/git-lola.html
+    lol = log --graph --decorate --pretty=oneline --abbrev-commit
+    lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+    ll = log --graph --date=short
+
+    ## Count commits by author.
+    count = !git shortlog -sn
+
+    # @link http://git.wiki.kernel.org/index.php/Aliases
+    whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
+    whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
+
+    # Attempt to cleanup some common problems.
+    unfuck = !git fsck && git remote prune $(git remote) && git gc --aggressive --auto
+
+    browse       = !hub browse
+    compare      = !hub compare
+    cb           = !git-cut-branch
+    sh           = !git-sh
+    grab         = !git-grab
+    thanks       = !git-thanks
+    track        = !git-track
+    
+    incoming     = !git-incoming
+    outgoing     = !git-outgoing
+
+    # Undo a `git push`
+    undo-push = push -f origin HEAD^:master
+
 [core]
     ## If true, makes `git` convert CRLF at the end of lines in text files to LF
     ## when reading from the work tree, and convert in reverse when writing to
@@ -177,7 +219,15 @@
     ## executed (this is the default).
     autocorrect = 0
 
+[man]
+    ## Specify the programs that may be used to display help in the man format.
+    viewer = man
+
 [merge]
+    ## Whether to print the diffstat between ORIG_HEAD and the merge result at
+    ## the end of the merge.
+    stat = true
+
     ## Controls which merge resolution program is used by `git-mergetool`.
     tool = meld
 
@@ -187,6 +237,35 @@
     ## changes. Level 5 and above outputs debugging information. The default is
     ## level 2.
     verbosity = 2
+
+[mergetool]
+    ## After performing a merge, the original file with conflict markers can be
+    ## saved as a file with a ".orig" extension. If this variable is set to
+    ## false then this file is not preserved.
+    keepBackup = false
+
+    ## Prompt before each invocation of the merge resolution program.
+    prompt = false
+
+[push]
+    ## Defines the action git push should take if no refspec is given on the
+    ## command line, no refspec is configured in the remote, and no refspec is
+    ## implied by any of the options given on the command line. 
+    default = matching
+
+[rerere]
+    ## Remember my merges.
+    ## @link http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
+    enabled = true
+
+[status]
+    ## By default, `git-status` and `git-commit` show files which are not
+    ## currently tracked by Git. Directories which contain only untracked files,
+    ## are shown with the directory name only. Showing untracked files means
+    ## that Git needs to `lstat` all all the files in the whole repository,
+    ## which might be slow on some systems. So, this variable controls how the
+    ## commands displays the untracked files.
+    showUntrackedFiles = normal
 
 [url "git@github.com:"]
     insteadOf = "gh:"
@@ -206,24 +285,3 @@
 [web]
     ## Specify the browser that will be used to display help in the web format.
     browser = google-chrome
-
-[alias]
-    amend = commit --amend
-    tags = tag -l
-    branches = branch -a
-    remotes = remote -v
-
-    ## @link https://github.com/cypher/dotfiles/blob/master/gitconfig
-    ls-ignored = ls-files --exclude-standard --ignored --others
-
-    # Various pretty loggers from various places.
-    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
-    lc = log ORIG_HEAD.. --stat --no-merges
-
-    # @link http://blog.kfish.org/2010/04/git-lola.html
-    lol = log --graph --decorate --pretty=oneline --abbrev-commit
-    lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
-    ll = log --graph --date=short
-
-    # Count commits by author
-    count = !git shortlog -sn
