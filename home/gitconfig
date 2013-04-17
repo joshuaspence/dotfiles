@@ -99,34 +99,72 @@
     branch = auto
     diff = auto
     grep = auto
-    pager = true
     interactive = auto
+    pager = true
     showbranch = auto
     status = auto
-    ui = always
+    ui = auto
 [color "branch"]
     current = yellow reverse
     local = yellow
     remote = green
+    plain = normal
 [color "diff"]
+    plain = normal
     meta = yellow bold
     frag = magenta bold
+    func = normal
     old = red bold
     new = green bold
+    commit = normal
+    whitespace = normal
+[color "grep"]
+    context = normal
+    filename = normal
+    function = normal
+    linenumber = normal
+    match = green
+    selected = normal
+    separator = normal
+[color "interactive"]
+    prompt = red
+    header = normal
+    help = green
+    error = red
 [color "status"]
+    header = normal
     added = yellow
     changed = green
     untracked = cyan
+    nobranch = red
 
 [commit]
     ## A boolean to enable/disable inclusion of status information in the commit
     ## message template when using an editor to prepare the commit message.
     status = true
 
-[help]
-    ## Specify the browser that will be used to display help in the web format.
-    browser = 
+[diff]
+    ## If set, `git diff` uses a prefix pair that is different from the standard
+    ## "a/" and "b/" depending on what is being compared.
+    mnemonicprefix = true
 
+    ## Tells `git` to detect renames. If set to any boolean value, it will
+    ## enable basic rename detection. If set to "copies" or "copy", it will
+    ## detect copies, as well.
+    renames = copy
+
+    ## A boolean to inhibit the standard behavior of printing a space before
+    ## each empty output line.
+    suppressBlankEmpty = true
+
+    ## Controls which diff tool is used.
+    tool = meld
+
+[difftool]
+    ## Prompt before each invocation of the diff tool.
+    prompt = false
+
+[help]
     ## Override the default help format used by `git-help`. Values "man",
     ## "info", "web" and "html" are supported.
     format = web
@@ -149,3 +187,43 @@
     ## changes. Level 5 and above outputs debugging information. The default is
     ## level 2.
     verbosity = 2
+
+[url "git@github.com:"]
+    insteadOf = "gh:"
+    pushInsteadOf = "github:"
+    pushInsteadOf = "git://github.com/"
+[url "git://github.com/"]
+    insteadOf = "github:"
+[url "git@gist.github.com:"]
+    insteadOf = "gist:"
+    pushInsteadOf = "gist:"
+    pushInsteadOf = "git://gist.github.com/"
+[url "git://gist.github.com/"]
+    insteadOf = "gist:"
+[url "git@heroku.com:"]
+    insteadOf = "heroku:"
+
+[web]
+    ## Specify the browser that will be used to display help in the web format.
+    browser = google-chrome
+
+[alias]
+    amend = commit --amend
+    tags = tag -l
+    branches = branch -a
+    remotes = remote -v
+
+    ## @link https://github.com/cypher/dotfiles/blob/master/gitconfig
+    ls-ignored = ls-files --exclude-standard --ignored --others
+
+    # Various pretty loggers from various places.
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
+    lc = log ORIG_HEAD.. --stat --no-merges
+
+    # @link http://blog.kfish.org/2010/04/git-lola.html
+    lol = log --graph --decorate --pretty=oneline --abbrev-commit
+    lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+    ll = log --graph --date=short
+
+    # Count commits by author
+    count = !git shortlog -sn
