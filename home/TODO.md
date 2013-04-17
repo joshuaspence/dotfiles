@@ -5,7 +5,6 @@ ssh/
 vim/
 bash_profile
 bashrc
-gitconfig
 Makefile
 README.md
 vimrc

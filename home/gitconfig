@@ -3,6 +3,14 @@
 ##
 ## @author Joshua Spence
 ## @file   ~/.gitconfig
+##
+## @link   http://git.wiki.kernel.org/index.php/Aliases
+## @link   http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
+## @link   http://github.com/cypher/dotfiles/blob/master/gitconfig
+## @link   http://github.com/defunkt/hub
+## @link   http://github.com/rtomayko/git-sh git-sh
+## @link   http://github.com/visionmedia/git-extras
+## @link   http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
 #\
 
 
@@ -29,7 +37,7 @@
     ## guessed from the system username and domain name.
     implicitIdentity = true
 
-    ## Advice shown when you used `git-checkout` to move to the detach HEAD
+    ## Advice shown when you used `git-checkout` to move to the detach HEAD.
     detachedHead = true
 
 [alias]
@@ -45,7 +53,8 @@
     changes = diff --name-status -r
 
     ## Show list of files in a conflict state.
-    ## http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
+    ##
+    ## @link http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
     conflicts = ls-files -u | awk '{print $4}' | sort -u
 
     ## Count commits by author.
@@ -104,7 +113,7 @@
     tags = tag -l
 
     ## Attempt to cleanup some common problems.
-    unfuck = !sh -c 'git fsck && for remote in $(git remote); do git remote prune $remote; done && git gc --aggressive --auto'
+    unfuck = !git fsck && git prune-all && git gc --aggressive --auto
 
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
@@ -120,29 +129,78 @@
         pull-request = !hub pull-request
     ## #}}}
 
-    #cb = !git-cut-branch
-    #sh = !git-sh
-    #grab = !git-grab
-    #thanks = !git-thanks
-    #track = !git-track
-    #incoming = !git-incoming
-    #outgoing = !git-outgoing
+    ## Aliases for local `git` scripts from `~/.dotfiles/bin/git`. Required here
+    ## only for tab-completion.
+    ##
+    ## #{{{
+        forest = !git-forest
+        publish-branch = !git-publish-branch
+        rank-contributors = !git-rank-contributors
+        show-merges = !git-show-merges
+        wtf = !git-wtf
+    ## #}}}
+
+    ## Aliases for {@link http://github.com/rtomayko/git-sh git-sh}. Required
+    ## here only for tab-completion.
+    ##
+    ## #{{{
+        sh = !git-sh
+    ## #}}}
+
+    ## Aliases for {@link http://github.com/visionmedia/git-extras git-extras}.
+    ## Required here only for tab-completion.
+    ##
+    ## #{{{
+        alias = !git-alias
+        back = !git-back
+        bug = !git-bug
+        changelog = !git-changelog
+        commits-since = !git-commits-since
+        contrib = !git-contrib
+        count = !git-count
+        create-branch = !git-create-branch
+        delete-branch = !git-delete-branch
+        delete-merged-branches = !git-delete-merged-branches
+        delete-submodule = !git-delete-submodule
+        delete-tag = !git-delete-tag
+        effort = !git-effort
+        extras = !git-extras
+        feature = !git-feature
+        fresh-branch = !git-fresh-branch
+        gh-pages = !git-gh-pages
+        graft = !git-graft
+        ignore = !git-ignore
+        info = !git-info
+        local-commits = !git-local-commits
+        obliterate = !git-obliterate
+        pull-request = !git-pull-request
+        refactor = !git-refactor
+        release = !git-release
+        rename-tag = !git-rename-tag
+        repl = !git-repl
+        setup = !git-setup
+        show-tree = !git-show-tree
+        squash = !git-squash
+        summary = !git-summary
+        touch = !git-touch
+        undo = !git-undo
+    ## #}}}
 
 [core]
-    ## If true, makes `git` convert CRLF at the end of lines in text files to LF
+    ## If true, makes git convert CRLF at the end of lines in text files to LF
     ## when reading from the work tree, and convert in reverse when writing to
     ## the work tree. The variable can be set to "input", in which case the
     ## conversion happens only while reading from the work tree but files are
     ## written out to the work tree with LF at the end of lines.
     autocrlf = input
 
-    ## If true, makes `git` check if converting CRLF as controlled by
-    ## `core.autocrlf` is reversible. `git` will verify if a command modifies a
+    ## If true, makes git check if converting CRLF as controlled by
+    ## `core.autocrlf` is reversible. git will verify if a command modifies a
     ## file in the work tree either directly or indirectly. For example,
     ## committing a file followed by checking out the same file should yield the
     ## original file in the work tree. If this is not the case for the current
     ## setting of `core.autocrlf`, git will reject the file. The variable can be
-    ## set to "warn", in which case `git` will only warn about an irreversible
+    ## set to "warn", in which case git will only warn about an irreversible
     ## conversion but continue the operation.
     safecrlf = warn
 
@@ -153,25 +211,13 @@
     #symlinks = true
 
     ## In addition to `.gitignore` (per-directory) and `.git/info/exclude`,
-    ## `git` looks into this file for patterns of files which are not meant to
-    ## be tracked.
+    ## git looks into this file for patterns of files which are not meant to be
+    ## tracked.
     excludesfile = ~/.gitignore
-
-    ## Commands such as `commit` and `tag` that lets you edit messages by
-    ## launching an editor uses the value of this variable when it is set, and
-    ## the environment variable `GIT_EDITOR` is not set. 
-    editor = vim
-
-    ## The command that `git` will use to paginate output. Can be overridden
-    ## with the `GIT_PAGER` environment variable. Note that `git` sets the
-    ## `LESS` environment variable to `FRSX` if it is unset when it runs the
-    ## pager. One can change these settings by setting the `LESS` variable to
-    ## some other value.
-    pager = less
 
     ## A comma separated list of common whitespace problems to notice.
     ## `git diff` will use `color.diff.whitespace` to highlight them, and
-    # `git apply --whitespace=error` will consider them as errors. 
+    ## `git apply --whitespace=error` will consider them as errors. 
     whitespace = space-before-tab,-indent-with-non-tab,trailing-space,cr-at-eol
 
 [apply]
@@ -251,9 +297,9 @@
     ## "a/" and "b/" depending on what is being compared.
     mnemonicprefix = true
 
-    ## Tells `git` to detect renames. If set to any boolean value, it will
-    ## enable basic rename detection. If set to "copies" or "copy", it will
-    ## detect copies, as well.
+    ## Tells git to detect renames. If set to any boolean value, it will enable
+    ## basic rename detection. If set to "copies" or "copy", it will detect
+    ## copies, as well.
     renames = copy
 
     ## A boolean to inhibit the standard behavior of printing a space before
@@ -276,7 +322,7 @@
     ## given number of deciseconds (0.1 sec). If more than one command can be
     ## deduced from the entered text, nothing will be executed. If the value of
     ## this option is negative, the corrected command will be executed
-    ## immediately. If the value is 0 - the command will be just shown but not
+    ## immediately. If the value is 0, the command will be just shown but not
     ## executed (this is the default).
     autocorrect = 0
 
@@ -309,13 +355,14 @@
     prompt = false
 
 [push]
-    ## Defines the action git push should take if no refspec is given on the
+    ## Defines the action `git push` should take if no refspec is given on the
     ## command line, no refspec is configured in the remote, and no refspec is
     ## implied by any of the options given on the command line. 
     default = matching
 
 [rerere]
     ## Remember my merges.
+    ##
     ## @link http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
     enabled = true
 

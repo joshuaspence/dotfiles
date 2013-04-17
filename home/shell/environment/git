@@ -2,6 +2,7 @@
 # Unset environment variables.
 ##
 unset GIT_EDITOR
+unset GIT_PAGER
 unset GIT_SSH
 
 ##
@@ -21,8 +22,11 @@ else
 fi
 GIT_SSH=$(command -v ssh)
 
+## TODO: Set GIT_PAGER
+
 ##
 # Export environment variables.
 ##
 export GIT_EDITOR
+export GIT_PAGER
 export GIT_SSH
