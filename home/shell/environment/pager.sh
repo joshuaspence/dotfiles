@@ -1,4 +1,9 @@
-## Unset environment variables.
+#/
+## @author Joshua Spence
+## @file   ~/.shell/environment/pager.sh
+#\
+
+## Unset environment variable.
 unset PAGER
 
 ## "PAGER" defines the utility used to display long text by commands such as
@@ -11,5 +16,5 @@ else
     echo "No command set for PAGER environment variable" >&2
 fi
 
-## Export environment variables.
+## Export environment variable.
 export PAGER

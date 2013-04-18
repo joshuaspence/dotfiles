@@ -1,3 +1,13 @@
+: ${HOME=~}
+: ${LOGNAME=$(id -un)}
+
+if [[ -n $COLORTERM || $(tput colors) > 2 ]]; then
+    CLICOLOR='true'
+    source "$HOME/.shell/environment/colors.sh"
+else
+    CLICOLOR='false'
+fi
+
 ##
 # Store the name of the shell.
 ##
@@ -35,3 +45,5 @@ case "$0" in
 esac
 
 shopt -q login_shell
+
+: ${UNAME=$(uname)}
