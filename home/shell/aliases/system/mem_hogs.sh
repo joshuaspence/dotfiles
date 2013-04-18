@@ -1,3 +1,8 @@
+#/
+## @author Joshua Spence
+## @file   ~/.shell/aliases/system/mem_hogs.sh
+#\
+
 ## Display the processes that are using the most memory.
 ##
 ## @link @todo I am not sure where I got this from...

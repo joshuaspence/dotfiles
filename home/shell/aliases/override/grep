@@ -1,6 +1,0 @@
-## Make sure `grep` is installed.
-if command -v ls >/dev/null || return
-
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'

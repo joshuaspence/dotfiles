@@ -1,3 +1,8 @@
+#/
+## @author Joshua Spence
+## @file   ~/.shell/aliases/navigation/two.sh
+#\
+
 ## Make sure `cd` is installed.
 command -v cd >/dev/null || return
 
@@ -5,6 +10,3 @@ command -v cd >/dev/null || return
 ##
 ## @link http://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 alias ..='cd ..'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-alias .....='cd ../../../..'
