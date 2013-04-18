@@ -1,24 +1,13 @@
-##
-# Check for the prerequisite functions.
-##
-(
-    command -v bunzip2 >/dev/null ||
-    (command -v cat >/dev/null && command -v pax >/dev/null) ||
-    command -v gunzip >/dev/null ||
-    command -v hdiutil >/dev/null ||
-    command -v tar >/dev/null ||    
-    command -v uncompress >/dev/null ||
-    (command -v uncompress >/dev/null && command -v pax >/dev/null) ||
-    command -v unzip >/dev/null
-) || return 1
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/archive/extract.sh
+#\
 
+## Extracts archived files and mounts disk images.
 ##
-# Extracts archived files and mounts disk images.
-#
-# @param [String] The path to the archive file.
-#
-# @link http://nparikh.org/notes/zshrc.txt
+## @param [String] The path to the archive file.
 ##
+## @link http://nparikh.org/notes/zshrc.txt
 function extract() {
     if [[ $# < 1 || -z $1 ]]; then
         echo "Usage: extract <path>" >&2

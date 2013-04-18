@@ -1,16 +1,14 @@
-##
-# Check for the prerequisite functions.
-##
-command -v eval >/dev/null || return 1
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/color/colorize.sh
+#\
 
+## Prints terminal codes for shell colors.
 ##
-# Prints terminal codes for shell colors.
-#
-# @param [String] Terminal code keyword (usually a colour).
-#
-# @link http://github.com/fnichol/bashrc/blob/master/bashrc
-# @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
+## @param [String] Terminal code keyword (usually a colour).
 ##
+## @link http://github.com/fnichol/bashrc/blob/master/bashrc
+## @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
 function colorize() {
     if [[ $# < 1 ]]; then
         echo "Usage: colorize <color_spec>" >&2

@@ -1,3 +1,8 @@
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/prompt/shell_prompt.sh
+#\
+
 shell_prompt() {
     # Some useful unicode sequences.    
     local joiner_bottomleft='\0342\0224\0224'   # └

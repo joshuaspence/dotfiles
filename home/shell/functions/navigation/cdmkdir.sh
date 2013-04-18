@@ -1,16 +1,13 @@
-# Check for the prerequisite functions.
-(
-    command -v mkdir >/dev/null &&
-    (command -v pushd >/dev/null || command -v cd >/dev/null)
-) || return 1
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/navigation/cdmkdir.sh
+#\
 
+## Creates the directory if it doesn't exist, and changes into it.
 ##
-# Creates the directory if it doesn't exist, and changes into it.
-#
-# @param [String] The path of the new directory.
-#
-# @link @todo
-#
+## @param [String] The path of the new directory.
+##
+## @link @todo
 function cdmkdir() {
     if [ -z "$1" ]; then
         echo "Usage: cdmkdir <path>" >&2

@@ -1,4 +1,9 @@
-shell_prompt__status() {
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/prompt/shell_prompt__status.sh
+#\
+
+function shell_prompt__status() {
     local cross='\0342\0234\0227'
     local tick='\0342\0234\0223'
 

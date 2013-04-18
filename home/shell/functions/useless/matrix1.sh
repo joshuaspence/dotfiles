@@ -1,16 +1,11 @@
-# Check for the prerequisite functions.
-(
-    command -v echo >/dev/null &&
-    command -v true >/dev/null &&
-    command -v seq >/dev/null &&
-    [[ -r /dev/urandom ]]
-) || return 1
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/useless/matrix1.sh
+#\
 
+## Cool "The Matrix" type screens.
 ##
-# Cool "The Matrix" type screens.
-#
-# @link @todo I am not sure where I got this from...
-#
+## @link @todo I am not sure where I got this from...
 function matrix1() {
     echo -e '\e[32m'
     while true; do
