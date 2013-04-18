@@ -1,4 +1,0 @@
-##
-# Alias to list the defined bold colors.
-##
-alias boldcolorlist="set | egrep '^BOLDCOLOR_\w*' | sort"

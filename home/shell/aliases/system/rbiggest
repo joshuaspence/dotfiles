@@ -1,6 +1,4 @@
+## Recursively displays the largest files/directories in the current directory.
 ##
-# Recursively displays the largest files/directories in the current directory.
-#
-# @link @todo I am not sure where I got this from...
-##
+## @link @todo I am not sure where I got this from...
 alias rbiggest='BLOCKSIZE=1048576; du -hx | sort -nr'

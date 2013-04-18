@@ -1,0 +1,7 @@
+## Make sure `ls` is installed.
+if ! command -v ls >/dev/null; then
+    echo "'ls' is not installed" >&2
+    return 1
+fi
+
+alias ls='ls ${LS_OPTS}'

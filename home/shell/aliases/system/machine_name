@@ -1,4 +1,2 @@
-##
-# The machine name.
-##
+## The machine name.
 alias machine_name='uname -n'
