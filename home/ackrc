@@ -14,15 +14,15 @@
 
 ## Specifies the color of the filename when it's printed in `--group` mode. By
 ## default, it's "bold green".
---color-filename="bold green"
+--color-filename=bold green
 
 ## Specifies the color of the line number when printed in `--color` mode. By
 ## default, it's "bold yellow".
---color-lineno="bold yellow"
+--color-lineno=bold yellow
 
 ## Specifies the color of the matching text when printed in `--color` mode. By
 ## default, it's "black on_yellow".
---color-match="black_on_yellow"
+--color-match=black on_yellow
 
 ## Print NUM lines (default 2) of context around matching lines.
 --context=2
