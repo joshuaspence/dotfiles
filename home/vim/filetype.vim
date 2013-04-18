@@ -1,12 +1,21 @@
-" Config files "{{{
-    autocmd BufRead,BufNewFile {*.cfg,*.conf,*.config} set filetype=config
+"/
+"" Filetype-specific configuration for {@link http://www.vim.org/ vim}.
+""
+"" @author Joshua Spence
+"" @file   ~/.vim/filetype.vim
+"\
+
+
+"" Config files "{{{
+  autocmd BufRead,BufNewFile {*.cfg,*.conf,*.config} set filetype=config
 " "}}}
 
-" Git "{{{
-    " Commit "{{{
-        autocmd BufRead,BufNewFile {COMMIT_EDITMSG} set filetype=gitcommit
-        autocmd Filetype gitcommit set textwidth=68 spell
-    " "}}}
+"" Git "{{{
+  "" Commit "{{{
+    autocmd BufRead,BufNewFile {COMMIT_EDITMSG} set filetype=gitcommit
+    autocmd Filetype gitcommit set textwidth=68
+    autocmd Filetype gitcommit set spell
+  "" "}}}
     
     " Config "{{{
         autocmd BufRead,BufNewFile {*gitconfig} set filetype=gitconfig
@@ -40,6 +49,6 @@
     autocmd FileType text setlocal wrap linebreak nolist
 " "}}}
 
-" Vimrc "{{{
-    autocmd BufWritePost {g,.g,,.}vimrc source $MYVIMRC | exe ":PowerlineReloadColorscheme"
+"" Vimrc "{{{
+  autocmd BufWritePost {g,.g,,.}vimrc source $MYVIMRC | exe ":PowerlineReloadColorscheme"
 " "}}}

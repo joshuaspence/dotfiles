@@ -1,13 +1,21 @@
-" Vundle "{{{
-    set nocompatible
-    filetype off " required
+"/
+"" Plugin configuration for {@link http://www.vim.org/ vim}.
+""
+"" @author Joshua Spence
+"" @file   ~/.vim/bundles.vim
+"\
 
-    set rtp+=~/.vim/bundle/vundle/
-    call vundle#rc()
 
-    " Let Vundle manage Vundle (required).
-    Bundle "gmarik/vundle"
-" "}}}
+"" Vundle "{{{
+  set nocompatible
+  filetype off " required
+
+  set rtp+=~/.vim/bundle/vundle/
+  call vundle#rc()
+
+  " Let Vundle manage Vundle (required).
+  Bundle "gmarik/vundle"
+"" "}}}
 
 " Features "{{{
     " Ack "{{{
