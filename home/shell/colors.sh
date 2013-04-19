@@ -64,8 +64,3 @@
     ## Alias to list the defined styles.
     alias stylelist='set | egrep '\''^STYLE_\w*'\'' | sort'
 ## #}}}
-
-## Miscellaneous. #{{{
-    XTITLE_START='\\[\\e]0;'
-    XTITLE_FINISH='\\007\\]'
-## #}}}

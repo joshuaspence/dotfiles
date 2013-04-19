@@ -4,9 +4,7 @@
 #\
 
 function shell_prompt__pwd() {
-    if [ $# -gt 0 ] && ([ "$@" == "-c" ] || [ "$@" == "--color" ]); then
-        echo -n -e "\[${COLOR_GREEN}\]\w\[${COLOR_NC}\]"
-    else
-        echo -n -e "\w"
-    fi
+    $CLICOLOR && echo -n "\[${PROMPT_PWD_COLOR}\]"
+                 echo -n '\w'
+    $CLICOLOR && echo -n "\[${COLOR_NC}\]"
 }

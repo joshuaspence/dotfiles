@@ -4,9 +4,7 @@
 #\
 
 function shell_prompt__tty() {
-    if [[ $# > 0 && ( $@ == -c || $@ == --color ) ]]; then
-        echo -n -e "\[${COLOR_MAGENTA}\]\$(tty)\[${COLOR_NC}\]"
-    else
-        echo -n -e "\$(tty)"
-    fi
+    $CLICOLOR && echo -n "\[${PROMPT_TTY_COLOR}\]"
+                 echo -n '$(tty)'
+    $CLICOLOR && echo -n "\[${COLOR_NC}\]"
 }

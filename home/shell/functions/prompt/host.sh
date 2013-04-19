@@ -4,9 +4,7 @@
 #\
 
 function shell_prompt__host() {
-    if [ $# -gt 0 ] && ([ "$@" == "-c" ] || [ "$@" == "--color" ]); then
-        echo -n -e "\[${COLOR_CYAN}\]\H\[${COLOR_NC}\]"
-    else
-        echo -n -e "\H"
-    fi
+    $CLICOLOR && echo -n "\[${PROMPT_HOST_COLOR}\]"
+                 echo -n '\H'
+    $CLICOLOR && echo -n "\[${COLOR_NC}\]"
 }

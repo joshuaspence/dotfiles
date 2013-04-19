@@ -20,8 +20,8 @@ function colorize() {
     local capname='setaf'
 
     case "$1" in
-        b-*  | bold-*      )        tput bold       ;;
-        u-*  | underline-* )   set smul         ; unset rmul ;;
+        b-*  | bold-*      ) tput bold       ;;
+        u-*  | underline-* ) set smul         ; unset rmul ;;
         bg-* | background-*) capname='setab' ;;
     esac
     case "$1" in
@@ -36,7 +36,7 @@ function colorize() {
 
         # Defaults
         default | *-default) tput $capname 9 ;;
-        none)                tput sgr0       ;;
+        none               ) tput sgr0       ;;
 
         *)                   tput sgr0        ; return 1 ;;
     esac

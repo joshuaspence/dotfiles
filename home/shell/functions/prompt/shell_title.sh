@@ -4,8 +4,11 @@
 #\
 
 function shell_title() {
+    local xtitle_start='\[\e]0;'
+    local xtitle_finish='\007\]'
+
     case $TERM in
         xterm* | rxvt*)
-            echo -e "\[\e]0;\u@\H:\w [\$(tty):\$SHLVL]\007\]";;
+            echo -n "${xtitle_start}\\u@\\H:\\w [\$(tty) : \${SHLVL}]${xtitle_finish}";;
     esac
 }

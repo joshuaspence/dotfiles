@@ -8,9 +8,9 @@
 ## @param [String] The keys to access the JSON data. Keys are separated by spaces.
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
-function json_value() {
+function json_extract() {
     if [[ $# < 1 || -z $1 ]]; then
-        echo "Usage: json_value <key1> <key2> ... <keyN>" >&2
+        echo "Usage: json_extract <key1> <key2> ... <keyN>" >&2
         return 1
     fi
 

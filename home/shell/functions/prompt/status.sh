@@ -4,12 +4,12 @@
 #\
 
 function shell_prompt__status() {
-    local cross='\0342\0234\0227'
-    local tick='\0342\0234\0223'
+    local cross=$(echo -ne '\0342\0234\0227')
+    local tick=$(echo -ne '\0342\0234\0223')
 
-    if [ $# -gt 0 ] && ([ "$@" == "-c" ] || [ "$@" == "--color" ]); then
-        echo -n -e "\$([[ \$? != 0 ]] && echo '\[${COLOR_RED}\]${cross}\[${COLOR_NC}\]' || echo '\[${COLOR_GREEN}\]${tick}\[${COLOR_NC}\]')"
+    if $CLICOLOR; then
+        echo -n "\[\$([[ \$? != 0 ]] && echo -n '${BOLDCOLOR_RED}\]${cross}' || echo -n '${BOLDCOLOR_GREEN}\]${tick}')\[${COLOR_NC}\]"
     else
-        echo -n -e "\$([[ \$? != 0 ]] && echo '${cross}' || echo '${tick}')"
+        echo -n   "\$([[ \$? != 0 ]] && echo -n '${cross}'                   || echo -n '${tick}')"
     fi
 }
