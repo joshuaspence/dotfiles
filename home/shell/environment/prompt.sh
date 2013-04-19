@@ -4,6 +4,7 @@
 #\
 
 ## Unset environment variables. #{{{
+    unset PROMPT_COMMAND
     unset PS1
     unset PS2
     unset PS3
@@ -16,6 +17,7 @@
 ## #}}}
 
 ## Set and export environment variables. #{{{
+    export PROMPT_COMMAND=$(shell_prompt__set_status)
     export PS1="$(shell_title)$(shell_prompt)"
     export PS2='... > '
     export PS3='#? '
