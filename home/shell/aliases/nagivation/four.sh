@@ -4,7 +4,7 @@
 #\
 
 ## Unset alias.
-unalias .... >/dev/null || true
+unalias .... 2>/dev/null || true
 
 ## Make sure `cd` is installed.
 command -v cd >/dev/null || return

@@ -4,7 +4,7 @@
 #\
 
 ## Source prerequisite colors.
-source "${HOME}/.shell/colors.sh"
+[[ -n $COLOR_NC ]] && source "${HOME}/.shell/vars/colors.sh"
 
 ## Shell prompt colors. #{{{
     PROMPT_HOST_COLOR="${COLOR_CYAN}"

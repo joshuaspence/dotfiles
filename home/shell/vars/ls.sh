@@ -5,7 +5,7 @@
 
 ## Unset environment variables and aliases. #{{{
     unset LS_OPTS
-    unalias ls
+    unalias ls 2>/dev/null || true
 ## #}}}
 
 ## Make sure `ls` is installed.
