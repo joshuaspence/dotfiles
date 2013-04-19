@@ -10,14 +10,14 @@
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function remove-path() {
-    local path_var="$1"; shift
+    local path_var="$1" && shift
     local new_path
 
     # Remove paths from path_var, working in new_path.
     local p
     for p in $@; do
         new_path=$(
-            eval "echo \"\$$path_var\"" |
+            eval "echo \"\${${path_var}}\"" |
             tr ':' '\n' |
             grep -v "^${p}$" |
             tr '\n' ':' |
@@ -26,5 +26,5 @@ function remove-path() {
     done
 
     # Reassign path_var from new_path.
-    eval $path_var="$new_path"
+    eval $path_var="${new_path}"
 }

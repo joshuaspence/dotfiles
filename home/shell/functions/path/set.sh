@@ -3,7 +3,9 @@
 ## @file   ~/.shell/functions/path/set.sh
 #\
 
-command -v remove-path >/dev/null || source "$HOME/.shell/functions/path/remove"
+## Source prerequisite shell functions. #{{{
+    command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove"
+## #}}}
 
 ## Sets a colon-separated search path variable, overwriting any previous values.
 ##
@@ -12,16 +14,15 @@ command -v remove-path >/dev/null || source "$HOME/.shell/functions/path/remove"
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function set-path() {
-    local path_var="$1"
-    shift
+    local path_var="$1" && shift
 
     # Set var and overwrite any previous values.
-    [ -d "$1" ] && eval $path_var="$1"
+    [[ -d $1 ]] && eval "${path_var}=\"$1\""
     shift
 
     local p
     for p in $@; do
-        remove-path "$path_var" "$p"
-        [ -d "$p" ] && eval $path_var="\$${path_var}:${p}"
+        remove-path "${path_var}" "${p}"
+        [[ -d $p ]] && eval "${path_var}=\"\${${path_var}}:${p}\""
     done
 }

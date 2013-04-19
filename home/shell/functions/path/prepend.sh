@@ -3,7 +3,9 @@
 ## @file   ~/.shell/functions/path/prepend.sh
 #\
 
-command -v remove-path >/dev/null || source "$HOME/.shell/functions/path/remove"
+## Source prerequisite shell functions. #{{{
+    command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove"
+## #}}}
 
 ## Prepends paths to the front of a search path variable list.
 ##
@@ -12,18 +14,17 @@ command -v remove-path >/dev/null || source "$HOME/.shell/functions/path/remove"
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function prepend-path() {
-    local path_var="$1"
-    shift
+    local path_var="$1" && shift
 
     # Create var if not exists.
-    if eval "test -z \"\$$path_var\"" ; then
-        [ -d "$1" ] && eval $path_var="$1"
+    if eval "test -z \"\${${path_var}}\""; then
+        [[ -d $1 ]] && eval "${path_var}=\"$1\""
         shift
     fi
 
     local p
-    for p in $@ ; do
-        remove-path "$path_var" "$p"
-        [ -d "$p" ] && eval $path_var="${p}:\$${path_var}"
+    for p in $@; do
+        remove-path "${path_var}" "${p}"
+        [[ -d $p ]] && eval "${path_var}=\"${p}:\${${path_var}}\""
     done
 }
