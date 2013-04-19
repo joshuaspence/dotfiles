@@ -1,5 +1,9 @@
+/**
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-2/Packages/User/SublimeLinter.sublime-settings
+ */
 {
-    /*
+    /**
      * Sets the mode in which SublimeLinter runs:
      *
      * true (default) - Linting occurs in the background as you type.
@@ -9,12 +13,12 @@
      */
     "sublimelinter": true,
 
-    /*
+    /**
      * An array of linter names to disable. Names should be lowercase.
      */
     "sublimelinter_disable": [],
 
-    /*
+    /**
      * Selects the way the lines with errors or warnings are marked:
      *
      * "outline" (default) - Draws outline boxes around the lines.
@@ -23,7 +27,7 @@
      */
     "sublimelinter_mark_style": "none",
 
-    /*
+    /**
      * If true, lines with errors or warnings will have a gutter mark.
      */
     "sublimelinter_gutter_marks": true

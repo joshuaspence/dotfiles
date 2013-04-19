@@ -1,11 +1,15 @@
+/**
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-2/Packages/User/DataConverter.sublime-settings
+ */
 {
-    /*
+    /**
      * When true, the first row is treated as the header row. Set to false to
      * always sniff for headers (sniffing isn't perfect!).
      */
     "assume_headers": false,
 
-    /*
+    /**
      * If false, defaults to the OS line separator.
      */
     "line_sep": false

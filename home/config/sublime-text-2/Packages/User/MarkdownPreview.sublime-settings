@@ -1,5 +1,9 @@
+/**
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-2/Packages/User/MarkdownPreview.sublime-settings
+ */
 {
-    /*
+    /**
      * Sets the default parser for converting markdown to HTML.
      *
      * Warning for GitHub API: If you have a ST2 Linux build, Python is not
@@ -11,7 +15,7 @@
      */
     "parser": "github"
 
-    /*
+    /**
      * Uses an OAuth token to when parsing markdown with GitHub API. To create
      * one for Markdown Preview, see {@link http://help.github.com/articles/creating-an-oauth-token-for-command-line-use}.
      */

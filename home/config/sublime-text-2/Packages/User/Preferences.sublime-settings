@@ -1,138 +1,142 @@
+/**
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-2/Packages/User/Preferences.sublime-settings
+ */
 {
-    /*
+    /**
      * Sets the colors used within the text area.
      */
     "color_scheme": "Packages/Color Scheme - Default/Blackboard.tmTheme",
 
-    /*
+    /**
      * Set to false to prevent line numbers being drawn in the gutter.
      */
     "line_numbers": true,
 
-    /*
+    /**
      * Columns in which to display vertical rulers.
      */
     "rulers": [ 80 ],
 
-    /*
+    /**
      * Set to true to turn spell checking on by default.
      */
     "spell_check": true,
 
-    /*
+    /**
      * The number of spaces a tab is considered equal to.
      */
     "tab_size": 4,
 
-    /*
+    /**
      * Set to true to insert spaces when tab is pressed.
      */
     "translate_tabs_to_spaces": true,
 
-    /*
+    /**
      * If "translate_tabs_to_spaces" is true then this setting will make tab and
      * backspace insert/delete up to the next tabstop.
      */
     "use_tab_stops": true,
 
-    /*
+    /**
      * Set to false to disable detection of tabs versus spaces on load.
      */
     "detect_indentation": true,
 
-    /*
+    /**
      * Calculates indentation automatically when pressing enter.
      */
     "auto_indent": true,
 
-    /*
+    /**
      * Makes auto indent a little smarter, Requires "auto_indent" to be enabled.
      */
     "smart_indent": true,
 
-    /*
+    /**
      * Adds whitespace up to the first open bracket when indenting. Requires
      * "auto_indent" to be enabled.
      */
     "indent_to_bracket": true,
 
-    /*
+    /**
      * Trims white space added by auto indent when moving the caret off the
      * line.
      */
     "trim_automatic_white_space": true,
 
-    /*
+    /**
      * Controls auto pairing of quotes, brackets etc.
      */
     "auto_match_enabled": true,
 
-    /*
+    /**
      * Word list to use for spell checking.
      */
     "dictionary": "Packages/Language - English/en_US.dic",
 
-    /*
+    /**
      * If enabled, will highlight any line with a caret.
      */
     "highlight_line": true,
 
-    /*
+    /**
      * Valid values are "smooth", "phase", "blink", "wide" and "solid".
      */
     "caret_style": "phase",
 
-    /*
+    /**
      * Set to false to disable underlining the brackets surrounding the caret.
      */
     "match_brackets": true,
 
-    /*
+    /**
      * Set to false if you'd rather only highlight the brackets when the caret
      * is next to one.
      */
     "match_brackets_content": true,
 
-    /*
+    /**
      * Enable visualization of the matching tag in HTML and XML.
      */
     "match_tags": true,
 
-    /*
+    /**
      * Highlights other occurrences of the currently selected text.
      */
     "match_selection": true,
 
-    /*
+    /**
      * Set to false to disable scrolling past the end of the buffer.
      */
     "scroll_past_end": false,
 
-    /*
+    /**
      * Set to "none" to turn off drawing white space, "selection" to draw only
      * the white space within the selection, and "all" to draw all white space.
      */
     "draw_white_space": "selection",
 
-    /*
+    /**
      * Set to true to remove trailing white space on save.
      */
     "trim_trailing_white_space_on_save": false,
 
-    /*
+    /**
      * Set to true to ensure the last line of the file ends in a newline
      * character when saving.
      */
     "ensure_newline_at_eof_on_save": true,
 
-    /*
+    /**
      * Determines what character(s) are used to terminate each line in new
      * files. Valid values are "system" (whatever the OS uses), "windows" (CRLF)
      * and "unix" (LF only).
      */
     "default_line_ending": "unix",
 
-    /*
+    /**
      * By default, shift+tab will only unindent if the selection spans
      * multiple lines. When pressing shift+tab at other times, it'll insert a
      * tab character - this allows tabs to be inserted when tab_completion is
@@ -141,7 +145,7 @@
      */
     "shift_tab_unindent": true,
 
-    /*
+    /**
      * If true, the selected text will be copied into the find panel when it's
      * shown.
      */
@@ -151,18 +155,18 @@
      * User Interface Settings
      **************************************************************************/
 
-    /*
+    /**
      * The theme controls the look of Sublime Text's UI (buttons, tabs, scroll
      * bars, etc).
      */
     "theme": "Default.sublime-theme",
 
-    /*
+    /**
      * Makes tabs with modified files more visible.
      */
     "highlight_modified_tabs": true,
     
-    /*
+    /**
      * Show folders in the side bar in bold.
      */
     "bold_folder_labels": true,
@@ -171,23 +175,23 @@
      * Application Behavior Settings
      **************************************************************************/
 
-    /*
+    /**
      * Makes the application start up with the last set of open files.
      */
     "remember_open_files": true,
 
-    /*
+    /**
      * Set to true to close windows as soon as the last file is closed, unless
      * there's a folder open within the window.
      */
     "close_windows_when_empty": false,
 
-    /*
+    /**
      * Show the full path to files in the title bar.
      */
     "show_full_path": true,
 
-    /*
+    /**
      * Preview file contents when clicking on a file in the side bar.
      */
     "preview_on_click": true,
@@ -207,23 +211,23 @@
      * Package: Package Control
      **************************************************************************/
     
-    /*
+    /**
      * If packages should be automatically upgraded when ST2 starts.
      */
     "auto_upgrade": true,
 
-    /*
+    /**
      * If missing packages should be automatically installed when ST2 starts.
      */
     "install_missing": true,
 
-    /*
+    /**
      * The minimum frequency in hours in which to check for automatic upgrades.
      * Setting this to 0 will always check for automatic upgrades.
      */
     "auto_upgrade_frequency": 0,
 
-    /*
+    /**
      * Packages to not automatically upgrade.
      */
     "auto_upgrade_ignore": [],

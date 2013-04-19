@@ -1,3 +1,7 @@
+/**
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-2/Packages/User/Package Control.sublime-settings
+ */
 {
 	"auto_upgrade_last_run": null,
 	"installed_packages":
