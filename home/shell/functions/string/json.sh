@@ -1,12 +1,11 @@
-# Check for the prerequisite functions.
-(
-     command -v pygmentize >/dev/null &&
-     command -v python >/dev/null 
-) || return 1
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/string/json.sh
+#\
 
-# Syntax-highlight JSON strings or files
-json() {
-    if [ -p /dev/stdin ]; then
+## Syntax-highlight JSON strings or files
+function json() {
+    if [[ -p /dev/stdin ]; then
         # piping, e.g. `echo '{"foo":42}' | json`
         python -mjson.tool | pygmentize -l javascript
     else

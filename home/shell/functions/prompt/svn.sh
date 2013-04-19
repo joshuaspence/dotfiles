@@ -1,7 +1,13 @@
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/prompt/svn.sh
+#\
+
+
 ##
 # TODO
 #
-svn_state() {
+function svn_state() {
     prompt_getcolors
     local info="$(svn info . 2> /dev/null)"
     local last current

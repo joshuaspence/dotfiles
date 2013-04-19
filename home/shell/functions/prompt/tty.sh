@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/shell_prompt__tty.sh
+## @file   ~/.shell/functions/prompt/tty.sh
 #\
 
 function shell_prompt__tty() {

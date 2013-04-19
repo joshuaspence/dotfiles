@@ -10,7 +10,7 @@
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 ## @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
 function colorize() {
-    if [[ $# < 1 ]]; then
+    if [[ $# < 1 || -z $1 ]]; then
         echo "Usage: colorize <color_spec>" >&2
         return 1
     fi
@@ -20,8 +20,8 @@ function colorize() {
     local capname='setaf'
 
     case "$1" in
-        b-* | bold-*)        tput bold       ;;
-        u-* | underline-*)   set smul         ; unset rmul ;;
+        b-*  | bold-*      )        tput bold       ;;
+        u-*  | underline-* )   set smul         ; unset rmul ;;
         bg-* | background-*) capname='setab' ;;
     esac
     case "$1" in

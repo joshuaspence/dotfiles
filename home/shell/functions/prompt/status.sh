@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/shell_prompt__status.sh
+## @file   ~/.shell/functions/prompt/status.sh
 #\
 
 function shell_prompt__status() {

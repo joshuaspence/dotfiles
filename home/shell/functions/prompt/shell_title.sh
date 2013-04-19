@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/shell_title.sh
+## @file   ~/.shell/functions/prompt/title.sh
 #\
 
 function shell_title() {

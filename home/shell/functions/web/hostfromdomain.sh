@@ -11,7 +11,7 @@
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function hostfromdomain() {
-    if [ $# -ne 1 ] || [ -z "$1" ]; then
+    if [[ $# < 1 || -z $1 ]]; then
         echo "Usage: hostfromdomain <domainname>" >&2
         return 1
     fi

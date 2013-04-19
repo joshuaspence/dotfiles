@@ -1,10 +1,13 @@
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/prompt/hg.sh
+#\
+
+## Prints out contextual hg state for the command prompt.
 ##
-# Prints out contextual hg state for the command prompt.
-#
-# @link http://github.com/darkhelmet/dotfiles
-# @link http://github.com/fnichol/bashrc/blob/master/bashrc
-#
-hg_state() {
+## @link http://github.com/darkhelmet/dotfiles
+## @link http://github.com/fnichol/bashrc/blob/master/bashrc
+function hg_state() {
     if ! hg --repository $(pwd) root >/dev/null 2>&1; then
         return 1
     fi

@@ -1,20 +1,13 @@
-# Check for the prerequisite functions.
-(
-    command -v awk >/dev/null &&
-    command -v date >/dev/null &&
-    command -v egrep >/dev/null &&
-    command -v git >/dev/null &&
-    command -v printf >/dev/null &&
-    command -v sed >/dev/null
-) || return 1
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/prompt/git.sh
+#\
 
+## Prints out contextual git state for the command prompt.
 ##
-# Prints out contextual git state for the command prompt.
-#
-# @link http://github.com/darkhelmet/dotfiles
-# @link http://github.com/fnichol/bashrc/blob/master/bashrc
-#
-git_state() {
+## @link http://github.com/darkhelmet/dotfiles
+## @link http://github.com/fnichol/bashrc/blob/master/bashrc
+function git_state() {
     if ! git rev-parse >/dev/null 2>&1; then
         return 1
     fi

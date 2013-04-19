@@ -1,15 +1,11 @@
-# Check for the prerequisite functions.
-(
-    command -v awk >/dev/null &&
-    command -v echo >/dev/null &&
-    command -v head >/dev/null
-) || return 1
+#/
+## @author Joshua Spence
+## @file   ~/.shell/functions/os/linux-flavor.sh
+#\
 
+## The flavor of Linux that we are using.
 ##
-# The flavor of Linux that we are using.
-#
-# @link @todo I am not sure where I got this from...
-#
+## @link @todo I am not sure where I got this from...
 function linux-flavor() {
     if [[ -f /etc/redhat-release ]]; then
         awk '{print $1}' /etc/redhat-release

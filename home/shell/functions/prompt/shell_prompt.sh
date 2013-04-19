@@ -3,7 +3,7 @@
 ## @file   ~/.shell/functions/prompt/shell_prompt.sh
 #\
 
-shell_prompt() {
+function shell_prompt() {
     # Some useful unicode sequences.    
     local joiner_bottomleft='\0342\0224\0224'   # └
     local joiner_topleft='\0342\0224\0214'      # ┌

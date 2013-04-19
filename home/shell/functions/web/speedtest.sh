@@ -5,7 +5,8 @@
 
 ## Speedtest.
 ##
-## @link https://github.com/jacobwg/dotfiles/blob/master/zsh/aliases.zsh
+## @link http://github.com/jacobwg/dotfiles/blob/master/zsh/aliases.zsh
 function speedtest() {
-    wget --config=/dev/null --output-document=/dev/null 'http://speedtest.wdc01.softlayer.com/downloads/test500.zip'
+    wget --config=/dev/null --output-document=/dev/null \
+        'http://speedtest.wdc01.softlayer.com/downloads/test500.zip'
 }
