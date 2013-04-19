@@ -3,7 +3,6 @@
 ## @file   ~/.screenrc
 #\
 
-
 ## Screen Settings #{{{
     ## Clear the text when exiting visual programs.
     altscreen on

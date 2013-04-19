@@ -5,7 +5,6 @@
 ## @file   ~/.inputrc
 #\
 
-
 ## Do not bell on tab-completion.
 set bell-style none
 
@@ -31,7 +30,7 @@ set convert-meta off
 set input-meta on
 set output-meta on
 
-## Don't echo `^C` etc. Note this only works for the command line itself, not if
+## Don't echo "^C" etc. Note this only works for the command line itself, not if
 ## already running a command.
 set echo-control-characters off
 

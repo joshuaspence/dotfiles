@@ -5,7 +5,6 @@
 ## @file   ~/.dotfilesrc
 #\
 
-
 [dotfiles]
 repository = ~/dotfiles/home
 packages = ['config']

@@ -5,22 +5,21 @@
 ## @file   ~/.ackrc
 #\
 
-
 ## Operate on all files, regardless of type.
 #--all
 
 ## Always color, even if piping to a another program.
 --color
 
-## Specifies the color of the filename when it's printed in `--group` mode. By
+## Specifies the color of the filename when it's printed in "--group" mode. By
 ## default, it's "bold green".
 --color-filename=bold green
 
-## Specifies the color of the line number when printed in `--color` mode. By
+## Specifies the color of the line number when printed in "--color" mode. By
 ## default, it's "bold yellow".
 --color-lineno=bold yellow
 
-## Specifies the color of the matching text when printed in `--color` mode. By
+## Specifies the color of the matching text when printed in "--color" mode. By
 ## default, it's "black on_yellow".
 --color-match=black on_yellow
 
@@ -68,5 +67,5 @@
 --ignore-dir=tmp
 --ignore-dir=vendor
 
-## Disable file types.
+## Disable certain file types.
 --nolog

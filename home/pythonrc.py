@@ -85,7 +85,8 @@ def _pythonrc_set_prompt():
 
     if os.getenv('TERM') in ('xterm', 'vt100', 'rxvt', 'Eterm', 'putty'):
         if 'readline' in sys.modules:
-            # ^A and ^B delimit invisible characters for readline to count right.
+            # ^A and ^B delimit invisible characters for readline to count
+            # right.
             sys.ps1 = '\001\033[0;32m\002>>> \001\033[0m\002'
             sys.ps2 = '\001\033[0;32m\002... \001\033[0m\002'
         else:
@@ -123,7 +124,8 @@ def _pythonrc_enable_pprint():
         def excepthook(exctype, value, traceback):
             '''Prints exceptions to sys.stderr and colorizes them.'''
 
-            # traceback.format_exception() isn't used because it's inconsistent with the built-in formatter.
+            # traceback.format_exception() isn't used because it's inconsistent
+            # with the built-in formatter.
             old_stderr = sys.stderr
             sys.stderr = StringIO()
             try:

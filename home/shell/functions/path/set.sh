@@ -4,7 +4,7 @@
 #\
 
 ## Source prerequisite shell functions. #{{{
-    command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove"
+    command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove.sh"
 ## #}}}
 
 ## Sets a colon-separated search path variable, overwriting any previous values.

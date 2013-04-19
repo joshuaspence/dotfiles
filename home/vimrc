@@ -5,7 +5,6 @@
 "" @file   ~/.vimrc
 "\
 
-
 "" General "{{{
   "" Disable vi compatibility.
   set nocompatible

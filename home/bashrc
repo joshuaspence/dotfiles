@@ -3,21 +3,20 @@
 ## @file ~/.bashrc
 #\
 
+## We need the source_r function.
+command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
 
-## We need the sh_source_r function!
-command -v sh_source_r >/dev/null || source "$HOME/.shell/functions/source/sh_source_r"
-
-## Setup the environment,.
-sh_source_r "$HOME/.shell/environment"
+## Setup the environment.
+source_r "${HOME}/.shell/environment"
 
 ## Import command aliases.
-sh_source_r "$HOME/.shell/aliases"
+source_r "${HOME}/.shell/aliases"
 
 ## Import user-defined functions.
-sh_source_r "$HOME/.shell/functions"
+source_r "${HOME}/.shell/functions"
 
 ## Set up completion.
-sh_source_r "$HOME/.shell/completion"
+source_r "${HOME}/.shell/completion"
 
 ## Set up shell options.
-sh_source_r "$HOME/.shell/shopt"
+source_r "${HOME}/.shell/bash"

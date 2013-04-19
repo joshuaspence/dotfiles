@@ -13,7 +13,6 @@
 ## @link   http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
 #\
 
-
 [include]
     path = ~/.gituser
 
@@ -104,7 +103,7 @@
     ## List remotes.
     remotes = remote -v
 
-    ## Serve repo on the spot.
+    ## Serve repository on the spot.
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     serve = daemon --reuseaddr --verbose  --base-path=. --export-all ./.git
