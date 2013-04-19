@@ -3,10 +3,8 @@
 ## @file   ~/.shell/environment/ls.sh
 #\
 
-## Unset environment variables. #{{{
-    unset LS_COLORS
-    unset LS_OPTS
-## #}}}
+## Unset environment variable.
+unset LS_COLORS
 
 ## Make sure `ls` is installed.
 command -v ls >/dev/null || return
@@ -16,9 +14,7 @@ if $CLICOLOR; then
     if command -v dircolors >/dev/null; then
         eval "$(dircolors -b)"
     fi
-
-    ## Alias the `ls` command to automatically use color. #{{{
-        LS_OPTS='--color=auto'
-        alias ls='ls ${LS_OPTS}'
-    ## #}}}
 fi
+
+## Export environment variable.
+export LS_COLORS

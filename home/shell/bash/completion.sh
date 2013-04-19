@@ -1,6 +1,9 @@
-##
-# Enable programmable completion features.
-##
+#/
+## @author Joshua Spence
+## @file   ~/.shell/bash/completion.sh
+#\
+
+## Enable programmable completion features.
 if ! shopt -oq posix; then
     if [[ -r /usr/share/bash-completion/bash_completion ]]; then
         source /usr/share/bash-completion/bash_completion

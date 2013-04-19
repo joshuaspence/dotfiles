@@ -1,10 +1,13 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/shell.sh
+## @file   ~/.shell/vars/shell.sh
 #\
 
 # Unset variables. #{{{
-    unset INTERACTIVE
+    unset SHELL
+    unset INTERACTIVE_SHELL
+    unset LOGIN_SHELL
+    unset REMOTE_SHELL
 ## #}}}
 
 ## Basic shell variables. These should already be setup. #{{{
@@ -19,14 +22,13 @@ SHELL="$0"
 ## Detect color support.
 if [[ -n $COLORTERM || $(tput colors) > 2 ]]; then
     CLICOLOR='true'
-    source "$HOME/.shell/colors.sh"
 else
     CLICOLOR='false'
 fi
 
 ## Detect interactive shell.
 if [[ $- == *i* ]]; then
-    NTERACTIVE_SHELL='true'
+    INTERACTIVE_SHELL='true'
 else
     INTERACTIVE_SHELL='false'
 fi

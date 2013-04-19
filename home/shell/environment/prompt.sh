@@ -10,15 +10,12 @@
     unset PS3
 ## #}}}
 
-## Source prerequisite fuctions.
-if ! ( command -v shell_prompt >/dev/null && command -v shell_title >/dev/null ); then
-    command -v sh_source_r >/dev/null || source "$HOME/.shell/functions/source/sh_source_r"
+## Source prerequisite functions. #{{{
+    command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
+    command -v shell_prompt >/dev/null source_r "${HOME}/.shell/functions/prompt"
+## #}}}
 
-    command -v shell_prompt >/dev/null || sh_source_r "$HOME/.shell/functions/prompt"
-    command -v shell_title >/dev/null || sh_source_r "$HOME/.shell/functions/title"
-fi
-
-## Set and unset environment variables. #{{{
+## Set and export environment variables. #{{{
     export PS1="$(shell_title)$(shell_prompt)"
     export PS2='... > '
     export PS3='#? '

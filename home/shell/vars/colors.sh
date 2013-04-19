@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/colors.sh
+## @file   ~/.shell/vars/colors.sh
 #\
 
 ## Normal colors. #{{{

@@ -18,7 +18,7 @@
 command -v man >/dev/null || return
 
 ## Source prerequisite environment variables. #{{{
-    [[ -n $PAGER ]] || source "$HOME/.shell/environment/pager"
+    [[ -n $PAGER ]] || source "${HOME}/.shell/environment/pager"
 ## #}}}
 
 ## The pager to use with the `man` command.

@@ -3,6 +3,9 @@
 ## @file   ~/.shell/aliases/navigation/four.sh
 #\
 
+## Unset alias.
+unalias ....
+
 ## Make sure `cd` is installed.
 command -v cd >/dev/null || return
 
