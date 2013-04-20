@@ -1,12 +1,9 @@
 #/
-## My configuration file for {@link http://betterthangrep.com/ ack-grep}.
+## My configuration file for {@link http://beyondgrep.com/ ack-grep}.
 ##
 ## @author Joshua Spence
 ## @file   ~/.ackrc
 #\
-
-## Operate on all files, regardless of type.
-#--all
 
 ## Always color, even if piping to a another program.
 --color
@@ -24,7 +21,7 @@
 --color-match=black on_yellow
 
 ## Print NUM lines (default 2) of context around matching lines.
---context=2
+#--context=2
 
 ## Don't follow symlinks.
 --nofollow
@@ -48,8 +45,8 @@
 --type-add=html=.html.erb,.html.haml
 --type-add=js=.coffee,.js.erb
 --type-add=php=.php.inc
---type-add=ruby=.builder,.haml,.rake,.rspec,.ruby-version
---type-add=ruby=Gemfile,Rakefile
+--type-add=ruby=.builder,.haml,.rake,.rspec
+--type-add=ruby=Gemfile
 
 ## Add types that `ack-grep` doesn't know about.
 --type-set=coffee=.coffee
@@ -61,11 +58,9 @@
 --type-set=puppet=.pp
 
 ## Ignore these directories.
+--ignore-dir=cache
 --ignore-dir=doc
 --ignore-dir=log
 --ignore-dir=rdoc
 --ignore-dir=tmp
 --ignore-dir=vendor
-
-## Disable certain file types.
---nolog
