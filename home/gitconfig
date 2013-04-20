@@ -397,6 +397,9 @@
 [url "git@heroku.com:"]
     insteadOf = "heroku:"
 
+[url "git@gitorious.org:"]
+    pushInsteadOf = git://gitorious.org/
+
 [web]
     ## Specify the browser that will be used to display help in the web format.
     browser = google-chrome

@@ -1,0 +1,51 @@
+## @link https://github.com/mikemcquaid/dotfiles
+
+# load shared shell configuration
+source ~/.shrc
+
+# Enable completions
+autoload -U compinit && compinit
+
+if quiet_which brew
+then
+    [ ! -f $BREW_PREFIX/share/zsh/site-functions/_brew ] && \
+        mkdir -p $BREW_PREFIX/share/zsh/site-functions &>/dev/null && \
+        ln -s $BREW_PREFIX/Library/Contributions/brew_zsh_completion.zsh \
+              $BREW_PREFIX/share/zsh/site-functions/_brew
+    export FPATH="$BREW_PREFIX/share/zsh/site-functions:$FPATH"
+fi
+
+# Enable regex moving
+autoload -U zmv
+
+# Style ZSH output
+zstyle ':completion:*:descriptions' format '%U%B%F{red}%d%f%b%u'
+zstyle ':completion:*:warnings' format '%BSorry, no matches for: %d%b'
+
+# Case insensitive completion
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
+# Case insensitive globbing
+setopt no_case_glob
+
+# Don't show duplicate history entires
+setopt hist_find_no_dups
+
+# Remove unnecessary blanks from history
+setopt hist_reduce_blanks
+
+# Share history between instances
+setopt share_history
+
+# Don't hang up background jobs
+setopt no_hup
+
+# Expand parameters, commands and aritmatic in prompts
+setopt prompt_subst
+
+# Colorful prompt with Git and Subversion branch
+autoload -U colors && colors
+
+
+## @link https://github.com/paulmillr/dotfiles/blob/master/home/zshrc.sh
+autoload -Uz promptinit && promptinit

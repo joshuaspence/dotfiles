@@ -177,6 +177,9 @@ Host *
     ## identities.
     #IdentitiesOnly no
 
+    ## @todo
+    #NoHostAuthenticationForLocalhost yes
+
     ## Specifies whether to use password authentication. The argument to this
     ## keyword must be "yes" or "no".
     PasswordAuthentication yes
@@ -197,6 +200,12 @@ Host *
     ## Specifies what variables from the local environment should be sent to the
     ## server.
     SendEnv LANG LC_*
+
+    ## @todo
+    #StrictHostKeyChecking ask
+
+    ## @todo
+    #VerifyHostKeyDNS ask
 
     ## If this flag is set to "yes", an ASCII art representation of the remote
     ## host key fingerprint is printed in addition to the hex fingerprint string

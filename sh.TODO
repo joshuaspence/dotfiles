@@ -1,0 +1,53 @@
+## @link https://github.com/mikemcquaid/dotfiles
+
+# 077 would be more secure, but 022 is more useful.
+umask 022
+
+# OS variables
+[ $(uname -s) = "Darwin" ] && export OSX=1 && export UNIX=1
+[ $(uname -s) = "Linux" ] && export LINUX=1 && export UNIX=1
+uname -s | grep -q "_NT-" && export WINDOWS=1
+
+# Fix systems missing $USER
+[ -z "$USER" ] && export USER=$(whoami)
+
+# Set to avoid `env` output from changing console colour
+export LESS_TERMEND=$'\E[0m'
+
+# Count CPUs for Make jobs
+if [ $OSX ]
+then
+    export CPUCOUNT=$(sysctl -n hw.ncpu)
+elif [ $LINUX ]
+then
+    export CPUCOUNT=$(getconf _NPROCESSORS_ONLN)
+else
+    export CPUCOUNT="1"
+fi
+
+if [ "$CPUCOUNT" -gt 1 ]
+then
+    export MAKEFLAGS="-j$CPUCOUNT"
+fi
+
+# Load GitHub token
+[ -s ~/.github_password ] && export GITHUB_PASSWORD=$(cat ~/.github_password)
+
+force_add_to_path() {
+    remove_from_path "$1"
+    export PATH="$PATH:$1"
+}
+
+
+## @link https://github.com/norm/home/blob/master/etc/bash/defaults/00.flags
+# The current Operating System type (eg. Linux, Darwin, NetBSD)
+export HOSTOS=`uname`
+
+# The current host's name, in short form (without domain name).
+export HOST=`hostname -s`
+
+# The current domain name.
+export DOMAIN=`hostname | sed -e "s/${HOST}.//"`
+
+## @link https://github.com/norm/home/blob/master/etc/bash/defaults/10.locations
+export LESSHISTFILE="${HOME}/var/less_history"          # ~/.lesshst

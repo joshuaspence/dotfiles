@@ -198,6 +198,21 @@
      */
     "preview_on_click": true,
 
+    /**
+     * Folder_exclude_patterns and file_exclude_patterns control which files
+     * are listed in folders on the side bar.
+     */
+    "folder_exclude_patterns":
+    [
+    	"cache",
+    	"CVS",
+    	"log",
+    	"tmp",
+    	".git",
+    	".hg",
+    	".svn"
+    ],
+
     /** *}}} */
 
     /**************************************************************************

@@ -30,5 +30,10 @@
     /**
      * If true, lines with errors or warnings will have a gutter mark.
      */
-    "sublimelinter_gutter_marks": true
+    "sublimelinter_gutter_marks": true,
+
+    /**
+     * Set to true to highlight annotations.
+     */
+    "sublimelinter_notes": false
 }
