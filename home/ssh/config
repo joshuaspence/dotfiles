@@ -3,12 +3,11 @@
 ## @file ~/.ssh/config
 #\
 
-
 ## Personal #{{{
     Host gunwatcher gunwatcher.joshuaspence.com
         Hostname gunwatcher.joshuaspence.com
         User ec2-user
-        IdentityFile ~/.ssh/keys/ec2
+        IdentityFile ~/.ssh/ec2
 
         ForwardAgent no
         IdentitiesOnly yes
@@ -18,7 +17,7 @@
     Host pear pear.joshuaspence.com
         Hostname pear.joshuaspence.com
         User ec2-user
-        IdentityFile ~/.ssh/keys/ec2
+        IdentityFile ~/.ssh/ec2
 
         ForwardAgent no
         IdentitiesOnly yes
@@ -30,7 +29,7 @@
     Host home home.ddns.joshuaspence.com
         Hostname home.ddns.joshuaspence.com
         User root
-        IdentityFile ~/.ssh/keys/home
+        IdentityFile ~/.ssh/home
 
         ForwardAgent yes
         IdentitiesOnly yes
@@ -42,7 +41,7 @@
     Host launchpad bazaar.launchpad.net
         Hostname bazaar.launchpad.net
         User joshuaspence
-        IdentityFile  ~/.ssh/keys/launchpad
+        IdentityFile  ~/.ssh/launchpad
 
         ForwardAgent yes
         IdentitiesOnly yes
@@ -54,7 +53,7 @@
     Host github git.github.com
         Hostname git.github.com
         User git
-        IdentityFile  ~/.ssh/keys/github
+        IdentityFile  ~/.ssh/github
 
         ForwardAgent no
         IdentitiesOnly yes
@@ -66,7 +65,7 @@
     Host analytics01 analytics01.freelancer.com
         HostName analytics01.freelancer.com
         User joshua
-        IdentityFile ~/.ssh/keys/freelancer
+        IdentityFile ~/.ssh/freelancer
 
         ForwardAgent yes
         IdentitiesOnly yes
@@ -76,7 +75,7 @@
     Host local-staging josh.syd.local 10.0.0.2
         HostName josh.syd.local
         User freelancer
-        IdentityFile ~/.ssh/keys/vagrant
+        IdentityFile ~/.ssh/vagrant
 
         ForwardAgent no
         IdentitiesOnly yes
@@ -86,7 +85,7 @@
     Host staging3 staging3.freelancer.com
         HostName staging3.freelancer.com
         User staging-josh
-        IdentityFile ~/.ssh/keys/freelancer
+        IdentityFile ~/.ssh/freelancer
 
         ForwardAgent yes
         IdentitiesOnly yes
@@ -96,7 +95,7 @@
     Host db-slave-stats-tunnel
         HostName analytics01.freelancer.com
         User joshua
-        IdentityFile ~/.ssh/keys/freelancer
+        IdentityFile ~/.ssh/freelancer
 
         ForwardAgent no
         IdentitiesOnly yes
@@ -110,7 +109,7 @@
     Host freelancer-git git.freelancer.com
         HostName git.freelancer.com
         User git
-        IdentityFile ~/.ssh/keys/git.freelancer.com
+        IdentityFile ~/.ssh/git.freelancer.com
 
         ForwardAgent no
         IdentitiesOnly yes

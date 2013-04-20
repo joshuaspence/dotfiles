@@ -15,7 +15,7 @@ fi
 ## We run the environment settings for all shells to ensure it's always set up.
 source_r "${HOME}/.shell/environment/"
 
-## Check if the shell is interactive.
+## Check if the shell is interactive. If yes, then source `~/.bashrc`.
 [[ -n $INTERACTIVE ]] || source "${HOME}/.shell/vars/shell.sh"
 if $INTERACTIVE; then
     source "${HOME}/.bashrc"

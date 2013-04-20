@@ -13,6 +13,6 @@ ignore = [
     '.gitignore',
     '.gitmodules',
     'Makefile',
-    '*.md']
-externals = {
-    '.ssh/keys': '~/.keys'}
+    'README.md',
+    'TODO.md']
+externals = {}

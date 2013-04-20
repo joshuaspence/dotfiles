@@ -128,8 +128,10 @@
         pull-request = !hub pull-request
     ## #}}}
 
-    ## Aliases for local `git` scripts from `~/.dotfiles/bin/git`. Required here
-    ## only for tab-completion.
+    ## Aliases for {@link http://github.com/joshuaspence/git-utils git-utils}.
+    ## Required here only for tab-completion.
+    ##
+    ## #todo Do I need this here?
     ##
     ## #{{{
         forest = !git-forest
@@ -142,12 +144,16 @@
     ## Aliases for {@link http://github.com/rtomayko/git-sh git-sh}. Required
     ## here only for tab-completion.
     ##
+    ## #todo Do I need this here?
+    ##
     ## #{{{
         sh = !git-sh
     ## #}}}
 
     ## Aliases for {@link http://github.com/visionmedia/git-extras git-extras}.
     ## Required here only for tab-completion.
+    ##
+    ## #todo Do I need this here?
     ##
     ## #{{{
         alias = !git-alias

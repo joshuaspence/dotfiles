@@ -1,12 +1,11 @@
 oh-my-zsh/
-#shell/
-ssh/
+shell/zsh
+ssh/config
 vim/
-#bash_profile
-#bashrc
-gitconfig
+#inputrc
 Makefile
 README.md
+#screenrc
 vimrc
 zlogin
 zlogout
