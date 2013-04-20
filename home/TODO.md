@@ -8,5 +8,8 @@ gitconfig
 Makefile
 README.md
 vimrc
-zsh*
+zlogin
+zlogout
+zprofile
+zshenv
 zshrc
