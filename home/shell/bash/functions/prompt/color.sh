@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/colors.sh
+## @file   ~/.shell/bash/functions/prompt/colors.sh
 #\
 
 ## Source prerequisite colors.

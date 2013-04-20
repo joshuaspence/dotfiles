@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/shell_prompt.sh
+## @file   ~/.shell/bash/functions/prompt/shell_prompt.sh
 #\
 
 function shell_prompt() {

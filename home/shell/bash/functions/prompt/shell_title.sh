@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/title.sh
+## @file   ~/.shell/bash/functions/prompt/title.sh
 #\
 
 function shell_title() {
@@ -9,6 +9,6 @@ function shell_title() {
 
     case $TERM in
         xterm* | rxvt*)
-            echo -n "${xtitle_start}\\u@\\H:\\w [\$(tty) : \${SHLVL}]${xtitle_finish}";;
+            echo -n "${xtitle_start}\u@\H:\w [\$(tty) : \${SHLVL}]${xtitle_finish}";;
     esac
 }

@@ -19,4 +19,4 @@ source_r "${HOME}/.shell/aliases/"
 source_r "${HOME}/.shell/functions/"
 
 ## Set up shell options.
-source_r "${HOME}/.shell/opts.bash/"
+source_r "${HOME}/.shell/bash/"

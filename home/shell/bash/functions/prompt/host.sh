@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/host.sh
+## @file   ~/.shell/bash/functions/prompt/host.sh
 #\
 
 function shell_prompt__host() {

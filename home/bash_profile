@@ -4,7 +4,9 @@
 #\
 
 ## Pull in any system defaults first so they can be overridden later.
-[[ -r /etc/profile ]] && source /etc/profile
+if [[ -r /etc/profile ]]; then
+    source /etc/profile
+fi
 
 ## Source prerequisite functions. #{{{
     command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
@@ -14,7 +16,7 @@
 source_r "${HOME}/.shell/environment/"
 
 ## Check if the shell is interactive.
-[[ -n $INTERACTIVE_SHELL ]] || source "${HOME}/.shell/vars/shell.sh"
-if $INTERACTIVE_SHELL; then
+[[ -n $INTERACTIVE ]] || source "${HOME}/.shell/vars/shell.sh"
+if $INTERACTIVE; then
     source "${HOME}/.bashrc"
 fi

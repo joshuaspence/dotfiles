@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/time.sh
+## @file   ~/.shell/bash/functions/prompt/time.sh
 #\
 
 function shell_prompt__time() {

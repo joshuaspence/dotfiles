@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/pwd.sh
+## @file   ~/.shell/bash/functions/prompt/pwd.sh
 #\
 
 function shell_prompt__pwd() {

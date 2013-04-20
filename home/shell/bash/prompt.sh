@@ -13,7 +13,7 @@
 
 ## Source prerequisite functions. #{{{
     command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
-    command -v shell_prompt >/dev/null || source_r "${HOME}/.shell/functions/prompt/"
+    command -v shell_prompt >/dev/null || source_r "${HOME}/.shell/bash/functions/prompt/"
 ## #}}}
 
 ## Set environment variables. #{{{
