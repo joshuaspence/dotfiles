@@ -3,5 +3,5 @@
 ## @file   ~/.shell/environment/locale.sh
 #\
 
-export LANG='en_AU.UTF-8'
-export LANGUAGE='en_AU:en'
+export LANG='en_US.UTF-8'
+export LANGUAGE='en_US:en'
