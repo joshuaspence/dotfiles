@@ -5,7 +5,7 @@
 
 ## Prints IP addresses.
 ##
-## @link @todo I am not sure where I got this from...
+## @link @todo I am not sure where I got this from.
 function ips() {
 	ifconfig |
 	grep 'inet ' |

@@ -13,7 +13,7 @@ if command -v less >/dev/null; then
 elif command -v more >/dev/null; then
     PAGER=$(command -v more)
 else
-    echo "No command set for PAGER environment variable" >&2
+    echo 'No command set for PAGER environment variable' >&2
 fi
 
 ## Export environment variable.

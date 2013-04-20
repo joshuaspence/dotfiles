@@ -10,7 +10,8 @@
 ## Prepends paths to the front of a search path variable list.
 ##
 ## @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
-## @param [List] Space-seperated list of system paths to push, in reverse order.
+## @param [List]   Space-seperated list of system paths to push, in reverse
+##                 order.
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function prepend-path() {

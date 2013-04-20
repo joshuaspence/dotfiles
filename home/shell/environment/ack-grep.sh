@@ -16,20 +16,29 @@ command -v ack-grep >/dev/null || return
     if [[ -r $HOME/.ackrc ]]; then
         ACKRC="${HOME}/.ackrc"
     else
-        echo "No path set for ACKRC environment variable" >&2
+        echo 'No path set for ACKRC environment variable' >&2
     fi
 ## #}}}
 
 ## Set the pagers for `ack-grep`. #{{{
     if command -v less >/dev/null; then
         ACK_PAGER=$(command -v less)
-        ACK_PAGER_COLOR="${ACK_PAGER} -R"
+        
+        if $CLICOLOR; then
+            ACK_PAGER_COLOR="${ACK_PAGER} -R"
+        fi
     elif command -v more >/dev/null; then
         ACK_PAGER=$(command -v more)
-        ACK_PAGER_COLOR="${ACK_PAGER}"
+
+        if $CLICOLOR; then
+            ACK_PAGER_COLOR="${ACK_PAGER}"
+        fi
     else
-        echo "No command set for ACK_PAGER environment variable" >&2
-        echo "No command set for ACK_PAGER_COLOR environment variable" >&2
+        echo 'No command set for ACK_PAGER environment variable' >&2
+
+        if $CLICOLOR; then
+            echo 'No command set for ACK_PAGER_COLOR environment variable' >&2
+        fi
     fi
 ## #}}}
 

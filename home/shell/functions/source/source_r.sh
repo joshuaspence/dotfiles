@@ -8,8 +8,11 @@
 ## @param [String] The path of the file or directory to source.
 function source_r() {
     if [[ $# < 1 || -z $1 ]]; then
-        echo "Usage: source_r <path>" >&2
+        echo 'Usage: source_r <path>' >&2
         return 1
+    elif [[ ! -d $1 ]]; then
+        echo "'$1' does not exist" >&2
+        return 2
     fi
 
     local file

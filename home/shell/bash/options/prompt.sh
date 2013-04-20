@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/environment/prompt.sh
+## @file   ~/.shell/bash/prompt.sh
 #\
 
 ## Unset environment variables. #{{{
@@ -16,10 +16,10 @@
     command -v shell_prompt >/dev/null || source_r "${HOME}/.shell/functions/prompt/"
 ## #}}}
 
-## Set and export environment variables. #{{{
-    export PROMPT_COMMAND=$(shell_prompt__set_status)
-    export PS1="$(shell_title)$(shell_prompt)"
-    export PS2='... > '
-    export PS3='#? '
-    export PS4='+'
+## Set environment variables. #{{{
+    PROMPT_COMMAND=$(shell_prompt__set_status)
+    PS1="$(shell_title)$(shell_prompt)"
+    PS2='... > '
+    PS3='#? '
+    PS4='+'
 ## #}}}

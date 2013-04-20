@@ -10,7 +10,7 @@
 ## Sets a colon-separated search path variable, overwriting any previous values.
 ##
 ## @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
-## @param [List] Space-separated list of system paths to append, in order.
+## @param [List]   Space-separated list of system paths to append, in order.
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function set-path() {

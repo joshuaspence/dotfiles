@@ -10,7 +10,7 @@
 ## Appends paths to the end of a search path variable list.
 ##
 ## @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
-## @param [List] Space-seperated list of system paths to append, in order.
+## @param [List]   Space-seperated list of system paths to append, in order.
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function append-path() {

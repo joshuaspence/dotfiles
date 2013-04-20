@@ -10,7 +10,7 @@
 ## @link http://github.com/stevehodgkiss/dotfiles/blob/master/aliases
 function sniff() {
     if [[ $# < 1 || -z $1 ]]; then
-        echo "Usage: sniff <interface>" >&2
+        echo 'Usage: sniff <interface>' >&2
         return 1
     fi
 

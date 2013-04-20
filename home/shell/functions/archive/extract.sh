@@ -10,7 +10,7 @@
 ## @link http://nparikh.org/notes/zshrc.txt
 function extract() {
     if [[ $# < 1 || -z $1 ]]; then
-        echo "Usage: extract <path>" >&2
+        echo 'Usage: extract <path>' >&2
         return 1
     elif [[ ! -f $1 ]]; then
         echo "'$1' is not a valid file" >&2

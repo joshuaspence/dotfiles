@@ -5,8 +5,8 @@
 
 ## Removes all instances of paths in a search path.
 ##
-## @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
-## @param [List] Space-separated list of system paths to remove.
+## @param [String] Path variable to manipulate (eg: "PATH", "PYTHONPATH", etc).
+## @param [List]   Space-separated list of system paths to remove.
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function remove-path() {

@@ -14,5 +14,5 @@ unset VISUAL
 if [[ -n $EDITOR ]]; then
     export VISUAL="${EDITOR}"
 else
-    echo "No command set for VISUAL environment variable" >&2
+    echo 'No command set for VISUAL environment variable' >&2
 fi

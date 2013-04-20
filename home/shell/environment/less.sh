@@ -18,7 +18,9 @@ command -v less >/dev/null || return
 ## #}}}
 
 ## Allow `less` to show color escape sequences.
-export LESS='-R'
+if $CLICOLOR; then
+    export LESS='-R'
+fi
 
 ## The `less` pager supports editing the file being viewed by pressing "v".
 if [[ -n $EDITOR ]]; then

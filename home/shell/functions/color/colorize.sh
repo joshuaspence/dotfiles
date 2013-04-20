@@ -5,13 +5,13 @@
 
 ## Prints terminal codes for shell colors.
 ##
-## @param [String] Terminal code keyword (usually a colour).
+## @param [String] Terminal code keyword (usually a color).
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 ## @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
 function colorize() {
     if [[ $# < 1 || -z $1 ]]; then
-        echo "Usage: colorize <color_spec>" >&2
+        echo 'Usage: colorize <color_spec>' >&2
         return 1
     fi
 

@@ -11,7 +11,7 @@
 ##
 ## @param [optional, String] The alert text.
 ##
-## @link @todo I am not sure where I got this from...
+## @link @todo I am not sure where I got this from.
 function alert() {
     notify-send --urgency=low \
         -i $([[ $? == 0 ]] && echo 'terminal' || echo 'error') \

@@ -5,7 +5,7 @@
 
 ## Cool "The Matrix" type screens.
 ##
-## @link @todo I am not sure where I got this from...
+## @link @todo I am not sure where I got this from.
 function matrix3() {
 	tr -c '[:digit:]' ' ' </dev/urandom |
 	dd cbs=$(tput cols) conv=lcase,unblock |

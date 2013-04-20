@@ -5,12 +5,13 @@
 
 # Unset variables. #{{{
     unset SHELL
-    unset INTERACTIVE_SHELL
-    unset LOGIN_SHELL
-    unset REMOTE_SHELL
+    unset CLICOLOR
+    unset INTERACTIVE
+    unset LOGIN
+    unset REMOTE
 ## #}}}
 
-## Basic shell variables. These should already be setup. #{{{
+## Basic shell variables. These should already be setup on most systems. #{{{
     : ${HOME=~}
     : ${LOGNAME=$(id -un)}
     : ${UNAME=$(uname)}
@@ -28,21 +29,21 @@ fi
 
 ## Detect interactive shell.
 if [[ $- == *i* ]]; then
-    INTERACTIVE_SHELL='true'
+    INTERACTIVE='true'
 else
-    INTERACTIVE_SHELL='false'
+    INTERACTIVE='false'
 fi
 
 ## Detect login shell.
 if shopt -q login_shell; then
-    LOGIN_SHELL='true'
+    LOGIN='true'
 else
-    LOGIN_SHELL='false'
+    LOGIN='false'
 fi
 
 ## Check is this is a remote (SSH) connection.
 if [[ -n $SSH_TTY || -n $SSH_CLIENT || -n $SSH_CONNECTION ]]; then
-    REMOTE_SHELL='true'
+    REMOTE='true'
 else
-    REMOTE_SHELL='false'
+    REMOTE='false'
 fi

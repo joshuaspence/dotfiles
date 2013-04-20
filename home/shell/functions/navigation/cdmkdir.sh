@@ -7,10 +7,10 @@
 ##
 ## @param [String] The path of the new directory.
 ##
-## @link @todo I am not sure where I got this from...
+## @link @todo I am not sure where I got this from.
 function cdmkdir() {
-    if [[ -z $1 ]]; then
-        echo "Usage: cdmkdir <path>" >&2
+    if [[ $# < 1 || -z $1 ]]; then
+        echo 'Usage: cdmkdir <path>' >&2
         return 1
     fi
 

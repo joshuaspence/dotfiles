@@ -22,19 +22,19 @@ command -v git >/dev/null || return
     elif command -v vi >/dev/null; then
         GIT_EDITOR=$(command -v vi)
     else
-        echo "No command set for GIT_EDITOR environment variable" >&2
+        echo 'No command set for GIT_EDITOR environment variable' >&2
     fi
 
     if [[ -n $PAGER ]]; then
         GIT_PAGER="${PAGER}"
     else
-        echo "No command set for GIT_PAGER environment variable" >&2
+        echo 'No command set for GIT_PAGER environment variable' >&2
     fi
 
     if command -v ssh >/dev/null; then
         GIT_SSH=$(command -v ssh)
     else
-        echo "No command set for GIT_SSH environment variable" >&2
+        echo 'No command set for GIT_SSH environment variable' >&2
     fi
 ## #}}}
 
