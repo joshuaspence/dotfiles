@@ -11,8 +11,8 @@
 
     /**
      * When set to true GitGutter runs asynchronously in a separate thread. This
-     * This may cause a small delay between a modification and the icon change
-     * but can increase performance greatly if needed.
+     * may cause a small delay between a modification and the icon change but
+     * can increase performance greatly if needed.
      */
     "non_blocking": true
 }

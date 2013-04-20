@@ -4,7 +4,7 @@
  */
 {
     /**************************************************************************
-     * Package: Alignment
+     * Package: Alignment *{{{
      **************************************************************************/
 
     /**
@@ -12,15 +12,17 @@
      */
     "align_indent": true,
 
+    /** *}}} */
+
     /**************************************************************************
-     * Package: SublimeCodeIntel
+     * Package: SublimeCodeIntel *{{{
      **************************************************************************/
 
     /**
      * Sets the mode in which SublimeCodeIntel runs:
      *
-     * true - Enabled (default).
-     * false - Disabled.
+     * true (default): Enabled (default).
+     * false:          Disabled.
      */
     "codeintel": true,
 
@@ -32,8 +34,8 @@
     /**
      * Sets the mode in which SublimeCodeIntel's live autocomplete runs:
      *
-     * true - Autocomplete popups as you type (default).
-     * false - Autocomplete popups only when you request it.
+     * true (default): Autocomplete popups as you type (default).
+     * false:          Autocomplete popups only when you request it.
      */
     "codeintel_live": true,
 
@@ -41,4 +43,6 @@
      * An array of language names to disable.
      */
     "codeintel_live_disabled_languages": []
+
+    /** *}}} */
 }

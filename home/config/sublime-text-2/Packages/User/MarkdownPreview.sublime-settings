@@ -9,15 +9,17 @@
      * Warning for GitHub API: If you have a ST2 Linux build, Python is not
      * built with SSL so it may not work.
      *
-     * "default" - Uses the built-in python-markdown2 parser.
-     * "github" - Uses the GitHub API to convert markdown, so you can use GitHub
-     *     flavored Markdown, see {@link http://github.github.com/github-flavored-markdown}.
+     * "default" (default): Uses the built-in python-markdown2 parser.
+     * "github":            Uses the GitHub API to convert markdown, so you can
+     *                      use GitHub flavored Markdown, see
+     *                      {@link http://github.github.com/github-flavored-markdown}.
      */
-    "parser": "github"
+    "parser": "default"
 
     /**
      * Uses an OAuth token to when parsing markdown with GitHub API. To create
-     * one for Markdown Preview, see {@link http://help.github.com/articles/creating-an-oauth-token-for-command-line-use}.
+     * one for Markdown Preview, see
+     * {@link http://help.github.com/articles/creating-an-oauth-token-for-command-line-use}.
      */
     //"github_oauth_token": "secret",
 }

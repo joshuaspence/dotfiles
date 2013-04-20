@@ -152,7 +152,7 @@
     "find_selected_text": true,
 
     /**************************************************************************
-     * User Interface Settings
+     * User Interface Settings *{{{
      **************************************************************************/
 
     /**
@@ -171,8 +171,10 @@
      */
     "bold_folder_labels": true,
 
+    /** *}}} */
+
     /**************************************************************************
-     * Application Behavior Settings
+     * Application Behavior Settings *{{{
      **************************************************************************/
 
     /**
@@ -196,45 +198,25 @@
      */
     "preview_on_click": true,
 
+    /** *}}} */
+
     /**************************************************************************
-     * Package: ClipboardHistory
+     * Package: ClipboardHistory *{{{
      **************************************************************************/
     "limit": 50,
     "paste_and_indent": true,
+    /** *}}} */
 
     /**************************************************************************
-     * Package: Githubinator
+     * Package: Githubinator *{{{
      **************************************************************************/
     "default_remote": "origin",
-    
-    /**************************************************************************
-     * Package: Package Control
-     **************************************************************************/
-    
-    /**
-     * If packages should be automatically upgraded when ST2 starts.
-     */
-    "auto_upgrade": true,
-
-    /**
-     * If missing packages should be automatically installed when ST2 starts.
-     */
-    "install_missing": true,
-
-    /**
-     * The minimum frequency in hours in which to check for automatic upgrades.
-     * Setting this to 0 will always check for automatic upgrades.
-     */
-    "auto_upgrade_frequency": 0,
-
-    /**
-     * Packages to not automatically upgrade.
-     */
-    "auto_upgrade_ignore": [],
+    /** *}}} */
 
     /**************************************************************************
-     * Package: WrapPlus
+     * Package: WrapPlus *{{{
      **************************************************************************/
     "WrapPlus.break_long_words": true,
     "WrapPlus.break_on_hyphens": true
+    /** *}}} */
 }
