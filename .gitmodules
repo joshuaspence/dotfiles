@@ -28,3 +28,6 @@
 [submodule "home/vim/bundle/vundle"]
 	path = home/vim/bundle/vundle
 	url = git://github.com/gmarik/vundle.git
+[submodule "modules/gist"]
+	path = modules/gist
+	url = git://github.com/gmarik/gist.sh.git
