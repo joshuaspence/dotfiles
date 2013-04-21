@@ -5,7 +5,6 @@
 "" @file   ~/.vim/filetype.vim
 "\
 
-
 "" Config files "{{{
   autocmd BufRead,BufNewFile {*.cfg,*.conf,*.config} set filetype=config
 " "}}}

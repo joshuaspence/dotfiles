@@ -4,4 +4,3 @@
 "" @author Joshua Spence
 "" @file   ~/.vim/functions.vim
 "\
-

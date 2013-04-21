@@ -5,12 +5,11 @@
 "" @file   ~/.vim/mappings.vim
 "\
 
-
 "" Set leader. Note: This line MUST come before any '<leader>' mappings.
 let mapleader=","
 
 "" Set local leader. Note: This line MUST come before any '<leader>' mappings.
-let maplocalleader="\"
+let maplocalleader="\\"
 
 "" vimrc "{{{
   "" @todo Reload all vim files.

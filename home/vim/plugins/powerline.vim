@@ -1,3 +1,10 @@
+"/
+"" @author Joshua Spence
+"" @file   ~/.vim/plugins/powerline.vim
+"\
+
+Bundle "powerline"
+
 let g:Powerline_symbols='fancy'
 let g:Powerline_theme='skwp'
 let g:Powerline_colorscheme='skwp'
