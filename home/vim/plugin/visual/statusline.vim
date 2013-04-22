@@ -1,10 +1,9 @@
 "/
+"" Configuration for the {@link http://www.vim.org/ vim} status line.
+""
 "" @author Joshua Spence
 "" @file   ~/.vim/plugin/visual/statusline.vim
 "\
-
-"" Always show the status line.
-set laststatus=2
 
 set statusline=
 
@@ -29,14 +28,17 @@ set statusline+=%=
 "" Number of lines.
 set statusline+=[%L]
 
-"" Current fileformat.
+"" Current file format.
 set statusline+=[%{&ff}]
 
 "" Current syntax in square brackets.
 set statusline+=%y
 
-"" Current % into file.
+"" Current percentage into file.
 set statusline+=[%p%%]
 
 "" Current row, current column.
 set statusline+=[%04l,%04v]
+
+"" Always show the status line.
+set laststatus=2

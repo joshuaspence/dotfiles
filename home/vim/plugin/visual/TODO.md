@@ -1,0 +1,10 @@
+visual/shortmess.vim
+bundles.vim
+folding.vim
+indenting.vim
+mouse.vim
+search.vim
+sounds.vim
+syntax.vim
+tabs.vim
+viewoptions.vim

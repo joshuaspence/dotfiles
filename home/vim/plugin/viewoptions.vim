@@ -1,7 +1,11 @@
 "/
+"" Changes the effect of the `:mkview` command.
+""
 "" @author Joshua Spence
 "" @file   ~/.vim/plugin/viewoptions.vim
 "\
+
+set viewoptions=
 
 "" Cursor position in file and window.
 set viewoptions+=cursor
