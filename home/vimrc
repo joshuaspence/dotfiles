@@ -20,35 +20,11 @@
     "" prepend(^=) $HOME/.tmp/ to default path. Use full path as backup filename(//).
     set directory=/tmp//
   "" "}}}
-
-  "" View options "{{{
-    "" Cursor position in file and window.
-    set viewoptions+=cursor
-
-    "" Manually created folds, opened/closed folds and local fold options.
-    set viewoptions+=folds
-
-    "" Options and mappings local to a window or buffer.
-    set viewoptions+=options
-
-    "" Backslashes in file names replaced with forward slashes.
-    set viewoptions+=slash
-
-    "" With Unix end-of-line format, even when on Windows or DOS.
-    set viewoptions+=unix
-  "" "}}}
 "" "}}}
 
 "" Visual "{{{
-  "" Line wrapping "{{{
-    "" Line wrapping off.
-    set nowrap
-
-    set textwidth=0
-  "" "}}}
-
   "" Format options "{{{
-    "" <Suppor></Suppor>t for numbered/bullet lists.
+    "" Support for numbered/bullet lists.
     set formatoptions+=n
 
     "" Automatically insert the current comment leader after hitting 'o' or 'O'
@@ -62,92 +38,12 @@
     set formatoptions-=t
   "" "}}}
 
-  "" Wild mode "{{{
-    "" Command-line tab completion.
-    set wildmode=full
-
-    set wildmenu
-
-    "" vim will ignore certain file patterns. "{{{
-      "" Binary images.
-      set wildignore+=*.bmp,*.gif,*.jpg,*.jpeg,*.png
-
-      "" Byte code and stuff.
-      set wildignore+=*.class,classes,*.luac,*.pyc,*.rbc
-          
-      "" Compiled object files.
-      set wildignore+=*.dll,*.exe,*.manifest,*.o,*.obj
-
-      "" LaTeX intermediate files.
-      set wildignore+=*.aux,*.out,*.toc
-
-      "" Version control.
-      set wildignore+=.bzr,.git,.hg,.svn
-
-      "" vim swap files.
-      set wildignore+=*.sw?
-    "" "}}}
-  "" "}}}
-
-  "" Completion "{{{
-    set complete=.,w,b,u,t
-    set completeopt=longest,menu,menuone,preview
-  "" "}}}
-
-  "" Status line "{{{
-    "" Always show the status line.
-    set laststatus=2
-
-    set statusline=
-
-    "" Full path to file in the buffer.
-    set statusline+=%F
-
-    "" Modified flag in square brackets.
-    set statusline+=%m
-
-    "" Readonly flag in square brackets.
-    set statusline+=%r
-
-    "" Help flag in square brackets.
-    set statusline+=%h
-
-    "" Preview flag in square brackets.
-    set statusline+=%w
-
-    "" Right align.
-    set statusline+=%=
-
-    "" Number of lines.
-    set statusline+=[%L]
-
-    "" Current fileformat.
-    set statusline+=[%{&ff}]
-
-    "" Current syntax in square brackets.
-    set statusline+=%y
-
-    "" Current % into file.
-    set statusline+=[%p%%]
-
-    "" Current row, current column.
-    set statusline+=[%04l,%04v]
-  "" "}}}
-
   "" Commands "{{{
     " Display an incomplete command in the lower right corner of the vim window.
     set showcmd
 
     "" Make the command area two lines high.
     set cmdheight=2
-  "" "}}}
-
-  "" Bracket matching "{{{
-    "" Show matching brackets.
-    set showmatch
-
-    "" How many tenths of a second to blink.
-    set matchtime=5
   "" "}}}
 
   "" Sounds "{{{
@@ -160,23 +56,6 @@
     "" @todo
     set t_vb=
   "" "}}}
-
-  "" Match and Search "{{{
-    "" Highlight search.
-    set hlsearch
-
-    "" Case insensitive matching.
-    set ignorecase
-      
-    "" Case sensitive matching when there's a capital letter.
-    set smartcase
-
-    "" Show the 'best match so far' as search strings are typed.
-    set incsearch
-  "" "}}}
-
-  "" Set the title of the window in the terminal to the file.
-  set title
 
   "" Shortens messages "{{{
     set shortmess=
@@ -192,52 +71,8 @@
 "" "}}}
 
 "" Functionality "{{{
-
-  "" Indenting "{{{
-    set autoindent
-    set smartindent
-    set cindent
-    set cinoptions=:s,ps,ts,cs
-    set cinwords=if,else,while,do,for,switch,case
-  "" "}}}
-
   "" Automatically detect file types.
   filetype plugin indent on
-
-  "" Folding "{{{
-    if has("folding")
-      "" Turn on folding.
-      set foldenable
-
-      "" A column with the specified width is shown at the side of the window
-      "" which indicates open and closed folds.
-      set foldcolumn=3
-
-      "" Fold on the marker.
-      set foldmethod=marker
-          
-      "" Don't autofold anything (but I can still fold manually).
-      set foldlevel=100
-
-      "" What movements open folds "{{{
-        set foldopen=
-        set foldopen+=block
-        set foldopen+=hor
-        set foldopen+=mark
-        set foldopen+=percent
-        set foldopen+=quickfix
-        set foldopen+=tag
-      "" "}}}
-      endif
-  "" "}}}
-
-  "" Window splitting "{{{
-    "" Split windows below current window.
-    set splitbelow
-
-    "" Split windows to the right of the current window.
-    set splitright
-  "" "}}}
 
   "" "{{{
     "" Display unprintable characters (<F12> switches).
@@ -246,12 +81,6 @@
     "" Unprintable chars mapping
     set listchars=tab:·\ ,eol:¶,trail:·,extends:»,precedes:«
   "" "}}}
-
-  "" Keep three lines below the last line when scrolling.
-  set scrolloff=3
-
-  "" Don't go to the start of the line after some commands.
-  set nostartofline
 "" "}}}
 
 "" Spelling "{{{

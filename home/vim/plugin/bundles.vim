@@ -16,29 +16,35 @@
 
   "" Let Vundle manage Vundle (required).
   Bundle 'gmarik/vundle'
-
-  "" Mappings "{{{
-    
-  "" "}}}
 "" "}}}
 
 "" Bundles "{{{
   Bundle 'abolish.vim'
+  Bundle 'airblade/vim-gitgutter'
   Bundle 'ack.vim'
+  Bundle 'closetag.vim'
   Bundle 'commentary.vim'
   Bundle 'endwise.vim'
   Bundle 'fugitive.vim'
+  Bundle 'Indent-Guides'
+  Bundle 'kablamo/vim-git-log'
+  Bundle 'lastpos.vim'
+  Bundle 'Lokaltog/powerline'
+  Bundle 'Markdown'
+  Bundle 'scrooloose/nerdcommenter'
   Bundle 'scrooloose/nerdtree'
+  Bundle 'scrooloose/syntastic'
+  Bundle 'sickill/vim-pasta'
   Bundle 'surround.vim'
-  Bundle 'tope/eunuch'
-
-  "Bundle "airblade/vim-gitgutter"
-  "Bundle "tpope/vim-markdown"
-  "Bundle "powerline"
-  "Bundle "rsi.vim"
-  "Bundle "scriptease.vim"
-  "Bundle "sleuth.vim"
-  "Bundle "synastic.vim"
+  Bundle 'Tabular'
+  Bundle 'tpope/vim-abolish'
+  Bundle 'tpope/vim-eunuch'
+  Bundle 'tpope/vim-rsi'
+  Bundle 'tpope/vim-scriptease'
+  Bundle 'tpope/vim-sleuth'
+  Bundle 'trailing-whitespace'
+  Bundle 'upAndDown'
+  Bundle 'ZoomWin'
 "" "}}}
 
 "" "{{{
