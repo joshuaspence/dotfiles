@@ -14,13 +14,6 @@ nnoremap <silent> <C-J> gEa<CR><ESC>ew
 noremap H ^
 noremap L $
 
-
-
-
-
-
-
-
 nnoremap # :let @/='\<<C-R>=expand("<cword>")<CR>\>'<CR>:set hls<CR>
 nnoremap * #
 

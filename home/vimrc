@@ -6,21 +6,6 @@
 "\
 
 "" General "{{{
-  "" Disable vi compatibility.
-  set nocompatible
-
-  "" Number of lines of command line history to keep.
-  set history=1000
-
-  "" Time to wait after ESC (default causes an annoying delay).
-  set timeoutlen=250
-
-  "" Use the OS clipboard by default.
-  set clipboard+=unnamed
-
-  "" Toggle between paste and normal: for 'safer' pasting from keyboard.
-  set pastetoggle=<F10>
-
   "" Walk directory tree up to $HOME looking for tags.
   set tags=./tags;$HOME
 
@@ -32,18 +17,8 @@
   "" "}}}
 
   "" Backup "{{{
-    set nowritebackup
-    set nobackup
-
     "" prepend(^=) $HOME/.tmp/ to default path. Use full path as backup filename(//).
     set directory=/tmp//
-  "" "}}}
-
-  "" Persistent Undo "{{{
-    if has("persistent_undo")
-      set undofile
-      set undodir=~/.vim/.undo
-    endif
   "" "}}}
 
   "" View options "{{{
@@ -65,28 +40,6 @@
 "" "}}}
 
 "" Visual "{{{
-  "" Color "{{{
-    "" We plan to use a dark background.
-    set background=dark
-  "" "}}}
-
-  "" Show line numbers.
-  set number
-
-  "" Ruler "{{{
-    "" Show the ruler.
-    set ruler
-
-    "" Display current column/line.
-    set rulerformat=%l,%c ruler
-  "" "}}}
-
-  "" Highlight the current column.
-  set cursorcolumn
-
-  "" Highlight the current line.
-  set cursorline
-
   "" Line wrapping "{{{
     "" Line wrapping off.
     set nowrap
@@ -95,7 +48,7 @@
   "" "}}}
 
   "" Format options "{{{
-    "" Support for numbered/bullet lists.
+    "" <Suppor></Suppor>t for numbered/bullet lists.
     set formatoptions+=n
 
     "" Automatically insert the current comment leader after hitting 'o' or 'O'
@@ -239,22 +192,6 @@
 "" "}}}
 
 "" Functionality "{{{
-  "" More powerful backspacing.
-  set backspace=indent,eol,start
-
-  "" Tabs "{{{
-    "" Set the default tabstop.
-    set tabstop=4 softtabstop=4
-
-    "" Set the default shift width for indents.
-    set shiftwidth=4
-      
-    "" Make tabs into spaces (set by tabstop).
-    set expandtab
-      
-    "" Smarter tab levels.
-    set smarttab
-  "" "}}}
 
   "" Indenting "{{{
     set autoindent
@@ -264,31 +201,8 @@
     set cinwords=if,else,while,do,for,switch,case
   "" "}}}
 
-  "" Enable syntax highlighting.
-  syntax on
-
-  "" Don't highlight minified js and stuff.
-  set synmaxcol=500
-
   "" Automatically detect file types.
   filetype plugin indent on
-
-  "" Mouse "{{{
-    "" Hide mouse after chars typed.
-    set mousehide
-
-    "" Mouse in all modes.
-    set mouse=a
-
-    "" Enable mouse support.
-    set mousemodel=extend
-    set selectmode=mouse
-
-    "" Mouse can control splits.
-    if has("gui_running")
-      set mousefocus
-    endif
-  "" "}}}
 
   "" Folding "{{{
     if has("folding")
@@ -366,50 +280,15 @@
 "" "}}}
 
 "" Advanced "{{{
-  "" This will save the file when you switch buffers.
-  set autowrite
-
-  "" Set to auto read when a file is changed from the outside.
-  set autoread
-
   "" Buffers "{{{
     "" The current buffer can be put to the background without writing to disk.
     set hidden
   "" "}}}
-
-  "" Don't update while in macro.
-  set lazyredraw
-
-  "" Optimize for fast terminal connections. Sends more characters for redraws.
-  "" Improves redrawing.
-  set ttyfast
 "" "}}}
 
-"" Commands "{{{
-  "" Sudo write.
-  comm! W exec 'w !sudo tee % > /dev/null' | e!
-"" "}}}
-
-"" Plugins "{{{
-  source ~/.vim/plugins.vim
-"" "}}}
-
-"" Key mappings "{{{
-  source ~/.vim/mappings.vim
-"" "}}}
-
-"" Custom functions "{{{
-  source ~/.vim/functions.vim
-"" "}}}
-
-"" Auto commands "{{{
-  if has("autocmd")
-      source ~/.vim/autocmd.vim
-  endif
-"" "}}}
-
-"" File types "{{{
+"" "{{{
   if has("autocmd")
       source ~/.vim/filetype.vim
   endif
+  source ~/.vim/mappings.vim
 "" "}}}
