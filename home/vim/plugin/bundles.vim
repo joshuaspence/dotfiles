@@ -6,45 +6,56 @@
 "\
 
 "" Vundle "{{{
-  "" Required. "{{{
+  "" Ensure that the `~/.vim/bundle/` system works. "{{{
     set nocompatible
     filetype off
+    set rtp+=~/.vim/bundle/vundle/
+    call vundle#rc()
   "" "}}}
-
-  set rtp+=~/.vim/bundle/vundle/
-  call vundle#rc()
-
-  "" Let Vundle manage Vundle (required).
-  Bundle 'gmarik/vundle'
 "" "}}}
+ 
+"" Let Vundle manage Vundle (required).
+Bundle 'gmarik/vundle'
 
 "" Bundles "{{{
-  Bundle 'abolish.vim'
   Bundle 'airblade/vim-gitgutter'
-  Bundle 'ack.vim'
-  Bundle 'closetag.vim'
-  Bundle 'commentary.vim'
-  Bundle 'endwise.vim'
-  Bundle 'fugitive.vim'
-  Bundle 'Indent-Guides'
+  Bundle 'flazz/vim-colorschemes'
+  Bundle 'godlygeek/tabular'
   Bundle 'kablamo/vim-git-log'
-  Bundle 'lastpos.vim'
   Bundle 'Lokaltog/powerline'
-  Bundle 'Markdown'
+  Bundle 'mattn/gist-vim'
+  Bundle 'mattn/webapi-vim'
+  Bundle 'mileszs/ack.vim'
+  Bundle 'myusuf3/numbers.vim'
+  Bundle 'nathanaelkane/vim-indent-guides'
   Bundle 'scrooloose/nerdcommenter'
   Bundle 'scrooloose/nerdtree'
   Bundle 'scrooloose/syntastic'
   Bundle 'sickill/vim-pasta'
-  Bundle 'surround.vim'
-  Bundle 'Tabular'
+  Bundle 'thinca/vim-template'
   Bundle 'tpope/vim-abolish'
+  Bundle 'tpope/vim-commentary'
+  Bundle 'tpope/vim-endwise'
   Bundle 'tpope/vim-eunuch'
+  Bundle 'tpope/vim-fugitive'
+  Bundle 'tpope/vim-markdown'
   Bundle 'tpope/vim-rsi'
   Bundle 'tpope/vim-scriptease'
   Bundle 'tpope/vim-sleuth'
+  Bundle 'tpope/vim-surround'
   Bundle 'trailing-whitespace'
-  Bundle 'upAndDown'
-  Bundle 'ZoomWin'
+  Bundle 'vim-scripts/closetag.vim'
+  Bundle 'vim-scripts/lastpos.vim'
+  Bundle 'vim-scripts/SearchComplete'
+  Bundle 'vim-scripts/upAndDown'
+  Bundle 'vim-scripts/ZoomWin'
+
+  "" Languages "{{{
+    Bundle 'elzr/vim-json'
+    Bundle 'groenewege/vim-less'
+    Bundle 'pangloss/vim-javascript'
+    Bundle 'puppetlabs/puppet-syntax-vim'
+  "" "}}}
 "" "}}}
 
 "" "{{{

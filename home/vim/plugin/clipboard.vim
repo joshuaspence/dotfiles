@@ -3,5 +3,10 @@
 "" @file   ~/.vim/plugin/clipboard.vim
 "\
 
-"" Use the OS clipboard by default.
-set clipboard+=unnamed
+if has ('x') && has ('gui')
+  "" On Linux use + register for copy-paste.
+  set clipboard=unnamedplus
+elseif has ('gui')
+  "" On mac and Windows, use * register for copy-paste
+  set clipboard=unnamed
+endif

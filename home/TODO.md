@@ -1,14 +1,10 @@
 oh-my-zsh/
-shell/zsh
 ssh/config
-vim/
+vim/ vimrc
 #inputrc
 Makefile
 README.md
 #screenrc
-vimrc
-zlogin
-zlogout
-zprofile
-zshenv
-zshrc
+shell/zsh/ zlogin zlogout zprofile zshenv zshrc
+*/README.md
+*/TODO.md

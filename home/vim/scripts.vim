@@ -1,4 +1,4 @@
 "/
 "" @author Joshua Spence
-"" @file   ~/.vim/filetype.vim
+"" @file   ~/.vim/scripts.vim
 "\
