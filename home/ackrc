@@ -1,5 +1,5 @@
 #/
-## My configuration file for {@link http://beyondgrep.com/ ack-grep}.
+## Configuration file for {@link http://beyondgrep.com/ ack-grep}.
 ##
 ## @author Joshua Spence
 ## @file   ~/.ackrc
@@ -40,7 +40,7 @@
 ## Print the filename for each match.
 --with-filename
 
-## Types.
+## Add extensions to built-in types.
 --type-add=css=.less,.sass,.scss
 --type-add=html=.html.erb,.html.haml
 --type-add=js=.coffee,.js.erb
@@ -59,8 +59,6 @@
 
 ## Ignore these directories.
 --ignore-dir=cache
---ignore-dir=doc
 --ignore-dir=log
---ignore-dir=rdoc
 --ignore-dir=tmp
 --ignore-dir=vendor
