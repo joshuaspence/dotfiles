@@ -5,7 +5,7 @@
 "" @file   ~/.vim/plugin/visual/cmd.vim
 "\
 
-if has ('cmdline_info')
+if has ('showcmd')
     "" Display an incomplete command in the lower right corner of the vim
     "" window.
     set showcmd

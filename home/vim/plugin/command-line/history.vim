@@ -5,5 +5,7 @@
 "" @file   ~/.vim/plugin/command-line/history.vim
 "\
 
-"" Number of lines of command line history to keep.
-set history=1000
+if has('cmdline_hist')
+    "" Number of lines of command line history to keep.
+    set history=1000
+endif

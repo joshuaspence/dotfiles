@@ -5,7 +5,9 @@
 "" @file   ~/.vim/plugin/syntax.vim
 "\
 
-syntax on
+if has('syntax')
+    syntax on
 
-"" Don't highlight really wide files such as minified js.
-set synmaxcol=500
+    "" Don't highlight really wide files such as minified js.
+    set synmaxcol=500
+endif

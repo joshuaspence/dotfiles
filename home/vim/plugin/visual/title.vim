@@ -5,4 +5,6 @@
 "" @file   ~/.vim/plugin/visual/title.vim
 "\
 
-set title
+if has('title')
+    set title
+endif

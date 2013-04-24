@@ -8,8 +8,10 @@
 "" Copy indent from current line when starting a new line.
 set autoindent
 
-"" Do smart indenting when starting a new line.
-set smartindent
+if has('smartindent')
+    "" Do smart indenting when starting a new line.
+    set smartindent
+endif
 
 if has('cindent')
     "" Use the C indenting rules.
