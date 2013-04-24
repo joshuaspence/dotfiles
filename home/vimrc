@@ -1,5 +1,7 @@
 "/
-"" Vanilla configuration for {@link http://www.vim.org/ vim}.
+"" An empty configuration file for {@link http://www.vim.org/ vim}. All
+"" {@link http://www.vim.org/ vim} configuration is done within the `~/.vim`
+"" directory.
 ""
 "" @author Joshua Spence
 "" @file   ~/.vimrc
