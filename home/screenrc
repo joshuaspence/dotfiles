@@ -1,4 +1,6 @@
 #/
+## Configuration file for {@link http://www.gnu.org/software/screen/ screen}.
+##
 ## @author Joshua Spence
 ## @file   ~/.screenrc
 #\
