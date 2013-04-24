@@ -1,0 +1,8 @@
+#/
+## @author Joshua Spence
+## @file   ~/.vim/bundle/.gitignore
+#\
+
+*
+!vundle/
+!.gitignore

@@ -1,0 +1,16 @@
+export GIT_PAGER=cat
+
+## @link https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.bin/git-age
+git age = git ls-files | xargs -n1 -i{} git log -1 --pretty=format:"%ci {}%n" -- {}
+
+## @link https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.bin/home-fix
+# Ensure sane file modes for some important files and directories
+if [ -d "${HOME}/.ssh" ]; then
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/*
+fi
+if [ -d "${HOME}/.gnupg" ]; then
+    chmod 700 -R ~/.gnupg
+fi
+
+[ -d "${HOME}/.subversion" ] && chmod 700 "${HOME}/.subversion"

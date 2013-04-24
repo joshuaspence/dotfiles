@@ -1,0 +1,6 @@
+#!/bin/bash
+# https://github.com/jacobwg/dotfiles/blob/master/bin/escape
+
+# Escape UTF-8 characters into their 3-byte format
+printf "\\\x%s" $(printf "$@" | xxd -p -c1 -u)
+echo # newline

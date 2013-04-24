@@ -1,0 +1,16 @@
+# Check for the prerequisite functions.
+command -v curl >/dev/null || return 1
+
+##
+# Checks whether a website is down for you, or everybody.
+#
+# @param [String] The URL.
+#
+down4me() {
+    if [ $# -ne 1 ] || [ -z "$1" ]; then
+        echo "Usage: down4me <url>" >&2
+        return 1
+    fi
+
+    curl -s "http://www.downforeveryoneorjustme.com/$1" | sed -e '/just you/!d;s/<[^>]*>//g'
+}

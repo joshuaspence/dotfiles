@@ -1,0 +1,90 @@
+" Tell vim to remember certain things when we exit
+"  '10  :  marks will be remembered for up to 10 previously edited files
+"  "100 :  will save up to 100 lines for each register
+"  :20  :  up to 20 lines of command-line history will be remembered
+"  %    :  saves and restores the buffer list
+"  n... :  where to save the viminfo files
+set viminfo='10,\"100,:20,%,n~/.viminfo
+
+
+set cf                                " error files / jumping
+set ffs=unix,dos,mac                  " support these files
+set isk+=_,$,@,%,#,-                  " none word dividers
+set viminfo='1000,f1,:100,@100,/20
+
+if &t_Co > 2 || has("gui_running")
+  if has("terminfo")
+    set t_Co=16
+    set t_AB=[%?%p1%{8}%<%t%p1%{40}%+%e%p1%{92}%+%;%dm
+    set t_AF=[%?%p1%{8}%<%t%p1%{30}%+%e%p1%{82}%+%;%dm
+  else
+    set t_Co=16
+    set t_Sf=[3%dm
+    set t_Sb=[4%dm
+  endif
+  syntax on
+  set hlsearch
+  colorscheme slate2
+endif
+
+" Highlight
+highlight Comment         ctermfg=DarkGrey guifg=#444444
+highlight StatusLineNC    ctermfg=Black ctermbg=DarkGrey cterm=bold
+highlight StatusLine      ctermbg=Black ctermfg=LightGrey
+
+" Highlight Trailing Whitespace
+set list listchars=trail:.,tab:>.
+highlight SpecialKey ctermfg=DarkGray ctermbg=Black
+
+" jump to last position of buffer when opening
+au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") |
+                         \ exe "normal g'\"" | endif
+
+" ---------------------------------------------------------------------------
+"  sh config
+" ---------------------------------------------------------------------------
+
+au Filetype sh,bash set ts=4 sts=4 sw=4 expandtab
+let g:is_bash = 1
+
+
+" ---------------------------------------------------------------------------
+"  Misc mappings
+" ---------------------------------------------------------------------------
+
+" duplicate current tab with same file+line
+map ,t :tabnew %<CR>
+
+" open directory dirname of current file, and in new tab
+map ,d :e %:h/<CR>
+map ,dt :tabnew %:h/<CR>
+
+" open gf under cursor in new tab
+map ,f :tabnew <cfile><CR>
+
+" open tag under cursor in new tab
+map <C-\> :tab split<CR>:exec("tag ".expand("<cword>"))<CR>
+
+function! Browser ()
+    let line0 = getline (".")
+    let line = matchstr (line0, "http[^ )]*")
+    let line = escape (line, "#?&;|%")
+    exec ':silent !open ' . "\"" . line . "\""
+endfunction
+map ,w :call Browser ()<CR>
+
+" ---------------------------------------------------------------------------
+"  Strip all trailing whitespace in file
+" ---------------------------------------------------------------------------
+
+function! StripWhitespace ()
+    exec ':%s/ \+$//gc'
+endfunction
+map ,s :call StripWhitespace ()<CR>
+
+au Filetype gitcommit set tw=68  spell
+au Filetype ruby      set tw=80  ts=2
+
+" make file executable
+command -nargs=* Xe !chmod +x <args>
+command! -nargs=0 Xe !chmod +x %
