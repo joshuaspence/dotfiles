@@ -5,7 +5,6 @@
 "" @file   ~/.vim/plugin/viewoptions.vim
 "\
 
-"" Reset 'viewoptions'.
 set viewoptions=
 
 "" Cursor position in file and window.
