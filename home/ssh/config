@@ -53,7 +53,7 @@
     Host github git.github.com
         Hostname git.github.com
         User git
-        IdentityFile  ~/.ssh/github
+        IdentityFile  ~/.ssh/git.github.com
 
         ForwardAgent no
         IdentitiesOnly yes
@@ -101,7 +101,7 @@
         IdentitiesOnly yes
         PasswordAuthentication no
         PubkeyAuthentication yes
-        
+
         # Port forwarding
         ExitOnForwardFailure yes
         LocalForward 3306 db-slave-stats.freelancer.com:3306
