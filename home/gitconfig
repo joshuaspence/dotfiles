@@ -1,5 +1,5 @@
 #/
-## My configuration file for `git`.
+## Configuration file for {@link http://git-scm.com/ git}.
 ##
 ## @author Joshua Spence
 ## @file   ~/.gitconfig
@@ -17,15 +17,17 @@
     path = ~/.gituser
 
 [advice]
-    ## Advice shown when `git-push` refuses non-fast-forward refs.
+    ## Advice shown when `git-push` refuses non-fast-forward refs. Default is
+    ## true.
     pushNonFastForward = true
 
     ## Directions on how to stage/unstage/add shown in the output of
-    ## `git-status` and the template shown when writing commit messages.
+    ## `git-status` and the template shown when writing commit messages. Default
+    ## is true.
     statusHints = true
 
     ## Advice shown when `git-merge` refuses to merge to avoid overwriting local
-    ## changes.
+    ## changes. Default is true.
     commitBeforeMerge = true
 
     ## Advices shown by various commands when conflicts prevent the operation
@@ -33,10 +35,11 @@
     resolveConflict = true
 
     ## Advice on how to set your identity configuration when your information is
-    ## guessed from the system username and domain name.
+    ## guessed from the system username and domain name. Default is true.
     implicitIdentity = true
 
     ## Advice shown when you used `git-checkout` to move to the detach HEAD.
+    ## Default is true.
     detachedHead = true
 
 [alias]
@@ -44,20 +47,23 @@
     amend = commit --amend
 
     ## List branches.
-    branches = branch -a   
+    branches = branch --all
+
+    ## List the files that have changed.
+    changed = diff --name-only
 
     ## List the files that have changed, and the status of these files.
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
-    changes = diff --name-status -r
+    changes = diff --name-status
 
     ## Show list of files in a conflict state.
     ##
     ## @link http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
-    conflicts = ls-files -u | awk '{print $4}' | sort -u
+    conflicts = ls-files --unmerged | awk '{print $4}' | sort --unique
 
     ## Count commits by author.
-    count = shortlog -sn
+    count = shortlog --summary --numbered
 
     ## See the changes in a branch since it was forked from another branch, or
     ## since the last merge with the origin branch.
@@ -101,15 +107,15 @@
     prune-all = !git remote | xargs -n 1 git remote prune
 
     ## List remotes.
-    remotes = remote -v
+    remotes = remote --verbose
 
     ## Serve repository on the spot.
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
-    serve = daemon --reuseaddr --verbose  --base-path=. --export-all ./.git
+    serve = daemon --reuseaddr --verbose --base-path=. --export-all ./.git
 
     ## List tags.
-    tags = tag -l
+    tags = tag --list
 
     ## Attempt to cleanup some common problems.
     unfuck = !git fsck && git prune-all && git gc --aggressive --auto
@@ -118,44 +124,44 @@
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 
     ## @link http://git.wiki.kernel.org/index.php/Aliases
-    whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
+    whois = !sh -c 'git log --regexp-ignore-case -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -
 
-    ## Aliases for {@link http://github.com/defunkt/hub hub}. #{{{
+    ## Aliases for {@link http://github.com/defunkt/hub hub}. @{{{
         browse = !hub browse
         compare = !hub compare
         create = !hub create
         fork = !hub fork
         pull-request = !hub pull-request
-    ## #}}}
+    ## @}}}
 
     ## Aliases for {@link http://github.com/joshuaspence/git-utils git-utils}.
     ## Required here only for tab-completion.
     ##
-    ## #todo Do I need this here?
+    ## @todo Do I need this here?
     ##
-    ## #{{{
+    ## @{{{
         forest = !git-forest
         publish-branch = !git-publish-branch
         rank-contributors = !git-rank-contributors
         show-merges = !git-show-merges
         wtf = !git-wtf
-    ## #}}}
+    ## @}}}
 
     ## Aliases for {@link http://github.com/rtomayko/git-sh git-sh}. Required
     ## here only for tab-completion.
     ##
-    ## #todo Do I need this here?
+    ## @todo Do I need this here?
     ##
-    ## #{{{
+    ## @{{{
         sh = !git-sh
-    ## #}}}
+    ## @}}}
 
     ## Aliases for {@link http://github.com/visionmedia/git-extras git-extras}.
     ## Required here only for tab-completion.
     ##
-    ## #todo Do I need this here?
+    ## @todo Do I need this here?
     ##
-    ## #{{{
+    ## @{{{
         alias = !git-alias
         back = !git-back
         bug = !git-bug
@@ -189,41 +195,7 @@
         summary = !git-summary
         touch = !git-touch
         undo = !git-undo
-    ## #}}}
-
-[core]
-    ## If true, makes git convert CRLF at the end of lines in text files to LF
-    ## when reading from the work tree, and convert in reverse when writing to
-    ## the work tree. The variable can be set to "input", in which case the
-    ## conversion happens only while reading from the work tree but files are
-    ## written out to the work tree with LF at the end of lines.
-    autocrlf = input
-
-    ## If true, makes git check if converting CRLF as controlled by
-    ## `core.autocrlf` is reversible. git will verify if a command modifies a
-    ## file in the work tree either directly or indirectly. For example,
-    ## committing a file followed by checking out the same file should yield the
-    ## original file in the work tree. If this is not the case for the current
-    ## setting of `core.autocrlf`, git will reject the file. The variable can be
-    ## set to "warn", in which case git will only warn about an irreversible
-    ## conversion but continue the operation.
-    safecrlf = warn
-
-    ## If false, symbolic links are checked out as small plain files that
-    ## contain the link text. `git-update-index` and `git-add` will not change
-    ## the recorded type to regular file. Useful on filesystems like FAT that do
-    ## not support symbolic links.
-    #symlinks = true
-
-    ## In addition to `.gitignore` (per-directory) and `.git/info/exclude`,
-    ## git looks into this file for patterns of files which are not meant to be
-    ## tracked.
-    excludesfile = ~/.gitignore
-
-    ## A comma separated list of common whitespace problems to notice.
-    ## `git diff` will use `color.diff.whitespace` to highlight them, and
-    ## `git apply --whitespace=error` will consider them as errors. 
-    whitespace = space-before-tab,-indent-with-non-tab,trailing-space,cr-at-eol
+    ## @}}}
 
 [apply]
     whitespace = fix,error
@@ -231,6 +203,7 @@
 [branch]
     ## Tells `git branch` and `git checkout` to set up new branches so that
     ## `git-pull` will appropriately merge from the starting point branch.
+    ## Default is true.
     autosetupmerge = true
 
     ## When a new branch is created with `git branch` or `git checkout` that
@@ -239,7 +212,7 @@
     ## When local, rebase is set to true for tracked branches of other local
     ## branches. When remote, rebase is set to true for tracked branches of
     ## remote branches. When always, rebase will be set to true for all tracking
-    ## branches.
+    ## branches. Default is never.
     autosetuprebase = never
 
 [color]
@@ -296,6 +269,41 @@
     ## A boolean to enable/disable inclusion of status information in the commit
     ## message template when using an editor to prepare the commit message.
     status = true
+
+[core]
+    ## If true, makes git convert CRLF at the end of lines in text files to LF
+    ## when reading from the work tree, and convert in reverse when writing to
+    ## the work tree. The variable can be set to "input", in which case the
+    ## conversion happens only while reading from the work tree but files are
+    ## written out to the work tree with LF at the end of lines.
+    autocrlf = input
+
+    ## If true, makes git check if converting CRLF as controlled by
+    ## `core.autocrlf` is reversible. git will verify if a command modifies a
+    ## file in the work tree either directly or indirectly. For example,
+    ## committing a file followed by checking out the same file should yield the
+    ## original file in the work tree. If this is not the case for the current
+    ## setting of `core.autocrlf`, git will reject the file. The variable can be
+    ## set to "warn", in which case git will only warn about an irreversible
+    ## conversion but continue the operation.
+    safecrlf = warn
+
+    ## If false, symbolic links are checked out as small plain files that
+    ## contain the link text. `git-update-index` and `git-add` will not change
+    ## the recorded type to regular file. Useful on filesystems like FAT that do
+    ## not support symbolic links.
+    #symlinks = true
+
+    ## In addition to `.gitignore` (per-directory) and `.git/info/exclude`,
+    ## git looks into this file for patterns of files which are not meant to be
+    ## tracked.
+    excludesfile = ~/.gitignore
+
+    ## A comma separated list of common whitespace problems to notice.
+    ## `git diff` will use `color.diff.whitespace` to highlight them, and
+    ## `git apply --whitespace=error` will consider them as errors.
+    whitespace = space-before-tab,-indent-with-non-tab,trailing-space,cr-at-eol
+
 
 [diff]
     ## If set, `git diff` uses a prefix pair that is different from the standard
@@ -362,7 +370,7 @@
 [push]
     ## Defines the action `git push` should take if no refspec is given on the
     ## command line, no refspec is configured in the remote, and no refspec is
-    ## implied by any of the options given on the command line. 
+    ## implied by any of the options given on the command line.
     default = matching
 
 [rerere]

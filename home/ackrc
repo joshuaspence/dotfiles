@@ -40,25 +40,28 @@
 ## Print the filename for each match.
 --with-filename
 
-## Add extensions to built-in types.
---type-add=css=.less,.sass,.scss
---type-add=html=.html.erb,.html.haml
---type-add=js=.coffee,.js.erb
---type-add=php=.php.inc
---type-add=ruby=.builder,.haml,.rake,.rspec
---type-add=ruby=Gemfile
+## Add extensions to built-in types. @{{{
+    --type-add=css=.less,.sass,.scss
+    --type-add=html=.html.erb,.html.haml
+    --type-add=js=.coffee,.js.erb
+    --type-add=php=.php.inc
+    --type-add=ruby=.builder,.haml,.rake,.rspec
+    --type-add=ruby=Gemfile
+## @}}}
 
-## Add types that `ack-grep` doesn't know about.
---type-set=coffee=.coffee
---type-set=config=.cfg,.conf,.config
---type-set=csv=.csv
---type-set=log=.log
---type-set=json=.json
---type-set=markdown=.md,.markdown
---type-set=puppet=.pp
+## Add types that `ack-grep` doesn't know about. @{{{
+    --type-set=coffee=.coffee
+    --type-set=config=.cfg,.conf,.config
+    --type-set=csv=.csv
+    --type-set=log=.log
+    --type-set=json=.json
+    --type-set=markdown=.md,.markdown
+    --type-set=puppet=.pp
+## @}}}
 
-## Ignore these directories.
---ignore-dir=cache
---ignore-dir=log
---ignore-dir=tmp
---ignore-dir=vendor
+## Ignore these directories. @{{{
+    --ignore-dir=cache
+    --ignore-dir=log
+    --ignore-dir=tmp
+    --ignore-dir=vendor
+## @}}}

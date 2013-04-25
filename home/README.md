@@ -18,7 +18,7 @@ You only log in once, and that's when ~/.bash_profile or ~/.profile is read and 
 
 Non-login shells only execute ~/.bashrc, not /.profile or ~/.bash_profile, for this exact reason, so in there define everything that only applies to bash. That's functions, aliases, bash-only variables like HISTSIZE (this is not an environment variable, don't export it!), shell options with set and shopt, etc.
 
-Now, as part of UNIX peculiarity, a login-shell does NOT execute ~/.bashrc but only ~/.profile or ~/.bash_profile, so you should source that one manually from the latter. 
+Now, as part of UNIX peculiarity, a login-shell does NOT execute ~/.bashrc but only ~/.profile or ~/.bash_profile, so you should source that one manually from the latter.
 
 http://hacktux.com/bash/bashrc/bash_profile
 

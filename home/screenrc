@@ -5,7 +5,7 @@
 ## @file   ~/.screenrc
 #\
 
-## Screen Settings #{{{
+## Screen Settings @{{{
     ## Clear the text when exiting visual programs.
     altscreen on
 
@@ -23,40 +23,40 @@
 
     ## No annoying screen flashes.
     vbell off
-## #}}}
+## @}}}
 
-## Screen Key Bindings #{{{
-    ## Remove some stupid / dangerous key bindings. #{{{
+## Screen Key Bindings @{{{
+    ## Remove some stupid/dangerous key bindings. @{{{
         bind ^k
         #bind L
         bind ^\
 
-        ## Make them better. #{{{
+        ## Make them better. @{{{
             bind \\ quit
             bind K kill
             bind I login on
             bind O login off
             bind } history
-        ## #}}}
-    ## #}}}
-    
+        ## @}}}
+    ## @}}}
+
     # You need this line to make backspace work properly on Linux. Otherwise,
     # backspace becomes CTRL-H, which causes the help window to pop every in
     # emacs whenever you hit backspace.
     bindkey -k kb stuff ^?
 
-    ## Previous window. #{{{
+    ## Previous window. @{{{
         bindkey ^[[1;7C prev    # Ctrl+Alt+Left from gnome-terminal
         bindkey ^[^[[D prev     # Ctrl+Alt+Left from putty
-    ## #}}}
+    ## @}}}
 
-    ## Next window. #{{{
+    ## Next window. @{{{
         bindkey ^[[1;7D next    # Ctrl+Alt+Right from gnome-terminal
         bindkey ^[^[[C next     # Ctrl+Alt+Right from putty
-    ## #}}}
-## #}}}
+    ## @}}}
+## @}}}
 
-## Terminal Settings #{{{
+## Terminal Settings @{{{
     ## The vt100 description does not mention "dl".
     termcapinfo vt100 dl=5\E[M
 
@@ -85,9 +85,9 @@
 
     ## Enable non-blocking mode to better cope with flaky SSH connections.
     defnonblock 5
-## #}}}
+## @}}}
 
-## Startup Screens #{{{
+## Startup Screens @{{{
     ## Example of automatically running some programs in windows on screen
     ## startup.
     ##
@@ -95,10 +95,10 @@
     ## in the next window, and then open mutt and tail in windows 8 and 9
     ## respectively.
     ##
-    ## #{{{
+    ## @{{{
         #screen top
         #screen -t monkey ssh monkey
         #screen -t mail 8 mutt
         #screen -t daemon 9 tail -f /var/log/daemon.log
-    ## #}}}
-## #}}}
+    ## @}}}
+## @}}}

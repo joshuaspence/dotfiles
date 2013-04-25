@@ -1,18 +1,15 @@
 #/
-## @author Joshua Spence
-## @file   ~/.pythonrc
+## Start-up script for {@link http://www.python.org/ Python}.
 ##
-## @link http://valueerror.wordpress.com/2009/11/03/python-shell-history-autocompletion-and-rc-file/
-## @link http://docs.python.org/2/library/rlcompleter.html
-## @link http://gist.github.com/mgedmin/760273
-## @link http://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/python/pythonrc.py
+## @author Joshua Spence
+## @file   ~/.pythonrc.py
 #\
 
 
 ## Command-line history.
 ##
 ## @link http://valueerror.wordpress.com/2009/11/03/python-shell-history-autocompletion-and-rc-file/
-def _pythonrc_enable_history():
+def pythonrc_enable_history():
     import os
     import sys
 
@@ -43,7 +40,7 @@ def _pythonrc_enable_history():
 ## Tab completion.
 ##
 ## @link http://docs.python.org/2/library/rlcompleter.html
-def _pythonrc_enable_completion():
+def pythonrc_enable_completion():
     import sys
 
     try:
@@ -79,7 +76,7 @@ def _pythonrc_enable_completion():
 ## Colored prompt.
 ##
 ## @link http://gist.github.com/mgedmin/760273
-def _pythonrc_set_prompt():
+def pythonrc_set_prompt():
     import os
     import sys
 
@@ -97,7 +94,7 @@ def _pythonrc_set_prompt():
 ## Enable pretty printing of evaluated expressions.
 ##
 ## @link http://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/python/pythonrc.py
-def _pythonrc_enable_pprint():
+def pythonrc_enable_pprint():
     import pprint
     import sys
 
@@ -119,7 +116,7 @@ def _pythonrc_enable_pprint():
                 sys.stdout.write(s + '\n')
 
         # Save the old excepthook.
-        _old_excepthook = sys.excepthook
+        old_excepthook = sys.excepthook
 
         def excepthook(exctype, value, traceback):
             '''Prints exceptions to sys.stderr and colorizes them.'''
@@ -129,7 +126,7 @@ def _pythonrc_enable_pprint():
             old_stderr = sys.stderr
             sys.stderr = StringIO()
             try:
-                _old_excepthook(exctype, value, traceback)
+                old_excepthook(exctype, value, traceback)
                 s = sys.stderr.getvalue()
                 try:
                     s = highlight(s, PythonTracebackLexer(), TerminalFormatter())
@@ -233,15 +230,15 @@ if __name__ == '__main__':
 
         # Run installation functions and don't taint the global namespace.
         try:
-            _pythonrc_enable_history()
-            _pythonrc_enable_completion()
-            _pythonrc_set_prompt()
-            _pythonrc_enable_pprint()
+            pythonrc_enable_history()
+            pythonrc_enable_completion()
+            pythonrc_set_prompt()
+            pythonrc_enable_pprint()
 
-            del _pythonrc_enable_history
-            del _pythonrc_enable_completion
-            del _pythonrc_set_prompt
-            del _pythonrc_enable_pprint
+            del pythonrc_enable_history
+            del pythonrc_enable_completion
+            del pythonrc_set_prompt
+            del pythonrc_enable_pprint
         finally:
             if cwd is not None:
                 sys.path.insert(cwd, '')

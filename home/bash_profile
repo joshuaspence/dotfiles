@@ -1,10 +1,12 @@
 #/
+## Sets up environment variables for {@link @todo bash}.
+##
 ## @author Joshua Spence
 ## @file ~/.bash_profile
 #\
 
 ## Pull in any system defaults first so they can be overridden later.
-if [[ -r /etc/profile ]]; then
+if [[ -f /etc/profile && -r /etc/profile ]]; then
     source /etc/profile
 fi
 

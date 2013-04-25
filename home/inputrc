@@ -80,7 +80,7 @@ set skip-completed-text on
 ## Show extra file information when completing, like `ls -F` does.
 set visible-stats on
 
-## Key mappings #{{{
+## Key mappings @{{{
 $if mode=emacs
     "\e[3;3~": kill-word                # Alt+Delete
 
@@ -112,14 +112,14 @@ $if mode=emacs
         "\eOd": backward-word
     $endif
 
-    ## For non RH/Debian xterm, can't hurt for RH/Debian xterm. #{{{
+    ## For non RH/Debian xterm, can't hurt for RH/Debian xterm. @{{{
         "\eOH": beginning-of-line
         "\eOF": end-of-line
-    ## #}}}
+    ## @}}}
 
-    ## For FreeBSD console. #{{{
+    ## For FreeBSD console. @{{{
         "\e[H": beginning-of-line
         "\e[F": end-of-line
-    ## #}}}
+    ## @}}}
 $endif
-## #}}}
+## @}}}
