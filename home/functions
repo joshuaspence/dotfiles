@@ -1,0 +1,12 @@
+#/
+## Load shell functions.
+##
+## @author Joshua Spence
+## @file   ~/.functions
+#\
+
+## Source prerequisite function.
+command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
+
+## Import functions.
+source_r "${HOME}/.shell/functions/"

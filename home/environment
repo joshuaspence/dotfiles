@@ -1,0 +1,12 @@
+#/
+## Load shell environment variables.
+##
+## @author Joshua Spence
+## @file   ~/.environment
+#\
+
+## Source prerequisite function.
+command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
+
+## Import environment variables.
+source_r "${HOME}/.shell/environment/"

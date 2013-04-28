@@ -3,7 +3,7 @@
 ## @file   ~/.shell/vars/colors.sh
 #\
 
-## Normal colors. #{{{
+## Normal colors @{{{
     COLOR_NC='\e[0m'
     COLOR_BLACK='\e[0;30m'
     COLOR_RED='\e[0;31m'
@@ -16,9 +16,9 @@
 
     ## Alias to list the defined colors.
     alias colorlist='set | egrep '\''^COLOR_\w*'\'' | sort'
-## #}}}
+## @}}}
 
-## Bold colors. #{{{
+## Bold colors @{{{
     BOLDCOLOR_BLACK='\e[1;30m'
     BOLDCOLOR_RED='\e[1;31m'
     BOLDCOLOR_GREEN='\e[1;32m'
@@ -30,9 +30,9 @@
 
     ## Alias to list the defined bold colors.
     alias boldcolorlist='set | egrep '\''^BOLDCOLOR_\w*'\'' | sort'
-## #}}}
+## @}}}
 
-## Backgrounds. #{{{
+## Backgrounds @{{{
     BG_BLACK='\e[40m'
     BG_RED='\e[41m'
     BG_GREEN='\e[42m'
@@ -44,9 +44,9 @@
 
     ## Alias to list the defined background colors.
     alias backgroundcolorlist='set | egrep '\''^BG_\w*'\'' | sort'
-## #}}}
+## @}}}
 
-## Styles. #{{{
+## Styles @{{{
     STYLE_PLAIN='\e[0m'
     STYLE_BOLD='\e[1m'
     STYLE_NOBOLD='\e[22m'
@@ -63,4 +63,4 @@
 
     ## Alias to list the defined styles.
     alias stylelist='set | egrep '\''^STYLE_\w*'\'' | sort'
-## #}}}
+## @}}}

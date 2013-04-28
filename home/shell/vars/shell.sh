@@ -3,19 +3,19 @@
 ## @file   ~/.shell/vars/shell.sh
 #\
 
-# Unset variables. #{{{
+# Unset variables. @{{{
     unset SHELL
     unset CLICOLOR
     unset INTERACTIVE
     unset LOGIN
     unset REMOTE
-## #}}}
+## @}}}
 
-## Basic shell variables. These should already be setup on most systems. #{{{
+## Basic shell variables. These should already be setup on most systems. @{{{
     : ${HOME=~}
     : ${LOGNAME=$(id -un)}
     : ${UNAME=$(uname)}
-## #}}}
+## @}}}
 
 ## Store the name of the shell.
 SHELL="$0"

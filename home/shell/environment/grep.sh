@@ -3,10 +3,10 @@
 ## @file   ~/.shell/environment/grep.sh
 #\
 
-## Unset environment variables. #{{{
+## Unset environment variables. @{{{
     unset GREP_COLOR
     unset GREP_OPTIONS
-## #}}}
+## @}}}
 
 ## Make sure `grep` is installed.
 command -v grep >/dev/null || return

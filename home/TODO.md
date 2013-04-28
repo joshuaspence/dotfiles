@@ -1,10 +1,12 @@
-oh-my-zsh/
+config/
 ssh/config
-vim/ vimrc
-#inputrc
+vim/
+aliases functions environment
+#bash_profile
+#bashrc
+#dotfilesrc
+#gitconfig
 Makefile
+#pythonrc.py
 README.md
-#screenrc
-shell/zsh/ zlogin zlogout zprofile zshenv zshrc
-*/README.md
-*/TODO.md
+shell/zsh/ oh-my-zsh/ zlogin zlogout zprofile zshenv zshrc

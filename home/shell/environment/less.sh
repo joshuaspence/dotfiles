@@ -3,19 +3,19 @@
 ## @file   ~/.shell/environment/less.sh
 #\
 
-## Unset environment variables. #{{{
+## Unset environment variables. @{{{
     unset LESS
     unset LESSEDIT
     unset LESSOPEN
     unset LESSCLOSE
-## #}}}
+## @}}}
 
 ## Make sure `less` is installed.
 command -v less >/dev/null || return
 
-## Source prerequisite environment variables. #{{{
+## Source prerequisite environment variables. @{{{
     [[ -n $EDITOR ]] || source "${HOME}/.shell/environment/editor.sh"
-## #}}}
+## @}}}
 
 ## Allow `less` to show color escape sequences.
 if $CLICOLOR; then

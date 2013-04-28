@@ -3,9 +3,9 @@
 ## @file ~/.bashrc
 #\
 
-## Source prerequisite functions. #{{{
+## Source prerequisite functions. @{{{
     command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
-## #}}}
+## @}}}
 
 ## Setup shell variables.
 source_r "${HOME}/.shell/vars/"

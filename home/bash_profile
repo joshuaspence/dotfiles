@@ -10,9 +10,9 @@ if [[ -f /etc/profile && -r /etc/profile ]]; then
     source /etc/profile
 fi
 
-## Source prerequisite functions. #{{{
+## Source prerequisite functions. @{{{
     command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
-## #}}}
+## @}}}
 
 ## We run the environment settings for all shells to ensure it's always set up.
 source_r "${HOME}/.shell/environment/"

@@ -3,11 +3,11 @@
 ## @file   ~/.shell/environment/ec2.sh
 #\
 
-## Unset environment variables. #{{{
+## Unset environment variables. @{{{
     unset EC2_HOME
     unset EC2_PRIVATE_KEY
     unset EC2_CERT
-## #}}}
+## @}}}
 
 ## Make sure Amazon EC2 API Tools are installed. To do this, we will just check
 ## whether `ec2-version` is installed.

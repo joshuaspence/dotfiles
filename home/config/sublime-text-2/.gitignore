@@ -1,4 +1,8 @@
-Backup/
-Installed\ Packages/
-Pristine\ Packages/
-Settings/
+#/
+## @author Joshua Spence
+## @file   ~/.config/sublime-text-2/.gitignore
+#\
+
+*
+!Packages/
+!.gitignore

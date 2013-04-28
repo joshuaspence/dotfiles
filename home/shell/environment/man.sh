@@ -3,7 +3,7 @@
 ## @file   ~/.shell/environment/man.sh
 #\
 
-## Unset environment variables. #{{{
+## Unset environment variables. @{{{
     unset MANPAGER
     unset LESS_TERMCAP_mb
     unset LESS_TERMCAP_md
@@ -12,14 +12,14 @@
     unset LESS_TERMCAP_so
     unset LESS_TERMCAP_ue
     unset LESS_TERMCAP_us
-## #}}}
+## @}}}
 
 ## Make sure `man` is installed.
 command -v man >/dev/null || return
 
-## Source prerequisite environment variables. #{{{
+## Source prerequisite environment variables. @{{{
     [[ -n $PAGER ]] || source "${HOME}/.shell/environment/pager.sh"
-## #}}}
+## @}}}
 
 ## The pager to use with the `man` command.
 if [[ -n $PAGER ]]; then
