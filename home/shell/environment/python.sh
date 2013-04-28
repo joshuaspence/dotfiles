@@ -6,16 +6,14 @@
 ## @file   ~/.shell/environment/python.sh
 #\
 
-## Unset the environment variable.
+# Unset environment variables.
 unset PYTHONSTARTUP
 
-## Make sure `python` is installed.
+# Make sure `python` is installed.
 command -v python >/dev/null || return
 
-## Set the environment variable.
+# Set the environment variable.
 PYTHONSTARTUP="${HOME}/.pythonrc.py"
-
-## Export the environment variable.
 if [[ -f $PYTHONSTARTUP && -r $PYTHONSTARTUP ]]; then
     export PYTHONSTARTUP
 else

@@ -1,4 +1,6 @@
 #/
+## Locale environment variables.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/environment/locale.sh
 #\

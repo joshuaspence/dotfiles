@@ -1,30 +1,31 @@
 #/
+## Environment variables defining the operating system type.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/environment/os.sh
 ##
 ## @link   http://github.com/mikemcquaid/dotfiles
 #\
 
-## Unset environment variables. @{{{
+if [[ $(uname -s) == 'Darwin' ]]; then
+    unset LINUX
+    export OSX=1
+    export UNIX=1
+    unset WINDOWS
+elif [[ $(uname -s) == 'Linux' ]]; then
+    export LINUX=1
+    unset OSX
+    export UNIX=1
+    unset WINDOWS
+elif [[ $(uname -s) == '*_NT-*' ]]; then
+    unset LINUX
+    unset OSX
+    unset UNIX
+    export WINDOWS=1
+else
     unset LINUX
     unset OSX
     unset UNIX
     unset WINDOWS
-## @}}}
-
-if [[ $(uname -s) == 'Darwin' ]]; then
-    OSX=1
-    UNIX=1
-elif [[ $(uname -s) == 'Linux' ]]; then
-    LINUX=1
-    UNIX=1
-elif [[ $(uname -s) == '*_NT-*' ]]; then
-    WINDOWS=1
+    echo 'Unknown operating system' >&2
 fi
-
-## Export environment variables. @{{{
-    export LINUX
-    export OSX
-    export UNIX
-    export WINDOWS
-## @}}}
