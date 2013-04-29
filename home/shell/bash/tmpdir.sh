@@ -3,4 +3,4 @@
 ## @file   ~/.shell/bash/tmpdir.sh
 #\
 
-TMPDIR=
+TMPDIR='/tmp'

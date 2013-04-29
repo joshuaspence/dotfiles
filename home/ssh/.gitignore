@@ -1,2 +1,8 @@
+#/
+## @author Joshua Spence
+## @file   ~/.ssh/config/.gitignore
+#\
+
 *
 !config
+!.gitignore

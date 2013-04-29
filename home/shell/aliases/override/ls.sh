@@ -2,13 +2,12 @@
 ## Alias the `ls` command to automatically use color.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/vars/ls.sh
+## @file   ~/.shell/aliases/override/ls.sh
 #\
 
-# Unset environment variables and aliases.
-if command -v ls >/dev/null $CLICOLOR; then    
+if $CLICOLOR; then    
     LS_OPTS='--color=auto'
-    alias ls='/ls ${LS_OPTS}'
+    alias ls='ls ${LS_OPTS}'
 else
 	unset LS_OPTS
 	unalias ls 2>/dev/null || true

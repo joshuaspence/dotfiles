@@ -1,4 +1,6 @@
 #/
+## ANSI colors for the shell.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/vars/colors.sh
 #\
@@ -14,7 +16,7 @@
     COLOR_CYAN='\e[0;36m'
     COLOR_WHITE='\e[0;37m'
 
-    ## Alias to list the defined colors.
+    ## An alias to list the defined colors.
     alias colorlist='set | egrep '\''^COLOR_\w*'\'' | sort'
 ## @}}}
 
@@ -28,7 +30,7 @@
     BOLDCOLOR_CYAN='\e[1;36m'
     BOLDCOLOR_WHITE='\e[1;37m'
 
-    ## Alias to list the defined bold colors.
+    ## An alias to list the defined bold colors.
     alias boldcolorlist='set | egrep '\''^BOLDCOLOR_\w*'\'' | sort'
 ## @}}}
 
@@ -42,7 +44,7 @@
     BG_CYAN='\e[46m'
     BG_WHITE='\e[47m'
 
-    ## Alias to list the defined background colors.
+    ## An alias to list the defined background colors.
     alias backgroundcolorlist='set | egrep '\''^BG_\w*'\'' | sort'
 ## @}}}
 
@@ -61,6 +63,6 @@
     STYLE_STRIKETHROUGH='\e[9m'
     STYLE_NOSTRIKETHROUGH='\e[29m'
 
-    ## Alias to list the defined styles.
+    ## An alias to list the defined styles.
     alias stylelist='set | egrep '\''^STYLE_\w*'\'' | sort'
 ## @}}}
