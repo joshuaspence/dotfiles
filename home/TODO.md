@@ -1,11 +1,10 @@
 config/
 ssh/config
 vim/
-aliases functions environment
 #bash_profile
 #bashrc
 #dotfilesrc
-#gitconfig
+gitconfig
 Makefile
 #pythonrc.py
 README.md

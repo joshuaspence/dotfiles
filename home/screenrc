@@ -40,9 +40,9 @@
         ## @}}}
     ## @}}}
 
-    # You need this line to make backspace work properly on Linux. Otherwise,
-    # backspace becomes CTRL-H, which causes the help window to pop every in
-    # emacs whenever you hit backspace.
+    ## You need this line to make backspace work properly on Linux. Otherwise,
+    ## backspace becomes CTRL-H, which causes the help window to pop every in
+    ## emacs whenever you hit backspace.
     bindkey -k kb stuff ^?
 
     ## Previous window. @{{{
@@ -91,9 +91,9 @@
     ## Example of automatically running some programs in windows on screen
     ## startup.
     ##
-    ## The following will open top in the first window, an ssh session to monkey
-    ## in the next window, and then open mutt and tail in windows 8 and 9
-    ## respectively.
+    ## The following will open `top` in the first window, an `ssh` session to
+    ## monkey in the next window, and then open `mutt` and `tail` in windows 8
+    ## and 9 respectively.
     ##
     ## @{{{
         #screen top

@@ -3,9 +3,7 @@
 ##
 ## @author Joshua Spence
 ## @file   ~/.aliases
+#\
 
-## Source prerequisite function.
 command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
-
-## Import command aliases.
 source_r "${HOME}/.shell/aliases/"
