@@ -5,18 +5,13 @@
 ## @file   ~/.shell/environment/ls.sh
 #\
 
-# Unset environment variable.
-unset LS_COLORS
-
-# Make sure `ls` is installed.
-command -v ls >/dev/null || return
-
-# Set environment variable.
 if $CLICOLOR; then
-    # The `dircolors` command provides color setup for `ls`.
-    command -v dircolors >/dev/null; then
-        eval "$(dircolors -b)"
+    if command -v dircolors >/dev/null; then
+    	eval "$(dircolors -b)"
     else
-        echo 'No options set for LS_COLORS environment variable' >&2
-    fi
+    	unset LS_COLORS
+		echo 'No options set for LS_COLORS environment variable' >&2
+	fi
+else
+	unset LS_COLORS
 fi

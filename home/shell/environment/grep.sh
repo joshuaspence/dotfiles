@@ -5,15 +5,13 @@
 ## @file   ~/.shell/environment/grep.sh
 #\
 
-# Unset environment variables.
-unset GREP_COLOR
-unset GREP_OPTIONS
-
 # Make sure `grep` is installed.
 command -v grep >/dev/null || return
 
-# Set and export environment variables.
 if $CLICOLOR; then
-    export GREP_COLOR='1;33' # bold red
+    export GREP_COLORS='ms=01;31:mc=01;31:sl=:cx=:fn=35:ln=32:bn=32:se=36'
     export GREP_OPTIONS='--color=auto'
+else
+	unset GREP_COLOR
+	unset GREP_OPTIONS
 fi
