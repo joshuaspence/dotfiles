@@ -3,7 +3,6 @@
 ##
 ## @author Joshua Spence
 ## @file   ~/.gitconfig
-##
 ## @link   http://git.wiki.kernel.org/index.php/Aliases
 ## @link   http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
 ## @link   http://github.com/cypher/dotfiles/blob/master/gitconfig
@@ -15,32 +14,6 @@
 
 [include]
     path = ~/.gituser
-
-[advice]
-    ## Advice shown when `git-push` refuses non-fast-forward refs. Default is
-    ## true.
-    pushNonFastForward = true
-
-    ## Directions on how to stage/unstage/add shown in the output of
-    ## `git-status` and the template shown when writing commit messages. Default
-    ## is true.
-    statusHints = true
-
-    ## Advice shown when `git-merge` refuses to merge to avoid overwriting local
-    ## changes. Default is true.
-    commitBeforeMerge = true
-
-    ## Advices shown by various commands when conflicts prevent the operation
-    ## from being performed.
-    resolveConflict = true
-
-    ## Advice on how to set your identity configuration when your information is
-    ## guessed from the system username and domain name. Default is true.
-    implicitIdentity = true
-
-    ## Advice shown when you used `git-checkout` to move to the detach HEAD.
-    ## Default is true.
-    detachedHead = true
 
 [alias]
     ## A shortcut to amend to the previous commit.

@@ -1,5 +1,6 @@
 #/
-## Sets up environment variables for {@link @todo bash}.
+## Initialization for login {@link http://www.gnu.org/software/bash/ bash}
+## shells.
 ##
 ## @author Joshua Spence
 ## @file ~/.bash_profile
@@ -10,15 +11,13 @@ if [[ -f /etc/profile && -r /etc/profile ]]; then
     source /etc/profile
 fi
 
-## Source prerequisite functions. @{{{
-    command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
-## @}}}
+## Source prerequisite function.
+command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
 
 ## We run the environment settings for all shells to ensure it's always set up.
 source_r "${HOME}/.shell/environment/"
 
 ## Check if the shell is interactive. If yes, then source `~/.bashrc`.
-[[ -n $INTERACTIVE ]] || source "${HOME}/.shell/vars/shell.sh"
 if $INTERACTIVE; then
     source "${HOME}/.bashrc"
 fi

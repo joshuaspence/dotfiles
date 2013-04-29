@@ -6,4 +6,5 @@
 ## @file   ~/.shell/aliases/system/biggest.sh
 #\
 
-alias biggest='du -h -s -k $(ls -A) | sort -n -r'
+## Display the largest files/directories in the current directory.
+alias biggest='du -hsk $(ls -A) | sort -nr'

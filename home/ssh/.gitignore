@@ -1,8 +1,11 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.ssh/config/.gitignore
+## @file   ~/.ssh/.gitignore
 #\
 
 *
+!authorized_keys
 !config
+!environment
+!rc
 !.gitignore

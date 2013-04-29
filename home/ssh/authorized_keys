@@ -1,0 +1,7 @@
+#/
+## Lists the public keys (DSA/ECDSA/RSA) that can be used for logging in as this
+## user.
+##
+## @author Joshua Spence
+## @file   ~/.ssh/authorized_keys
+#\

@@ -1,9 +1,0 @@
-#/
-## Load shell command aliases.
-##
-## @author Joshua Spence
-## @file   ~/.aliases
-#\
-
-command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
-source_r "${HOME}/.shell/aliases/"

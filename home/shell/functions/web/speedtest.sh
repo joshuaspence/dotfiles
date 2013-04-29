@@ -1,4 +1,6 @@
 #/
+## A shell function to test the speed of the internet connection.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/web/speedtest.sh
 #\

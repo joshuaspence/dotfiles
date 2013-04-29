@@ -1,9 +1,10 @@
 #/
+## A shell function to start a web server using `python`.
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/web/python-webserver.sh
 #\
 
-## Starts a web server using Python.
+## Starts a web server using `python`.
 ##
 ## @param [optional, Integer] Bind port number, default 8000.
 ##

@@ -6,4 +6,5 @@
 ## @file   ~/.shell/aliases/system/rbiggest.sh
 #\
 
-alias rbiggest='du -BM -h -x | sort -n -r'
+## Recursively display the largest files/directories in the current directory.
+alias rbiggest='du -BM -hx | sort -nr'

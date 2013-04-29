@@ -1,14 +1,13 @@
 #/
-## Alias the `ls` command to automatically use color.
+## Override the `ls` command with an alias such that `ls` will automatically
+## use color.
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/aliases/override/ls.sh
 #\
 
-if $CLICOLOR; then    
-    LS_OPTS='--color=auto'
-    alias ls='ls ${LS_OPTS}'
+if $CLICOLOR; then
+    alias ls='ls --color=auto'
 else
-	unset LS_OPTS
 	unalias ls 2>/dev/null || true
 fi

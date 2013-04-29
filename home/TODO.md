@@ -1,8 +1,6 @@
 config/
 ssh/config
 vim/
-#bash_profile
-#bashrc
 #dotfilesrc
 gitconfig
 Makefile

@@ -1,0 +1,38 @@
+apt-get => APT_CONFIG
+cp,mv => SIMPLE_BACKUP_SUFFIX, VERSION_CONTROL
+perlrun
+ruby
+python
+
+MORE
+DISPLAY
+
+     SSH_ASKPASS           If ssh needs a passphrase, it will read the passphrase from the current terminal if it was run from a terminal.  If ssh
+                           does not have a terminal associated with it but DISPLAY and SSH_ASKPASS are set, it will execute the program specified
+                           by SSH_ASKPASS and open an X11 window to read the passphrase.  This is particularly useful when calling ssh from a
+                           .xsession or related script.  (Note that on some machines it may be necessary to redirect the input from /dev/null to
+                           make this work.)
+
+     SSH_AUTH_SOCK         Identifies the path of a UNIX-domain socket used to communicate with the agent.
+
+     SSH_CONNECTION        Identifies the client and server ends of the connection.  The variable contains four space-separated values: client IP
+                           address, client port number, server IP address, and server port number.
+
+     SSH_ORIGINAL_COMMAND  This variable contains the original command line if a forced command is executed.  It can be used to extract the origi‐
+                           nal arguments.
+
+     SSH_TTY               This is set to the name of the tty (path to the device) associated with the current shell or command.  If the current
+                           session has no tty, this variable is not set.
+
+     TZ                    This variable is set to indicate the present time zone if it was set when the daemon was started (i.e. the daemon passes
+                           the value on to new connections).
+ssh-agent
+
+sudo => SUDO_ASKPASS SUDO_EDITOR SUDO_PROMPT SUDO_PS1
+
+tar => TAR_OPTIONS
+gzip => GZIP
+bzip => BZIP2, BZIP
+unzip => UNZIP
+crontab => CRONTAB_NOHEADER
+df => BLOCK_SIZE

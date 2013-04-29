@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/functions/navigation/dead_symllinks.sh
+## @file   ~/.shell/functions/navigation/dead_symlinks.sh
 #\
 
 ## Find dead symlinks.

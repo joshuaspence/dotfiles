@@ -8,26 +8,8 @@
 ## Always color, even if piping to a another program.
 --color
 
-## Specifies the color of the filename when it's printed in "--group" mode. By
-## default, it's "bold green".
---color-filename=bold green
-
-## Specifies the color of the line number when printed in "--color" mode. By
-## default, it's "bold yellow".
---color-lineno=bold yellow
-
-## Specifies the color of the matching text when printed in "--color" mode. By
-## default, it's "black on_yellow".
---color-match=black on_yellow
-
-## Print NUM lines (default 2) of context around matching lines.
-#--context=2
-
 ## Don't follow symlinks.
 --nofollow
-
-## Outputs the filetypes that `ack-grep` associates with each file.
-#--show-types
 
 ## Ignore case in the search strings if the search pattern contains no uppercase
 ## characters.

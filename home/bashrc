@@ -1,14 +1,21 @@
 #/
+## Initialization for interactive non-login
+## {@link http://www.gnu.org/software/bash/ bash} shells.
+##
 ## @author Joshua Spence
 ## @file ~/.bashrc
 #\
 
-## Source prerequisite functions. @{{{
-    command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
-## @}}}
+## Pull in any system defaults first so they can be overridden later.
+if [[ -f /etc/bash.bashrc && -r /etc/bash.bashrc ]]; then
+    source /etc/bash.bashrc
+fi
 
-## Setup shell variables.
-source_r "${HOME}/.shell/vars/"
+## Source prerequisite function.
+command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
+
+## Setup shell options.
+source_r "${HOME}/.shell/bash/"
 
 ## Setup the environment.
 source_r "${HOME}/.shell/environment/"
@@ -18,6 +25,3 @@ source_r "${HOME}/.shell/aliases/"
 
 ## Import user-defined functions.
 source_r "${HOME}/.shell/functions/"
-
-## Set up shell options.
-source_r "${HOME}/.shell/bash/"

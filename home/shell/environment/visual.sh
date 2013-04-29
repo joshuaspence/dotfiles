@@ -1,7 +1,7 @@
 #/
 ## The "VISUAL" environment variable is used to specify the visual
 ## (screen-oriented) editor. Generally you will want to set it to the same value
-## as the "EDITOR" variable.
+## as the "EDITOR" environment variable.
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/environment/visual.sh

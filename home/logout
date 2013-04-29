@@ -3,8 +3,6 @@
 ##
 ## @author Joshua Spence
 ## @file   ~/.logout
-## @file   ~/.bash_logout
-## @file   ~/.zlogout
 #\
 
 ## When leaving the console, clear the screen to increase privacy.

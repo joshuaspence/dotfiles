@@ -1,11 +1,11 @@
 #/
+## A shell function to output a cool "The Matrix" type screen.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/useless/matrix1.sh
 #\
 
-## Cool "The Matrix" type screens.
-##
-## @link @todo I am not sure where I got this from.
+## Cool "The Matrix" type screen.
 function matrix1() {
     echo -e '\e[32m'
     while true; do

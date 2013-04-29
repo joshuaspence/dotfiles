@@ -3,7 +3,9 @@
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/aliases/navigation/two.sh
-## @link   http://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 #\
 
+## Easier navigation.
+##
+## @link http://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 alias ..='cd ..'
