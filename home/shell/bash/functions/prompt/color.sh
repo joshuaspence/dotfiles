@@ -1,16 +1,18 @@
 #/
+## Color configuration for the {@link http://www.gnu.org/software/bash/ bash}
+## prompt statement.
+##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/functions/prompt/colors.sh
+## @file   ~/.shell/bash/functions/prompt/color.sh
 #\
 
-## Source prerequisite colors.
-[[ -n $COLOR_NC ]] && source "${HOME}/.shell/vars/colors.sh"
+# Source prerequisite variables.
+[[ -n $COLOR_NC ]] && source "${HOME}/.shell/bash/colors.sh"
 
-## Shell prompt colors. #{{{
-    PROMPT_HOST_COLOR="${COLOR_CYAN}"
-    PROMPT_PWD_COLOR="${COLOR_GREEN}"
-    PROMPT_ROOTUSER_COLOR="${COLOR_RED}"
-    PROMPT_TIME_COLOR="${COLOR_BLUE}"
-    PROMPT_TTY_COLOR="${COLOR_MAGENTA}"
-    PROMPT_USER_COLOR="${COLOR_YELLOW}"
-## #}}}
+# Shell prompt colors.
+PROMPT_HOST_COLOR="${COLOR_CYAN}"
+PROMPT_PWD_COLOR="${COLOR_GREEN}"
+PROMPT_ROOTUSER_COLOR="${COLOR_RED}"
+PROMPT_TIME_COLOR="${COLOR_BLUE}"
+PROMPT_TTY_COLOR="${COLOR_MAGENTA}"
+PROMPT_USER_COLOR="${COLOR_YELLOW}"

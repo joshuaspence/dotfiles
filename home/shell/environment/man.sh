@@ -9,15 +9,6 @@
 # Make sure `man` is installed.
 command -v man >/dev/null || return
 
-# The pager to use with the `man` command.
-[[ -n $PAGER ]] || source "${HOME}/.shell/environment/pager.sh"
-if [[ -n $PAGER ]]; then
-    export MANPAGER="${PAGER}"
-else
-    unset MANPAGER
-    echo 'No command set for MANPAGER environment variable' >&2
-fi
-
 # Use `less` colors for `man` pages.
 if $CLICOLOR; then
     export LESS_TERMCAP_mb=$(printf "${COLOR_RED}")

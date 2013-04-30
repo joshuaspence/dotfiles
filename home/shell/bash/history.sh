@@ -1,4 +1,6 @@
 #/
+## Configure {@link http://www.gnu.org/software/bash/ bash} shell history.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/bash/history.sh
 #\
@@ -10,13 +12,13 @@ HISTCONTROL='ignorespace:erasedups'
 ## Give history timestamps.
 HISTTIMEFORMAT='[%F %T] '
 
-## Lots of history. #{{{
+## Lots of history. @{{{
     HISTSIZE='10000000000'
     HISTFILESIZE="${HISTSIZE}"
-## #}}}
+## @}}}
 
-## File where history is stored.
+## File where the history is stored.
 HISTFILE="${HOME}/.shell_history"
 
 ## Exclude certain commands from the history file.
-HISTIGNORE='cd:history:ls:pwd:[ \t]*'
+HISTIGNORE='cd:history:ls:pwd'

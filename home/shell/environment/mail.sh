@@ -2,7 +2,7 @@
 ## Disable mail checking.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/mailcheck.sh
+## @file   ~/.shell/environment/mail.sh
 #\
 
 unset MAILCHECK

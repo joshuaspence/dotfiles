@@ -1,4 +1,6 @@
 #/
+## Echoes the {@link http://www.gnu.org/software/bash/ bash} prompt statement.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/bash/functions/prompt/shell_prompt.sh
 #\
