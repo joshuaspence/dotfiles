@@ -1,1 +1,48 @@
-packages/Base File.sublime-settings
+/**
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-2/Packages/User/Base File.sublime-settings
+ */
+{
+    /**************************************************************************
+     * Package: Alignment *{{{
+     **************************************************************************/
+
+    /**
+     * If the indent level of a multi-line selection should be aligned.
+     */
+    "align_indent": true,
+
+    /** *}}} */
+
+    /**************************************************************************
+     * Package: SublimeCodeIntel *{{{
+     **************************************************************************/
+
+    /**
+     * Sets the mode in which SublimeCodeIntel runs:
+     *
+     * true (default): Enabled (default).
+     * false:          Disabled.
+     */
+    "codeintel": true,
+
+    /**
+     * An array of language names which are disabled.
+     */
+    "codeintel_disabled_languages": [],
+
+    /**
+     * Sets the mode in which SublimeCodeIntel's live autocomplete runs:
+     *
+     * true (default): Autocomplete popups as you type (default).
+     * false:          Autocomplete popups only when you request it.
+     */
+    "codeintel_live": true,
+
+    /**
+     * An array of language names to disable.
+     */
+    "codeintel_live_disabled_languages": []
+
+    /** *}}} */
+}
