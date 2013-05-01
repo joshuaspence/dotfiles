@@ -7,49 +7,29 @@
 
 ## Personal @{{{
     Host git.github.com github
-        Hostname git.github.com
+        HostName git.github.com
         User git
+
         ForwardAgent no
-
-        IdentitiesOnly yes
-        PasswordAuthentication no
-        PubkeyAuthentication yes
-
-    Host bazaar.launchpad.net launchpad
-        Hostname bazaar.launchpad.net
-        User joshuaspence
-        ForwardAgent no
-
         IdentitiesOnly yes
         PasswordAuthentication no
         PubkeyAuthentication yes
 
     ## EC2 @{{{
         Host gunwatcher.ec2.joshuaspence.com gunwatcher.joshuaspence.com gunwatcher
-            Hostname gunwatcher.ec2.joshuaspence.com
+            HostName gunwatcher.ec2.joshuaspence.com
             User ec2-user
-            ForwardAgent no
 
+            ForwardAgent no
             IdentitiesOnly yes
             PasswordAuthentication no
             PubkeyAuthentication yes
 
         Host pear.ec2.joshuaspence.com pear.joshuaspence.com pear
-            Hostname pear.ec2.joshuaspence.com
+            HostName pear.ec2.joshuaspence.com
             User ec2-user
+
             ForwardAgent no
-
-            IdentitiesOnly yes
-            PasswordAuthentication no
-            PubkeyAuthentication yes
-    ## @}}}
-
-    ## Home @{{{
-        Host home.ddns.joshuaspence.com home
-            Hostname home.ddns.joshuaspence.com
-            User root
-            ForwardAgent yes
-
             IdentitiesOnly yes
             PasswordAuthentication no
             PubkeyAuthentication yes
@@ -58,38 +38,38 @@
 
 ## Freelancer @{{{
     Host analytics01.freelancer.com analytics01
-        Hostname analytics01.freelancer.com
+        HostName analytics01.freelancer.com
         User joshua
-        ForwardAgent yes
 
+        ForwardAgent yes
         IdentitiesOnly yes
         PasswordAuthentication no
         PubkeyAuthentication yes
 
-    Host git.freelancer.com gitlab.freelancer.com freelancer-git
-        Hostname git.freelancer.com
+    Host git.freelancer.com gitlab.freelancer.com
+        HostName git.freelancer.com
         User git
-        ForwardAgent no
 
+        ForwardAgent no
         IdentitiesOnly yes
         PasswordAuthentication no
         PubkeyAuthentication yes
 
     Host staging3.freelancer.com staging3
-        Hostname staging3.freelancer.com
+        HostName staging3.freelancer.com
         User staging-josh
-        ForwardAgent yes
 
+        ForwardAgent yes
         IdentitiesOnly yes
         PasswordAuthentication no
         PubkeyAuthentication yes
 
     ## Office @{{{
         Host josh.syd.local local-staging
-            Hostname josh.syd.local
+            HostName josh.syd.local
             User freelancer
-            ForwardAgent yes
 
+            ForwardAgent yes
             IdentitiesOnly yes
             PasswordAuthentication no
             PubkeyAuthentication yes
@@ -97,10 +77,10 @@
 
     ## Tunnels @{{{
         Host db-slave-stats-tunnel
-            Hostname analytics01.freelancer.com
+            HostName analytics01.freelancer.com
             User joshua
-            ForwardAgent no
 
+            ForwardAgent no
             IdentitiesOnly yes
             PasswordAuthentication no
             PubkeyAuthentication yes
@@ -113,23 +93,15 @@
 
 ## Global @{{{
     Host *
-        ## If this flag is set to "yes", `ssh` will additionally check the host
-        ## IP address in the `~/.ssh/known_hosts` file. This allows `ssh` to
-        ## detect if a host key changed due to DNS spoofing. If the option is
-        ## set to "no", the check will not be executed.
+        ## Specifies whether to additionally check the host IP address in the
+        ## `~/.ssh/known_hosts` file.
         CheckHostIP yes
 
         ## Specifies whether to use compression.
         Compression no
 
         ## Enables the sharing of multiple sessions over a single network
-        ## connection. When set to "yes", `ssh` will listen for connections on a
-        ## control socket specified using the "ControlPath" argument. Additional
-        ## sessions can connect to this socket using the same "ControlPath" with
-        ## "ControlMaster" set to "no" (the default). These sessions will try to
-        ## reuse the master instance's network connection rather than initiating
-        ## new ones, but will fall back to connecting normally if the control
-        ## socket does not exist, or is not listening.
+        ## connection.
         ##
         ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
         ## @{{{
@@ -143,7 +115,8 @@
         ForwardAgent no
 
         ## Specifies whether X11 connections will be automatically redirected
-        ## over the secure channel and DISPLAY set.
+        ## over the secure channel and "DISPLAY" set.
+        ##
         ## @{{{
             ForwardX11 no
             ForwardX11Trusted yes
@@ -154,12 +127,14 @@
         ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
         GSSAPIAuthentication no
 
+        ## Indicates that `ssh` should hash host names and addresses when they
+        ## are added to `~/.ssh/known_hosts`.
+        HashKnownHosts yes
+
         ## Specifies that `ssh` should only use the authentication identity
-        ## files configured in the SSH config files, even if `ssh-agent` offers
-        ## more identities. The argument to this keyword must be "yes" or "no".
-        ## This option is intended for situations where `ssh-agent` offers many
-        ## different identities.
-        #IdentitiesOnly no
+        ## files configured in the `ssh` configuration files, even if
+        ## `ssh-agent` offers more identities.
+        IdentitiesOnly no
 
         ## Specifies a file from which the user's DSA, ECDSA or RSA
         ## authentication identity is read.
@@ -168,30 +143,22 @@
         ## This option disables host authentication for localhost.
         NoHostAuthenticationForLocalhost yes
 
-        ## Specifies whether to use password authentication. The argument to
-        ## this keyword must be "yes" or "no".
+        ## Specifies whether to use password authentication.
         PasswordAuthentication yes
 
         ## Allow local command execution via the "LocalCommand" option or using
-        ## the `!command` escape sequence in `ssh`. The argument must be "yes"
-        ## or "no".
+        ## the `!command` escape sequence in `ssh`.
         PermitLocalCommand no
 
         ## Specifies the protocol versions `ssh` should support in order of
-        ## preference. The possible values are "1" and "2". Multiple versions
-        ## must be comma-separated.
+        ## preference.
         Protocol 2
 
-        ## Specifies whether to try public key authentication. The argument to
-        ## this keyword must be "yes" or "no".
-        #PubkeyAuthentication no
-
-        ## Specifies what variables from the local environment should be sent to
-        ## the server.
-        SendEnv LANG LC_*
+        ## Specifies whether to try public key authentication.
+        PubkeyAuthentication yes
 
         ## If the network disappears your connection will hang, but if it then
-        ## re-appears with 10 minutes it will resume working.
+        ## re-appears within 10 minutes it will resume working.
         ##
         ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
         ## @{{{
@@ -200,42 +167,7 @@
             TCPKeepAlive no
         ## @}}}
 
-        ## If this flag is set to "yes", `ssh` will never automatically add host
-        ## keys to the `~/.ssh/known_hosts` file, and refuses to connect to
-        ## hosts whose host key has changed. This provides maximum protection
-        ## against trojan horse attacks, though it can be annoying when the
-        ## `/etc/ssh/ssh_known_hosts` file is poorly maintained or when
-        ## connections to new hosts are frequently made. This option forces the
-        ## user to manually add all new hosts.
-        ##
-        ## If this flag is set to "no", `ssh` will automatically add new host
-        ## keys to the user known hosts files.
-        ##
-        ## If this flag is set to "ask", new host keys will be added to the user
-        ## known host files only after the user has confirmed that is what they
-        ## really want to do, and `ssh` will refuse to connect to hosts whose
-        ## host key has changed. The host keys of known hosts will be verified
-        ## automatically in all cases.
-        ##
-        ## The argument must be "yes", "no" or "ask". The default is "ask".
-        StrictHostKeyChecking ask
-
         ## Specifies whether to verify the remote key using DNS and SSHFP
         ## resource records.
-        ##
-        ## If this option is set to "yes", the client will implicitly trust keys
-        ## that match a secure fingerprint from DNS. Insecure fingerprints will
-        ## be handled as if this option was set to "ask".
-        ##
-        ## If this option is set to "ask", information on fingerprint match will
-        ## be displayed, but the user will still need to confirm new host keys
-        ## according to the "StrictHostKeyChecking" option.
-        ##
-        ## The argument must be "yes", "no" or "ask". The default is "no".
-        VerifyHostKeyDNS ask
-
-        ## If this flag is set to "yes", an ASCII art representation of the
-        ## remote host key fingerprint is printed in addition to the hex
-        ## fingerprint string at login and for unknown host keys.
-        VisualHostKey no
+        VerifyHostKeyDNS yes
 ## @}}}
