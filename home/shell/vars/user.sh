@@ -6,4 +6,4 @@
 ## @file   ~/.shell/vars/user.sh
 #\
 
-: ${USER=$(id -un)}
+: ${USER=$(whoami)}

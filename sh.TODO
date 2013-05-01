@@ -3,9 +3,6 @@
 # 077 would be more secure, but 022 is more useful.
 umask 022
 
-# Fix systems missing $USER
-[ -z "$USER" ] && export USER=$(whoami)
-
 # Set to avoid `env` output from changing console colour
 export LESS_TERMEND=$'\E[0m'
 
@@ -33,7 +30,6 @@ force_add_to_path() {
     export PATH="$PATH:$1"
 }
 
-
 ## @link https://github.com/norm/home/blob/master/etc/bash/defaults/00.flags
 # The current Operating System type (eg. Linux, Darwin, NetBSD)
 export HOSTOS=`uname`
@@ -43,6 +39,3 @@ export HOST=`hostname -s`
 
 # The current domain name.
 export DOMAIN=`hostname | sed -e "s/${HOST}.//"`
-
-## @link https://github.com/norm/home/blob/master/etc/bash/defaults/10.locations
-export LESSHISTFILE="${HOME}/var/less_history"          # ~/.lesshst

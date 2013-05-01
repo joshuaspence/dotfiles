@@ -1,5 +1,3 @@
-
-
 # complete hostnames from this file
 : ${HOSTFILE=~/.ssh/known_hosts}
 

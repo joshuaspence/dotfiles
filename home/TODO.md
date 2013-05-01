@@ -1,4 +1,3 @@
-config/
 ssh/config
 vim/
 #dotfilesrc
