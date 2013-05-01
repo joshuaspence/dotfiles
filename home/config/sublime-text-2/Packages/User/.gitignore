@@ -3,5 +3,5 @@
 ## @file   ~/.config/sublime-text-2/Packages/User/.gitignore
 #\
 
-Package Control.last-run
-Side Bar.sublime-settings
+/Package Control.last-run
+/Side Bar.sublime-settings
