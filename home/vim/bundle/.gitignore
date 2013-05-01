@@ -3,6 +3,6 @@
 ## @file   ~/.vim/bundle/.gitignore
 #\
 
-*
-!vundle/
-!.gitignore
+/*
+!/vundle/
+!/.gitignore

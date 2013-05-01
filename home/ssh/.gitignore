@@ -3,9 +3,9 @@
 ## @file   ~/.ssh/.gitignore
 #\
 
-*
-!authorized_keys
-!config
-!environment
-!rc
-!.gitignore
+/*
+!/authorized_keys
+!/config
+!/environment
+!/rc
+!/.gitignore

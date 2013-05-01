@@ -3,5 +3,5 @@
 ## @file   ~/.vim/undo/.gitignore
 #\
 
-*
-!.gitignore
+/*
+!/.gitignore
