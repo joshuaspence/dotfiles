@@ -3,6 +3,6 @@
 ## @file   ~/.config/sublime-text-2/.gitignore
 #\
 
-*
+/*
 !Packages/
 !.gitignore

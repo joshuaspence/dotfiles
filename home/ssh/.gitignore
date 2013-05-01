@@ -3,7 +3,7 @@
 ## @file   ~/.ssh/.gitignore
 #\
 
-*
+/*
 !authorized_keys
 !config
 !environment
