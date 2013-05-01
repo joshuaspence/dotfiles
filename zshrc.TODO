@@ -46,6 +46,5 @@ setopt prompt_subst
 # Colorful prompt with Git and Subversion branch
 autoload -U colors && colors
 
-
 ## @link https://github.com/paulmillr/dotfiles/blob/master/home/zshrc.sh
 autoload -Uz promptinit && promptinit
