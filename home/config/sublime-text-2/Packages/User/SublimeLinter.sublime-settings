@@ -6,13 +6,6 @@
  * @file   ~/.config/sublime-text-2/Packages/User/SublimeLinter.sublime-settings
  */
 {
-    /**
-     * Selects the way the lines with errors or warnings are marked.
-     */
     "sublimelinter_mark_style": "none",
-
-    /**
-     * If true, lines with errors or warnings will have a gutter mark.
-     */
     "sublimelinter_gutter_marks": true
 }

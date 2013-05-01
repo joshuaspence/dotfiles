@@ -1,8 +1,0 @@
-/**
- * Package configuration for
- * {@link http://github.com/revolunet/sublimetext-markdown-preview Markdown Preview}.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-2/Packages/User/MarkdownPreview.sublime-settings
- */
-{}

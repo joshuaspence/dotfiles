@@ -1,8 +1,0 @@
-/**
- * Package configuration for
- * {@link http://github.com/sergeche/emmet-sublime Emmet}.
- * 
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-2/Packages/User/Emmet.sublime-settings
- */
-{}
