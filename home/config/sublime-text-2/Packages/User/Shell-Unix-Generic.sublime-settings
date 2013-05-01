@@ -1,4 +1,6 @@
 /**
+ * Settings for "Shell-Unix-Generic" files.
+ * 
  * @author Joshua Spence
  * @file   ~/.config/sublime-text-2/Packages/User/Shell-Unix-Generic.sublime-settings
  */
@@ -6,15 +8,10 @@
 	"extensions":
 	[
 		".ackrc", "ackrc",
-		".aliases",
 		".bash_logout", "bash_logout",
 		".bash_profile", "bash_profile",
-		".bash_prompt",
 		".bashrc", "bashrc",
-		".brew",
 		".dotfilesrc", "dotfilesrc",
-		".exports",
-		".functions",
 		".git",
 		".gitattributes",
 		".gitconfig", "gitconfig",
@@ -22,10 +19,6 @@
 		".gituser",
 		".hushlogin", "hushlogin",
 		".inputrc", "inputrc",
-		".npmrc", "npmrc",
-		".osx",
-		".packages",
-		".pkginit",
 		".screenrc", "screenrc",
 		".zlogin", "zlogin",
 		".zlogout", "zlogout",

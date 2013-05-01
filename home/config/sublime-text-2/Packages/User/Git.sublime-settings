@@ -1,5 +1,28 @@
 /**
+ * Package configuration for
+ * {@link http://github.com/kemayo/sublime-text-2-git/ Git}.
+ * 
  * @author Joshua Spence
  * @file   ~/.config/sublime-text-2/Packages/User/Git.sublime-settings
  */
-{}
+{
+    /**
+     * Save before running commands.
+     */
+    "save_first": true,
+
+    /**
+     * Use the panel for diff output, rather than a new scratch window.
+     */
+    "diff_panel": false,
+
+    /**
+     * Show the branch in the status bar.
+     */
+    "statusbar_branch": true,
+
+    /**
+     * Show symbols for quick git status in status bar.
+     */
+    "statusbar_status": true
+}

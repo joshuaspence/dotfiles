@@ -1,11 +1,14 @@
 /**
+ * Package configuration for
+ * {@link http://github.com/fitnr/SublimeDataConverter DataConverter}.
+ *
  * @author Joshua Spence
  * @file   ~/.config/sublime-text-2/Packages/User/DataConverter.sublime-settings
  */
 {
     /**
      * When true, the first row is treated as the header row. Set to false to
-     * always sniff for headers (sniffing isn't perfect!).
+     * always sniff for headers.
      */
     "assume_headers": false,
 

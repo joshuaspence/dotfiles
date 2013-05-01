@@ -1,4 +1,6 @@
 /**
+ * General configuration for {@link http://www.sublimetext.com/ Sublime Text}.
+ *
  * @author Joshua Spence
  * @file   ~/.config/sublime-text-2/Packages/User/Preferences.sublime-settings
  */
@@ -173,9 +175,7 @@
 
     /** @}}} */
 
-    /**************************************************************************
-     * Application Behavior Settings @{{{
-     **************************************************************************/
+    /** Application Behavior Settings @{{{ */
 
     /**
      * Makes the application start up with the last set of open files.
@@ -194,44 +194,23 @@
     "show_full_path": true,
 
     /**
-     * Preview file contents when clicking on a file in the side bar.
-     */
-    "preview_on_click": true,
-
-    /**
-     * Folder_exclude_patterns and file_exclude_patterns control which files
-     * are listed in folders on the side bar.
+     * Controls which folders are listed in the side bar.
      */
     "folder_exclude_patterns":
     [
-    	"cache",
-    	"CVS",
-    	"log",
-    	"tmp",
-    	".git",
-    	".hg",
-    	".svn"
+        "cache",
+        "CVS",
+        "log",
+        "tmp",
+        ".git",
+        ".hg",
+        ".svn"
     ],
 
-    /** @}}} */
+    /**
+     * Controls which files are listed in the side bar.
+     */
+    "file_exclude_patterns": []
 
-    /**************************************************************************
-     * Package: ClipboardHistory @{{{
-     **************************************************************************/
-    "limit": 50,
-    "paste_and_indent": true,
-    /** @}}} */
-
-    /**************************************************************************
-     * Package: Githubinator @{{{
-     **************************************************************************/
-    "default_remote": "origin",
-    /** @}}} */
-
-    /**************************************************************************
-     * Package: WrapPlus @{{{
-     **************************************************************************/
-    "WrapPlus.break_long_words": true,
-    "WrapPlus.break_on_hyphens": true
     /** @}}} */
 }

@@ -1,91 +1,33 @@
 /**
+ * Key map for {@link http://www.sublimetext.com/ Sublime Text}.
+ *
  * @author Joshua Spence
  * @file   ~/.config/sublime-text-2/Packages/User/Default (Linux).sublime-keymap
  */
 [
     {"keys": ["ctrl+alt+n"], "command": "clone_file"},
 
-    /**************************************************************************
-     * Package: Alignment *{{{
-     **************************************************************************/
-    {"keys": ["ctrl+alt+a"], "command": "alignment"},
-    /** *}}} */
-
-    /**************************************************************************
-     * Package: ChangeQuotes *{{{
-     **************************************************************************/
+    /** Package: ChangeQuotes @{{{ */
     {"keys": ["ctrl+shift+'"], "command": "change_quotes"},
-    /** *}}} */
-
-    /**************************************************************************
-     * Package: Clickable URLs *{{{
-     **************************************************************************/
-    {"keys": ["ctrl+alt+enter"], "command": "open_url"},
-    /** *}}} */
-
-    /**************************************************************************
-     * Package: Clipboard History *{{{
-     **************************************************************************/
-    {"keys": ["ctrl+alt+v"], "command": "clipboard_display"},
-    {"keys": ["ctrl+alt+d"], "command": "clipboard_clear_history"},
-    {"keys": ["ctrl+shift+v"], "command": "clipboard_paste_previous"},
-    {"keys": ["ctrl+shift+alt+v"], "command": "clipboard_paste_next"},
-    /** *}}} */
-
-    /**************************************************************************
-     * Package: DocBlockr *{{{
-     **************************************************************************/
-    {"keys": ["alt+shift+tab"], "command": "jsdocs_reparse", "context": [{"key": "selector", "operator": "equal", "operand": "comment.block"}]},
-    /** *}}} */
-
-    /**************************************************************************
-     * Package: Git *{{{
-     **************************************************************************/
-    {"keys": ["enter"], "command": "git_goto_diff", "context": [{"key": "selector", "operand": "markup.inserted.diff"}]},
-    {"keys": ["enter"], "command": "git_goto_diff", "context": [{"key": "selector", "operand": "markup.deleted.diff"}]},
+    /** @}}} */
+    
+    /** Package: Git @{{{ */
     {"keys": ["ctrl+shift+g", "ctrl+g"], "command": "git_graph"},
     {"keys": ["ctrl+shift+g", "ctrl+shift+g"], "command": "git_graph_all"},
     {"keys": ["ctrl+shift+g", "ctrl+d"], "command": "git_diff_tool"},
-    /** *}}} */
+    /** @}}} */
 
-    /**************************************************************************
-     * Package: GitGutter *{{{
-     **************************************************************************/
+    /** Package: GitGutter @{{{ */
     {"keys": ["ctrl+shift+alt+j"], "command": "git_gutter_next_change"},
     {"keys": ["ctrl+shift+alt+k"], "command": "git_gutter_prev_change"},
-    /** *}}} */
+    /** @}}} */
 
-    /**************************************************************************
-     * Package: GitHubinator *{{{
-     **************************************************************************/
+    /** Package: GitHubinator @{{{ */
     {"keys": ["ctrl+shift+g", "ctrl+h"], "command": "githubinator", "args": {"permalink": false}},
     {"keys": ["ctrl+shift+g", "ctrl+shift+h"], "command": "githubinator", "args": {"permalink": true}},
-    /** *}}} */
+    /** @}}} */
 
-    /**************************************************************************
-     * Package: Markdown Preview *{{{
-     **************************************************************************/
-    {"keys": ["alt+m"], "command": "markdown_preview", "args": {"target": "browser"}},
-    /** *}}} */
-
-    /**************************************************************************
-     * Package: SublimeCodeIntel *{{{
-     **************************************************************************/
-    {"keys": ["ctrl+j"], "command": "code_intel_auto_complete"},
-    {"keys": ["ctrl+f3"], "command": "goto_python_definition"},
-    /** *}}} */
-
-    /**************************************************************************
-     * Package: SublimeLinter *{{{
-     **************************************************************************/
-    {"keys": ["ctrl+alt+l"], "command": "sublimelinter", "args": {"action": "lint"}},
-    {"keys": ["ctrl+alt+e"], "command": "find_next_lint_error"},
-    {"keys": ["ctrl+alt+shift+e"], "command": "find_previous_lint_error"},
-    /** *}}} */
-
-    /**************************************************************************
-     * Package: Wrap Plus *{{{
-     **************************************************************************/
-    {"keys": ["alt+q"], "command": "wrap_lines_plus"}
-    /** *}}} */
+    /** Package: Markdown Preview @{{{ */
+    {"keys": ["alt+m"], "command": "markdown_preview", "args": {"target": "browser"}}
+    /** @}}} */
 ]
