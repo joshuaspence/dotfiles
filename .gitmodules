@@ -7,9 +7,6 @@
 [submodule "home/oh-my-zsh"]
 	path = home/oh-my-zsh
 	url = git://github.com/robbyrussell/oh-my-zsh.git
-[submodule "modules/hosts"]
-	path = modules/hosts
-	url = git://github.com/StevenBlack/hosts.git
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
