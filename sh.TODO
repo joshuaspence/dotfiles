@@ -25,11 +25,6 @@ fi
 # Load GitHub token
 [ -s ~/.github_password ] && export GITHUB_PASSWORD=$(cat ~/.github_password)
 
-force_add_to_path() {
-    remove_from_path "$1"
-    export PATH="$PATH:$1"
-}
-
 ## @link https://github.com/norm/home/blob/master/etc/bash/defaults/00.flags
 # The current Operating System type (eg. Linux, Darwin, NetBSD)
 export HOSTOS=`uname`
@@ -39,3 +34,53 @@ export HOST=`hostname -s`
 
 # The current domain name.
 export DOMAIN=`hostname | sed -e "s/${HOST}.//"`
+
+## @link https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.bin/home-fix
+# Ensure sane file modes for some important files and directories
+if [ -d "${HOME}/.ssh" ]; then
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/*
+fi
+if [ -d "${HOME}/.gnupg" ]; then
+    chmod 700 -R ~/.gnupg
+fi
+
+[ -d "${HOME}/.subversion" ] && chmod 700 "${HOME}/.subversion"
+
+# complete hostnames from this file
+: ${HOSTFILE=~/.ssh/known_hosts}
+
+# PAGER
+if test -n "$(command -v less)" ; then
+    PAGER="less -FirSwX"
+    MANPAGER="less -FiRswX"
+else
+    PAGER=more
+    MANPAGER="$PAGER"
+fi
+export PAGER MANPAGER
+
+# we always pass these to ls(1)
+LS_COMMON="-hBG"
+# setup the main ls alias if we've established common args
+test -n "$LS_COMMON" &&
+alias ls="command ls $LS_COMMON"
+
+# do not list implied entries ending with ~.
+LSFLAGS="-B"
+
+# Usage: pls [<var>]
+# List path entries of PATH or environment variable <var>.
+pls () { eval echo \$${1:-PATH} |tr : '\n'; }
+
+# Usage: puniq [<path>]
+# Remove duplicate entries from a PATH style value while retaining
+# the original order. Use PATH if no <path> is given.
+#
+# Example:
+#   $ puniq /usr/bin:/usr/local/bin:/usr/bin
+#   /usr/bin:/usr/local/bin
+puniq () {
+    echo "$1" |tr : '\n' |nl |sort -u -k 2,2 |sort -n |
+    cut -f 2- |tr '\n' : |sed -e 's/:$//' -e 's/^://'
+}
