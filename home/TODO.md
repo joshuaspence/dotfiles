@@ -1,5 +1,5 @@
 #dotfilesrc
-gitconfig
+gitconfig gitignore
 Makefile
 #pythonrc.py
 README.md
