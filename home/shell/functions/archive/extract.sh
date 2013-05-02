@@ -14,7 +14,7 @@ function extract() {
     if [[ $# < 1 || -z $1 ]]; then
         echo 'Usage: extract <path>' >&2
         return 1
-    elif [[ $# >= 1 && ! -f $1 ]]; then
+    elif [[ $# > 0 && ! -f $1 ]]; then
         echo "'$1' is not a valid file" >&2
         return 2
     fi

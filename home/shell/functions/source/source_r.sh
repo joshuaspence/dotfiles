@@ -16,7 +16,7 @@ function source_r() {
 
     if [[ -f $1 && -r $1 ]]; then
         source "$1"
-    elif [[ -d $1 -r $1 ]]; then
+    elif [[ -d $1 && -r $1 ]]; then
         local file; for file in $(find "$1" ! -type d -readable 2>/dev/null); do
             source "${file}"
         done
