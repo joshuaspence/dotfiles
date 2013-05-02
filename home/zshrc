@@ -36,23 +36,18 @@ export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:$HOME
 export TERM='rxvt-unicode'
 export EDITOR='vim'
 
-## Source aliases.
-source_r "$HOME/.shell/aliases"
-
 ## Terminal related settings.
-export LS_COLORS="ow=01;94:di=01;94"
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-bindkey "^[[7~" beginning-of-line
-bindkey "^[[8~" end-of-line
+#export LS_COLORS="ow=01;94:di=01;94"
+#zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+#bindkey "^[[7~" beginning-of-line
+#bindkey "^[[8~" end-of-line
 
-## Shell options.
-source "$HOME/.shell/shopt.zsh"
+command -v source_r || source "${HOME}/.shell/functions/source/source_r.sh"
 
-source "$HOME/.shell/environment/ls.zsh"
-source "$HOME/.shell/environment/update.zsh"
-source "$HOME/.shell/environment/shell"
+source_r "$HOME/.shell/aliases/"
+source_r "$HOME/.shell/functions/"
+source_r "$HOME/.shell/zsh/"
 
 DISABLE_LS_COLORS='false'
-
 DISABLE_AUTO_UPDATE='false'
 UPDATE_ZSH_DAYS='13'
