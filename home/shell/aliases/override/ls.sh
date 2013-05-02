@@ -6,6 +6,8 @@
 ## @file   ~/.shell/aliases/override/ls.sh
 #\
 
+[[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
+
 if $CLICOLOR; then
     alias ls='ls --color=auto'
 else

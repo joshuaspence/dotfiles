@@ -3,13 +3,14 @@
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/environment/man.sh
-## @link   http://nion.modprobe.de/blog/archives/572-less-colors-for-man-pages.html
 #\
 
-# Make sure `man` is installed.
 command -v man >/dev/null || return
+[[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
 
-# Use `less` colors for `man` pages.
+## Use `less` colors for `man` pages.
+##
+## @link   http://nion.modprobe.de/blog/archives/572-less-colors-for-man-pages.html
 if $CLICOLOR; then
     export LESS_TERMCAP_mb=$(printf "${COLOR_RED}")
     export LESS_TERMCAP_md=$(printf "${COLOR_RED}")

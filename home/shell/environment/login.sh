@@ -6,7 +6,7 @@
 #\
 
 if shopt -q login_shell; then
-    export LOGIN='true'
+    export LOGIN_SHELL='true'
 else
-    export LOGIN='false'
+    export LOGIN_SHELL='false'
 fi

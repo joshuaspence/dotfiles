@@ -5,8 +5,8 @@
 ## @file   ~/.shell/environment/grep.sh
 #\
 
-# Make sure `grep` is installed.
 command -v grep >/dev/null || return
+[[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
 
 if $CLICOLOR; then
     export GREP_COLORS='ms=01;31:mc=01;31:sl=:cx=:fn=35:ln=32:bn=32:se=36'

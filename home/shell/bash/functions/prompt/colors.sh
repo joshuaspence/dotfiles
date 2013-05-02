@@ -3,13 +3,11 @@
 ## prompt statement.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/functions/prompt/color.sh
+## @file   ~/.shell/bash/functions/prompt/colors.sh
 #\
 
-# Source prerequisite variables.
-[[ -n $COLOR_NC ]] && source "${HOME}/.shell/bash/colors.sh"
+[[ -n $COLOR_NC ]] || source "${HOME}/.shell/bash/colors.sh"
 
-# Shell prompt colors.
 PROMPT_HOST_COLOR="${COLOR_CYAN}"
 PROMPT_PWD_COLOR="${COLOR_GREEN}"
 PROMPT_ROOTUSER_COLOR="${COLOR_RED}"

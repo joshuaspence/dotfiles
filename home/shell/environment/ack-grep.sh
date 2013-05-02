@@ -5,10 +5,8 @@
 ## @file   ~/.shell/environment/ack-grep.sh
 #\
 
-# Make sure `ack-grep` is installed.
 command -v ack-grep >/dev/null || return
 
-# Set the pager for `ack-grep`.
 if command -v less >/dev/null; then
     export ACK_PAGER=$(command -v less)
 elif command -v more >/dev/null; then

@@ -5,10 +5,8 @@
 ## @file   ~/.shell/environment/git.sh
 #\
 
-# Make sure `git` is installed.
 command -v git >/dev/null || return
 
-# Set "GIT_EDITOR" environment variable.
 if command -v vim >/dev/null; then
     export GIT_EDITOR=$(command -v vim)
 elif command -v vi >/dev/null; then

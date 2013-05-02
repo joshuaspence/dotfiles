@@ -8,6 +8,7 @@
 #\
 
 [[ -n $EDITOR ]] || source "${HOME}/.shell/environment/editor.sh"
+
 if [[ -n $EDITOR ]]; then
     export VISUAL="${EDITOR}"
 else

@@ -5,17 +5,17 @@
 ## @file   ~/.shell/environment/less.sh
 #\
 
-# Make sure `less` is installed.
 command -v less >/dev/null || return
+[[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
 
-# Allow `less` to show color escape sequences.
+## Allow `less` to show color escape sequences.
 if $CLICOLOR; then
     export LESS='-R'
 else
 	unset LESS
 fi
 
-# Set the `less` input preprocessor.
+## Set the `less` input preprocessor.
 if command -v lesspipe >/dev/null; then
     eval "$(lesspipe)"
 else

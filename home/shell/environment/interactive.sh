@@ -6,7 +6,7 @@
 #\
 
 if [[ $- == *i* ]]; then
-    export INTERACTIVE='true'
+    export INTERACTIVE_SHELL='true'
 else
-    export INTERACTIVE='false'
+    export INTERACTIVE_SHELL='false'
 fi

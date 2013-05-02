@@ -6,10 +6,8 @@
 ## @file   ~/.shell/environment/python.sh
 #\
 
-# Make sure that `python` is installed.
 command -v python >/dev/null || return
 
-# Set and export environment variables.
 PYTHONSTARTUP="${HOME}/.pythonrc.py"
 if [[ -f $PYTHONSTARTUP && -r $PYTHONSTARTUP ]]; then
     export PYTHONSTARTUP

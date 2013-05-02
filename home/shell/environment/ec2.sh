@@ -1,14 +1,13 @@
 #/
-## Environment variables for Amazon EC2 CLI tools.
+## Environment variables for
+## {@link http://aws.amazon.com/developertools/351 Amazon EC2 CLI tools}.
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/environment/ec2.sh
 #\
 
-# Make sure Amazon EC2 CLI Tools are installed.
 command -v ec2-version >/dev/null || return
 
-# Set and export environment variables.
 EC2_HOME="${HOME}/.ec2"
 if [[ -d $EC2_HOME && -r $EC2_HOME ]]; then
     export EC2_HOME

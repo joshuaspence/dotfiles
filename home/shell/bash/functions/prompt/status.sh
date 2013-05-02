@@ -1,10 +1,13 @@
 #/
-## Echoes the return status of the previous command for the
+## A shell function to echo the return status of the previous command for the
 ## {@link http://www.gnu.org/software/bash/ bash} prompt statement.
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/bash/functions/prompt/status.sh
 #\
+
+[[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
+[[ -n $PROMPT_HOST_COLOR ]] || source "${HOME}/.shell/bash/functions/prompt/colors.sh"
 
 function shell_prompt__set_status() {
     echo -n 'PROMPT_STATUS=$?'
