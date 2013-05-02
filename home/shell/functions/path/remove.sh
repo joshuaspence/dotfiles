@@ -1,22 +1,25 @@
 #/
+## A shell function to remove the specified paths from a search path.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/path/remove.sh
 #\
 
-## Removes all instances of paths in a search path.
+## Removes the specified paths from a search path.
 ##
-## @param [String] Path variable to manipulate (eg: "PATH", "PYTHONPATH", etc).
-## @param [List]   Space-separated list of system paths to remove.
+## @param [String] Search path variable to manipulate (e.g. "PATH").
+## @param [List]   Space-separated list of paths to remove.
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function remove-path() {
-    local path_var="$1" && shift
-    local new_path
+    if [[ $# < 1 || -z $1 ]]; then
+        echo 'Usage: remove-path <path_var> <path1> ... <pathN>' >&2
+        return 1
+    fi
 
-    # Remove paths from path_var, working in new_path.
-    local p
-    for p in $@; do
-        new_path=$(
+    local path_var="$1"; shift
+    local p; for p in "$@"; do
+        eval $path_var=$(
             eval "echo \"\${${path_var}}\"" |
             tr ':' '\n' |
             grep -v "^${p}$" |
@@ -24,7 +27,4 @@ function remove-path() {
             sed -e 's/:$//'
         )
     done
-
-    # Reassign path_var from new_path.
-    eval $path_var="${new_path}"
 }

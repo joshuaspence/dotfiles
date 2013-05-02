@@ -1,9 +1,11 @@
 #/
+## A shell function to sniff HTTP traffic.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/network/sniff.sh
 #\
 
-## View HTTP traffic.
+## Sniff HTTP traffic.
 ##
 ## @param [String] The interface on which to sniff for HTTP traffic.
 ##

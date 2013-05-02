@@ -1,28 +1,37 @@
 #/
+## A shell function to overwrite a search path variable.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/path/set.sh
 #\
 
-## Source prerequisite shell functions. #{{{
-    command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove.sh"
-## #}}}
+# Source prerequisite shell functions.
+command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove.sh"
 
 ## Sets a colon-separated search path variable, overwriting any previous values.
 ##
-## @param [String] Path variable to manipulate (ex: PATH, PYTHONPATH, etc).
-## @param [List]   Space-separated list of system paths to append, in order.
+## @param [String] Search path variable to manipulate (e.g. "PATH").
+## @param [List]   Space-separated list of paths to append, in order.
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function set-path() {
-    local path_var="$1" && shift
+    if [[ $# < 1 || -z $1 ]]; then
+        echo 'Usage: set-path [-f|--force] <path_var> <path1> ... <pathN>' >&2
+        return 1
+    fi
 
-    # Set var and overwrite any previous values.
-    [[ -d $1 ]] && eval "${path_var}=\"$1\""
-    shift
+    local force; if [[ $1 == '-f' || $1 == '--force' ]]; then
+        force=1; shift
+    else
+        force=0
+    fi
 
-    local p
-    for p in $@; do
+    local path_var="$1"; shift
+
+    [[ -d $1 || $force == 1 ]] && eval "${path_var}=\"$1\""; shift
+
+    local p; for p in "$@"; do
         remove-path "${path_var}" "${p}"
-        [[ -d $p ]] && eval "${path_var}=\"\${${path_var}}:${p}\""
+        [[ -d $p || $force == 1 ]] && eval "${path_var}=\"\${${path_var}}:${p}\""
     done
 }

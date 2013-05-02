@@ -1,17 +1,22 @@
 #/
+## A shell function to create a desktop notification indicating the exit status
+## of a command.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/notification/alert.sh
 #\
 
-## Add an `alert` alias for long running commands. Use like so:
-##   `sleep 10; alert`
+## Create a desktop notification indicating the exit status of a command.
 ##
-## Another example:
-##   `( sleep 5 && alert "slept OK" || alert "sleep failed" ) &`
+## <code>
+## sleep 10; alert
+## </code>
+##
+## <code>
+## ( sleep 5 && alert "slept OK" || alert "sleep failed" ) &
+## </code>
 ##
 ## @param [optional, String] The alert text.
-##
-## @link @todo I am not sure where I got this from.
 function alert() {
     notify-send --urgency=low \
         -i $([[ $? == 0 ]] && echo 'terminal' || echo 'error') \

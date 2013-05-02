@@ -1,13 +1,15 @@
 #/
+## A shell function to echo the primary IP address of the system.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/network/primary_ip.sh
 #\
 
-## Returns the primary IP address of the system.
+## Echoes the primary IP address of the system.
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function primary_ip() {
-    case $(uname -s) in
+    case "$(uname -s)" in
         Darwin)
             ifconfig $(iface) |
             grep '^[[:space:]]*inet ' |

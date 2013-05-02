@@ -1,13 +1,13 @@
 #/
+## A shell function to echo the primary network interface.
+##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/network/iface.sh
 #\
 
-## Get the primary network interface.
-##
-## @link @todo I am not sure where I got this from.
+## Echo the primary network interface.
 function iface() {
-    case $(uname -s) in
+    case "$(uname -s)" in
         Darwin)
             netstat -nr |
             grep '^default' |
