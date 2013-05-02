@@ -1,11 +1,3 @@
-# Check for the prerequisite functions.
-(
-    command -v awk >/dev/null &&
-    command -v echo >/dev/null &&
-    command -v grep >/dev/null &&
-    command -v nmap >/dev/null
-) || return 1
-
 ##
 # Scan for hosts on a specified network.
 #
@@ -13,7 +5,7 @@
 #
 function findhosts() {
     nmap -sP -n -oG - "$1"/24 | grep "Up" | awk '{print $2}' -
-    echo "To scan those do: nmap $1-254" 
-    echo "To scan and OS detect those do: sudo nmap -O $1-254" 
+    echo "To scan those do: nmap $1-254"
+    echo "To scan and OS detect those do: sudo nmap -O $1-254"
     echo "To intensly scan one do: sudo nmap -sV -vv -PN $1"
 }

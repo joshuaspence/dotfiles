@@ -1,5 +1,4 @@
-# Check for the prerequisite functions.
-command -v curl >/dev/null || return 1
+#!/bin/sh
 
 ##
 # Checks whether a website is down for you, or everybody.
