@@ -264,7 +264,7 @@
     ## @link http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
     enabled = true
 
-[url "git@github.com:"] # @todo check these
+[url "git@github.com:"]
     insteadOf = "gh:"
     pushInsteadOf = "github:"
     pushInsteadOf = "git://github.com/"
@@ -282,7 +282,7 @@
     insteadOf = "heroku:"
 
 [url "git@gitorious.org:"]
-    pushInsteadOf = git://gitorious.org/
+    pushInsteadOf = "git://gitorious.org/"
 
 [web]
     ## Specify the browser that will be used to display help in the web format.
