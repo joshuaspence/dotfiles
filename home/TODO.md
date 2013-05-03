@@ -1,9 +1,7 @@
 #dotfilesrc
-gitconfig gitignore
 Makefile
 #pythonrc.py
 README.md
-#curlrc
 
 shell/zsh/ oh-my-zsh/ zlogin zlogout zprofile zshenv zshrc
 vim/
