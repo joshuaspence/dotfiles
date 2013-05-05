@@ -3,13 +3,6 @@
 ##
 ## @author Joshua Spence
 ## @file   ~/.gitconfig
-## @link   http://git.wiki.kernel.org/index.php/Aliases
-## @link   http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
-## @link   http://github.com/cypher/dotfiles/blob/master/gitconfig
-## @link   http://github.com/defunkt/hub
-## @link   http://github.com/rtomayko/git-sh git-sh
-## @link   http://github.com/visionmedia/git-extras
-## @link   http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
 #\
 
 [include]
@@ -19,7 +12,13 @@
     ## A shortcut to amend to the previous commit.
     amend = commit --amend
 
-    ## List branches.
+    ## @link http://blog.apiaxle.com/post/handy-git-tips-to-stop-you-getting-fired/
+    assume = update-index --assume-unchanged
+
+    ## @link http://blog.apiaxle.com/post/handy-git-tips-to-stop-you-getting-fired/
+    assumed = "!git ls-files -v | grep ^h | cut -c 3-"
+
+    ## List all branches.
     branches = branch --all
 
     ## List the files that have changed.
@@ -38,11 +37,20 @@
     ## Count commits by author.
     count = shortlog --summary --numbered
 
+    ## While the empty tree sha1 "4b825dc642cb6eb9a060e54bf8d69288fbee4904" is
+    ## known to `git`, you may need to generate it.
+    ##
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    empty-tree-sha1 = hash-object -t tree /dev/null
+
     ## See the changes in a branch since it was forked from another branch, or
     ## since the last merge with the origin branch.
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     forkdiff = !bash -c 'git diff $(git merge-base "$1" "$2") "$2" "${@: 3}" ' -
+
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    gitkconflict = !gitk --left-right HEAD...MERGE_HEAD
 
     ## Produces a graphical `git log`.
     ##
@@ -52,6 +60,9 @@
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     graphviz = "!f() { echo 'digraph git {' ; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g' ; echo '}'; }; f"
+
+    ## @link http://git.wiki.kernel.org/index.php/Aliases
+    k = !gitk
 
     ## List all new commits after you fetched, with stats, but excluding merges.
     ##
@@ -79,27 +90,39 @@
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     prune-all = !git remote | xargs -n 1 git remote prune
 
-    ## List remotes.
+    ## List all remotes.
     remotes = remote --verbose
 
     ## Serve repository on the spot.
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
-    serve = daemon --reuseaddr --verbose --base-path=. --export-all ./.git
+    serve = !git daemon --reuseaddr --verbose --base-path=. --export-all ./.git
 
-    ## List tags.
+    ## List all tags.
     tags = tag --list
 
+    ## @link http://blog.apiaxle.com/post/handy-git-tips-to-stop-you-getting-fired/
+    unassume = update-index --no-assume-unchanged
+
     ## Attempt to cleanup some common problems.
+    ##
+    ## @link http://github.com/gregschoen/awesome-git-config/blob/master/.gitconfig
     unfuck = !git fsck && git prune-all && git gc --aggressive --auto
 
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 
+    ## @link http://github.com/gregschoen/awesome-git-config/blob/master/.gitconfig
+    whoami = config user.name
+
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     whois = !sh -c 'git log --regexp-ignore-case -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -
 
-    ## Aliases for {@link http://github.com/defunkt/hub hub}. @{{{
+    ## Aliases for {@link http://github.com/defunkt/hub hub}.
+    ##
+    ## @todo Do I need this here?
+    ##
+    ## @{{{
     browse = !hub browse
     compare = !hub compare
     create = !hub create
@@ -111,6 +134,7 @@
     ## Required here only for tab-completion.
     ##
     ## @todo Do I need this here?
+    ##
     ## @{{{
     forest = !git-forest
     publish-branch = !git-publish-branch
@@ -123,6 +147,7 @@
     ## here only for tab-completion.
     ##
     ## @todo Do I need this here?
+    ##
     ## @{{{
     sh = !git-sh
     ## @}}}
@@ -131,6 +156,7 @@
     ## Required here only for tab-completion.
     ##
     ## @todo Do I need this here?
+    ##
     ## @{{{
     alias = !git-alias
     back = !git-back
@@ -221,41 +247,22 @@
     nobranch = red
 
 [core]
-    ## In addition to `.gitignore` (per-directory) and `.git/info/exclude`,
-    ## git looks into this file for patterns of files which are not meant to be
-    ## tracked.
     excludesfile = ~/.gitignore
-
-    ## A comma separated list of common whitespace problems to notice.
-    ## `git diff` will use `color.diff.whitespace` to highlight them, and
-    ## `git apply --whitespace=error` will consider them as errors.
     whitespace = space-before-tab,-indent-with-non-tab,trailing-space,cr-at-eol
 
 [diff]
-    ## If set, `git diff` uses a prefix pair that is different from the standard
-    ## "a/" and "b/" depending on what is being compared.
     mnemonicprefix = true
-
-    ## Tells git to detect renames/copies.
     renames = copy
-
-    ## Controls which diff tool is used.
     tool = meld
 
 [difftool]
-    ## Prompt before each invocation of the diff tool.
     prompt = false
 
 [merge]
-    ## Controls which merge resolution program is used by `git-mergetool`.
     tool = meld
 
 [mergetool]
-    ## After performing a merge, the original file with conflict markers can be
-    ## saved as a file with a ".orig" extension.
     keepBackup = false
-
-    ## Prompt before each invocation of the merge resolution program.
     prompt = false
 
 [rerere]
@@ -285,5 +292,4 @@
     pushInsteadOf = "git://gitorious.org/"
 
 [web]
-    ## Specify the browser that will be used to display help in the web format.
     browser = google-chrome
