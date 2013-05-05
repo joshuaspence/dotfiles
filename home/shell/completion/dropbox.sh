@@ -7,11 +7,13 @@
 #\
 
 function _dropbox() {
-    local cur prev commands
+    local commands cur opts prev
+    _init_completion || return
 
     COMPREPLY=()
     cur=$(_get_cword "=")
     prev="${COMP_WORDS[COMP_CWORD-1]}"
+    commands="autostart exclude filestatus help lansync ls puburl running start status stop"
 
     _expand || return 0
 
@@ -20,31 +22,32 @@ function _dropbox() {
         return 0
     fi
 
-    declare -a commands=( autostart exclude filestatus help lansync ls puburl running start status stop )
+    case "${prev}" in
+        autostart|lansync)
+            COMPREPLY=($(compgen -W 'y n' -- ${cur}))
+            return 0
+            ;;
+        exclude)
+            opts='list add remove'
+            COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+            ;;
+        filestatus)
+            opts='-l --list -a --all'
+            COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+            ;;
+        help)
+            COMPREPLY=($(compgen -W "${commands}" -- ${cur}))
+            return 0
+            ;;
+        start)
+            local opts='-i --install'
+            COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+            ;;
+        *)
+            ;;
+    esac
 
-    # These options require an argument.
-    if [[ $prev == @(autostart exclude filestatus help lansync ls puburl start) ]]; then
-        return 0
-    fi
-
-    if [[ $COMP_CWORD == 1 ]]; then
-        completions=${commands[@]}
-    elif [[ $COMP_CWORD == 2 ]]; then
-        case $prev in
-            autostart|lansync)
-                completions='y n';;
-
-            exclude)    completions='list add remove';;
-            filestatus) completions='-l --list -a --all';;
-            help)       completions=${commands[@]};;
-            start)      completions='-i --install';;
-            *)          return 1;;
-        esac
-    else
-        return 1
-    fi
-
-    COMPREPLY=( $(compgen -W "$completions" -- $cur) )
+    COMPREPLY=($(compgen -W "${commands}" -- ${cur}))
     return 0
 }
 
