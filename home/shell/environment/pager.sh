@@ -6,9 +6,9 @@
 ## @file   ~/.shell/environment/pager.sh
 #\
 
-if command -v less >/dev/null; then
+if command -v less &>/dev/null; then
     export PAGER=$(command -v less)
-elif command -v more >/dev/null; then
+elif command -v more &>/dev/null; then
     export PAGER=$(command -v more)
 else
     unset PAGER

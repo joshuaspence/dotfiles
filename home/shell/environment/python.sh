@@ -6,12 +6,12 @@
 ## @file   ~/.shell/environment/python.sh
 #\
 
-command -v python >/dev/null || return
-
-PYTHONSTARTUP="${HOME}/.pythonrc.py"
-if [[ -f $PYTHONSTARTUP && -r $PYTHONSTARTUP ]]; then
-    export PYTHONSTARTUP
-else
-    unset PYTHONSTARTUP
-    echo 'No file set for PYTHONSTARTUP environment variable' >&2
-fi
+command -v python &>/dev/null && {
+    PYTHONSTARTUP="${HOME}/.pythonrc.py"
+    if [[ -f $PYTHONSTARTUP && -r $PYTHONSTARTUP ]]; then
+        export PYTHONSTARTUP
+    else
+        unset PYTHONSTARTUP
+        echo 'No file set for PYTHONSTARTUP environment variable' >&2
+    fi
+}

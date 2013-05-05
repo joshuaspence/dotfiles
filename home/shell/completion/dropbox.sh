@@ -7,16 +7,45 @@
 #\
 
 function _dropbox() {
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    local prev=${COMP_WORDS[COMP_CWORD-1]}
+    local cur prev commands
 
-    local commands
+    COMPREPLY=()
+    cur=$(_get_cword "=")
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    _expand || return 0
+
+    # These options are final.
+    if [[ ${COMP_WORDS[@]} == *+([[:space:]])@(status|stop|running)+([[:space:]])* ]]; then
+        return 0
+    fi
+
     declare -a commands=( autostart exclude filestatus help lansync ls puburl running start status stop )
 
-    ## Default completions is the list of commands.
-    completions=${commands[@]}
+    # These options require an argument.
+    if [[ $prev == @(autostart exclude filestatus help lansync ls puburl start) ]]; then
+        return 0
+    fi
+
+    if [[ $COMP_CWORD == 1 ]]; then
+        completions=${commands[@]}
+    elif [[ $COMP_CWORD == 2 ]]; then
+        case $prev in
+            autostart|lansync)
+                completions='y n';;
+
+            exclude)    completions='list add remove';;
+            filestatus) completions='-l --list -a --all';;
+            help)       completions=${commands[@]};;
+            start)      completions='-i --install';;
+            *)          return 1;;
+        esac
+    else
+        return 1
+    fi
 
     COMPREPLY=( $(compgen -W "$completions" -- $cur) )
+    return 0
 }
 
-complete -o default -F _dropbox dropbox
+complete -F _dropbox ${nospace} dropbox
