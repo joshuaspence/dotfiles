@@ -1,0 +1,23 @@
+#/
+## Startup file for `bc`.
+##
+## @author Joshua Spence
+## @file   ~/.bcrc
+#\
+
+# Some useful constants.
+pi=a(1)*4
+e=e(1)
+
+# Some useful functions.
+define asin(expr) { return a(expr/sqrt(1-expr^2)); }
+define acos(expr) { return a(sqrt(1-expr^2)/expr); }
+define atan(expr) { return a(expr); }
+
+define sin(expr) { return s(expr); }
+define cos(expr) { return c(expr); }
+define tan(expr) { return s(expr) / c(expr); }
+
+define ln(expr) { return l(expr); }
+define log2(expr) { return l(expr)/l(2); }
+define log10(expr) { return l(expr)/l(10); }
