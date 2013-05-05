@@ -14,5 +14,5 @@ function sshlist() {
         return 2
     fi
 
-	awk '$1 ~ /Host$/ && $2 != "*" { for (i=2; i<=NF; i++) print $i }' "${1:-${HOME}/.ssh/config}"
+    awk '$1 ~ /Host$/ && $2 != "*" { for (i=2; i<=NF; i++) print $i }' "${1:-${HOME}/.ssh/config}"
 }

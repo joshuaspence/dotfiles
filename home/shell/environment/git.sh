@@ -12,6 +12,6 @@ if command -v vim >/dev/null; then
 elif command -v vi >/dev/null; then
     export GIT_EDITOR=$(command -v vi)
 else
-	unset GIT_EDITOR
+    unset GIT_EDITOR
     echo 'No command set for GIT_EDITOR environment variable' >&2
 fi

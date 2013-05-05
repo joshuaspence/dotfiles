@@ -10,11 +10,15 @@
 ## Use `dircolors` to provide colors for `ls`.
 if $CLICOLOR; then
     if command -v dircolors >/dev/null; then
-    	eval "$(dircolors -b)"
+        if [[ -r ${HOME}/.dircolors ]]; then
+            eval "$(dircolors -b ${HOME}/.dircolors)"
+        else
+            eval "$(dircolors -b)"
+        fi
     else
-    	unset LS_COLORS
-		echo 'No options set for LS_COLORS environment variable' >&2
-	fi
+        unset LS_COLORS
+        echo 'No options set for LS_COLORS environment variable' >&2
+    fi
 else
-	unset LS_COLORS
+    unset LS_COLORS
 fi

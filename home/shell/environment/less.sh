@@ -6,25 +6,25 @@
 #\
 
 command -v less >/dev/null || return
+
 [[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
 
 ## Allow `less` to show color escape sequences.
 if $CLICOLOR; then
     export LESS='-R'
 else
-	unset LESS
+    unset LESS
 fi
 
 ## Set the `less` input preprocessor.
 if command -v lesspipe >/dev/null; then
     eval "$(lesspipe)"
 else
-	unset LESSOPEN
-	unset LESSCLOSE
-	echo 'No command set for LESSOPEN environment variable' >&2
-	echo 'No command set for LESSCLOSE environment variable' >&2
+    unset LESSOPEN
+    unset LESSCLOSE
+    echo 'No command set for LESSOPEN environment variable' >&2
+    echo 'No command set for LESSCLOSE environment variable' >&2
 fi
 
-# Disable `less` history.
+## Disable `less` history.
 export LESSHISTFILE='-'
-export LESSHISTSIZE=0

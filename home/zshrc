@@ -51,3 +51,5 @@ source_r "$HOME/.shell/zsh/"
 DISABLE_LS_COLORS='false'
 DISABLE_AUTO_UPDATE='false'
 UPDATE_ZSH_DAYS='13'
+
+PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting

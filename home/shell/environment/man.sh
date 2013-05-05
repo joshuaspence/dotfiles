@@ -6,7 +6,13 @@
 #\
 
 command -v man >/dev/null || return
+
 [[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
+
+## Don't clear the screen after quitting a manual page.
+if command -v less >/dev/null; then
+    export MANPAGER='less -X'
+fi
 
 ## Use `less` colors for `man` pages.
 ##

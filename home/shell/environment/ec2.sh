@@ -16,6 +16,6 @@ if [[ -d $EC2_HOME && -r $EC2_HOME ]]; then
 else
     unset EC2_HOME
     unset EC2_PRIVATE_KEY
-	unset EC2_CERT
-    echo 'No command set for EC2_HOME environment variable' >&2
+    unset EC2_CERT
+    echo 'No path set for EC2_HOME environment variable' >&2
 fi

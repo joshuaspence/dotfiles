@@ -25,3 +25,5 @@ source_r "${HOME}/.shell/aliases/"
 
 ## Import user-defined functions.
 source_r "${HOME}/.shell/functions/"
+
+PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting

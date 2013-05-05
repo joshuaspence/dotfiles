@@ -6,17 +6,17 @@
 ## @link   http://github.com/mikemcquaid/dotfiles
 #\
 
-if [[ $(uname -s) == 'Darwin' ]]; then
+if [[ $(uname -s) == Darwin ]]; then
     export LINUX='false'
     export OSX='true'
     export UNIX='true'
     export WINDOWS='false'
-elif [[ $(uname -s) == 'Linux' ]]; then
+elif [[ $(uname -s) == Linux ]]; then
     export LINUX='true'
     export OSX='false'
     export UNIX='true'
     export WINDOWS='false'
-elif [[ $(uname -s) == '*_NT-*' ]]; then
+elif [[ $(uname -s) == *_NT-* ]]; then
     export LINUX='false'
     export OSX='false'
     export UNIX='false'

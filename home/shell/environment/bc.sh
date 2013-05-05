@@ -5,17 +5,10 @@
 ## @file   ~/.shell/environment/bc.sh
 #\
 
-BC_ENV_ARGS=
+command -v bc >/dev/null || return
 
-## Define the standard math library.
-BC_ENV_ARGS+='-l '
-
-## Do not print the normal GNU `bc` welcome.
-BC_ENV_ARGS+='-q '
-
-## Add a startup file.
 if [[ -f ${HOME}/.bcrc && -r ${HOME}/.bcrc ]]; then
-    BC_ENV_ARGS+="${HOME}/.bcrc"
+    export BC_ENV_ARGS+="-lq ${HOME}/.bcrc"
+else
+    export BC_ENV_ARGS='-lq'
 fi
-
-export BC_ENV_ARGS

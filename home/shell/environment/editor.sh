@@ -8,8 +8,10 @@
 
 if [[ -n $DISPLAY ]] && command -v subl >/dev/null; then
     export EDITOR="$(command -v subl) -n -w"
-elif [[ -n $DISPLAY ]] && command -v sublime-text-2 >/dev/null; then
-    export EDITOR="$(command -v sublime-text-2) -n -w"
+elif [[ -n $DISPLAY ]] && command -v sublime >/dev/null; then
+    export EDITOR="$(command -v sublime) -n -w"
+elif [[ -n $DISPLAY ]] && command -v sublime-text >/dev/null; then
+    export EDITOR="$(command -v sublime-text) -n -w"
 elif command -v vim >/dev/null; then
     export EDITOR=$(command -v vim)
 elif command -v vi >/dev/null; then

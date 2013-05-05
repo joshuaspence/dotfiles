@@ -1,5 +1,5 @@
 #/
-## Startup file for `bc`.
+## Startup file for {@link http://www.gnu.org/software/bc/ bc}.
 ##
 ## @author Joshua Spence
 ## @file   ~/.bcrc

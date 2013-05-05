@@ -3,9 +3,6 @@
 # 077 would be more secure, but 022 is more useful.
 umask 022
 
-# Set to avoid `env` output from changing console colour
-export LESS_TERMEND=$'\E[0m'
-
 # Count CPUs for Make jobs
 if [ $OSX ]
 then
