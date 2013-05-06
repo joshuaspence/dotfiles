@@ -1,0 +1,19 @@
+[global_config]
+  enabled_plugins = CustomCommandsMenu, LaunchpadCodeURLHandler, APTURLHandler
+  window_state = maximise
+[keybindings]
+[profiles]
+  [[default]]
+    scroll_on_output = False
+    font = Ubuntu Mono 13
+    use_system_font = False
+    scrollback_infinite = True
+[layouts]
+  [[default]]
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+    [[[window0]]]
+      type = Window
+      parent = ""
+[plugins]

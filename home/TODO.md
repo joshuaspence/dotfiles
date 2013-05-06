@@ -1,11 +1,19 @@
+config/htop/htoprc
+config/terminator/config
+config/user-dirs.dirs
+config/user-dirs.locale
+oh-my-zsh/
+shell/completions/dropbox.sh
+#shell/environment/login.sh
+shell/functions/color/colorize.sh
+shell/zsh/
+vim/
 #dotfilesrc
 Makefile
 #pythonrc.py
 README.md
-
-shell/zsh/ oh-my-zsh/ zlogin zlogout zprofile zshenv zshrc
-vim/
-shell/functions/color/colorize.sh
-
-shell/completions/dropbox.sh
-#shell/environment/login.sh
+zlogin
+zlogout
+zprofile
+zshenv
+zshrc
