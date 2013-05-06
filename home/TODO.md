@@ -7,8 +7,10 @@ shell/completions/dropbox.sh
 #shell/environment/login.sh
 shell/functions/color/colorize.sh
 shell/zsh/
+subversion/config
 vim/
 #dotfilesrc
+hgrc
 Makefile
 #pythonrc.py
 README.md
