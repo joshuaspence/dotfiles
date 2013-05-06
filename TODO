@@ -1,48 +1,7 @@
-apt-get => APT_CONFIG
-cp,mv => SIMPLE_BACKUP_SUFFIX, VERSION_CONTROL
-perlrun
-ruby
-python
+http://amix.dk/vim/vimrc.html
+http://dougireton.com/blog/2013/02/23/layout-your-vimrc-like-a-boss/
 
-MORE
+https://github.com/sorin-ionescu/prezto
 
-sudo => SUDO_ASKPASS SUDO_EDITOR SUDO_PROMPT SUDO_PS1
-
-tar => TAR_OPTIONS
-gzip => GZIP
-bzip => BZIP2, BZIP
-unzip => UNZIP
-crontab => CRONTAB_NOHEADER
-df => BLOCK_SIZE
-bc => BC_ENV_ARGS
-
-alias path='echo -e ${PATH//:/\\n}'
-alias now='date +"%T'
-alias nowtime=now
-alias nowdate='date +"%d-%m-%Y"'
-
-# get web server headers #
-alias header='curl -I'
-
-# update on one command
-alias update='sudo apt-get update && sudo apt-get upgrade'
-
-## pass options to free ##
-alias meminfo='free -m -l -t'
-
-## get top process eating memory
-alias psmem='ps auxf | sort -nr -k 4'
-alias psmem10='ps auxf | sort -nr -k 4 | head -10'
-
-## get top process eating cpu ##
-alias pscpu='ps auxf | sort -nr -k 3'
-alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
-
-## Get server cpu info ##
-alias cpuinfo='lscpu'
-
-## older system use /proc/cpuinfo ##
-##alias cpuinfo='less /proc/cpuinfo' ##
-
-## get GPU ram on desktop / laptop##
-alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
+https://github.com/rtomayko/shocco/blob/master/shocco.sh#commit
+https://github.com/dasch/rails-complete
