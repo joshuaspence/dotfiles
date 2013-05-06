@@ -10,10 +10,12 @@ shell/zsh/
 subversion/config
 vim/
 #dotfilesrc
+gemrc
 hgrc
 Makefile
 #pythonrc.py
 README.md
+#tigrc
 zlogin
 zlogout
 zprofile

@@ -28,3 +28,6 @@
 [submodule "modules/gist"]
 	path = modules/gist
 	url = git://github.com/gmarik/gist.sh.git
+[submodule "modules/tig"]
+	path = modules/tig
+	url = git://github.com/jonas/tig.git

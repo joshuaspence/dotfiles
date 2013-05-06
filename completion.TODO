@@ -1,0 +1,17 @@
+rvm
+dropbox
+gem
+    - https://github.com/mernen/completion-ruby
+    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/rubygems
+rake
+    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/rake
+pip
+    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/pip
+maven
+    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/maven
+npm
+    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/npm
+hub
+    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/hub
+ipython
+    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/ipython
