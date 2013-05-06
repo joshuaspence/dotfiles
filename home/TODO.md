@@ -13,9 +13,11 @@ vim/
 gemrc
 hgrc
 Makefile
+muttrc
 #pythonrc.py
 README.md
 #tigrc
+toprc
 zlogin
 zlogout
 zprofile

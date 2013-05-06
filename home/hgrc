@@ -4,3 +4,6 @@
 ## @author Joshua Spence
 ## @file   ~/.hgrc
 #\
+
+[ui]
+username = Joshua Spence <josh@joshuaspence.com>
