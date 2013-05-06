@@ -222,3 +222,6 @@ precmd () {
   vcs_info
   set-titles-with-path
 }
+
+## @link https://github.com/skwp/dotfiles/tree/master/zsh
+## @link https://github.com/mt3/dotfiles/tree/master/.dotfiles/zsh

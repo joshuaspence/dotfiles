@@ -3,35 +3,6 @@
 # 077 would be more secure, but 022 is more useful.
 umask 022
 
-# Count CPUs for Make jobs
-if [ $OSX ]
-then
-    export CPUCOUNT=$(sysctl -n hw.ncpu)
-elif [ $LINUX ]
-then
-    export CPUCOUNT=$(getconf _NPROCESSORS_ONLN)
-else
-    export CPUCOUNT="1"
-fi
-
-if [ "$CPUCOUNT" -gt 1 ]
-then
-    export MAKEFLAGS="-j$CPUCOUNT"
-fi
-
-# Load GitHub token
-[ -s ~/.github_password ] && export GITHUB_PASSWORD=$(cat ~/.github_password)
-
-## @link https://github.com/norm/home/blob/master/etc/bash/defaults/00.flags
-# The current Operating System type (eg. Linux, Darwin, NetBSD)
-export HOSTOS=`uname`
-
-# The current host's name, in short form (without domain name).
-export HOST=`hostname -s`
-
-# The current domain name.
-export DOMAIN=`hostname | sed -e "s/${HOST}.//"`
-
 ## @link https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.bin/home-fix
 # Ensure sane file modes for some important files and directories
 if [ -d "${HOME}/.ssh" ]; then
@@ -60,11 +31,7 @@ export PAGER MANPAGER
 # we always pass these to ls(1)
 LS_COMMON="-hBG"
 # setup the main ls alias if we've established common args
-test -n "$LS_COMMON" &&
-alias ls="command ls $LS_COMMON"
-
-# do not list implied entries ending with ~.
-LSFLAGS="-B"
+test -n "$LS_COMMON" && alias ls="command ls $LS_COMMON"
 
 # Usage: pls [<var>]
 # List path entries of PATH or environment variable <var>.

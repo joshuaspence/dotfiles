@@ -206,6 +206,7 @@
     showbranch = auto
     status = auto
     ui = auto
+    wtf = true
 [color "branch"]
     current = yellow reverse
     local = yellow
