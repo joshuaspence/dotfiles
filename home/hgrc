@@ -7,3 +7,6 @@
 
 [ui]
 username = Joshua Spence <josh@joshuaspence.com>
+
+[diff]
+git = True

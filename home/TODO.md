@@ -1,25 +1,28 @@
-config/htop/htoprc
-config/terminator/config
-config/user-dirs.dirs
-config/user-dirs.locale
-oh-my-zsh/
-shell/completions/dropbox.sh
-#shell/environment/login.sh
-shell/functions/color/colorize.sh
-shell/zsh/
-subversion/config
-vim/
-#dotfilesrc
-gemrc
-hgrc
-Makefile
-muttrc
-#pythonrc.py
-README.md
-#tigrc
-toprc
-zlogin
-zlogout
-zprofile
-zshenv
-zshrc
+- config/htop/htoprc
+- config/terminator/config
+- config/user-dirs.dirs
+- config/user-dirs.locale
+- oh-my-zsh/
+- shell/completions/dropbox.sh
+- shell/environment/login.sh
+- shell/functions/color/colorize.sh
+- shell/zsh/
+- vim/
+- Makefile
+- muttrc
+- README.md
+- tigrc
+- toprc
+- zlogin
+- zlogout
+- zprofile
+- zshenv
+- zshrc
+
+Mostly done
+===========
+- subversion/config
+- gemrc
+- hgrc
+- dotfilesrc
+- pythonrc.py
