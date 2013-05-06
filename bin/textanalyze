@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # TextAnalzyer is a text analyzer tool that finds out words that are
 # characteristic for a given input file. It is independent from any
 # language, and even seems to work well with HTML files.
