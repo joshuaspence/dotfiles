@@ -1,5 +1,5 @@
 "/
-"" Configuration for the {@link http://www.vim.org/ vim} status line.
+"" Status line configuration.
 ""
 "" @author Joshua Spence
 "" @file   ~/.vim/plugin/visual/statusline.vim

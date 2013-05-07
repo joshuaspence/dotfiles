@@ -1,23 +1,24 @@
 "/
-"" Plugin configuration for {@link http://www.vim.org/ vim}.
+"" Plugin configuration for {@link http://www.vim.org/ vim} with
+"" {@link http://github.com/gmarik/vundle Vundle}.
 ""
 "" @author Joshua Spence
 "" @file   ~/.vim/plugin/bundles.vim
 "\
 
-"" Vundle pre-commands. "{{{
-    "" Ensure that the `~/.vim/bundle/` system works. "{{{
+"" Vundle pre-commands. @{{{
+    "" Ensure that the `~/.vim/bundle/` system works. @{{{
         set nocompatible
         filetype off
         set rtp+=~/.vim/bundle/vundle/
         call vundle#rc()
-    "" "}}}
+    "" @}}}
 
     "" Let Vundle manage Vundle.
     Bundle 'gmarik/vundle'
-"" "}}}
+"" @}}}
 
-"" Bundles "{{{
+"" Bundles @{{{
     Bundle 'airblade/vim-gitgutter'
     Bundle 'flazz/vim-colorschemes'
     Bundle 'godlygeek/tabular'
@@ -50,15 +51,15 @@
     Bundle 'vim-scripts/upAndDown'
     Bundle 'vim-scripts/ZoomWin'
 
-    "" Languages "{{{
+    "" Languages @{{{
         Bundle 'elzr/vim-json'
         Bundle 'groenewege/vim-less'
         Bundle 'pangloss/vim-javascript'
         Bundle 'puppetlabs/puppet-syntax-vim'
-    "" "}}}
-"" "}}}
+    "" @}}}
+"" @}}}
 
-"" Vundle post-commands. "{{{
+"" Vundle post-commands. @{{{
     "" Automatically detect file types. Must turn on after Vundle.
     filetype plugin indent on
-"" "}}}
+"" @}}}

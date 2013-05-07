@@ -1,5 +1,5 @@
 "/
-"" Command-line history for {@link http://www.vim.org/ vim}.
+"" Command-line history.
 ""
 "" @author Joshua Spence
 "" @file   ~/.vim/plugin/command-line/history.vim

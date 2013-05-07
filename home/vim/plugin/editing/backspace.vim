@@ -1,5 +1,5 @@
 "/
-"" More powerful backspacing for {@link http://www.vim.org/ vim}.
+"" More powerful backspacing.
 ""
 "" @author Joshua Spence
 "" @file   ~/.vim/plugin/backspace.vim

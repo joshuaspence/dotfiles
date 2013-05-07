@@ -13,13 +13,13 @@ endif
 set wildmode=full
 
 if has('wildignore')
-    "" vim will ignore certain file patterns. "{{{
+    "" vim will ignore certain file patterns. @{{{
         "" Binary images.
         set wildignore+=*.bmp,*.gif,*.jpg,*.jpeg,*.png
 
         "" Byte code and stuff.
         set wildignore+=*.class,classes,*.luac,*.pyc,*.rbc
-          
+
         "" Compiled object files.
         set wildignore+=*.dll,*.exe,*.manifest,*.o,*.obj
 
@@ -31,5 +31,5 @@ if has('wildignore')
 
         "" vim swap files.
         set wildignore+=*.sw?
-    "" "}}}
+    "" @}}}
 endif

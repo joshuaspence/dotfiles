@@ -1,5 +1,5 @@
 "/
-"" Undo/redo options for {@link http://www.vim.org/ vim}.
+"" Undo/redo configuration.
 ""
 "" @author Joshua Spence
 "" @file   ~/.vim/plugin/editing/undo.vim
