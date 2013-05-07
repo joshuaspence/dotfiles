@@ -11,8 +11,6 @@ Still to do
 - Makefile
 - muttrc
 - README.md
-- tigrc
-- toprc
 - zlogin
 - zlogout
 - zprofile
