@@ -21,6 +21,7 @@ Mostly done
 ===========
 - subversion/config
 - gemrc
+- gitconfig
 - hgrc
 - dotfilesrc
 - pythonrc.py

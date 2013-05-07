@@ -29,13 +29,13 @@
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     changes = diff --name-status
 
+    ## Count commits by author.
+    commit-count = shortlog --summary --numbered
+
     ## Show list of files in a conflict state.
     ##
     ## @link http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
-    conflicts = ls-files --unmerged | awk '{print $4}' | sort --unique
-
-    ## Count commits by author.
-    count = shortlog --summary --numbered
+    conflicts = ls-files --unmerged | awk '{print $4}' | sort -u
 
     ## While the empty tree sha1 "4b825dc642cb6eb9a060e54bf8d69288fbee4904" is
     ## known to `git`, you may need to generate it.
@@ -47,7 +47,7 @@
     ## since the last merge with the origin branch.
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
-    forkdiff = !bash -c 'git diff $(git merge-base "$1" "$2") "$2" "${@: 3}" ' -
+    forkdiff = !bash -c 'git diff $(git merge-base "$1" "$2") "$2" "${@: 3}"' -
 
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     gitkconflict = !gitk --left-right HEAD...MERGE_HEAD
@@ -59,7 +59,7 @@
     ## </code>
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
-    graphviz = "!f() { echo 'digraph git {' ; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g' ; echo '}'; }; f"
+    graphviz = "!f() { echo 'digraph git {'; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g'; echo '}'; }; f"
 
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     k = !gitk
@@ -84,6 +84,11 @@
     ##
     ## @link http://github.com/cypher/dotfiles/blob/master/gitconfig
     ls-ignored = ls-files --exclude-standard --ignored --others
+
+    ## Check if a branch has been merged into the current HEAD if on master.
+    ##
+    ## @link http://github.com/wadey/dotfiles/blob/master/gitconfig
+    merged = !sh -c 'git rev-list HEAD | grep --color=none $(git rev-parse $0)'
 
     ## Prune all stale remote branches.
     ##
@@ -113,51 +118,55 @@
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 
     ## @link http://github.com/gregschoen/awesome-git-config/blob/master/.gitconfig
-    whoami = config user.name
+    whoami = config --get user.name
 
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     whois = !sh -c 'git log --regexp-ignore-case -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -
 
-    ## Aliases for {@link http://github.com/defunkt/hub hub}.
-    ##
-    ## @todo Do I need this here?
-    ##
-    ## @{{{
+## Aliases for {@link http://github.com/defunkt/hub hub}.
+##
+## @todo Do I need this here?
+##
+## @{{{
+[alias]
     browse = !hub browse
     compare = !hub compare
     create = !hub create
     fork = !hub fork
     pull-request = !hub pull-request
-    ## @}}}
+## @}}}
 
-    ## Aliases for {@link http://github.com/joshuaspence/git-utils git-utils}.
-    ## Required here only for tab-completion.
-    ##
-    ## @todo Do I need this here?
-    ##
-    ## @{{{
+## Aliases for {@link http://github.com/joshuaspence/git-utils git-utils}.
+## Required here only for tab-completion.
+##
+## @todo Do I need this here?
+##
+## @{{{
+[alias]
     forest = !git-forest
     publish-branch = !git-publish-branch
     rank-contributors = !git-rank-contributors
     show-merges = !git-show-merges
     wtf = !git-wtf
-    ## @}}}
+## @}}}
 
-    ## Aliases for {@link http://github.com/rtomayko/git-sh git-sh}. Required
-    ## here only for tab-completion.
-    ##
-    ## @todo Do I need this here?
-    ##
-    ## @{{{
+## Aliases for {@link http://github.com/rtomayko/git-sh git-sh}. Required
+## here only for tab-completion.
+##
+## @todo Do I need this here?
+##
+## @{{{
+[alias]
     sh = !git-sh
-    ## @}}}
+## @}}}
 
-    ## Aliases for {@link http://github.com/visionmedia/git-extras git-extras}.
-    ## Required here only for tab-completion.
-    ##
-    ## @todo Do I need this here?
-    ##
-    ## @{{{
+## Aliases for {@link http://github.com/visionmedia/git-extras git-extras}.
+## Required here only for tab-completion.
+##
+## @todo Do I need this here?
+##
+## @{{{
+[alias]
     alias = !git-alias
     back = !git-back
     bug = !git-bug
@@ -191,7 +200,7 @@
     summary = !git-summary
     touch = !git-touch
     undo = !git-undo
-    ## @}}}
+## @}}}
 
 [apply]
     whitespace = fix,error
