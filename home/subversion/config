@@ -4,3 +4,6 @@
 ## @author Joshua Spence
 ## @file   ~/.subversion/config
 #\
+
+[helpers]
+merge-tool-cmd = meld

@@ -20,9 +20,6 @@ Still to do
 Mostly done
 ===========
 - shell/functions/source/source_r.sh
-- subversion/config
-- gemrc
 - gitconfig
-- hgrc
 - dotfilesrc
 - pythonrc.py

@@ -10,3 +10,13 @@ username = Joshua Spence <josh@joshuaspence.com>
 
 [diff]
 git = True
+
+[extensions]
+churn =
+color =
+fetch =
+forest =
+git =
+graphlog =
+hgk =
+pager =

@@ -1,12 +1,20 @@
 #/
-## A recursive `source` shell function.
+## A recursive `source` shell function which also takes into consideration the
+## file extension to allow for shell-specific files to be sourced.
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/functions/source/source_r.sh
 #\
 
-## Recursive `source` function which also takes into consideration the file
-## extension to allow for shell-specific files.
+## A recursive `source` shell function which also takes into consideration the
+## file extension to allow for shell-specific files to be sourced.
+##
+## All files with the extension ".sh" will be sourced, regardless of the current
+## shell. Additionally, this function will source files with the extension
+## "*.${SHELL}".
+##
+## If the argument to this function is a file, then this file will be sourced
+## regardless of its extension.
 ##
 ## @param [String] The path of the file or directory to source.
 function source_r() {
