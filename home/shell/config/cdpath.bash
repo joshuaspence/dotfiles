@@ -2,7 +2,7 @@
 ## "CDPATH" contains the search path for the `cd` command.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/cdpath.sh
+## @file   ~/.shell/config/cdpath.bash
 #\
 
 CDPATH='.:~:~/workspace'

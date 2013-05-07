@@ -3,7 +3,7 @@
 ## systems.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/vars/uname.sh
+## @file   ~/.shell/config/uname.sh
 #\
 
 : ${UNAME=$(uname)}

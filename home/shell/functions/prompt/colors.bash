@@ -3,10 +3,10 @@
 ## prompt statement.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/functions/prompt/colors.sh
+## @file   ~/.shell/functions/prompt/colors.bash
 #\
 
-[[ -n $COLOR_NC ]] || source "${HOME}/.shell/bash/colors.sh"
+[[ -n $COLOR_NC ]] || source "${HOME}/.shell/config/colors.sh"
 
 PROMPT_HOST_COLOR="${COLOR_CYAN}"
 PROMPT_PWD_COLOR="${COLOR_GREEN}"

@@ -3,7 +3,7 @@
 ## {@link http://www.gnu.org/software/bash/ bash}.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/completion.sh
+## @file   ~/.shell/config/completion.bash
 #\
 
 if ! shopt -oq posix; then

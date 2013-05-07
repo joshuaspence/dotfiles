@@ -3,11 +3,11 @@
 ## {@link http://www.gnu.org/software/bash/ bash} prompt statement.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/functions/prompt/pwd.sh
+## @file   ~/.shell/functions/prompt/pwd.bash
 #\
 
 [[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
-[[ -n $PROMPT_HOST_COLOR ]] || source "${HOME}/.shell/bash/functions/prompt/colors.sh"
+[[ -n $PROMPT_HOST_COLOR ]] || source "${HOME}/.shell/functions/prompt/colors.bash"
 
 function shell_prompt__pwd() {
     $CLICOLOR && echo -n "\[${PROMPT_PWD_COLOR}\]"

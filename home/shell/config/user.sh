@@ -3,7 +3,7 @@
 ## most systems.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/vars/user.sh
+## @file   ~/.shell/config/user.sh
 #\
 
 : ${USER=$(whoami)}

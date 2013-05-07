@@ -2,7 +2,7 @@
 ## Configure {@link http://www.gnu.org/software/bash/ bash} shell options.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/shopt.sh
+## @file   ~/.shell/config/shopt.bash
 #\
 
 ## A command name that is the name of a directory is executed as if it were the

@@ -5,8 +5,6 @@
 ## @file   ~/.shell/functions/source/source_r.sh
 #\
 
-command -v file_extension &>/dev/null || source "${HOME}/.shell/functions/source/file_extension.sh"
-
 ## Recursive `source` function which also takes into consideration the file
 ## extension to allow for shell-specific files.
 ##
@@ -20,11 +18,9 @@ function source_r() {
     if [[ -f $1 && -r $1 ]]; then
         source "$1"
     elif [[ -d $1 && -r $1 ]]; then
-        local file; for file in $(find "$1" ! -type d -readable 2>/dev/null); do
-            case "$(file_extension "${file}")" in
-                '' | 'sh' | "$(basename ${SHELL})")
-                    source "${file}";;
-            esac
+        [[ -n $SHELL ]] || source "${HOME}/.shell/config/shell.sh"
+        local file; for file in $(find "$1" ! -type d -readable -name '*.sh' -o -name "*.$(basename ${SHELL})" 2>/dev/null); do
+            source "${file}"
         done
     else
         echo "'$1' does not exist or is not readable" >&2

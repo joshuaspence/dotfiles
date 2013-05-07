@@ -2,7 +2,7 @@
 ## Configure {@link http://www.gnu.org/software/bash/ bash} shell history.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/history.sh
+## @file   ~/.shell/config/history.bash
 #\
 
 ## Entries beginning with space aren't added into history, and duplicate
@@ -13,8 +13,8 @@ HISTCONTROL='ignorespace:erasedups'
 HISTTIMEFORMAT='[%F %T] '
 
 ## Lots of history. @{{{
-    HISTSIZE='10000000000'
-    HISTFILESIZE="${HISTSIZE}"
+HISTSIZE='10000000000'
+HISTFILESIZE="${HISTSIZE}"
 ## @}}}
 
 ## File where the history is stored.

@@ -4,7 +4,7 @@
 ## "FIGNORE" is excluded from the list of matched filenames.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/fignore.sh
+## @file   ~/.shell/config/fignore.bash
 #\
 
 FIGNORE='.o:.pyc:~'

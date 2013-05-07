@@ -15,7 +15,7 @@ fi
 command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
 
 ## Setup shell options.
-source_r "${HOME}/.shell/bash/"
+source_r "${HOME}/.shell/config/"
 
 ## Setup the environment.
 source_r "${HOME}/.shell/environment/"
@@ -25,5 +25,8 @@ source_r "${HOME}/.shell/aliases/"
 
 ## Import user-defined functions.
 source_r "${HOME}/.shell/functions/"
+
+## Import completion functions.
+source_r "${HOME}/.shell/completion/"
 
 PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting

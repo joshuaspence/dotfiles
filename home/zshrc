@@ -44,9 +44,9 @@ export EDITOR='vim'
 
 command -v source_r || source "${HOME}/.shell/functions/source/source_r.sh"
 
+source_r "$HOME/.shell/config/"
 source_r "$HOME/.shell/aliases/"
 source_r "$HOME/.shell/functions/"
-source_r "$HOME/.shell/zsh/"
 
 DISABLE_LS_COLORS='false'
 DISABLE_AUTO_UPDATE='false'

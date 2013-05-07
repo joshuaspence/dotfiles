@@ -3,7 +3,7 @@
 ## that should be read when the shell needs to complete a hostname.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/hostfile.sh
+## @file   ~/.shell/config/hostfile.bash
 #\
 
 unset HOSTFILE

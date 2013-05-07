@@ -3,7 +3,7 @@
 ## be set on most systems.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/vars/home.sh
+## @file   ~/.shell/config/home.sh
 #\
 
 : ${HOME=~}

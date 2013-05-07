@@ -3,7 +3,7 @@
 ## filenames to be ignored by pathname expansion.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/bash/globignore.sh
+## @file   ~/.shell/config/globignore.bash
 #\
 
 unset GLOBIGNORE

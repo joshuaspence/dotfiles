@@ -2,7 +2,7 @@
 ## ANSI colors for the shell.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/vars/colors.sh
+## @file   ~/.shell/config/colors.sh
 #\
 
 ## Normal colors @{{{

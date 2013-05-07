@@ -1,6 +1,6 @@
 #/
 ## @author Joshua Spence
-## @file   ~/.shell/zsh/shopt.sh
+## @file   ~/.shell/config/shopt.zsh
 #\
 
 setopt extended_glob

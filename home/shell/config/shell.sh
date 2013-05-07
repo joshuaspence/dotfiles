@@ -3,7 +3,7 @@
 ## systems.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/vars/shell.sh
+## @file   ~/.shell/config/shell.sh
 #\
 
 : ${SHELL="$0"}

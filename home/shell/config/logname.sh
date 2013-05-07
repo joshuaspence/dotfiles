@@ -3,7 +3,7 @@
 ## use this variable. This should already be set on most systems.
 ##
 ## @author Joshua Spence
-## @file   ~/.shell/vars/logname.sh
+## @file   ~/.shell/config/logname.sh
 #\
 
 : ${LOGNAME=$(id -un)}
