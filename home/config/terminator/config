@@ -1,19 +1,31 @@
+;/
+;; Configuration file for
+;; {@link http://software.jessies.org/terminator/ Terminator}.
+;;
+;; @author Joshua Spence
+;; @file   ~/.config/terminator/config
+;\
+
 [global_config]
-  enabled_plugins = CustomCommandsMenu, LaunchpadCodeURLHandler, APTURLHandler
+  focus = system
   window_state = maximise
 [keybindings]
 [profiles]
   [[default]]
+    audible_bell = False
+    visible_bell = True
+    force_no_bell = False
+    scroll_on_keystroke = True
     scroll_on_output = False
-    font = Ubuntu Mono 13
-    use_system_font = False
-    scrollback_infinite = True
+    alternate_screen_scroll = True
+    scrollback_lines = 10000
+    scrollback_infinite = False
 [layouts]
   [[default]]
-    [[[child1]]]
-      type = Terminal
-      parent = window0
-    [[[window0]]]
+    [[[window]]]
       type = Window
       parent = ""
+    [[[child]]]
+      type = Terminal
+      parent = window
 [plugins]

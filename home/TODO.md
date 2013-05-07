@@ -1,6 +1,5 @@
 Still to do
 ===========
-- config/terminator/config
 - config/user-dirs.dirs
 - config/user-dirs.locale
 - oh-my-zsh/
