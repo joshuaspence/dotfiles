@@ -11,11 +11,14 @@ command -v man &>/dev/null && {
     ## Don't clear the screen after quitting a manual page.
     if command -v less &>/dev/null; then
         export MANPAGER='less -X'
+    else
+        unset MANPAGER
+        echo 'No command set for MANPAGER environment variable' >&2
     fi
 
     ## Use `less` colors for `man` pages.
     ##
-    ## @link   http://nion.modprobe.de/blog/archives/572-less-colors-for-man-pages.html
+    ## @link http://nion.modprobe.de/blog/archives/572-less-colors-for-man-pages.html
     if $CLICOLOR; then
         export LESS_TERMCAP_mb=$(printf "${COLOR_RED}")
         export LESS_TERMCAP_md=$(printf "${COLOR_RED}")

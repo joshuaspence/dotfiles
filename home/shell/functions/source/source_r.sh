@@ -5,7 +5,10 @@
 ## @file   ~/.shell/functions/source/source_r.sh
 #\
 
-## Recursive `source` function.
+command -v file_extension &>/dev/null || source "${HOME}/.shell/functions/source/file_extension.sh"
+
+## Recursive `source` function which also takes into consideration the file
+## extension to allow for shell-specific files.
 ##
 ## @param [String] The path of the file or directory to source.
 function source_r() {
@@ -18,7 +21,10 @@ function source_r() {
         source "$1"
     elif [[ -d $1 && -r $1 ]]; then
         local file; for file in $(find "$1" ! -type d -readable 2>/dev/null); do
-            source "${file}"
+            case "$(file_extension "${file}")" in
+                '' | 'sh' | "$(basename ${SHELL})")
+                    source "${file}";;
+            esac
         done
     else
         echo "'$1' does not exist or is not readable" >&2

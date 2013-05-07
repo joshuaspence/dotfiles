@@ -1,5 +1,5 @@
 #/
-## Environment variable for `ls`.
+## Environment variables for `ls`.
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/environment/ls.sh
@@ -11,11 +11,13 @@ command -v ls &>/dev/null && {
     ## Use `dircolors` to provide colors for `ls`.
     if $CLICOLOR; then
         if command -v dircolors &>/dev/null; then
-            if [[ -r ${HOME}/.dircolors ]]; then
-                eval "$(dircolors -b ${HOME}/.dircolors)"
+            DIRCOLORSRC="${HOME}/.dircolors"
+            if [[ -r $DIRCOLORSRC ]]; then
+                eval "$(dircolors ${DIRCOLORSRC})"
             else
-                eval "$(dircolors -b)"
+                eval "$(dircolors)"
             fi
+            unset DIRCOLORSRC
         else
             unset LS_COLORS
             echo 'No options set for LS_COLORS environment variable' >&2

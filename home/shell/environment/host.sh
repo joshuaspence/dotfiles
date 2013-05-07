@@ -6,4 +6,4 @@
 #\
 
 export HOST=$(hostname -s)
-export DOMAIN=$(hostname | sed -e "s/${HOST}.//")
+export DOMAIN=$(hostname | sed "s/${HOST}.//")

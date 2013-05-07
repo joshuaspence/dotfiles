@@ -6,9 +6,11 @@
 #\
 
 command -v bc &>/dev/null && {
-    if [[ -f ${HOME}/.bcrc && -r ${HOME}/.bcrc ]]; then
-        export BC_ENV_ARGS+="-lq ${HOME}/.bcrc"
+    BCRC="${HOME}/.bcrc"
+    if [[ -f $BCRC && -r $BCRC ]]; then
+        export BC_ENV_ARGS="-lq ${BCRC}"
     else
         export BC_ENV_ARGS='-lq'
     fi
+    unset BCRC
 }

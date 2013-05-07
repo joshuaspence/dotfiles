@@ -1,1 +1,0 @@
-../vars/uname.sh
