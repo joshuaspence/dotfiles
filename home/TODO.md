@@ -4,10 +4,9 @@ Still to do
 - config/user-dirs.locale
 - oh-my-zsh/
 - shell/completions/dropbox.sh
-- shell/environment/login.sh
+- shell/environment/login.zsh
 - shell/functions/color/colorize.sh
-- shell/zsh/
-- vim/
+- shell/config/*.zsh
 - Makefile
 - muttrc
 - README.md
@@ -20,6 +19,18 @@ Still to do
 Mostly done
 ===========
 - shell/functions/source/source_r.sh
-- gitconfig
+- vim/after/
+- vim/plugin/editing/formatoptions.vim
+- vim/plugin/visual/shortmess.vim
+- vim/plugin/bundles.vim
+- vim/plugin/folding.vim
+- vim/plugin/indent.vim
+- vim/plugin/search.vim
+- vim/plugin/syntax.vim
+- vim/plugin/tabs.vim
+- vim/plugin/viewoptions.vim
+- vim/filetype.vim
+- vim/scripts.vim
 - dotfilesrc
+- gitconfig
 - pythonrc.py
