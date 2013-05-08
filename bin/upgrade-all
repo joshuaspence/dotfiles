@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if command -v apt-get &>/dev/null; then
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo apt-get dist-upgrade
+fi
+
+if command -v gem &>/dev/null; then
+    gem update --system
+fi
+
+if command -v pip &>/dev/null; then
+    sudo $(which pip-upgrade)
+fi
+
+if command -v rvm &>/dev/null; then
+    echo "TODO"
+fi
