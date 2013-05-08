@@ -15,10 +15,10 @@ if has('folding')
 
     "" Fold on the marker.
     set foldmethod=marker
-      
+
     "" Don't autofold anything (but I can still fold manually).
     set foldlevel=100
 
-    "" What movements open folds.
+    "" Specify the movements which open folds.
     set foldopen=block,hor,mark,percent,quickfix,tag
 endif
