@@ -21,7 +21,7 @@
 "" Bundles @{{{
     Bundle 'airblade/vim-gitgutter'
     Bundle 'flazz/vim-colorschemes'
-    "Bundle 'godlygeek/tabular'
+    Bundle 'godlygeek/tabular'
     Bundle 'mattn/gist-vim'
     Bundle 'mattn/webapi-vim'
     Bundle 'mileszs/ack.vim'
@@ -36,7 +36,7 @@
     Bundle 'tpope/vim-eunuch'
     Bundle 'tpope/vim-fugitive'
     Bundle 'tpope/vim-markdown'
-    "Bundle 'tpope/vim-scriptease'
+    Bundle 'tpope/vim-scriptease'
     Bundle 'tpope/vim-sleuth'
     Bundle 'tpope/vim-surround'
     Bundle 'trailing-whitespace'

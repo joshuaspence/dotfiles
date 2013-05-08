@@ -19,10 +19,6 @@ Still to do
 Mostly done
 ===========
 - shell/functions/source/source_r.sh
-- vim/after/
-- vim/plugin/bundles.vim
-- vim/filetype.vim
-- vim/scripts.vim
 - dotfilesrc
 - gitconfig
 - pythonrc.py

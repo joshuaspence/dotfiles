@@ -5,5 +5,4 @@
 "" @file   ~/.vim/plugin/visual/cursor.vim
 "\
 
-set cursorcolumn
 set cursorline
