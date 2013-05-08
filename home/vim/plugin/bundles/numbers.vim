@@ -1,6 +1,6 @@
 "/
 "" @author Joshua Spence
-"" @file   ~/.vim/after/plugin/bundle/numbers.vim
+"" @file   ~/.vim/plugin/bundles/numbers.vim
 "\
 
 nnoremap <F3> :NumbersToggle<CR>

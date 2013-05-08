@@ -20,7 +20,6 @@ Mostly done
 ===========
 - shell/functions/source/source_r.sh
 - vim/after/
-- vim/plugin/editing/formatoptions.vim
 - vim/plugin/bundles.vim
 - vim/filetype.vim
 - vim/scripts.vim

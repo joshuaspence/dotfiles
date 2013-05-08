@@ -3,7 +3,7 @@
 "" manager.
 ""
 "" @author Joshua Spence
-"" @file   ~/.vim/after/plugin/bundle/vundle.vim
+"" @file   ~/.vim/plugin/bundles/vundle.vim
 "\
 
 nmap <Leader>bi :BundleInstall<CR>

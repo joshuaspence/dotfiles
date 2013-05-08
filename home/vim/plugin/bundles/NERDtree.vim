@@ -1,6 +1,6 @@
 "/
 "" @author Joshua Spence
-"" @file   ~/.vim/after/plugin/bundle/NERDtree.vim
+"" @file   ~/.vim/plugin/bundles/NERDtree.vim
 "\
 
 "" Make NERDtree look nice.
