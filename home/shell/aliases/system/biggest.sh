@@ -7,4 +7,4 @@
 #\
 
 ## Display the largest files/directories in the current directory.
-alias biggest='du -hsk $(ls -A) | sort -nr'
+alias biggest='ls -Ab | xargs du -hsk | sort -nr'

@@ -12,6 +12,6 @@ command -v ls &>/dev/null && {
     if $CLICOLOR; then
         alias ls='ls --color=auto'
     else
-        unalias ls 2>/dev/null || true
+        unalias ls &>/dev/null || true
     fi
 }
