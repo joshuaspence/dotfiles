@@ -7,6 +7,6 @@
 
 RVM_COMPLETION="${HOME}/.rvm/scripts/completion"
 if [[ -f $RVM_COMPLETION && -r $RVM_COMPLETION ]]; then
-    source $RVM_COMPLETION
+    source "${RVM_COMPLETION}"
 fi
 unset RVM_COMPLETION

@@ -19,7 +19,7 @@ function extract() {
         return 2
     fi
 
-    case "$1" in
+    case $1 in
         *.tar.bz2)  tar -jxvf "$1" ;;
         *.tar.gz)   tar -zxvf "$1" ;;
         *.bz2)      bunzip2 "$1" ;;

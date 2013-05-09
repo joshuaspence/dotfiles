@@ -9,7 +9,7 @@
 ##
 ## @link http://github.com/fnichol/bashrc/blob/master/bashrc
 function primary_ip() {
-    case "$(uname -s)" in
+    case $(uname -s) in
         Darwin)
             ifconfig $(iface) |
             grep '^[[:space:]]*inet ' |
@@ -24,7 +24,7 @@ function primary_ip() {
             ifconfig $(iface) |
             grep '^[[:space:]]*inet ' |
             awk '{print $2}' |
-            awk -F':' '{print $2}'
+            awk -F: '{print $2}'
             ;;
         SunOS)
             ifconfig $(iface) |

@@ -5,14 +5,14 @@
 ## @file   ~/.shell/completion/dropbox.bash
 #\
 
-command -v dropbox >/dev/null && {
+command -v dropbox &>/dev/null && {
     function _dropbox() {
         _init_completion || return
 
-        local commands="autostart exclude filestatus help lansync ls puburl running start status stop"
+        local commands='autostart exclude filestatus help lansync ls puburl running start status stop'
 
         if [[ $cword < 2 ]]; then
-            COMPREPLY=($(compgen -W "$commands" -- $cur))
+            COMPREPLY=($(compgen -W "${commands}" -- $cur))
         else
             case ${words[1]} in
                 autostart|lansync)
@@ -23,12 +23,8 @@ command -v dropbox >/dev/null && {
                 exclude)
                     if [[ $cword < 3 ]]; then
                         COMPREPLY=($(compgen -W 'add list remove' -- $cur))
-                    else
-                        case ${words[2]} in
-                            add|remove)
-                                COMPREPLY=($(compgen -d -- $cur))
-                                ;;
-                        esac
+                    elif [[ ${words[2]} == @(add|remove) ]]; then
+                        COMPREPLY=($(compgen -d -- $cur))
                     fi
                     ;;
                 filestatus)
@@ -42,7 +38,7 @@ command -v dropbox >/dev/null && {
                     ;;
                 help)
                     if [[ $cword < 3 ]]; then
-                        COMPREPLY=($(compgen -W "$commands" -- $cur))
+                        COMPREPLY=($(compgen -W "${commands}" -- $cur))
                     fi
                     ;;
                 ls)

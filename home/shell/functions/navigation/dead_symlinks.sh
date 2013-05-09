@@ -10,7 +10,7 @@
 ## @param [optional, String] The base directory. Defaults to the current
 ##                           directory.
 ##
-## @link http://github.com/jacobwg/dotfiles/blob/master/bin/deadsymlinks
+## @link  http://github.com/jacobwg/dotfiles/blob/master/bin/deadsymlinks
 function dead_symlinks() {
     if [[ $# > 0 && ! -d $1 ]]; then
         echo "'$1' is not a valid directory" >&2

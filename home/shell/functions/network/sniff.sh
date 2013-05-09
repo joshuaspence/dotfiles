@@ -9,7 +9,7 @@
 ##
 ## @param [String] The interface on which to sniff for HTTP traffic.
 ##
-## @link http://github.com/stevehodgkiss/dotfiles/blob/master/aliases
+## @link  http://github.com/stevehodgkiss/dotfiles/blob/master/aliases
 function sniff() {
     if [[ $# < 1 || -z $1 ]]; then
         echo 'Usage: sniff <interface>' >&2

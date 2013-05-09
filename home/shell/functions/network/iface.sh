@@ -7,7 +7,7 @@
 
 ## Echo the primary network interface.
 function iface() {
-    case "$(uname -s)" in
+    case $(uname -s) in
         Darwin)
             netstat -nr |
             grep '^default' |
@@ -25,8 +25,8 @@ function iface() {
             awk '{print $8}'
             ;;
         SunOS)
-            local def_gateway=$(netstat -nr | grep ^default | awk '{print $2}')
-            route get $def_gateway |
+            local def_gateway=$(netstat -nr | grep '^default' | awk '{print $2}')
+            route get "${def_gateway}" |
             grep '^[ ]*interface:' |
             awk '{print $2}'
             ;;
