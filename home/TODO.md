@@ -1,7 +1,5 @@
 Still to do
 ===========
-- config/user-dirs.dirs
-- config/user-dirs.locale
 - oh-my-zsh/
 - shell/environment/login.zsh
 - shell/config/*.zsh
