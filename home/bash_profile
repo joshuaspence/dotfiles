@@ -7,9 +7,11 @@
 #\
 
 ## Pull in any system defaults first so they can be overridden later.
-if [[ -f /etc/profile && -r /etc/profile ]]; then
-    source /etc/profile
+PROFILE='/etc/profile'
+if [[ -f $PROFILE && -r $PROFILE ]]; then
+    source $PROFILE
 fi
+unset PROFILE
 
 ## Source prerequisite function.
 command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
