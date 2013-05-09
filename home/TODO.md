@@ -4,7 +4,6 @@ Still to do
 - shell/environment/login.zsh
 - shell/config/*.zsh
 - Makefile
-- muttrc
 - README.md
 - zlogin
 - zlogout
