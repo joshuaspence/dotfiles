@@ -11,20 +11,20 @@ if [[ -f /etc/bash.bashrc && -r /etc/bash.bashrc ]]; then
     source /etc/bash.bashrc
 fi
 
-## Source prerequisite function.
+# Source prerequisite function.
 command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
 
-## Setup shell options.
+# Setup shell options.
 source_r "${HOME}/.shell/config/"
 
-## Setup the environment.
+# Setup the environment.
 source_r "${HOME}/.shell/environment/"
 
-## Import command aliases.
+# Import command aliases.
 source_r "${HOME}/.shell/aliases/"
 
-## Import user-defined functions.
+# Import user-defined functions.
 source_r "${HOME}/.shell/functions/"
 
-## Import completion functions.
+# Import completion functions.
 source_r "${HOME}/.shell/completion/"

@@ -7,6 +7,6 @@
 
 RVM_INIT="${HOME}/.rvm/scripts/rvm"
 if [[ -f $RVM_INIT && -r $RVM_INIT ]]; then
-    source $RVM_INIT
+    source "${RVM_INIT}"
 fi
 unset RVM_INIT

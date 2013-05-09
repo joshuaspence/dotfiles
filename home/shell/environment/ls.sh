@@ -12,7 +12,7 @@ command -v ls &>/dev/null && {
     if $CLICOLOR; then
         if command -v dircolors &>/dev/null; then
             DIRCOLORSRC="${HOME}/.dircolors"
-            if [[ -r $DIRCOLORSRC ]]; then
+            if [[ -f $DIRCOLORSRC && -r $DIRCOLORSRC ]]; then
                 eval "$(dircolors ${DIRCOLORSRC})"
             else
                 eval "$(dircolors)"
