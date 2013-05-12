@@ -7,7 +7,7 @@
 
 ## Echoes the primary IP address of the system.
 ##
-## @link http://github.com/fnichol/bashrc/blob/master/bashrc
+## @link https://github.com/fnichol/bashrc/blob/master/bashrc
 function primary_ip() {
     case $(uname -s) in
         Darwin)

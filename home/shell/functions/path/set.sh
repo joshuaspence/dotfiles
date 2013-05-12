@@ -5,15 +5,12 @@
 ## @file   ~/.shell/functions/path/set.sh
 #\
 
-# Source prerequisite shell functions.
-command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove.sh"
-
 ## Sets a colon-separated search path variable, overwriting any previous values.
 ##
 ## @param [String] Search path variable to manipulate (e.g. "PATH").
 ## @param [List]   Space-separated list of paths to append, in order.
 ##
-## @link http://github.com/fnichol/bashrc/blob/master/bashrc
+## @link https://github.com/fnichol/bashrc/blob/master/bashrc
 function set-path() {
     if [[ $# < 1 || -z $1 ]]; then
         echo 'Usage: set-path [-f|--force] <path_var> <path1> ... <pathN>' >&2

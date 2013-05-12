@@ -6,9 +6,6 @@
 ## @file   ~/.shell/functions/prompt/time.sh
 #\
 
-[[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
-[[ -n $PROMPT_HOST_COLOR ]] || source "${HOME}/.shell/functions/prompt/colors.bash"
-
 function shell_prompt__time() {
     $CLICOLOR && echo -n "\[${PROMPT_TIME_COLOR}\]"
                  echo -n '\t'

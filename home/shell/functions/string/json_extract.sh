@@ -12,19 +12,17 @@
 ## echo '{"foo": {"bar": false}}' | json_extract foo bar
 ## </code>
 ##
-## @param [String] The keys to access the JSON data. Keys are separated by
-##                 spaces.
+## @param [List] The keys to access the JSON data. Each argument forms a key.
 ##
-## @link  http://github.com/fnichol/bashrc/blob/master/bashrc
+## @link https://github.com/fnichol/bashrc/blob/master/bashrc
 function json_extract() {
     if [[ $# < 1 || -z $1 ]]; then
         echo 'Usage: json_extract <key1> <key2> ... <keyN>' >&2
         return 1
     fi
 
-    local key
     local keys
-    for key in $@; do
+    local key; for key in $@; do
         keys="${keys}['${key}']"
     done
 

@@ -9,8 +9,8 @@
 ##
 ## @param [String] Terminal code keyword (usually a color).
 ##
-## @link  http://github.com/fnichol/bashrc/blob/master/bashrc
-## @link  http://github.com/wayneeseguin/rvm/blob/master/scripts/color
+## @link https://github.com/fnichol/bashrc/blob/master/bashrc
+## @link https://github.com/wayneeseguin/rvm/blob/master/scripts/color
 function colorize() {
     if [[ $# != 1 || -z $1 ]]; then
         echo 'Usage: colorize <color_spec>' >&2

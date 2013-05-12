@@ -14,6 +14,7 @@ Still to do
 Mostly done
 ===========
 - shell/functions/color/colorize.sh
+- shell/functions/path/*
 - shell/functions/source/source_r.sh
 - dotfilesrc
 - gitconfig

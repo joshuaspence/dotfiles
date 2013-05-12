@@ -7,5 +7,5 @@
 
 ## Easier navigation.
 ##
-## @link http://github.com/mathiasbynens/dotfiles/blob/master/.aliases
+## @link https://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 alias ...='cd ../..'

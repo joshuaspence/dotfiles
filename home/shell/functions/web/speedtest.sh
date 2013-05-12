@@ -7,8 +7,7 @@
 
 ## Test the speed of the Internet connection.
 ##
-## @link http://github.com/jacobwg/dotfiles/blob/master/zsh/aliases.zsh
+## @link https://github.com/jacobwg/dotfiles/blob/master/zsh/aliases.zsh
 function speedtest() {
-    wget --config=/dev/null --output-document=/dev/null \
-        'http://speedtest.wdc01.softlayer.com/downloads/test500.zip'
+    wget -O /dev/null 'http://speedtest.wdc01.softlayer.com/downloads/test500.zip'
 }
