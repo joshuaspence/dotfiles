@@ -1,5 +1,5 @@
 #/
-## Bash completion for {@;ink https://www.dropbox.com/install?os=lnx Dropbox}.
+## Bash completion for {@link https://www.dropbox.com/install?os=lnx Dropbox}.
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/completion/dropbox.bash

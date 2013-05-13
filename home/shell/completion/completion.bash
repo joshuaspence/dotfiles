@@ -1,3 +1,8 @@
+#/
+## @author Joshua Spence
+## @file   ~/.shell/completion/completion.bash
+#\
+
 if ! shopt -oq posix; then
     if [ -f /usr/share/bash-completion/bash_completion ]; then
         source /usr/share/bash-completion/bash_completion

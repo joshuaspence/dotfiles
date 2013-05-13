@@ -3,7 +3,7 @@
 ##
 ## @author Joshua Spence
 ## @file   ~/.shell/environment/os.sh
-## @link   http://github.com/mikemcquaid/dotfiles
+## @link   https://github.com/mikemcquaid/dotfiles
 #\
 
 if [[ $(uname -s) == Darwin ]]; then

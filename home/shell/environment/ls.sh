@@ -11,13 +11,7 @@ command -v ls &>/dev/null && {
     ## Use `dircolors` to provide colors for `ls`.
     if $CLICOLOR; then
         if command -v dircolors &>/dev/null; then
-            DIRCOLORSRC="${HOME}/.dircolors"
-            if [[ -f $DIRCOLORSRC && -r $DIRCOLORSRC ]]; then
-                eval "$(dircolors ${DIRCOLORSRC})"
-            else
-                eval "$(dircolors)"
-            fi
-            unset DIRCOLORSRC
+            eval "$(dircolors)"
         else
             unset LS_COLORS
             echo 'No options set for LS_COLORS environment variable' >&2
