@@ -8,7 +8,7 @@
 
 command -v python &>/dev/null && {
     PYTHONSTARTUP="${HOME}/.pythonrc.py"
-    if [[ -f $PYTHONSTARTUP && -r $PYTHONSTARTUP ]]; then
+    if [[ -f $PYTHONSTARTUP ]]; then
         export PYTHONSTARTUP
     else
         unset PYTHONSTARTUP

@@ -5,8 +5,6 @@
 ## @file   ~/.shell/environment/rvm.sh
 #\
 
-RVM_INIT="${HOME}/.rvm/scripts/rvm"
-if [[ -f $RVM_INIT && -r $RVM_INIT ]]; then
-    source "${RVM_INIT}"
+if [[ -f $HOME/.rvm/scripts/rvm ]]; then
+    source "${HOME}/.rvm/scripts/rvm"
 fi
-unset RVM_INIT

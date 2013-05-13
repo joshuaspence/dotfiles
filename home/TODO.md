@@ -13,6 +13,10 @@ Still to do
 
 Mostly done
 ===========
+- shell/config/shopt.bash
+- shell/config/shopt.zsh
+- shell/environment/ec2.sh
+- shell/environment/host.sh
 - shell/functions/color/colorize.sh
 - shell/functions/path/*
 - shell/functions/source/source_r.sh
