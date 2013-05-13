@@ -8,5 +8,5 @@
 
 ## Set to avoid `env` output from changing console color.
 ##
-## @link http://github.com/rcmachado/dotfiles/blob/master/bash_colors
+## @link https://github.com/rcmachado/dotfiles/blob/master/bash_colors
 export LESS_TERMEND=$'\e[0m'
