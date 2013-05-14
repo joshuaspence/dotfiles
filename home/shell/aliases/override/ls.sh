@@ -10,8 +10,8 @@ command -v ls &>/dev/null && {
     [[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"
 
     if $CLICOLOR; then
-        alias ls='ls --color=auto'
+        alias ls='ls -h --color=auto'
     else
-        unalias ls 2>/dev/null || true
+        alias ls='ls -h'
     fi
 }
