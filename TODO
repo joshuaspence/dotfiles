@@ -27,8 +27,6 @@ hub => GITHUB_USER GITHUB_PASSWORD
 #===============================================================================
 # Completion
 #===============================================================================
-pip
-    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/pip
 maven
     - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/maven
 npm
