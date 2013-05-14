@@ -9,7 +9,6 @@ http://www.git-legit.org/
 # Packages
 #===============================================================================
 apt-get => APT_CONFIG
-cp,mv => SIMPLE_BACKUP_SUFFIX VERSION_CONTROL
 perlrun
 ruby
 python
