@@ -31,7 +31,5 @@ maven
     - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/maven
 npm
     - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/npm
-hub
-    - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/hub
 ipython
     - https://github.com/thomasf/dotfiles-thomasf-base/blob/master/.config-base/bash/completion.d/ipython

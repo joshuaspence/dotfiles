@@ -123,19 +123,6 @@
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     whois = !sh -c 'git log --regexp-ignore-case -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -
 
-## Aliases for {@link http://github.com/defunkt/hub hub}.
-##
-## @todo Do I need this here?
-##
-## @{{{
-[alias]
-    browse = !hub browse
-    compare = !hub compare
-    create = !hub create
-    fork = !hub fork
-    pull-request = !hub pull-request
-## @}}}
-
 ## Aliases for {@link http://github.com/joshuaspence/git-utils git-utils}.
 ## Required here only for tab-completion.
 ##

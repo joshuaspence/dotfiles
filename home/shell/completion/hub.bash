@@ -1,0 +1,1 @@
+../../../modules/hub/etc/hub.bash_completion.sh
