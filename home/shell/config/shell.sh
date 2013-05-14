@@ -6,4 +6,4 @@
 ## @file   ~/.shell/config/shell.sh
 #\
 
-: ${SHELL="$0"}
+: ${SHELL=$(ps -p $$ h | awk '{print $5}')}
