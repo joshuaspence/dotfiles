@@ -15,7 +15,6 @@ ruby
 python
 sudo => SUDO_ASKPASS SUDO_EDITOR SUDO_PROMPT SUDO_PS1
 tar => TAR_OPTIONS
-gzip => GZIP
 bzip => BZIP2 BZIP
 unzip => UNZIP
 crontab => CRONTAB_NOHEADER
