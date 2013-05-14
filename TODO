@@ -13,7 +13,6 @@ cp,mv => SIMPLE_BACKUP_SUFFIX VERSION_CONTROL
 perlrun
 ruby
 python
-more => MORE
 sudo => SUDO_ASKPASS SUDO_EDITOR SUDO_PROMPT SUDO_PS1
 tar => TAR_OPTIONS
 gzip => GZIP
