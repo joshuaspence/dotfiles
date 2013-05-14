@@ -31,3 +31,6 @@
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
+[submodule "home/shell/completion/ruby"]
+	path = home/shell/completion/ruby
+	url = git://github.com/mernen/completion-ruby.git
