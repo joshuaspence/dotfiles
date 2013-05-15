@@ -1,29 +1,25 @@
 .PHONY: all
-all: git-extras hosts hub
+all: gist git-extras git-utils hub rename shell-utils spark vimpager
 
 submake = make --no-print-directory -C $(1) $(2)
 sudo-submake = sudo $(call submake,$(1),$(2))
 sudo-submake-if-no-command = command -v $(1) >/dev/null 2>&1 && echo "$(1) is installed" || $(call sudo-submake,$(2),$(3))
-todo = echo "TODO" && false
+todo = echo "$@: TODO"
 
-#===============================================================================
-# Git-Extras
-#===============================================================================
-git-extras_SUBMODULE_DIR := git-extras
+.PHONY: gist
+gist:
+	@$(todo)
 
-clean-git-extras:
-	$(call submake,$(git-extras_SUBMODULE_DIR),clean)
+.PHONY: git-extras
+git-extras:
+	@$(call sudo-submake,$@,install)
 
-.PHONY: install-git-extras
-install-git-extras:
-	$(call sudo-submake,$(git-extras_SUBMODULE_DIR),install)
-
-uninstall-git-extras:
-	$(call sudo-submake,$(git-extras_SUBMODULE_DIR),uninstall)
+.PHONY: git-utils
+	@$(todo)
 
 .PHONY: hub
 hub:
-	cd hub && sudo rake install
+	@cd hub && sudo rake install
 
 .PHONY: rename
 rename:
