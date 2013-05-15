@@ -25,9 +25,6 @@
 [submodule "modules/spark"]
 	path = modules/spark
 	url = git@github.com:joshuaspence/spark.git
-[submodule "modules/tig"]
-	path = modules/tig
-	url = git://github.com/jonas/tig.git
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
