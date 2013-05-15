@@ -21,13 +21,8 @@ install-git-extras:
 uninstall-git-extras:
 	$(call sudo-submake,$(git-extras_SUBMODULE_DIR),uninstall)
 
-#===============================================================================
-# Hub
-#===============================================================================
 .PHONY: hub
-hub: /usr/local/bin/hub
-
-/usr/local/bin/hub: hub/hub
+hub:
 	cd hub && sudo rake install
 
 .PHONY: rename
