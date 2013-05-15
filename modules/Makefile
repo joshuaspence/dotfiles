@@ -3,6 +3,7 @@ all: git-extras hosts hub
 
 submake = make --no-print-directory -C $(1) $(2)
 sudo-submake = sudo $(call submake,$(1),$(2))
+sudo-submake-if-no-command = command -v $(1) >/dev/null 2>&1 && echo "$(1) is installed" || $(call sudo-submake,$(2),$(3))
 
 #===============================================================================
 # Git-Extras
@@ -20,24 +21,6 @@ uninstall-git-extras:
 	$(call sudo-submake,$(git-extras_SUBMODULE_DIR),uninstall)
 
 #===============================================================================
-# Hosts
-#===============================================================================
-hosts_SUBMODULE_DIR := hosts
-
-.PHONY: hosts
-hosts: /etc/hosts
-
-clean-hosts
-
-
-.PHONY: hosts/hosts
-hosts/hosts:
-	(echo y; echo n) | python hosts/updateHostsFile.py
-
-/etc/hosts: hosts/hosts
-	sudo cp $< $@
-
-#===============================================================================
 # Hub
 #===============================================================================
 .PHONY: hub
@@ -45,3 +28,7 @@ hub: /usr/local/bin/hub
 
 /usr/local/bin/hub: hub/hub
 	cd hub && sudo rake install
+
+.PHONY: vimpager
+vimpager:
+	@$(call sudo-submake-if-no-command,$@,$@,install)
