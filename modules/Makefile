@@ -30,13 +30,17 @@ hub: /usr/local/bin/hub
 /usr/local/bin/hub: hub/hub
 	cd hub && sudo rake install
 
+.PHONY: rename
+rename:
+	@$(todo)
+
 .PHONY: shell-utils
 shell-utils:
-	@$(call todo)
+	@$(todo)
 
 .PHONY: spark
 spark:
-	@$(call todo)
+	@$(todo)
 
 .PHONY: vimpager
 vimpager:
