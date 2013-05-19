@@ -1,22 +1,24 @@
 #!/usr/bin/env ruby
 
+#/
+## Usage: webseq [-s|--style=<style>] <file>
 ##
-# Usage: webseq [-s|--style=<style>] <file>
-#
-# Generate a sequence diagram from the text in <file> using the
-# "websequencediagrams.com" API and write the result as a PNG to standard
-# output. If <file> is '-' or no <file> is specified, read diagram description
-# text from standard input.
-#
-# Use the --style argument to generate diagrams in any of the following styles:
-# "default", "earth", "modern-blue", "mscgen", "omegapple", "qsd", "rose",
-# "roundgreen" or "napkin". The "modern-blue" style is used by default.
-#
-# Example:
-#     `webseq --style=napkin awesome.seq > awesome.png`
-#
-# @link http://www.websequencediagrams.com
-# @link http://github.com/rtomayko/dotfiles/blob/rtomayko/bin/webseq
+## Generate a sequence diagram from the text in <file> using the
+## "websequencediagrams.com" API and write the result as a PNG to standard
+## output. If <file> is '-' or no <file> is specified, read diagram description
+## text from standard input.
+##
+## Use the --style argument to generate diagrams in any of the following styles:
+## "default", "earth", "modern-blue", "mscgen", "omegapple", "qsd", "rose",
+## "roundgreen" or "napkin". The "modern-blue" style is used by default.
+##
+## <code>
+## webseq --style=napkin awesome.seq > awesome.png
+## </code>
+##
+## @link http://www.websequencediagrams.com
+## @link https://github.com/rtomayko/dotfiles/blob/rtomayko/bin/webseq
+#\
 
 require 'net/http'
 require 'uri'

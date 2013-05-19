@@ -28,25 +28,28 @@
 
 set -e
 
-# The man.cx root URL
-MANCX_URL='http://man.cx'
-
-# Write usage and bail out with no arguments or with `--help`.
-if [[ $# == 0 || "$1" == '-h' || "$1" == '--help' ]]; then
+function usage() {
     cat "$0" |
     grep '^#|' |
     cut -c4-
+}
 
-    if [[ "$1" == '-h' || "$1" == '--help' ]]; then
-        exit 0
-    else
-        exit 1
-    fi
+# The man.cx root URL
+MANCX_URL='http://man.cx'
+
+if [[ $# > 0 && ( "$1" == '-h' || "$1" == '--help' ) ]]; then
+    usage
+    exit 0
+fi
+
+if [[ $# == 0 ]]; then
+    usage
+    exit 1
 fi
 
 # Bail out if we couldn't find a browser.
 if [[ -z $BROWSER ]]; then
-    echo "$(basename $0): BROWSER not set" >&2
+    echo "BROWSER not set" >&2
     exit 2
 fi
 

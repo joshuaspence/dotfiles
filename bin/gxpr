@@ -41,6 +41,7 @@
 ## </code>
 ##
 ## @link https://github.com/pengwynn/dotfiles/blob/master/bin/gxpr
+#\
 
 #| Usage: gxpr <expression>
 #|
@@ -48,23 +49,26 @@
 
 set -e
 
-# Write usage and bail out with no arguments or with `--help`.
-if [[ $# == 0 || "$1" == '-h' || "$1" == '--help' ]]; then
+function usage() {
     cat "$0" |
     grep '^#|' |
     cut -c4-
+}
 
-    if [[ "$1" == '-h' || "$1" == '--help' ]]; then
-        exit 0
-    else
-        exit 1
-    fi
+if [[ $# > 0 && ( "$1" == '-h' || "$1" == '--help' ) ]]; then
+    usage
+    exit 0
+fi
+
+if [[ $# == 0 ]]; then
+    usage
+    exit 1
 fi
 
 CURL='curl -s --header User-Agent:gxpr/1.0'
 GOOGLE='http://www.google.com/ig/calculator'
 WOLFRAM='http://www.wolframalpha.com/input/'
-EXPR=$(echo "$@" | perl -MURI::Escape -ne 'chomp;print uri_escape($_)')
+EXPR=$(echo "$@" | perl -MURI::Escape -ne 'chomp; print uri_escape($_)')
 
 res=$(
     $CURL "${GOOGLE}?q=${EXPR}" |
@@ -72,12 +76,10 @@ res=$(
     perl -pe 's/[^\x00-\x7F]//g'
 )
 
-# if we don't have a result, try wolfram alpha
-if [[ -z $res ]]; then
-    echo "Google doesn't know:" "'$@'" >&2
-    echo >&2
-    echo "Perhaps try Wolfram Alpha: \033[4m${WOLFRAM}?i=${EXPR}\033[0m" >&2
-    exit 2
-else
+# If we don't have a result, try Wolfram Alpha.
+if [[ $res ]]; then
     echo "${res}"
+else
+    echo -e "Google doesn't know: '$@'\n\nPerhaps try Wolfram Alpha: \033[4m${WOLFRAM}?i=${EXPR}\033[0m" >&2
+    exit 2
 fi
