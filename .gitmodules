@@ -16,9 +16,6 @@
 [submodule "modules/hub"]
 	path = modules/hub
 	url = git://github.com/defunkt/hub.git
-[submodule "modules/rename"]
-	path = modules/rename
-	url = git@github.com:joshuaspence/rename.git
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
@@ -28,3 +25,6 @@
 [submodule "modules/spark"]
 	path = modules/spark
 	url = git://github.com/holman/spark.git
+[submodule "modules/rename"]
+	path = modules/rename
+	url = git://github.com/ap/rename.git
