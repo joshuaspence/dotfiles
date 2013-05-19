@@ -1,7 +1,9 @@
 #!/bin/bash
 
 #/
-## Show processes listening on ports.
+## Shows processes listening on ports.
+##
+## @param [optional] Any parameters are passed to `lsof`.
 ##
 ## @link https://github.com/jacobwg/dotfiles/blob/master/bin/ports
 #\

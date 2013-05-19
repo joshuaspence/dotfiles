@@ -16,6 +16,9 @@
 ## webseq --style=napkin awesome.seq > awesome.png
 ## </code>
 ##
+## @param [String] The path of the file containing "websequencediagrams.com" API
+##                 code.
+##
 ## @link http://www.websequencediagrams.com
 ## @link https://github.com/rtomayko/dotfiles/blob/rtomayko/bin/webseq
 #\

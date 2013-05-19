@@ -40,6 +40,8 @@
 ## 126720 inches
 ## </code>
 ##
+## @param [String] The expression to be evaluated.
+##
 ## @link https://github.com/pengwynn/dotfiles/blob/master/bin/gxpr
 #\
 

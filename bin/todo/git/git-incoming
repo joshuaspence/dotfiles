@@ -1,57 +1,67 @@
-#!/bin/sh
-# Usage: git-incoming [d] [<upstream>] [<head> [<limit>]]
-# Show commits on <upstream> that do not exist on current branch.
-#
-# https://github.com/jacobwg/dotfiles/blob/master/bin/git-incoming
+#!/bin/bash
 
-# bail out with message to stderr and exit status 1
-die() {
-    echo "$(basename $0):" "$@" 1>&2
-    exit 1
+#/
+## Show the changes on the remote that would be pulled in.
+##
+## @param [optional, String] The name of the branch.
+##
+## @link https://github.com/wafflesnatcha/bin/blob/master/git-incoming
+#\
+
+#| Usage: git-incoming [<branch>]
+#|
+#| Show the changes on the remote that would be pulled in.
+
+set -e
+
+function usage() {
+    cat "$0" |
+    grep '^#|' |
+    cut -c4-
 }
 
-# colors
-SHA=$(git config --get-color 'color.branch.local')
-ADD=$(git config --get-color 'color.diff.new')
-REM=$(git config --get-color 'color.diff.old')
-RESET=$(git config --get-color '' 'reset')
-
-# check for -d / --diff argument
-diff=false
-if [ "$1" = '-d' -o "$1" = '--diff' ]
-then diff=true
-     shift
+if [[ $# > 0 && ( "$1" == '-h' || "$1" == '--help' ) ]]; then
+    usage
+    exit 0
 fi
 
-# use tracking branch if no upstream given
-if [ $# -eq 0 ]
-then
-    # get the current branch in refs/heads/<branch> form
-    ref=$(git symbolic-ref -q HEAD)
-    test -n "$ref" ||
-    die "you're not on a branch"
+# Return the name of the current branch.
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-    # just the branch name please
-    branch=$(echo "$ref" | sed 's@^refs/heads/@@')
-    test -n "$branch" ||
-    die "you're in a weird place; get on a local branch"
+function tracking_branch() {
+    branch_name=$1
+    git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads |
+    grep -e "${branch_name}\$" |
+    awk '{print $2}'
+}
 
-    # grab remote name for current branch
-    remote=$(git config --get "branch.$branch.remote" || true)
+# Are we tracking a remote branch?
+TRACKING=$(tracking_branch ${CURRENT_BRANCH})
 
-    # grab tracked branch name for current branch
-    merge=$(git config branch.$branch.merge) ||
-    die "branch $branch isn't tracking a remote branch and no <upstream> given"
-
-    # make it so
-    set -- "$remote/$(echo "$merge" |sed 's@^refs/heads/@@')"
+if [[ -z "${TRACKING//[[:space:]]/}" ]]; then
+    echo "The current branch '${CURRENT_BRANCH}' does not track an upstream branch" >&2
+    exit -1
 fi
 
-if $diff
-then git diff HEAD..."$1"
+# What's the name of the remote?
+REMOTE=$(git config branch.${CURRENT_BRANCH}.remote)
+
+# Log options
+OPTS="--pretty=oneline --abbrev-commit --decorate"
+
+# URL of the remote we are tracking
+REMOTE_URL=$(git config --get remote.${REMOTE}.url)
+
+# Fetch the changes from the remote.
+echo "Fetching changes from '"${REMOTE}"' (${REMOTE_URL})"
+git fetch -q
+
+# E.g. for 'master':
+#  git log master..origin/master
+CHANGES=$(env PAGER="" git log --color --exit-code $OPTS ${CURRENT_BRANCH}..${TRACKING})
+if [ $? -eq 0 ]; then
+    echo "No changes on ${REMOTE} that are not already available on this branch."
 else
-     git cherry -v HEAD "$@"                           |
-     cut -c1-9 -c43-                                   |
-     sed -e "s/^\(.\) \(.......\)/\1 $SHA\2$RESET/"    |
-     sed -e "s/^-/$REM-$RESET/" -e "s/^+/$ADD+$RESET/"
+    echo "Changes on ${REMOTE}:"
+    echo "${CHANGES}"
 fi

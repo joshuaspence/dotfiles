@@ -3,12 +3,6 @@
 #/
 ## Turns a "github.com" URL into a "git.io" URL.
 ##
-## Usage
-## =====
-## <code>
-## git-io URL [CODE]
-## </code>
-##
 ## @link https://gist.github.com/1209316
 #\
 

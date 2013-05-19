@@ -1,8 +1,14 @@
 #!/bin/bash
 
+#/
+## Checks whether a website is down for you, or for everybody.
+##
+## @param [String] The URL to check.
+#\
+
 #| Usage: down4me <url>
 #|
-#| Checks whether a website is down for you, or everybody.
+#| Checks whether a website is down for you, or for everybody.
 
 set -e
 

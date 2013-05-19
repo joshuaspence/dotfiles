@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 #/
+## Compares actual file sizes with the gzip and bzip2 file sizes.
+##
+## @param [List] The paths of the files to be checked for compressibility.
+##
 ## @author Gary Bernhardt
 ## @link   https://github.com/garybernhardt/dotfiles
 #\

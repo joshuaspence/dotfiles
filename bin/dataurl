@@ -2,9 +2,13 @@
 
 #/
 ## Creates a data URL from a file or from piped input.
+##
+## @param [optional, String] The path to the file to be encoded. If equal to '-'
+##                           or if not is specified, then data is read from
+##                           standard input.
 #\
 
-#| Usage: data-url [<file>]
+#| Usage: dataurl [<file>]
 #|
 #| Creates a data URL from a file or from piped input.
 
@@ -21,7 +25,7 @@ if [[ $# > 0 && ( "$1" == '-h' || "$1" == '--help' ) ]]; then
     exit 0
 fi
 
-if [[ ! -p /dev/stdin && $# == 0 ]]; then
+if [[ ( $# == 0 || ( $# > 0 && $1 == '-' ) && ! -p /dev/stdin ]]; then
     usage
     exit 1
 fi
