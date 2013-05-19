@@ -13,7 +13,6 @@ Still to do
 
 Mostly done
 ===========
-- shell/config/shopt.bash
 - shell/config/shopt.zsh
 - shell/environment/ec2.sh
 - shell/environment/host.sh
