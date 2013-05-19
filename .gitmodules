@@ -19,12 +19,12 @@
 [submodule "modules/rename"]
 	path = modules/rename
 	url = git@github.com:joshuaspence/rename.git
-[submodule "modules/spark"]
-	path = modules/spark
-	url = git@github.com:joshuaspence/spark.git
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
 [submodule "home/shell/completion/ruby"]
 	path = home/shell/completion/ruby
 	url = git://github.com/mernen/completion-ruby.git
+[submodule "modules/spark"]
+	path = modules/spark
+	url = git://github.com/holman/spark.git
