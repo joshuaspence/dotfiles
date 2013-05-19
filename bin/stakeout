@@ -1,44 +1,32 @@
-#!/usr/bin/env ruby -w
+#!/usr/bin/env ruby
 
-# https://github.com/twerth/dotfiles/blob/master/bin/rstakeout
-
-# Originally by Mike Clark.
-#
-# From http://www.pragmaticautomation.com/cgi-bin/pragauto.cgi/Monitor/StakingOutFileChanges.rdoc
-#
-# Runs a user-defined command when files are modified.
-#
-# Like autotest, but more customizable. This is useful when you want to do
-# something other than run tests. For example, generate a PDF book, run
-# a single test, or run a legacy Test::Unit suite in an app that also
-# has an rSpec suite.
-#
-# Can use Ruby's Dir[] to get file glob. Quote your args to take advantage of this.
-#
-#  rstakeout 'rake test:recent' **/*.rb
-#  => Only watches Ruby files one directory down (no quotes)
-#
-#  rstakeout 'rake test:recent' '**/*.rb'
-#  => Watches all Ruby files in all directories and subdirectories
-#
-# Modified (with permission) by Geoffrey Grosenbach to call growlnotify for
-# rspec and Test::Unit output.
-#
-# See the PeepCode screencast on rSpec or other blog articles for instructions on
-# setting up growlnotify.
-#
-# * Added Snarl support in win32, initial implementation by Francis Fish
-# * Added synchronous mode
-# * Allow adjusting of sleep time
-# * Fixes to work in Linux env too
-# Edvard Majakari <edvard@majakari.net>
-#
-# Mod'd by @twerth:
-#   Added ability to send file name to command, use -f, here is an example:
-#     rstakeout 'javascriptlint' '**/*.js' -f
-#
-#   Added ability to suppress output, use -q, here is an example:
-#     rstakeout 'javascriptlint' '**/*.js' -f -q
+#/
+## Originally by Mike Clark.
+##
+## From {@link http://www.pragmaticautomation.com/cgi-bin/pragauto.cgi/Monitor/StakingOutFileChanges.rdoc}.
+##
+## Runs a user-defined command when files are modified.
+##
+## Like `autotest`, but more customizable. This is useful when you want to do
+## something other than run tests. For example, generate a PDF book, run a
+## single test, or run a legacy `Test::Unit` suite in an app that also has an
+## rSpec suite.
+##
+## Can use Ruby's `Dir[]` to get file glob. Quote your arguments to take
+## advantage of this.
+##
+## <code>
+## # Only watches Ruby files one directory down (no quotes)
+## stakeout 'rake test:recent' **/*.rb
+## </code>
+##
+## <code>
+## # Watches all Ruby files in all directories and subdirectories
+## stakeout 'rake test:recent' '**/*.rb'
+## </code>
+##
+## @link https://github.com/twerth/dotfiles/blob/master/bin/rstakeout
+#\
 
 require 'optparse'
 require 'ostruct'

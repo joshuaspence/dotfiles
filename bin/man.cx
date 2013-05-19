@@ -1,0 +1,64 @@
+#!/bin/bash
+
+#/
+## Open man page topic on {@link http://man.cx}.
+##
+## Examples
+## ========
+## Open the `cowsay(1)` and `wall(1)` manpages:
+## <code>
+## man.cx cowsay wall
+## </code>
+##
+## Open the "1posix" section `sh`, `command`, and `type` man pages:
+## <code>
+## man.cx 1posix sh command type
+## </code>
+##
+## @author    Ryan Tomayko
+## @copyright Copyright (c) 2010 by Ryan Tomayko <http://tomayko.com/about>
+## @license   http://opensource.org/licenses/MIT MIT license
+## @link      https://github.com/jacobwg/dotfiles/blob/master/bin/man.cx
+#\
+
+#| Usage: man.cx [<section>] <topic> ...
+#|
+#| Open man page <topic> on http://man.cx. When <section> is given, it must start
+#| with a numeric. Multiple <topic>s may be specified.
+
+set -e
+
+# The man.cx root URL
+MANCX_URL='http://man.cx'
+
+# Write usage and bail out with no arguments or with `--help`.
+if [[ $# == 0 || "$1" == '-h' || "$1" == '--help' ]]; then
+    cat "$0" |
+    grep '^#|' |
+    cut -c4-
+
+    if [[ "$1" == '-h' || "$1" == '--help' ]]; then
+        exit 0
+    else
+        exit 1
+    fi
+fi
+
+# Bail out if we couldn't find a browser.
+if [[ -z $BROWSER ]]; then
+    echo "$(basename $0): BROWSER not set" >&2
+    exit 2
+fi
+
+# When the first argument starts with a numeric, its the <section>.
+section=
+case "$1" in [0-9]*)
+    section="($1)"
+    shift
+    ;;
+esac
+
+# Run over remaining arguments and open in BROWSER.
+for page in "$@"; do
+    $BROWSER "${MANCX_URL}/${page}${section}"
+done

@@ -1,13 +1,16 @@
 #!/usr/bin/env ruby
-# Usage: gitio URL [CODE]
-#
-# Turns a github.com URL
-#  into a git.io URL
-#
-# Created by @defunkt:
-#  https://gist.github.com/1209316
-#
-# Copies the git.io URL to your clipboard.
+
+#/
+## Turns a "github.com" URL into a "git.io" URL.
+##
+## Usage
+## =====
+## <code>
+## git-io URL [CODE]
+## </code>
+##
+## @link https://gist.github.com/1209316
+#\
 
 url  = ARGV[0]
 code = ARGV[1]
@@ -27,7 +30,6 @@ end
 output = `curl -i http://git.io -F 'url=#{url}' #{code} 2> /dev/null`
 if output =~ /Location: (.+)\n?/
   puts $1
-  `echo #$1 | pbcopy`
 else
   puts output
 end
