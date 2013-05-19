@@ -8,11 +8,5 @@
 [dotfiles]
 repository = ~/dotfiles/home
 packages = ['config']
-ignore = [
-    '.git',
-    '.gitignore',
-    '.gitmodules',
-    'Makefile',
-    'README.md',
-    'TODO.md']
+ignore = ['README.md']
 externals = {}
