@@ -9,25 +9,33 @@ function apt-upgrade() {
 }
 
 function easy_install-upgrade() {
+    local dry-run='--dry-run'
+    local verbose='--verbose'
+    local quiet='--quiet'
+
     command -v easy_install &>/dev/null && {
         yolk -U |
         cut -d ' ' -f 2 |
-        xargs easy_install
+        xargs sudo easy_install
     }
 }
 
 function gem-upgrade() {
+    local verbose='--verbose'
+
     command -v gem &>/dev/null && {
-        gem update --system
-        gem update --local
+        gem update
     }
 }
 
 function pip-upgrade() {
+    local quiet='--quiet'
+    local verbose='--verbose'
+
     command -v pip &>/dev/null && {
         pip freeze --local |
         grep -v '^\-e' |
-        cut -d = -f 1  | \
+        cut -d = -f 1  |
         xargs pip install -U
     }
 }
