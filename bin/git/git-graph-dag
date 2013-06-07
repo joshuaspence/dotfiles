@@ -1,41 +1,43 @@
 #!/bin/bash
 
 #/
-## Draw a graphviz diagram of the `git` directed acyclic graph.
-##
-## Labels consist of the short SHA1 and any refs. Unreachable commits (ignoring
-## the reflog) will be marked with an asterisk and drawn with dashed lines.
-##
-## <code>
-## git graph-dag HEAD~10.. | dot -Tpng | display -antialias
-## </code>
-##
-## @link https://github.com/whiteinge/dotfiles/blob/master/bin/git-graph-dag
-#\
-
 #| Usage: git-graph-dag <commit>...
 #|
+#| Draw a graphviz diagram of the `git` directed acyclic graph.
+#|
 #| Accepts any range or arguments that git rev-list accepts.
+#|
+#| Labels consist of the short SHA1 and any refs. Unreachable commits (ignoring the
+#| reflog) will be marked with an asterisk and drawn with dashed lines.
+#|
+#| <code>
+#| git graph-dag HEAD~10.. | dot -Tpng | display -antialias
+#| </code>
+#|
+#| @link https://github.com/whiteinge/dotfiles/blob/master/bin/git-graph-dag
+#\
 
 set -e
 
-# Write usage and bail out with no arguments or with `--help`.
-if [[ $# == 0 || "$1" == '-h' || "$1" == '--help' ]]; then
+function usage() {
     cat "$0" |
     grep '^#|' |
     cut -c4-
+}
 
-    if [[ "$1" == '-h' || "$1" == '--help' ]]; then
-        exit 0
-    else
-        exit 1
-    fi
+# Write usage and bail out with no arguments or with `-h` or `--help`.
+if [[ $# == 0 ]]; then
+    usage
+    exit 1
+elif [[ $# > 0 && ( $1 == '-h' || $1 == '--help' ) ]]; then
+    usage
+    exit 0
 fi
 
 echo 'digraph lattice {'
 
-# Draw the DAG and connect parents
-git rev-list --parents "$@" |
+# Draw the DAG and connect parents.
+git rev-list --parents $@ |
 while read commit parents; do
     for p in $parents; do
         echo "n${commit} -> n${p}"
@@ -43,24 +45,28 @@ while read commit parents; do
 done
 
 # Make pretty labels with the short sha1 and any refs
-git rev-list --pretty=format:'%H %h %d' "$@" | awk '
+git rev-list --pretty=format:'%H %h %d' $@ | awk '
 BEGIN {
-    command = "git fsck --unreachable --no-reflogs | cut -d\" \" -f3"
-    while (command | getline unr) unreachable[unr] = 1
-    close(command)
+    command = "git fsck --unreachable --no-reflogs | cut -d\" \" -f3";
+    while (command | getline unr) {
+        unreachable[unr] = 1;
+    }
+    close(command);
 }
 
 !/^commit/ {
-    refs = ""
-    for (i=3; i<=NF; i++) refs = refs " " $i
+    refs = "";
+    for (i=3; i<=NF; i++) {
+        refs = refs " " $i;
+    }
 
-    unreachable[$1] == 1 ? isunr = 1 : isunr = 0
+    unreachable[$1] == 1 ? isunr = 1 : isunr = 0;
 
-    printf "n%s [shape=Mrecord, style=%s, label=\"{%s%s}\"]\n", \
+    printf "\tn%s [shape=Mrecord, style=%s, label=\"{%s%s}\"]\n", \
         $1, \
         isunr == 1 ? "dashed" : "filled", \
         isunr == 1 ? "*" $2 : $2, \
-        refs == "" ? "" : refs
+        refs == "" ? "" : refs;
 }'
 
 echo '}'

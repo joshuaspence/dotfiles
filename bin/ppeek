@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #/
-## Read lines from standard input and write to both standard output and standard
-## error. This is useful for peeking in on a pipeline.
+## Read lines from standard input and writes to both standard output and
+## standard error. This is useful for peeking in on a pipeline.
 ##
 ## @param [optional, String] Text to prefix standard error output.
 #\
@@ -20,7 +20,7 @@ function usage() {
     cut -c4-
 }
 
-if [[ $# > 0 && ( "$1" == '-h' || "$1" == '--help' ) ]]; then
+if [[ $# > 0 && ( $1 == '-h' || $1 == '--help' ) ]]; then
     usage
     exit 0
 fi
