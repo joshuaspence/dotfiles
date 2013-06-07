@@ -5,11 +5,7 @@ Still to do
 - home/shell/config/*.zsh
 - home/Makefile
 - home/README.md
-- home/zlogin
-- home/zlogout
-- home/zprofile
-- home/zshenv
-- home/zshrc
+- home/z{login,logout,profile,sh{env,rc}}
 
 Mostly done
 ===========
