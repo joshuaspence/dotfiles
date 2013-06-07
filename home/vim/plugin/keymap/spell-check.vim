@@ -5,4 +5,4 @@
 "" @file   ~/.vim/plugin/keymap/spell-check.vim
 "\
 
-map <Leader>ss :setlocal spell!<cr>
+map <Leader>ss :setlocal spell!<CR>

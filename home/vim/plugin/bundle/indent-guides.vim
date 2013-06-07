@@ -6,4 +6,4 @@
 "" @file   ~/.vim/plugin/bundle/indent-guides.vim
 "\
 
-let g:indent_guides_enable_on_vim_startup = 1
+let g:indent_guides_enable_on_vim_startup=1
