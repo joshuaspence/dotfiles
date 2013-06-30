@@ -6,12 +6,6 @@
 ## @file   ~/.shell/functions/prompt/prompt.bash
 #\
 
-command -v shell_prompt__status &>/dev/null || source "${HOME}/.shell/functions/prompt/status.bash"
-command -v shell_prompt__user &>/dev/null || source "${HOME}/.shell/functions/prompt/user.bash"
-command -v shell_prompt__host &>/dev/null || source "${HOME}/.shell/functions/prompt/host.bash"
-command -v shell_prompt__time &>/dev/null || source "${HOME}/.shell/functions/prompt/time.bash"
-command -v shell_prompt__pwd &>/dev/null || source "${HOME}/.shell/functions/prompt/pwd.bash"
-
 function shell_prompt() {
     # Some useful unicode sequences.
     local joiner_bottomleft=$(echo -ne '\0342\0224\0224')   # └

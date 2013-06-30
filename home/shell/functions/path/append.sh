@@ -6,15 +6,12 @@
 ## @file   ~/.shell/functions/path/append.sh
 #\
 
-# Source prerequisite shell functions.
-command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove.sh"
-
 ## Appends the specified paths to the end of a search path.
 ##
 ## @param [String] Search path variable to manipulate (e.g.: "PATH").
 ## @param [List]   Space-seperated list of paths to append, in order.
 ##
-## @link http://github.com/fnichol/bashrc/blob/master/bashrc
+## @link https://github.com/fnichol/bashrc/blob/master/bashrc
 function append-path() {
     if [[ $# < 1 || -z $1 ]]; then
         echo 'Usage: append-path [-f|--force] <path_var> <path1> ... <pathN>' >&2
@@ -30,7 +27,8 @@ function append-path() {
     local path_var="$1"; shift
 
     if eval "test -z \"\${${path_var}}\""; then
-        [[ -d $1 || $force == 1 ]] && eval "${path_var}=\"$1\""; shift
+        [[ -d $1 || $force == 1 ]] && eval "${path_var}=\"$1\""
+        shift
     fi
 
     local p; for p in "$@"; do

@@ -6,20 +6,20 @@
 ## @file ~/.bash_profile
 #\
 
-## Pull in any system defaults first so they can be overridden later.
-if [[ -f /etc/profile && -r /etc/profile ]]; then
-    source /etc/profile
+# Pull in any system defaults first so they can be overridden later.
+PROFILE='/etc/profile'
+if [[ -f $PROFILE && -r $PROFILE ]]; then
+    source $PROFILE
 fi
+unset PROFILE
 
-## Source prerequisite function.
+# Source prerequisite function.
 command -v source_r >/dev/null || source "${HOME}/.shell/functions/source/source_r.sh"
 
-## We run the environment settings for all shells to ensure it's always set up.
+# We run the environment settings for all shells to ensure it's always set up.
 source_r "${HOME}/.shell/environment/"
 
-## Check if the shell is interactive. If yes, then source `~/.bashrc`.
+# Check if the shell is interactive. If yes, then source `~/.bashrc`.
 if $INTERACTIVE; then
     source "${HOME}/.bashrc"
 fi
-
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*

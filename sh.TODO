@@ -14,37 +14,3 @@ if [ -d "${HOME}/.gnupg" ]; then
 fi
 
 [ -d "${HOME}/.subversion" ] && chmod 700 "${HOME}/.subversion"
-
-# complete hostnames from this file
-: ${HOSTFILE=~/.ssh/known_hosts}
-
-# PAGER
-if test -n "$(command -v less)" ; then
-    PAGER="less -FirSwX"
-    MANPAGER="less -FiRswX"
-else
-    PAGER=more
-    MANPAGER="$PAGER"
-fi
-export PAGER MANPAGER
-
-# we always pass these to ls(1)
-LS_COMMON="-hBG"
-# setup the main ls alias if we've established common args
-test -n "$LS_COMMON" && alias ls="command ls $LS_COMMON"
-
-# Usage: pls [<var>]
-# List path entries of PATH or environment variable <var>.
-pls () { eval echo \$${1:-PATH} |tr : '\n'; }
-
-# Usage: puniq [<path>]
-# Remove duplicate entries from a PATH style value while retaining
-# the original order. Use PATH if no <path> is given.
-#
-# Example:
-#   $ puniq /usr/bin:/usr/local/bin:/usr/bin
-#   /usr/bin:/usr/local/bin
-puniq () {
-    echo "$1" |tr : '\n' |nl |sort -u -k 2,2 |sort -n |
-    cut -f 2- |tr '\n' : |sed -e 's/:$//' -e 's/^://'
-}

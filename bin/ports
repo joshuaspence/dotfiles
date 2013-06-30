@@ -1,17 +1,29 @@
-#!/bin/sh
+#!/bin/bash
 
-#/ Usage: ports [<options>]
 #/
-#/ Show processes listening on ports.
-#/ Any <options> are passed to lsof
+## Shows processes listening on ports.
+##
+## @param [optional] Any parameters are passed to `lsof`.
+##
+## @link https://github.com/jacobwg/dotfiles/blob/master/bin/ports
+#\
 
-# https://github.com/jacobwg/dotfiles/blob/master/bin/ports
+#| Usage: ports [<options>]
+#|
+#| Show processes listening on ports.
+#| Any <options> are passed to `lsof`.
 
 set -e
 
-test "$1" = "--help" && {
-    grep ^#/ <"$0"| cut -c4-
-    exit 2
+function usage() {
+    cat "$0" |
+    grep '^#|' |
+    cut -c4-
 }
+
+if [[ $# > 0 && ( "$1" == '-h' || "$1" == '--help' ) ]]; then
+    usage
+    exit 0
+fi
 
 exec lsof -iTCP -sTCP:LISTEN -P "$@"

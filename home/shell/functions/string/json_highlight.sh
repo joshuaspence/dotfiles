@@ -7,8 +7,8 @@
 
 ## Syntax-highlight JSON strings or files.
 ##
-## @param [optional, String] JSON data. If not specified, then data is read from
-##                           standard input.
+## @param [optional, List] JSON data. If not specified, then data is read from
+##                         standard input.
 function json_highlight() {
     if [[ -p /dev/stdin ]]; then
         # Piping, e.g. `echo '{"foo":42}' | json_highlight`

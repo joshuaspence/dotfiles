@@ -6,8 +6,6 @@
 ## @file   ~/.shell/functions/prompt/colors.bash
 #\
 
-[[ -n $COLOR_NC ]] || source "${HOME}/.shell/config/colors.sh"
-
 PROMPT_HOST_COLOR="${COLOR_CYAN}"
 PROMPT_PWD_COLOR="${COLOR_GREEN}"
 PROMPT_ROOTUSER_COLOR="${COLOR_RED}"

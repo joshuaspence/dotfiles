@@ -5,7 +5,7 @@
 ## @file   ~/.shell/functions/navigation/cdmkdir.sh
 #\
 
-## Creates the specified directory if it doesn't exist, and changes into it.
+## Creates the specified directory (if it doesn't exist) and changes into it.
 ##
 ## @param [String] The path of the new directory.
 function cdmkdir() {
@@ -16,6 +16,5 @@ function cdmkdir() {
 
     if [[ ! -e $1 ]]; then
         mkdir -p "$1"
-    fi
-    cd "$1"
+    fi && cd "$1"
 }

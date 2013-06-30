@@ -1,20 +1,30 @@
 #!/usr/bin/env python
 
-# By Gary Bernhardt.
-# Dotfiles at: https://github.com/garybernhardt/dotfiles
+#/
+## Compares actual file sizes with the gzip and bzip2 file sizes.
+##
+## @param [List] The paths of the files to be checked for compressibility.
+##
+## @author Gary Bernhardt
+## @link   https://github.com/garybernhardt/dotfiles
+#\
 
 import sys
 import zlib
 import bz2
 
+
 def main():
     data = file_data()
     size = len(data)
-    print 'file size', size
+    print 'File size: %i' % size
+
     gzip_size = len(zlib.compress(data))
-    print 'gzip size %i (%i%%)' % (gzip_size, percent(gzip_size, size))
+    print 'gzip size: %i (%i%%)' % (gzip_size, percent(gzip_size, size))
+
     bz2_size = len(bz2.compress(data))
-    print 'bz2 size %i (%i%%)' % (bz2_size, percent(bz2_size, size))
+    print 'bz2 size: %i (%i%%)' % (bz2_size, percent(bz2_size, size))
+
 
 def file_data():
     files = map(open, sys.argv[1:])
@@ -22,8 +32,10 @@ def file_data():
         files = [sys.stdin]
     return ''.join(f.read() for f in files)
 
+
 def percent(part, whole):
     return int(100.0 * part / whole)
+
 
 if __name__ == '__main__':
     main()

@@ -10,11 +10,11 @@
 ## @param [String] Search path variable to manipulate (e.g. "PATH").
 ## @param [List]   Space-separated list of paths to remove.
 ##
-## @link http://github.com/fnichol/bashrc/blob/master/bashrc
+## @link https://github.com/fnichol/bashrc/blob/master/bashrc
 function remove-path() {
     if [[ $# < 1 || -z $1 ]]; then
         echo 'Usage: remove-path <path_var> <path1> ... <pathN>' >&2
-        return 1
+        return -1
     fi
 
     local path_var="$1"; shift

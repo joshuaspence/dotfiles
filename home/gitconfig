@@ -123,19 +123,6 @@
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     whois = !sh -c 'git log --regexp-ignore-case -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -
 
-## Aliases for {@link http://github.com/defunkt/hub hub}.
-##
-## @todo Do I need this here?
-##
-## @{{{
-[alias]
-    browse = !hub browse
-    compare = !hub compare
-    create = !hub create
-    fork = !hub fork
-    pull-request = !hub pull-request
-## @}}}
-
 ## Aliases for {@link http://github.com/joshuaspence/git-utils git-utils}.
 ## Required here only for tab-completion.
 ##
@@ -148,58 +135,6 @@
     rank-contributors = !git-rank-contributors
     show-merges = !git-show-merges
     wtf = !git-wtf
-## @}}}
-
-## Aliases for {@link http://github.com/rtomayko/git-sh git-sh}. Required
-## here only for tab-completion.
-##
-## @todo Do I need this here?
-##
-## @{{{
-[alias]
-    sh = !git-sh
-## @}}}
-
-## Aliases for {@link http://github.com/visionmedia/git-extras git-extras}.
-## Required here only for tab-completion.
-##
-## @todo Do I need this here?
-##
-## @{{{
-[alias]
-    alias = !git-alias
-    back = !git-back
-    bug = !git-bug
-    changelog = !git-changelog
-    commits-since = !git-commits-since
-    contrib = !git-contrib
-    count = !git-count
-    create-branch = !git-create-branch
-    delete-branch = !git-delete-branch
-    delete-merged-branches = !git-delete-merged-branches
-    delete-submodule = !git-delete-submodule
-    delete-tag = !git-delete-tag
-    effort = !git-effort
-    extras = !git-extras
-    feature = !git-feature
-    fresh-branch = !git-fresh-branch
-    gh-pages = !git-gh-pages
-    graft = !git-graft
-    ignore = !git-ignore
-    info = !git-info
-    local-commits = !git-local-commits
-    obliterate = !git-obliterate
-    pull-request = !git-pull-request
-    refactor = !git-refactor
-    release = !git-release
-    rename-tag = !git-rename-tag
-    repl = !git-repl
-    setup = !git-setup
-    show-tree = !git-show-tree
-    squash = !git-squash
-    summary = !git-summary
-    touch = !git-touch
-    undo = !git-undo
 ## @}}}
 
 [apply]

@@ -1,15 +1,32 @@
-#!/bin/sh
+#!/bin/bash
 
+#/
+## Checks whether a website is down for you, or for everybody.
 ##
-# Checks whether a website is down for you, or everybody.
-#
-# @param [String] The URL.
-#
-down4me() {
-    if [ $# -ne 1 ] || [ -z "$1" ]; then
-        echo "Usage: down4me <url>" >&2
-        return 1
-    fi
+## @param [String] The URL to check.
+#\
 
-    curl -s "http://www.downforeveryoneorjustme.com/$1" | sed -e '/just you/!d;s/<[^>]*>//g'
+#| Usage: down4me <url>
+#|
+#| Checks whether a website is down for you, or for everybody.
+
+set -e
+
+function usage() {
+    cat "$0" |
+    grep '^#|' |
+    cut -c4-
 }
+
+if [[ $# > 0 && ( "$1" == '-h' || "$1" == '--help' ) ]]; then
+    usage
+    exit 0
+fi
+
+if [[ $# == 0 ]]; then
+    usage
+    exit 1
+fi
+
+curl -s "http://www.downforeveryoneorjustme.com/$1" |
+sed -e '/just you/!d;s/<[^>]*>//g'

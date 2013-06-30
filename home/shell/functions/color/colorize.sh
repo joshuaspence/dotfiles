@@ -9,8 +9,8 @@
 ##
 ## @param [String] Terminal code keyword (usually a color).
 ##
-## @link http://github.com/fnichol/bashrc/blob/master/bashrc
-## @link http://github.com/wayneeseguin/rvm/blob/master/scripts/color
+## @link https://github.com/fnichol/bashrc/blob/master/bashrc
+## @link https://github.com/wayneeseguin/rvm/blob/master/scripts/color
 function colorize() {
     if [[ $# != 1 || -z $1 ]]; then
         echo 'Usage: colorize <color_spec>' >&2
@@ -21,12 +21,12 @@ function colorize() {
     # "setab" for background.
     local capname='setaf'
 
-    case "$1" in
+    case $1 in
         b-*  | bold-*      ) tput bold       ;;
         u-*  | underline-* ) set smul         ; unset rmul ;;
         bg-* | background-*) capname='setab' ;;
     esac
-    case "$1" in
+    case $1 in
         black   | *-black  ) tput $capname 0 ;;
         red     | *-red    ) tput $capname 1 ;;
         green   | *-green  ) tput $capname 2 ;;

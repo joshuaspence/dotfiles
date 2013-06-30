@@ -13,9 +13,6 @@ function cdls() {
     if [[ $# < 1 || -z $1 ]]; then
         echo 'Usage: cdls <path>' >&2
         return 1
-    elif [[ $# > 0 && ! -d $1 ]]; then
-        echo "'$1' is not a valid directory" >&2
-        return 2
     fi
 
     cd "$1" && ls

@@ -1,7 +1,0 @@
-test $# -eq 0 && {
-    cat $0          |
-    grep '^#'       |
-    grep -v /bin/sh |
-    cut -c3-
-    exit
-}

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+function apt-upgrade() {
+    command -v apt-get &>/dev/null && {
+        apt-get update
+        apt-get upgrade
+        apt-get dist-upgrade
+    }
+}
+
+function easy_install-upgrade() {
+    command -v easy_install &>/dev/null && {
+        yolk -U |
+        cut -d ' ' -f 2 |
+        xargs easy_install
+    }
+}
+
+function gem-upgrade() {
+    command -v gem &>/dev/null && {
+        gem update --system
+        gem update --local
+    }
+}
+
+function pip-upgrade() {
+    command -v pip &>/dev/null && {
+        pip freeze --local |
+        grep -v '^\-e' |
+        cut -d = -f 1  | \
+        xargs pip install -U
+    }
+}
+
+function rvm-upgrade() {
+    command -v rvm &>/dev/null && {
+        rvm get stable --auto-dotfiles
+    }
+}
+
+apt-upgrade
+easy_install-upgrade
+gem-upgrade
+pip-upgrade
+rvm-upgrade

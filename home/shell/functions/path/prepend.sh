@@ -6,15 +6,12 @@
 ## @file   ~/.shell/functions/path/prepend.sh
 #\
 
-# Source prerequisite shell functions.
-command -v remove-path >/dev/null || source "${HOME}/.shell/functions/path/remove.sh"
-
 ## Prepends the specified paths to the front of a search path.
 ##
 ## @param [String] Search path variable to manipulate (e.g. "PATH").
 ## @param [List]   Space-seperated list of paths to push, in reverse order.
 ##
-## @link http://github.com/fnichol/bashrc/blob/master/bashrc
+## @link https://github.com/fnichol/bashrc/blob/master/bashrc
 function prepend-path() {
     if [[ $# < 1 || -z $1 ]]; then
         echo 'Usage: prepend-path [-f|--force] <path_var> <path1> ... <pathN>' >&2
@@ -30,7 +27,8 @@ function prepend-path() {
     local path_var="$1"; shift
 
     if eval "test -z \"\${${path_var}}\""; then
-        [[ -d $1 || $force == 1 ]] && eval "${path_var}=\"$1\""; shift
+        [[ -d $1 || $force == 1 ]] && eval "${path_var}=\"$1\""
+        shift
     fi
 
     local p; for p in "$@"; do

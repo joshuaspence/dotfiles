@@ -1,47 +1,38 @@
 .PHONY: all
-all: git-extras hosts hub
+all: gist git-extras git-utils hub rename shell-utils spark vimpager
 
 submake = make --no-print-directory -C $(1) $(2)
 sudo-submake = sudo $(call submake,$(1),$(2))
+sudo-submake-if-no-command = command -v $(1) >/dev/null 2>&1 && echo "$(1) is installed" || $(call sudo-submake,$(2),$(3))
+todo = echo "$@: TODO"
 
-#===============================================================================
-# Git-Extras
-#===============================================================================
-git-extras_SUBMODULE_DIR := git-extras
+.PHONY: gist
+gist:
+	@$(todo)
 
-clean-git-extras:
-	$(call submake,$(git-extras_SUBMODULE_DIR),clean)
+.PHONY: git-extras
+git-extras:
+	@$(call sudo-submake,$@,install)
 
-.PHONY: install-git-extras
-install-git-extras:
-	$(call sudo-submake,$(git-extras_SUBMODULE_DIR),install)
+.PHONY: git-utils
+	@$(todo)
 
-uninstall-git-extras:
-	$(call sudo-submake,$(git-extras_SUBMODULE_DIR),uninstall)
-
-#===============================================================================
-# Hosts
-#===============================================================================
-hosts_SUBMODULE_DIR := hosts
-
-.PHONY: hosts
-hosts: /etc/hosts
-
-clean-hosts
-
-
-.PHONY: hosts/hosts
-hosts/hosts:
-	(echo y; echo n) | python hosts/updateHostsFile.py
-
-/etc/hosts: hosts/hosts
-	sudo cp $< $@
-
-#===============================================================================
-# Hub
-#===============================================================================
 .PHONY: hub
-hub: /usr/local/bin/hub
+hub:
+	@cd hub && sudo rake install
 
-/usr/local/bin/hub: hub/hub
-	cd hub && sudo rake install
+.PHONY: rename
+rename:
+	@$(todo)
+
+.PHONY: shell-utils
+shell-utils:
+	@$(todo)
+
+.PHONY: spark
+spark:
+	@$(todo)
+
+.PHONY: vimpager
+vimpager:
+	@$(call sudo-submake-if-no-command,$@,$@,install)
