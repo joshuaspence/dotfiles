@@ -1,6 +1,7 @@
 #/
 ## Configuration file for
 ## {@link http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html readline}.
+##
 ## This was largely based on the `/etc/inputrc` file from my current system.
 ##
 ## @author Joshua Spence

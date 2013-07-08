@@ -5,11 +5,7 @@ Still to do
 - home/shell/config/*.zsh
 - home/Makefile
 - home/README.md
-- home/zlogin
-- home/zlogout
-- home/zprofile
-- home/zshenv
-- home/zshrc
+- home/z{login,logout,profile,sh{env,rc}}
 
 Mostly done
 ===========
@@ -20,5 +16,10 @@ Mostly done
 - home/shell/functions/path/*
 - home/shell/functions/source/source_r.sh
 - home/dotfilesrc
-- home/gitconfig
+- home/git{config,shrc}
+- home/hgrc
 - home/pythonrc.py
+
+Up to
+=====
+- home/gitignore

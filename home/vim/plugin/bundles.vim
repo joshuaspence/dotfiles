@@ -25,7 +25,6 @@
     Bundle 'mattn/gist-vim'
     Bundle 'mattn/webapi-vim'
     Bundle 'mileszs/ack.vim'
-    Bundle 'myusuf3/numbers.vim'
     Bundle 'nathanaelkane/vim-indent-guides'
     Bundle 'scrooloose/nerdtree'
     Bundle 'scrooloose/syntastic'

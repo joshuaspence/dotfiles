@@ -10,7 +10,7 @@ if has('clipboard') && has('gui')
         "" On Linux use + register for copy-paste.
         set clipboard=unnamedplus
     else
-        "" On Mac and Windows, use * register for copy-paste.
+        "" On Mac and Windows use * register for copy-paste.
         set clipboard=unnamed
     endif
 endif

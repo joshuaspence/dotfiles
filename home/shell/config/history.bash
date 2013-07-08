@@ -18,7 +18,7 @@ HISTFILESIZE="${HISTSIZE}"
 ## @}}}
 
 ## File where the history is stored.
-HISTFILE="${HOME}/.shell_history"
+HISTFILE="${HOME}/.bash_history"
 
 ## Exclude certain commands from the history file.
 HISTIGNORE='cd:history:ls:pwd'
