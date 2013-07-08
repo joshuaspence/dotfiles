@@ -73,6 +73,15 @@
             IdentitiesOnly yes
             PasswordAuthentication no
             PubkeyAuthentication yes
+
+        Host tiger-screens
+            HostName tiger-screens
+            User freelancer
+
+            ForwardAgent no
+            IdentitiesOnly yes
+            PasswordAuthentication no
+            PubkeyAuthentication yes
     ## @}}}
 
     ## Tunnels @{{{
@@ -134,7 +143,7 @@
         ## Specifies that `ssh` should only use the authentication identity
         ## files configured in the `ssh` configuration files, even if
         ## `ssh-agent` offers more identities.
-        IdentitiesOnly no
+        IdentitiesOnly yes
 
         ## Specifies a file from which the user's DSA, ECDSA or RSA
         ## authentication identity is read.

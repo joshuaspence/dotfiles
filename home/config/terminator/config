@@ -1,31 +1,14 @@
-;/
-;; Configuration file for
-;; {@link http://software.jessies.org/terminator/ Terminator}.
-;;
-;; @author Joshua Spence
-;; @file   ~/.config/terminator/config
-;\
-
 [global_config]
-  focus = system
-  window_state = maximise
 [keybindings]
 [profiles]
   [[default]]
-    audible_bell = False
-    visible_bell = True
-    force_no_bell = False
-    scroll_on_keystroke = True
     scroll_on_output = False
-    alternate_screen_scroll = True
-    scrollback_lines = 10000
-    scrollback_infinite = False
 [layouts]
   [[default]]
-    [[[window]]]
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+    [[[window0]]]
       type = Window
       parent = ""
-    [[[child]]]
-      type = Terminal
-      parent = window
 [plugins]
