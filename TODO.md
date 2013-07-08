@@ -16,5 +16,10 @@ Mostly done
 - home/shell/functions/path/*
 - home/shell/functions/source/source_r.sh
 - home/dotfilesrc
-- home/gitconfig
+- home/git{config,shrc}
+- home/hgrc
 - home/pythonrc.py
+
+Up to
+=====
+- home/gitignore
