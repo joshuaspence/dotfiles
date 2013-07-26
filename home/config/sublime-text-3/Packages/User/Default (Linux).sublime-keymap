@@ -2,19 +2,13 @@
  * Key map for {@link http://www.sublimetext.com/ Sublime Text}.
  *
  * @author Joshua Spence
- * @file   ~/.config/sublime-text-2/Packages/User/Default (Windows).sublime-keymap
+ * @file   ~/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap
  */
 [
     {"keys": ["ctrl+alt+n"], "command": "clone_file"},
 
     /** Package: ChangeQuotes @{{{ */
     {"keys": ["ctrl+shift+'"], "command": "change_quotes"},
-    /** @}}} */
-    
-    /** Package: Git @{{{ */
-    {"keys": ["ctrl+shift+g", "ctrl+g"], "command": "git_graph"},
-    {"keys": ["ctrl+shift+g", "ctrl+shift+g"], "command": "git_graph_all"},
-    {"keys": ["ctrl+shift+g", "ctrl+d"], "command": "git_diff_tool"},
     /** @}}} */
 
     /** Package: GitGutter @{{{ */
@@ -25,9 +19,5 @@
     /** Package: GitHubinator @{{{ */
     {"keys": ["ctrl+shift+g", "ctrl+h"], "command": "githubinator", "args": {"permalink": false}},
     {"keys": ["ctrl+shift+g", "ctrl+shift+h"], "command": "githubinator", "args": {"permalink": true}},
-    /** @}}} */
-
-    /** Package: Markdown Preview @{{{ */
-    {"keys": ["alt+m"], "command": "markdown_preview", "args": {"target": "browser"}}
     /** @}}} */
 ]

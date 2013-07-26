@@ -3,9 +3,10 @@
  * {@link http://github.com/SublimeLinter/SublimeLinter SublimeLinter}.
  *
  * @author Joshua Spence
- * @file   ~/.config/sublime-text-2/Packages/User/SublimeLinter.sublime-settings
+ * @file   ~/.config/sublime-text-3/Packages/User/SublimeLinter.sublime-settings
  */
 {
     "sublimelinter_mark_style": "none",
-    "sublimelinter_gutter_marks": true
+    "sublimelinter_gutter_marks": true,
+    "sublimelinter_gutter_marks_theme": "simple"
 }
