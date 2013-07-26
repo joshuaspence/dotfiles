@@ -1,0 +1,10 @@
+#/
+## @author Joshua Spence
+## @file   ~/.config/sublime-text-3/Packages/User/.gitignore
+#\
+
+/Package Control.cache/
+/Package Control.ca-bundle
+/Package Control.ca-list
+/Package Control.last-run
+/Side Bar.sublime-settings

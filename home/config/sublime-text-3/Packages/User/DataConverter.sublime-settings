@@ -1,0 +1,12 @@
+/**
+ * Package configuration for
+ * {@link http://github.com/fitnr/SublimeDataConverter DataConverter}.
+ *
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-3/Packages/User/DataConverter.sublime-settings
+ */
+{
+    "assume_headers": false,
+    "line_sep": false,
+    "header_joiner": "_"
+}

@@ -1,0 +1,11 @@
+/**
+ * Package configuration for
+ * {@link https://github.com/dzhibas/SublimePrettyJson PrettyJson}.
+ *
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-3/Packages/User/Pretty JSON.sublime-settings
+ */
+{
+    "indent": 4,
+    "sort_keys": false
+}

@@ -1,8 +1,8 @@
 /**
  * Settings for "Shell-Unix-Generic" files.
- * 
+ *
  * @author Joshua Spence
- * @file   ~/.config/sublime-text-2/Packages/User/Shell-Unix-Generic.sublime-settings
+ * @file   ~/.config/sublime-text-3/Packages/User/Shell-Unix-Generic.sublime-settings
  */
 {
 	"extensions":
@@ -20,11 +20,11 @@
 		".hushlogin", "hushlogin",
 		".inputrc", "inputrc",
 		".screenrc", "screenrc",
+		".wgetrc", "wgetrc",
 		".zlogin", "zlogin",
 		".zlogout", "zlogout",
 		".zprofile", "zprofile",
 		".zshenv", "zshenv",
-		".zshrc", "zshrc",
-		".wgetrc", "wgetrc"
+		".zshrc", "zshrc"
 	]
 }

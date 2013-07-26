@@ -1,4 +1,16 @@
+/**
+ * Package configuration for
+ * {@link http://wbond.net/sublime_packages/package_control Package Control}.
+ *
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-3/Packages/User/Package Control.sublime-settings
+ */
 {
+	"auto_upgrade": true,
+	"install_missing": true,
+	"auto_upgrade_ignore":
+	[
+	],
 	"auto_upgrade_last_run": null,
 	"installed_packages":
 	[
@@ -10,19 +22,13 @@
 		"Comments Aware Enter",
 		"DataConverter",
 		"DocBlockr",
-		"Dotfiles Syntax Highlighting",
-		"Emmet",
-		"FileSystem Autocompletion",
-		"Git",
 		"GitGutter",
 		"GitHubinator",
 		"Gitignore",
-		"LESS",
-		"Markdown Preview",
 		"Package Control",
 		"Pretty JSON",
 		"Puppet",
-		"SublimeCodeIntel",
+		"SublimeGit",
 		"SublimeLinter",
 		"Wrap Plus"
 	]
