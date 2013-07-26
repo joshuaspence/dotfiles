@@ -138,7 +138,7 @@
 ## @}}}
 
 [apply]
-    whitespace = fix,error
+    whitespace = fix
 
 [color]
     branch = auto
