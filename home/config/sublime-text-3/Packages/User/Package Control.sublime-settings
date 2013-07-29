@@ -1,17 +1,10 @@
-/**
- * Package configuration for
- * {@link http://wbond.net/sublime_packages/package_control Package Control}.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-3/Packages/User/Package Control.sublime-settings
- */
 {
 	"auto_upgrade": true,
-	"install_missing": true,
 	"auto_upgrade_ignore":
 	[
 	],
 	"auto_upgrade_last_run": null,
+	"install_missing": true,
 	"installed_packages":
 	[
 		"Alignment",
@@ -22,10 +15,14 @@
 		"Comments Aware Enter",
 		"DataConverter",
 		"DocBlockr",
+		"FindKeyConflicts",
 		"GitGutter",
 		"GitHubinator",
 		"Gitignore",
+		"LaTeXing3",
+		"LESS",
 		"Package Control",
+		"PlainTasks",
 		"Pretty JSON",
 		"Puppet",
 		"SublimeGit",
