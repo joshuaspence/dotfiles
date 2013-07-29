@@ -1,0 +1,8 @@
+{
+    "date_format": "(%y-%m-%d %H:%M)",
+    "color_scheme": "Packages/PlainTasks/tasks-gray.hidden-tmTheme",
+    "draw_indent_guides": true,
+    "margin": 2,
+    "tab_size": 2,
+    "use_tab_stops": false,
+}
