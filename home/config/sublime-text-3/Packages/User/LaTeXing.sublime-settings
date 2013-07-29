@@ -1,0 +1,23 @@
+{
+    "username": "josh@joshuaspence.com",
+    "license": "22d60be8f5b32840801f08c9d8",
+
+    "root_option": true,
+    "open_pdf_on_load": true,
+    "output_directory": "build",
+
+    "bibsonomy": false,
+    "bibsonomy_username": "",
+    "bibsonomy_apikey": "",
+
+    "citeulike": false,
+    "citeulike_username": "",
+
+    "mendeley": false,
+    "mendeley_oauth_token": "",
+    "mendeley_oauth_token_secret": "",
+
+    "zotero": false,
+    "zotero_user_id": "",
+    "zotero_user_key": "",
+}
