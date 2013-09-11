@@ -5,4 +5,4 @@
 ## @file   ~/.shell/config/cdpath.bash
 #\
 
-CDPATH='.:~:~/workspace'
+unset CDPATH
