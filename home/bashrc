@@ -29,5 +29,6 @@ source_r "${HOME}/.shell/functions/"
 ## Import completion functions.
 source_r "${HOME}/.shell/completion/"
 
-PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
+export PATH=$PATH:$HOME/.rvm/bin
 export PATH=$PATH:/opt/vagrant/bin
+export PATH=$PATH:/dotfiles/bin
