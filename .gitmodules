@@ -22,6 +22,12 @@
 [submodule "modules/hub"]
 	path = modules/hub
 	url = git://github.com/defunkt/hub.git
+[submodule "modules/phabricator/arcanist"]
+	path = modules/phabricator/arcanist
+	url = git://github.com/facebook/arcanist.git
+[submodule "modules/phabricator/libphutil"]
+	path = modules/phabricator/libphutil
+	url = git://github.com/facebook/libphutil.git
 [submodule "modules/rename"]
 	path = modules/rename
 	url = git://github.com/ap/rename.git
