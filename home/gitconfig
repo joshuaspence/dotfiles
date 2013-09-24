@@ -203,6 +203,10 @@
 [difftool]
     prompt = false
 
+[git-up "fetch"]
+    all = true
+    prune = true
+
 [merge]
     tool = meld
 
