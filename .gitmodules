@@ -37,3 +37,6 @@
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
+[submodule "modules/git-up"]
+	path = modules/git-up
+	url = https://github.com/aanand/git-up.git
