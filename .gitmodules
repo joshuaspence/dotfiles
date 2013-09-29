@@ -40,3 +40,6 @@
 [submodule "modules/git-up"]
 	path = modules/git-up
 	url = https://github.com/aanand/git-up.git
+[submodule "modules/phpsh"]
+	path = modules/phpsh
+	url = https://github.com/facebook/phpsh.git
