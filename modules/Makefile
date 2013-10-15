@@ -35,6 +35,11 @@ phpsh:
 	@cd phpsh && sudo python setup.py build
 	@cd phpsh && sudo python setup.py install
 
+.PHONY: tig
+tig:
+	@cd tig && make
+	@cd tig && sudo make install
+
 .PHONY: vimpager
 vimpager:
 	@$(call sudo-submake-if-no-command,$@,$@,install)

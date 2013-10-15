@@ -7,12 +7,18 @@
 [submodule "home/vim/bundle/vundle"]
 	path = home/vim/bundle/vundle
 	url = git://github.com/gmarik/vundle.git
+[submodule "modules/gist"]
+	path = modules/gist
+	url = https://github.com/defunkt/gist.git
 [submodule "modules/git-extras"]
 	path = modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git
 [submodule "modules/git-sh"]
 	path = modules/git-sh
 	url = git://github.com/rtomayko/git-sh.git
+[submodule "modules/git-up"]
+	path = modules/git-up
+	url = https://github.com/aanand/git-up.git
 [submodule "modules/git-utils"]
 	path = modules/git-utils
 	url = git@github.com:joshuaspence/git-utils.git
@@ -25,24 +31,18 @@
 [submodule "modules/phabricator/libphutil"]
 	path = modules/phabricator/libphutil
 	url = git://github.com/facebook/libphutil.git
+[submodule "modules/phpsh"]
+	path = modules/phpsh
+	url = https://github.com/facebook/phpsh.git
 [submodule "modules/rename"]
 	path = modules/rename
 	url = git://github.com/ap/rename.git
 [submodule "modules/spark"]
 	path = modules/spark
 	url = git://github.com/holman/spark.git
-[submodule "modules/vimpager"]
-	path = modules/vimpager
-	url = git://github.com/rkitover/vimpager.git
-[submodule "modules/git-up"]
-	path = modules/git-up
-	url = https://github.com/aanand/git-up.git
-[submodule "modules/phpsh"]
-	path = modules/phpsh
-	url = https://github.com/facebook/phpsh.git
-[submodule "modules/gist"]
-	path = modules/gist
-	url = https://github.com/defunkt/gist.git
 [submodule "modules/tig"]
 	path = modules/tig
 	url = https://github.com/jonas/tig.git
+[submodule "modules/vimpager"]
+	path = modules/vimpager
+	url = git://github.com/rkitover/vimpager.git
