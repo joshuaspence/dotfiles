@@ -14,24 +14,26 @@ gist:
 git-extras:
 	@$(call sudo-submake,$@,install)
 
+.PHONY: git-sh
+git-sh:
+	@$(call sudo-submake,$@,install)
+
+.PHONY: git-up
+git-up:
+	@$(todo)
+
 .PHONY: git-utils
+git-utils:
 	@$(todo)
 
 .PHONY: hub
 hub:
 	@cd hub && sudo rake install
 
-.PHONY: rename
-rename:
-	@$(todo)
-
-.PHONY: shell-utils
-shell-utils:
-	@$(todo)
-
-.PHONY: spark
-spark:
-	@$(todo)
+.PHONY: phpsh
+phpsh:
+	@cd phpsh && sudo python setup.py build
+	@cd phpsh && sudo python setup.py install
 
 .PHONY: vimpager
 vimpager:
