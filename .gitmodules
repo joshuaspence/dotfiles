@@ -19,9 +19,6 @@
 [submodule "modules/git-up"]
 	path = modules/git-up
 	url = https://github.com/aanand/git-up.git
-[submodule "modules/git-utils"]
-	path = modules/git-utils
-	url = git@github.com:joshuaspence/git-utils.git
 [submodule "modules/hub"]
 	path = modules/hub
 	url = git://github.com/defunkt/hub.git
