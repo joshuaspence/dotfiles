@@ -40,3 +40,6 @@
 [submodule "modules/phpsh"]
 	path = modules/phpsh
 	url = https://github.com/facebook/phpsh.git
+[submodule "modules/gist"]
+	path = modules/gist
+	url = https://github.com/defunkt/gist.git
