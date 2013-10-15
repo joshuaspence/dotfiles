@@ -43,3 +43,6 @@
 [submodule "modules/gist"]
 	path = modules/gist
 	url = https://github.com/defunkt/gist.git
+[submodule "modules/tig"]
+	path = modules/tig
+	url = https://github.com/jonas/tig.git
