@@ -46,3 +46,6 @@
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
+[submodule "modules/git-wt-commit"]
+	path = modules/git-wt-commit
+	url = git://gitorious.org/willgit/mainline.git/
