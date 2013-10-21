@@ -1,1 +1,1 @@
-deb http://linux.dropbox.com/ubuntu saucy main # disabled on upgrade to saucy
+deb http://linux.dropbox.com/ubuntu raring main # disabled on upgrade to saucy
