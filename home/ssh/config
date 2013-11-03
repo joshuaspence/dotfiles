@@ -96,7 +96,7 @@
 
             # Port forwarding
             ExitOnForwardFailure yes
-            LocalForward 3306 db-slave-stats.freelancer.com:3306
+            LocalForward 3306 127.0.0.1:3306
     ## @}}}
 ## @}}}
 
