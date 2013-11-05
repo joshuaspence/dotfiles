@@ -16,7 +16,7 @@
     assume = update-index --assume-unchanged
 
     ## @link http://blog.apiaxle.com/post/handy-git-tips-to-stop-you-getting-fired/
-    assumed = "!git ls-files -v | grep ^h | cut -c 3-"
+    assumed = !git ls-files -v | grep ^h | cut -c 3-
 
     ## List all branches.
     branches = branch --all
@@ -35,7 +35,7 @@
     ## Show list of files in a conflict state.
     ##
     ## @link http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
-    conflicts = ls-files --unmerged | awk '{print $4}' | sort -u
+    conflicts = ls-files --unmerged | awk '{print $4}' | sort --unique
 
     ## While the empty tree sha1 "4b825dc642cb6eb9a060e54bf8d69288fbee4904" is
     ## known to `git`, you may need to generate it.
@@ -59,7 +59,7 @@
     ## </code>
     ##
     ## @link http://git.wiki.kernel.org/index.php/Aliases
-    graphviz = "!f() { echo 'digraph git {'; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g'; echo '}'; }; f"
+    graphviz = "!f() { echo 'digraph git {'; git log --pretty='format:  %h -> { %p }' \"$@\" | sed -e 's/[0-9a-f][0-9a-f]*/\"&\"/g'; echo '}'; }; f"
 
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     k = !gitk
@@ -88,7 +88,7 @@
     ## Check if a branch has been merged into the current HEAD if on master.
     ##
     ## @link http://github.com/wadey/dotfiles/blob/master/gitconfig
-    merged = !sh -c 'git rev-list HEAD | grep --color=none $(git rev-parse $0)'
+    merged = "!sh -c 'git rev-list HEAD | grep --color=none $(git rev-parse $0)'"
 
     ## Prune all stale remote branches.
     ##
