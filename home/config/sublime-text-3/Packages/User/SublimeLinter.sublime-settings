@@ -4,6 +4,8 @@
  *
  * @author Joshua Spence
  * @file   ~/.config/sublime-text-3/Packages/User/SublimeLinter.sublime-settings
+ *
+ * @todo Replace with {@link https://github.com/lunixbochs/sublimelint/ SublimeLint}.
  */
 {
     "sublimelinter_mark_style": "none",
