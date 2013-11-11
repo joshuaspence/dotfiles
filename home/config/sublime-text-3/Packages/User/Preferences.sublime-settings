@@ -13,7 +13,7 @@
 	"detect_indentation": true,
 	"auto_indent": true,
 	"smart_indent": true,
-	"trim_automatic_white_space": true,
+	"trim_automatic_white_space": false,
 	"word_wrap": "auto",
 	"wrap_width": 0,
     "indent_subsequent_lines": true,
