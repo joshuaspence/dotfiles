@@ -8,5 +8,29 @@
 {
     "sublimelinter_mark_style": "none",
     "sublimelinter_gutter_marks": true,
-    "sublimelinter_gutter_marks_theme": "simple"
+    "sublimelinter_gutter_marks_theme": "simple",
+
+    "javascript_linter": "jshint",
+    "jshint_options": {
+        "bitwise": true,
+        "camelcase": false,
+        "curly": true,
+        "es3": false,
+        "eqeqeq": true,
+        "forin": true,
+        "freeze": true,
+        "immed": true,
+        "indent": 4,
+        "latedef": true,
+        "newcap": true,
+        "noarg": true,
+        "noempty": true,
+        "nonew": true,
+        "plusplus": false,
+        "quotmark": "single",
+        "undef": true,
+        "unused": true,
+        "strict": true,
+        "trailing": true
+    }
 }
