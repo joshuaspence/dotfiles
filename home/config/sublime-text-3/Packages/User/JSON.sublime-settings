@@ -1,0 +1,13 @@
+/**
+ * Syntax-specific settings for "JSON" files.
+ *
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-3/Packages/User/JSON.sublime-settings
+ */
+{
+    "extensions":
+    [
+        ".bowerrc",
+        ".jshintrc"
+    ]
+}
