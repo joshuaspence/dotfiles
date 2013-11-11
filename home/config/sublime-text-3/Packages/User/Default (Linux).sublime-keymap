@@ -15,9 +15,4 @@
     {"keys": ["ctrl+shift+alt+j"], "command": "git_gutter_next_change"},
     {"keys": ["ctrl+shift+alt+k"], "command": "git_gutter_prev_change"},
     /** @}}} */
-
-    /** Package: GitHubinator @{{{ */
-    {"keys": ["ctrl+shift+g", "ctrl+h"], "command": "githubinator", "args": {"permalink": false}},
-    {"keys": ["ctrl+shift+g", "ctrl+shift+h"], "command": "githubinator", "args": {"permalink": true}},
-    /** @}}} */
 ]
