@@ -1,3 +1,9 @@
+/**
+ * Package configuration for {@link http://www.latexing.com/ LaTeXing}.
+ *
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-3/Packages/User/LaTeXing.sublime-settings
+ */
 {
     "username": "josh@joshuaspence.com",
     "license": "22d60be8f5b32840801f08c9d8",
