@@ -6,5 +6,11 @@
  */
 {
     "email": "josh@joshuaspence.com",
-    "product_key": "3a01144e54511a5f71d11d895c123e78"
+    "product_key": "3a01144e54511a5f71d11d895c123e78",
+
+    "git_extensions": {
+        "git_flow": true,
+        "legit": true,
+        "hub": true
+    }
 }
