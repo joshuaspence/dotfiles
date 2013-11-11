@@ -1,0 +1,9 @@
+/**
+ * Package configuration for {@link https://github.com/danro/LESS-sublime LESS}.
+ *
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-3/Packages/User/LESS.sublime-settings
+ */
+{
+    "auto_insert_semicolon": false
+}
