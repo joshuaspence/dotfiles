@@ -1,7 +1,9 @@
 {
 	"auto_upgrade": true,
+	"auto_upgrade_ignore":
+	[
+	],
 	"install_missing": true,
-	"auto_upgrade_ignore": [],
 	"installed_packages":
 	[
 		"Alignment",
