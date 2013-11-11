@@ -12,7 +12,6 @@
 		".bash_profile", "bash_profile",
 		".bashrc", "bashrc",
 		".dotfilesrc", "dotfilesrc",
-		".git",
 		".gitattributes",
 		".gitconfig", "gitconfig",
 		".gitignore",
