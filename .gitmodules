@@ -1,48 +1,64 @@
 [submodule "home/oh-my-zsh"]
 	path = home/oh-my-zsh
 	url = git://github.com/robbyrussell/oh-my-zsh.git
+	branch = master
 [submodule "home/shell/completion/ruby"]
 	path = home/shell/completion/ruby
 	url = git://github.com/mernen/completion-ruby.git
+	branch = master
 [submodule "home/vim/bundle/vundle"]
 	path = home/vim/bundle/vundle
 	url = git://github.com/gmarik/vundle.git
+	branch = master
 [submodule "modules/gist"]
 	path = modules/gist
 	url = https://github.com/defunkt/gist.git
+	branch = master
 [submodule "modules/git-extras"]
 	path = modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git
+	branch = master
 [submodule "modules/git-sh"]
 	path = modules/git-sh
 	url = git://github.com/rtomayko/git-sh.git
+	branch = master
 [submodule "modules/git-up"]
 	path = modules/git-up
 	url = https://github.com/aanand/git-up.git
+	branch = master
 [submodule "modules/hub"]
 	path = modules/hub
 	url = git://github.com/defunkt/hub.git
+	branch = master
 [submodule "modules/phabricator/arcanist"]
 	path = modules/phabricator/arcanist
 	url = git://github.com/facebook/arcanist.git
+	branch = master
 [submodule "modules/phabricator/libphutil"]
 	path = modules/phabricator/libphutil
 	url = git://github.com/facebook/libphutil.git
+	branch = master
 [submodule "modules/phpsh"]
 	path = modules/phpsh
 	url = https://github.com/facebook/phpsh.git
+	branch = master
 [submodule "modules/rename"]
 	path = modules/rename
 	url = git://github.com/ap/rename.git
+	branch = master
 [submodule "modules/spark"]
 	path = modules/spark
 	url = git://github.com/holman/spark.git
+	branch = master
 [submodule "modules/tig"]
 	path = modules/tig
 	url = https://github.com/jonas/tig.git
+	branch = master
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
+	branch = master
 [submodule "modules/git-wt-commit"]
 	path = modules/git-wt-commit
 	url = git://gitorious.org/willgit/mainline.git/
+	branch = master
