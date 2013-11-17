@@ -1,6 +1,6 @@
 [global_config]
   window_state = maximise
-  inactive_color_offset = 0.60
+  inactive_color_offset = 0.80
 [keybindings]
 [profiles]
   [[default]]
