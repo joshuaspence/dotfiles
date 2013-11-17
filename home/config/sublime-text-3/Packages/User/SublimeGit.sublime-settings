@@ -10,7 +10,7 @@
 
     "git_extensions": {
         "git_flow": false,
-        "legit": true,
+        "legit": false,
         "hub": true
     }
 }
