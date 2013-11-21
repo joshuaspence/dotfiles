@@ -1,0 +1,17 @@
+/**
+ * Package configuration for
+ * {@link https://github.com/DisposaBoy/GoSublime GoSublime}.
+ *
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-3/Packages/User/GoSublime.sublime-settings
+ */
+{
+    "env": {
+        "PATH": "${HOME}/go/bin:${PATH}"
+    },
+    "shell": ["/bin/bash", "--login", "-c", "$CMD"],
+    "gscomplete_enabled": true,
+    "fmt_enabled": true,
+    "fmt_tab_indent": true,
+    "fmt_tab_width": 8,
+}

@@ -3,6 +3,8 @@
 ## @file   ~/.config/sublime-text-3/Packages/User/.gitignore
 #\
 
+/GoSublime/
+/GoSublime-aux.sublime-settings
 /Package Control.cache/
 /Package Control.ca-bundle
 /Package Control.ca-list
