@@ -64,6 +64,15 @@
         PasswordAuthentication no
         PubkeyAuthentication yes
 
+    Host staging4.freelancer.com staging4
+        HostName staging4.freelancer.com
+        User staging-josh
+
+        ForwardAgent yes
+        IdentitiesOnly yes
+        PasswordAuthentication no
+        PubkeyAuthentication yes
+
     ## Office @{{{
         Host josh.syd.local local-staging
             HostName josh.syd.local
