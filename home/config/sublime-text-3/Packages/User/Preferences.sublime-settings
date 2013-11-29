@@ -1,6 +1,7 @@
 {
 	"color_scheme": "Packages/Color Scheme - Default/Blackboard.tmTheme",
 	"font_size": 12,
+	"word_separators": "./\\()\"'-:,.;<>~!@#$%^&*|+=[]{}`~?_",
 	"line_numbers": true,
 	"gutter": true,
 	"fold_buttons": true,
