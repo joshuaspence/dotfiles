@@ -13,5 +13,5 @@
     "gscomplete_enabled": true,
     "fmt_enabled": true,
     "fmt_tab_indent": true,
-    "fmt_tab_width": 8,
+    "fmt_tab_width": 4,
 }
