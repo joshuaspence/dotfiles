@@ -36,3 +36,8 @@ tig:
 .PHONY: vimpager
 vimpager:
 	@$(call sudo-submake,$@,install)
+
+.PHONY: whenever
+whenever:
+	@cd $@ && rake build && rake install
+
