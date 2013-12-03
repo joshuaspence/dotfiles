@@ -62,3 +62,7 @@
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
 	branch = master
+[submodule "modules/whenever"]
+	path = modules/whenever
+	url = https://github.com/javan/whenever.git
+	branch = master
