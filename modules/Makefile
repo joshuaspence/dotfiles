@@ -2,6 +2,7 @@
 all: gist git-extras git-sh git-up hub phpsh tig vimpager
 
 submake = make --no-print-directory -C $(1) $(2)
+sudo-install = sudo install $(1)/$(2) /usr/local/bin
 sudo-submake = sudo $(call submake,$(1),$(2))
 todo = echo "$@: TODO"
 
@@ -28,6 +29,10 @@ hub:
 .PHONY: phpsh
 phpsh:
 	@cd phpsh && sudo python setup.py build && sudo python setup.py install
+
+.PHONY: spark
+spark:
+	@$(call sudo-install,$@,spark)
 
 .PHONY: tig
 tig:
