@@ -8,7 +8,7 @@ todo = echo "$@: TODO"
 
 .PHONY: arc
 arc:
-	sudo ln --symbolic $$(readlink -f phabricator/arcanist/bin/arc) /usr/local/bin
+	@sudo ln --force --symbolic $$(readlink -f phabricator/arcanist/bin/arc) /usr/local/bin
 
 .PHONY: gist
 gist:
