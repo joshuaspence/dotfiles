@@ -1,5 +1,5 @@
 .PHONY: all
-all: gist git-extras git-sh git-up hub phpsh tig vimpager
+all: arc gist git-extras git-sh git-up git-wt-commit hub phpsh rename spark tig vimpager whenever
 
 submake = make --no-print-directory -C $(1) $(2)
 sudo-install = sudo install -t /usr/local/bin $(foreach source,$(2),$(1)/$(source))
@@ -12,7 +12,7 @@ arc:
 
 .PHONY: gist
 gist:
-	@cd $@ && rake build && sudo rake install
+	@cd $@ && sudo rake install
 
 .PHONY: git-extras
 git-extras:
