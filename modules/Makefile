@@ -6,6 +6,10 @@ sudo-install = sudo install $(1)/$(2) /usr/local/bin
 sudo-submake = sudo $(call submake,$(1),$(2))
 todo = echo "$@: TODO"
 
+.PHONY: arc
+arc:
+	sudo ln --symbolic $$(readlink -f phabricator/arcanist/bin/arc) /usr/local/bin
+
 .PHONY: gist
 gist:
 	@cd $@ && rake build && sudo rake install
