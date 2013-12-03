@@ -28,7 +28,7 @@ hub:
 
 .PHONY: phpsh
 phpsh:
-	@cd phpsh && sudo python setup.py build && sudo python setup.py install
+	@cd phpsh && python setup.py build && sudo python setup.py install
 
 .PHONY: rename
 rename:
