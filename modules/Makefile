@@ -30,6 +30,10 @@ hub:
 phpsh:
 	@cd phpsh && sudo python setup.py build && sudo python setup.py install
 
+.PHONY: rename
+rename:
+	@$(call sudo-install,$@,rename)
+
 .PHONY: spark
 spark:
 	@$(call sudo-install,$@,spark)
