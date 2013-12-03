@@ -1,2 +1,2 @@
-deb http://ppa.launchpad.net/duh/golang/ubuntu saucy main
-deb-src http://ppa.launchpad.net/duh/golang/ubuntu saucy main
+deb http://ppa.launchpad.net/gophers/go/ubuntu raring main
+deb-src http://ppa.launchpad.net/gophers/go/ubuntu raring main
