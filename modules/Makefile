@@ -2,7 +2,7 @@
 all: gist git-extras git-sh git-up hub phpsh tig vimpager
 
 submake = make --no-print-directory -C $(1) $(2)
-sudo-install = sudo install $(1)/$(2) /usr/local/bin
+sudo-install = sudo install -t /usr/local/bin $(foreach source,$(2),$(1)/$(source))
 sudo-submake = sudo $(call submake,$(1),$(2))
 todo = echo "$@: TODO"
 
@@ -25,6 +25,10 @@ git-sh:
 .PHONY: git-up
 git-up:
 	@$(todo)
+
+.PHONY: git-wt-commit
+git-wt-commit:
+	$(call sudo-install,$@/bin,git-publish-branch git-rank-contributors git-show-merges git-wt-add git-wtf)
 
 .PHONY: hub
 hub:
