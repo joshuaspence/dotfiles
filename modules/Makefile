@@ -31,7 +31,7 @@ phpsh:
 
 .PHONY: tig
 tig:
-	@cd tig && make all && sudo make install
+	@$(call sudo-submake,$@,install prefix=/usr/local)
 
 .PHONY: vimpager
 vimpager:
