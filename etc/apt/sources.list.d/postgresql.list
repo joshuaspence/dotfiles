@@ -1,2 +1,2 @@
-deb http://ppa.launchpad.net/pitti/postgresql/ubuntu raring main
-deb-src http://ppa.launchpad.net/pitti/postgresql/ubuntu raring main
+deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main
+deb-src http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main
