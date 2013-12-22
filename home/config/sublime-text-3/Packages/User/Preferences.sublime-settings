@@ -35,5 +35,6 @@
     "theme": "Default.sublime-theme",
 	"highlight_modified_tabs": true,
 	"bold_folder_labels": true,
-	"show_full_path": true
+	"show_full_path": true,
+	"ignored_packages": ["Vintage"]
 }
