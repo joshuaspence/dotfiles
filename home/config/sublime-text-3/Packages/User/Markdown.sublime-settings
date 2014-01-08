@@ -6,6 +6,6 @@
  */
 {
 	"word_wrap": "auto",
-    "wrap_width": 80,
+    "wrap_width": 81,
     "spell_check": true
 }
