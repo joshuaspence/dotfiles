@@ -1,0 +1,12 @@
+/**
+ * Syntax-specific settings for "INI" files.
+ *
+ * @author Joshua Spence
+ * @file   ~/.config/sublime-text-3/Packages/User/INI.sublime-settings
+ */
+{
+    "extensions":
+    [
+        ".editorconfig"
+    ]
+}
