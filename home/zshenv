@@ -1,7 +1,0 @@
-#/
-## @author Joshua Spence
-## @file   ~/.zshenv
-#\
-
-command -v source_r || source "${HOME}/.shell/functions/source/source_r.sh"
-source_r "${HOME}/.shell/environment/"

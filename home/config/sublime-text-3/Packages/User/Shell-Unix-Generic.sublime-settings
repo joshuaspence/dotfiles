@@ -18,11 +18,6 @@
 		".gituser",
 		".inputrc", "inputrc",
 		".screenrc", "screenrc",
-		".wgetrc", "wgetrc",
-		".zlogin", "zlogin",
-		".zlogout", "zlogout",
-		".zprofile", "zprofile",
-		".zshenv", "zshenv",
-		".zshrc", "zshrc"
+        ".wgetrc", "wgetrc"
 	]
 }
