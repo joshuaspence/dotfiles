@@ -6,6 +6,6 @@
 ## @file   ~/.shell/completion/grunt.bash
 #\
 
-command -v aws &>/dev/null && {
+command -v grunt &>/dev/null && {
     eval "$(grunt --completion=bash)"
 }
