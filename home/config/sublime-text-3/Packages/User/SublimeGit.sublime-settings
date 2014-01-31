@@ -9,6 +9,7 @@
     "product_key": "3a01144e54511a5f71d11d895c123e78",
 
     "git_commit_pedantic": true,
+    "git_merge_flags": ["--no-ff"],
 
     "git_extensions": {
         "git_flow": false,
