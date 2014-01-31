@@ -1,9 +1,0 @@
-#/
-## @author Joshua Spence
-## @file   ~/.config/sublime-text-3/.gitignore
-#\
-
-/*
-!/LaTeXing.sublime-package
-!/.gitignore
-
