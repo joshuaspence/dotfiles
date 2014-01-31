@@ -30,6 +30,7 @@
 		"SublimeCodeIntel",
 		"SublimeGit",
 		"SublimeLinter",
+		"SublimeLinter-contrib-puppet-lint",
 		"SublimeLinter-csslint",
 		"SublimeLinter-jscs",
 		"SublimeLinter-jshint",

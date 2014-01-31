@@ -30,6 +30,11 @@
                 "args": [],
                 "excludes": []
             },
+            "puppetlint": {
+                "@disable": false,
+                "args": [],
+                "excludes": []
+            },
             "xmllint": {
                 "@disable": false,
                 "args": [],
