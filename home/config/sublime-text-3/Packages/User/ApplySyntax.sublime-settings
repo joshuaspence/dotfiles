@@ -7,5 +7,23 @@
  */
 {
     "new_file_syntax": false,
-    "syntaxes": []
+    "syntaxes": [
+        {
+            "name": "INI/INI",
+            "rules": [
+                {"file_name": ".*/\\.editorconfig$"}
+            ]
+        },
+        {
+            "name": "JSON/JSON",
+            "rules": [
+                {"file_name": ".*/\\.arcrc$"},
+                {"file_name": ".*/\\.arcconfig$"},
+                {"file_name": ".*/\\.(git|hg|svn)/arc/config$"},
+
+                {"file_name": ".*/\\.bowerrc"},
+                {"file_name": ".*/\\.jshintrc"}
+            ]
+        }
+    ]
 }

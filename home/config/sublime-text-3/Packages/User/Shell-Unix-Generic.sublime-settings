@@ -6,18 +6,18 @@
  */
 {
 	"extensions":
-	[
-		".ackrc", "ackrc",
-		".bash_logout", "bash_logout",
-		".bash_profile", "bash_profile",
-		".bashrc", "bashrc",
-		".dotfilesrc", "dotfilesrc",
-		".gitattributes",
-		".gitconfig", "gitconfig",
-		".gitignore",
-		".gituser",
-		".inputrc", "inputrc",
-		".screenrc", "screenrc",
+    [
+        ".ackrc", "ackrc",
+        ".bash_logout", "bash_logout",
+        ".bash_profile", "bash_profile",
+        ".bashrc", "bashrc",
+        ".dotfilesrc", "dotfilesrc",
+        ".gitattributes",
+        ".gitconfig", "gitconfig",
+        ".gitignore",
+        ".gituser",
+        ".inputrc", "inputrc",
+        ".screenrc", "screenrc",
         ".wgetrc", "wgetrc"
-	]
+    ]
 }
