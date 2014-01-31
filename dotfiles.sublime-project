@@ -10,19 +10,26 @@
                 "home/config/sublime-text-3/Index",
                 "home/config/sublime-text-3/Installed Packages",
                 "home/config/sublime-text-3/Local",
+                "home/config/sublime-text-3/Packages/GoSublime",
+                "home/config/sublime-text-3/Packages/Grunt",
+                "home/config/sublime-text-3/Packages/HTML",
+                "home/config/sublime-text-3/Packages/Rails",
+                "home/config/sublime-text-3/Packages/SublimeCodeIntel",
+                "home/config/sublime-text-3/Packages/SublimeLinter",
+                "home/config/sublime-text-3/Packages/Theme - Default",
+                "home/config/sublime-text-3/Packages/User/GoSublime",
                 "home/config/sublime-text-3/Packages/User/Package Control.cache",
-                "home/oh-my-zsh",
                 "home/vim/bundle/*",
                 "home/vim/undo",
                 "modules/*"
             ],
             "file_exclude_patterns":
             [
+                "GoSublime-aux.sublime-settings",
                 "Package Control.ca-bundle",
                 "Package Control.ca-list",
                 "Package Control.last-run",
-                "*.list.save",
-                "*.sublime_session"
+                "*.list.save"
             ]
         }
     ]
