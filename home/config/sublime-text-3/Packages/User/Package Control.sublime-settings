@@ -35,7 +35,6 @@
 		"SublimeLinter-jshint",
 		"SublimeLinter-json",
 		"SublimeLinter-xmllint",
-		"TidyHTML5",
-		"Wrap Plus"
+		"TidyHTML5"
 	]
 }
