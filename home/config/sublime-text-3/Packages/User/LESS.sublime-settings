@@ -5,5 +5,5 @@
  * @file   ~/.config/sublime-text-3/Packages/User/LESS.sublime-settings
  */
 {
-    "auto_insert_semicolon": false
+    "auto_insert_semicolon": true
 }
