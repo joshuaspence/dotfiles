@@ -25,12 +25,16 @@
 		"LaTeXing",
 		"LESS",
 		"nginx",
-		"Package Control",
 		"PHP-Twig",
 		"Pretty JSON",
 		"Puppet",
 		"SublimeGit",
 		"SublimeLinter",
+		"SublimeLinter-csslint",
+		"SublimeLinter-jscs",
+		"SublimeLinter-jshint",
+		"SublimeLinter-json",
+		"SublimeLinter-xmllint",
 		"TidyHTML5",
 		"Wrap Plus"
 	]
