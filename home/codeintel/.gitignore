@@ -1,0 +1,8 @@
+#/
+## @author Joshua Spence
+## @file   ~/.codeintel/.gitignore
+#\
+
+/*
+!/config
+!/.gitignore
