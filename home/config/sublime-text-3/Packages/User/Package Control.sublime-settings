@@ -26,7 +26,6 @@
 		"SublimeLinter-jscs",
 		"SublimeLinter-jshint",
 		"SublimeLinter-json",
-		"SublimeLinter-xmllint",
-		"TidyHTML5"
+		"SublimeLinter-xmllint"
 	]
 }
