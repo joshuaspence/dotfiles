@@ -54,9 +54,5 @@
     "always_prompt_for_file_reload": false,
     "close_windows_when_empty": false,
     "show_full_path": true,
-    "index_files": true,
-	"ignored_packages":
-    [
-		"Vintage"
-	]
+    "index_files": true
 }
