@@ -17,6 +17,7 @@
     "word_wrap": "auto",
     "wrap_width": 0,
     "indent_subsequent_lines": true,
+    "auto_match_enabled": true,
     "dictionary": "Packages/Language - English/en_US.dic",
     "draw_minimap_border": true,
 	"always_show_minimap_viewport": true,
