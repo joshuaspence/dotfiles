@@ -1,9 +1,6 @@
 /**
  * Package configuration for
  * {@link https://github.com/facelessuser/ApplySyntax ApplySyntax}.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-3/Packages/User/ApplySyntax.sublime-settings
  */
 {
     "new_file_syntax": false,

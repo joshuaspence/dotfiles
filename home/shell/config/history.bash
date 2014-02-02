@@ -1,8 +1,5 @@
 #/
 ## Configure {@link http://www.gnu.org/software/bash/ bash} shell history.
-##
-## @author Joshua Spence
-## @file   ~/.shell/config/history.bash
 #\
 
 ## Entries beginning with space aren't added into history, and duplicate

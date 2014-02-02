@@ -1,8 +1,5 @@
 "/
 "" Clipboard configuration.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/clipboard.vim
 "\
 
 if has('clipboard') && has('gui')

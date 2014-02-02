@@ -1,8 +1,5 @@
 #/
 ## Environment variables for `bc`.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/bc.sh
 #\
 
 command -v bc &>/dev/null && {

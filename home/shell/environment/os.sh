@@ -1,9 +1,7 @@
 #/
 ## Environment variables defining the operating system type.
 ##
-## @author Joshua Spence
-## @file   ~/.shell/environment/os.sh
-## @link   https://github.com/mikemcquaid/dotfiles
+## @link https://github.com/mikemcquaid/dotfiles
 #\
 
 if [[ $(uname -s) == Darwin ]]; then

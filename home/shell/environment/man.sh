@@ -1,8 +1,5 @@
 #/
 ## Environment variables for `man`.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/man.sh
 #\
 
 command -v man &>/dev/null && {

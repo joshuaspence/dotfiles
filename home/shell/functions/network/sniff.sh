@@ -1,8 +1,5 @@
 #/
 ## A shell function to sniff HTTP traffic.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/network/sniff.sh
 #\
 
 ## Sniff HTTP traffic.

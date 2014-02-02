@@ -1,8 +1,5 @@
 #/
 ## Start-up script for {@link http://www.python.org/ Python}.
-##
-## @author Joshua Spence
-## @file   ~/.pythonrc.py
 #\
 
 

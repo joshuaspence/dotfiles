@@ -1,9 +1,6 @@
 #/
 ## Initialization for login {@link http://www.gnu.org/software/bash/ bash}
 ## shells.
-##
-## @author Joshua Spence
-## @file ~/.bash_profile
 #\
 
 # Pull in any system defaults first so they can be overridden later.

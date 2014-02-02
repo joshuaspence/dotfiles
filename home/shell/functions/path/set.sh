@@ -1,8 +1,5 @@
 #/
 ## A shell function to overwrite a search path variable.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/path/set.sh
 #\
 
 ## Sets a colon-separated search path variable, overwriting any previous values.

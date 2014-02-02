@@ -1,8 +1,5 @@
 #/
 ## A shell function to syntax-highlight JSON strings or files.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/string/json_highlight.sh
 #\
 
 ## Syntax-highlight JSON strings or files.

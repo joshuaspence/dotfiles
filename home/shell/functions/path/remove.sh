@@ -1,8 +1,5 @@
 #/
 ## A shell function to remove the specified paths from a search path.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/path/remove.sh
 #\
 
 ## Removes the specified paths from a search path.

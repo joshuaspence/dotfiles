@@ -1,9 +1,6 @@
 #/
 ## A shell function to create a desktop notification indicating the exit status
 ## of a command.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/notification/alert.sh
 #\
 
 ## Create a desktop notification indicating the exit status of a command.

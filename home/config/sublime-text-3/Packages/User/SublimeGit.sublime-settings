@@ -1,8 +1,5 @@
 /**
  * Package configuration for {@link http://sublimegit.net/ SublimeGit}.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-3/Packages/User/SublimeGit.sublime-settings
  */
 {
     "email": "josh@joshuaspence.com",

@@ -1,9 +1,6 @@
 #/
 ## Environment variables for
 ## {@link http://aws.amazon.com/developertools/351 Amazon EC2 CLI tools}.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/ec2.sh
 #\
 
 command -v ec2-version &>/dev/null && {

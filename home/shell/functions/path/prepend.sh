@@ -1,9 +1,6 @@
 #/
 ## A shell function to prepend the specified paths to the front of a search
 ## path.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/path/prepend.sh
 #\
 
 ## Prepends the specified paths to the front of a search path.

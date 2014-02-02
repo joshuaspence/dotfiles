@@ -1,8 +1,5 @@
 "/
 "" Indenting options.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/indent.vim
 "\
 
 "" Copy indent from the current line when starting a new line.

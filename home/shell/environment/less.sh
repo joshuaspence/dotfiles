@@ -1,8 +1,5 @@
 #/
 ## Environment variables for {@link http://www.greenwoodsoftware.com/less less}.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/less.sh
 #\
 
 command -v less &>/dev/null && {

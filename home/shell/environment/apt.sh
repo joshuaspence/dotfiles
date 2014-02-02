@@ -1,8 +1,5 @@
 #/
 ## Environment variables for {@link http://wiki.debian.org/Apt apt}.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/apt.sh
 #\
 
 command -v apt-get &>/dev/null && {

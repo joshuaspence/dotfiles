@@ -1,9 +1,6 @@
 #/
 ## Color configuration for the {@link http://www.gnu.org/software/bash/ bash}
 ## prompt statement.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/colors.bash
 #\
 
 PROMPT_HOST_COLOR="${COLOR_CYAN}"

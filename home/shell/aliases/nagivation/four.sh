@@ -1,8 +1,5 @@
 #/
 ## A shell alias to allow for easier navigation.
-##
-## @author Joshua Spence
-## @file   ~/.shell/aliases/navigation/four.sh
 #\
 
 ## Easier navigation.

@@ -1,9 +1,6 @@
 #/
 ## The "EDITOR" environment variable declares the editor program called by
 ## `sudoedit`, `vipw` and other such programs when you tell them to edit a file.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/editor.sh
 #\
 
 if [[ -n $DISPLAY ]] && command -v subl &>/dev/null; then

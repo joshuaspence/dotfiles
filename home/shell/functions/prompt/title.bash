@@ -1,9 +1,6 @@
 #/
 ## A shell function to echo the title bar for the
 ## {@link http://www.gnu.org/software/bash/ bash} prompt statement.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/title.bash
 #\
 
 function shell_title() {

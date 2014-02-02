@@ -1,8 +1,5 @@
 #/
 ## Detect login shell.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/login.bash
 #\
 
 if shopt -q login_shell; then

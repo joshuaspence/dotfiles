@@ -1,8 +1,3 @@
-#/
-## @author Joshua Spence
-## @file   ~/.config/sublime-text-3/Packages/.gitignore
-#\
-
 /*
 !/User/
 !/.gitignore

@@ -1,8 +1,5 @@
 #/
 ## A shell function to extract fields from JSON data.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/string/json_value.sh
 #\
 
 ## Takes JSON on standard input and prints the value of a given path on standard

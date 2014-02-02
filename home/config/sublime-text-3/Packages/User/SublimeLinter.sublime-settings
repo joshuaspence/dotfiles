@@ -1,9 +1,6 @@
 /**
  * Package configuration for
  * {@link https://github.com/SublimeLinter/SublimeLinter SublimeLinter}.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-3/Packages/User/SublimeLinter.sublime-settings
  */
 {
     "user": {

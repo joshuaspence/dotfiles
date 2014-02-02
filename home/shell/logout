@@ -1,8 +1,5 @@
 #/
 ## Run commands before a login shell exits.
-##
-## @author Joshua Spence
-## @file   ~/.shell/logout
 #\
 
 ## When leaving the console, clear the screen to increase privacy.

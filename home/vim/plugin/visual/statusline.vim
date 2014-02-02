@@ -1,8 +1,5 @@
 "/
 "" Status line configuration.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/visual/statusline.vim
 "\
 
 if has('statusline')

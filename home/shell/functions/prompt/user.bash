@@ -1,9 +1,6 @@
 #/
 ## A shell function to echo the username for the
 ## {@link http://www.gnu.org/software/bash/ bash} prompt statement.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/user.bash
 #\
 
 function shell_prompt__user() {

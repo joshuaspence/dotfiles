@@ -1,9 +1,6 @@
 #/
 ## A function to echo the {@link http://www.gnu.org/software/bash/ bash} prompt
 ## statement.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/prompt.bash
 #\
 
 function shell_prompt() {

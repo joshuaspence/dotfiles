@@ -1,8 +1,5 @@
 #/
 ## Detect color support.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/color.sh
 #\
 
 if [[ -n $COLORTERM || $(tput colors) > 2 ]]; then

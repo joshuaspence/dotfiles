@@ -1,8 +1,5 @@
 #/
 ## A shell function to extract archived files and mount disk images.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/archive/extract.sh
 #\
 
 ## Extracts archived files and mounts disk images.

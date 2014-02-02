@@ -1,9 +1,6 @@
 #/
 ## Configure the {@link http://www.gnu.org/software/bash/ bash} prompt
 ## statement.
-##
-## @author Joshua Spence
-## @file   ~/.shell/config/prompt.bash
 #\
 
 [[ -n $CLICOLOR ]] || source "${HOME}/.shell/environment/color.sh"

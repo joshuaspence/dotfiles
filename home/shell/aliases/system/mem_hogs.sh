@@ -1,8 +1,5 @@
 #/
 ## A shell alias to display the processes that are using the most memory.
-##
-## @author Joshua Spence
-## @file   ~/.shell/aliases/system/mem_hogs.sh
 #\
 
 ## Display the processes that are using the most memory.

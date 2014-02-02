@@ -1,8 +1,5 @@
 #/
 ## Environment variables for `ls`.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/ls.sh
 #\
 
 command -v ls &>/dev/null && {

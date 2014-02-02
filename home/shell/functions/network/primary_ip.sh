@@ -1,8 +1,5 @@
 #/
 ## A shell function to echo the primary IP address of the system.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/network/primary_ip.sh
 #\
 
 ## Echoes the primary IP address of the system.

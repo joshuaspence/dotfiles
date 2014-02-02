@@ -1,8 +1,5 @@
 "/
 "" Options for Insert mode completion.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/editing/completion.vim
 "\
 
 "" Reset options.

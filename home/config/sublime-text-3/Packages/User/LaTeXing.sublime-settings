@@ -1,8 +1,5 @@
 /**
  * Package configuration for {@link http://www.latexing.com/ LaTeXing}.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-3/Packages/User/LaTeXing.sublime-settings
  */
 {
     "username": "josh@joshuaspence.com",

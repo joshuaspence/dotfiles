@@ -1,8 +1,5 @@
 #/
 ## Detect interactive shell.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/interactive.sh
 #\
 
 if [[ $- == *i* ]]; then

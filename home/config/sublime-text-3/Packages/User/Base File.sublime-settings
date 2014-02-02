@@ -1,9 +1,6 @@
 /**
  * Package configuration for
  * {@link http://github.com/spadgos/sublime-jsdocs DocBlockr}.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-3/Packages/User/Base File.sublime-settings
  */
 {
     "jsdocs_deep_indent": true,

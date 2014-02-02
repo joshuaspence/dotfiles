@@ -1,9 +1,6 @@
 #/
 ## A shell function to echo the TTY device for the
 ## {@link http://www.gnu.org/software/bash/ bash} prompt statement.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/tty.bash
 #\
 
 function shell_prompt__tty() {

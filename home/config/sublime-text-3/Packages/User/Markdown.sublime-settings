@@ -1,8 +1,5 @@
 /**
  * Syntax-specific settings for "Markdown" files.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-3/Packages/User/Markdown.sublime-settings
  */
 {
 	"word_wrap": "auto",

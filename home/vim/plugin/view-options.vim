@@ -1,8 +1,5 @@
 "/
 "" Changes the effect of the `:mkview` command.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/view-options.vim
 "\
 
 set viewoptions=

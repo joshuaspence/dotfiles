@@ -1,8 +1,5 @@
 "/
 "" Show/hide hidden characters.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/visual/list.vim
 "\
 
 "" Do not display unprintable characters.

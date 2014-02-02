@@ -1,9 +1,6 @@
 #/
 ## {@link http://www.gnu.org/software/bash/ bash} completion for
 ## {@link https://www.dropbox.com/install?os=lnx Dropbox}.
-##
-## @author Joshua Spence
-## @file   ~/.shell/completion/dropbox.bash
 #\
 
 command -v dropbox &>/dev/null && {

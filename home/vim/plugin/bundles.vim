@@ -1,9 +1,6 @@
 "/
 "" Plugin configuration for {@link http://www.vim.org/ vim} with
 "" {@link http://github.com/gmarik/vundle Vundle}.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/bundles.vim
 "\
 
 "" Vundle pre-commands. @{{{

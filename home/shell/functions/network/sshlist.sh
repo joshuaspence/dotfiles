@@ -1,8 +1,5 @@
 #/
 ## A shell function to list hosts defined in `~/.ssh/config`.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/network/sshlist.sh
 #\
 
 ## List hosts defined in `~/.ssh/config`.

@@ -1,8 +1,5 @@
 "/
 "" Enable syntax highlighting.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/syntax.vim
 "\
 
 if has('syntax')

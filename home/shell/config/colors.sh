@@ -1,8 +1,5 @@
 #/
 ## ANSI colors for the shell.
-##
-## @author Joshua Spence
-## @file   ~/.shell/config/colors.sh
 #\
 
 ## Normal colors @{{{

@@ -1,8 +1,5 @@
 "/
 "" Folding configuration.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/folding.vim
 "\
 
 if has('folding')

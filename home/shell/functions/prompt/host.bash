@@ -1,8 +1,6 @@
 #/
 ## A shell functo to echo the hostname for the
 ## {@link http://www.gnu.org/software/bash/ bash} prompt statement.
-##
-## @author Joshua Spence
 ## @file   ~/.shell/functions/prompt/host.bash
 #\
 

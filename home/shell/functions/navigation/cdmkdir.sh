@@ -1,8 +1,5 @@
 #/
 ## A shell function to create a directory and change into the new directory.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/navigation/cdmkdir.sh
 #\
 
 ## Creates the specified directory (if it doesn't exist) and changes into it.

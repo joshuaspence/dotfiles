@@ -1,8 +1,5 @@
 #/
 ## The "BROWSER" environment variable contains the path to the web browser.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/browser.sh
 #\
 
 if [[ -n $DISPLAY ]] && command -v google-chrome &>/dev/null; then

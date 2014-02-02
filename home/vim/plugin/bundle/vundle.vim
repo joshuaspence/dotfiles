@@ -1,9 +1,6 @@
 "/
 "" Key mappings for the {@link http://github.com/gmarik/vundle Vundle} plug-in
 "" manager.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/bundle/vundle.vim
 "\
 
 nmap <Leader>bi :BundleInstall<CR>

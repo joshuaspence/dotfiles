@@ -1,8 +1,5 @@
 #/
 ## A shell function to echo the primary network interface.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/network/iface.sh
 #\
 
 ## Echo the primary network interface.

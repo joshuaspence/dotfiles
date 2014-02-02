@@ -1,8 +1,5 @@
 #/
 ## Environment variables for {@link http://beyondgrep.com/ ack-grep}.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/ack-grep.sh
 #\
 
 command -v ack-grep &>/dev/null && {

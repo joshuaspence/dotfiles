@@ -1,8 +1,5 @@
 "/
 "" Configuration for {@link http://github.com/mattn/gist-vim gist-vim}.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/bundle/gist.vim
 "\
 
 let g:gist_clip_command='xclip -selection clipboard'

@@ -1,8 +1,5 @@
 #/
 ## Configuration file for {@link http://git-scm.com/ git}.
-##
-## @author Joshua Spence
-## @file   ~/.gitconfig
 #\
 
 [include]

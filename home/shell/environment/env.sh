@@ -1,9 +1,6 @@
 #/
 ## An environment variable used to prevent `env` output from changing console
 ## color.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/env.sh
 #\
 
 command -v env &>/dev/null && {

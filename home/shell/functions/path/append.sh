@@ -1,9 +1,6 @@
 #/
 ## A shell function to append the specified paths to the end of a search
 ## path.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/path/append.sh
 #\
 
 ## Appends the specified paths to the end of a search path.

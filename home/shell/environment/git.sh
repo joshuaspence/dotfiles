@@ -1,8 +1,5 @@
 #/
 ## Environment variables for {@link http://git-scm.com/ git}.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/git.sh
 #\
 
 command -v git &>/dev/null && {

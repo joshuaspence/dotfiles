@@ -6,9 +6,6 @@
 ## <code>
 ## whenever --update-crontab --load-file ~/.crontab
 ## </code>
-##
-## @author Joshua Spence
-## @file   ~/.crontab
 #\
 
 set :output, {:error => 'cron-error.log', :standard => 'cron.log'}

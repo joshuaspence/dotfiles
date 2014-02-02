@@ -1,9 +1,6 @@
 /**
  * Package configuration for
  * {@link https://github.com/DisposaBoy/GoSublime GoSublime}.
- *
- * @author Joshua Spence
- * @file   ~/.config/sublime-text-3/Packages/User/GoSublime.sublime-settings
  */
 {
     "env": {

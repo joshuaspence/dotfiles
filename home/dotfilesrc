@@ -1,8 +1,5 @@
 #/
 ## Configuration file for {@link http://github.com/jbernard/dotfiles dotfiles}.
-##
-## @author Joshua Spence
-## @file   ~/.dotfilesrc
 #\
 
 [dotfiles]

@@ -1,9 +1,6 @@
 #/
 ## A shell function to echo the return status of the previous command for the
 ## {@link http://www.gnu.org/software/bash/ bash} prompt statement.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/prompt/status.bash
 #\
 
 function shell_prompt__set_status() {

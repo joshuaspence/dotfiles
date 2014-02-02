@@ -1,8 +1,5 @@
 #/
 ## Configure {@link http://www.gnu.org/software/bash/ bash} shell options.
-##
-## @author Joshua Spence
-## @file   ~/.shell/config/shopt.bash
 #\
 
 shopt -u autocd

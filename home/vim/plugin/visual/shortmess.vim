@@ -1,8 +1,5 @@
 "/
 "" Shorten various messages.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/visual/shortmess.vim
 "\
 
 set shortmess=

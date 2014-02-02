@@ -1,8 +1,5 @@
 "/
 "" Configuration for automatic formatting.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/editing/format-options.vim
 "\
 
 set formatoptions=

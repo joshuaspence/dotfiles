@@ -1,8 +1,5 @@
 #/
 ## Environment variables for {@link http://www.openssh.org/ SSH}.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/ssh.sh
 #\
 
 command -v ssh &>/dev/null && {

@@ -1,8 +1,5 @@
 "/
 "" Command-line tab completion.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/command-line/wildmode.vim
 "\
 
 if has('wildmenu')

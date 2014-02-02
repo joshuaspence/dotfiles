@@ -1,8 +1,5 @@
 "/
 "" Searching options.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/search.vim
 "\
 
 if has('extra_search')

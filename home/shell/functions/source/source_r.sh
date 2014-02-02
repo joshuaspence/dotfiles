@@ -1,9 +1,6 @@
 #/
 ## A recursive `source` shell function which also takes into consideration the
 ## file extension to allow for shell-specific files to be sourced.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/source/source_r.sh
 #\
 
 ## A recursive `source` shell function which also takes into consideration the

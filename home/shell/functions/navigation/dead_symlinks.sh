@@ -1,8 +1,5 @@
 #/
 ## A shell function to find dead symbolic links.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/navigation/dead_symlinks.sh
 #\
 
 ## Find dead symbolic links.

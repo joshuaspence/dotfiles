@@ -1,8 +1,5 @@
 #/
 ## A shell function to print terminal codes for shell colors.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/color/colorize.sh
 #\
 
 ## Prints terminal codes for shell colors.

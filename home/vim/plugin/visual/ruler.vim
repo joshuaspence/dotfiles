@@ -1,8 +1,5 @@
 "/
 "" Show the ruler.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/visual/ruler.vim
 "\
 
 if has('cmdline_info')

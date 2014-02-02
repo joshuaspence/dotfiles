@@ -1,8 +1,5 @@
 #/
 ## Environment variables for {@link http://www.gnu.org/software/grep/ grep}.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/grep.sh
 #\
 
 command -v grep &>/dev/null && {

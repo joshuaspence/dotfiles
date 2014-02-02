@@ -1,8 +1,5 @@
 #/
 ## A shell function to output a cool "The Matrix" type screen.
-##
-## @author Joshua Spence
-## @file   ~/.shell/functions/useless/matrix3.sh
 #\
 
 ## Cool "The Matrix" type screen.

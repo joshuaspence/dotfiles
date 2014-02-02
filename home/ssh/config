@@ -1,8 +1,5 @@
 #/
 ## Configuration file for {@link http://www.openssh.org/ SSH}.
-##
-## @author Joshua Spence
-## @file   ~/.ssh/config
 #\
 
 ## Personal @{{{

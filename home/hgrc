@@ -1,8 +1,5 @@
 #/
 ## Configuration file for {@link http://mercurial.selenic.com/ Mercurial}.
-##
-## @author Joshua Spence
-## @file   ~/.hgrc
 #\
 
 [ui]

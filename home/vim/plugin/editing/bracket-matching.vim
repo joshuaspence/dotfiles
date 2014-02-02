@@ -1,8 +1,5 @@
 "/
 "" Show matching brackets.
-""
-"" @author Joshua Spence
-"" @file   ~/.vim/plugin/editing/bracket-matching.vim
 "\
 
 set showmatch

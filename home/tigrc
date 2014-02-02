@@ -1,8 +1,5 @@
 #/
 ## Configuration file for {@link http://github.com/jonas/tig tig}.
-##
-## @author Joshua Spence
-## @file   ~/.tigrc
 #\
 
 set line-graphics = utf8

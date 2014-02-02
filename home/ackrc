@@ -1,8 +1,5 @@
 #/
 ## Configuration file for {@link http://beyondgrep.com/ ack-grep}.
-##
-## @author Joshua Spence
-## @file   ~/.ackrc
 #\
 
 ## Always color, even if piping to a another program.

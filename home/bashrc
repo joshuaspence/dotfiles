@@ -1,9 +1,6 @@
 #/
 ## Initialization for interactive non-login
 ## {@link http://www.gnu.org/software/bash/ bash} shells.
-##
-## @author Joshua Spence
-## @file ~/.bashrc
 #\
 
 ## Pull in any system defaults first so they can be overridden later.

@@ -1,9 +1,6 @@
 #/
 ## The `python` commands in the "PYTHONSTARTUP" file are executed before the
 ## first prompt is displayed in interactive mode.
-##
-## @author Joshua Spence
-## @file   ~/.shell/environment/python.sh
 #\
 
 command -v python &>/dev/null && {
