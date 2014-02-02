@@ -6,6 +6,7 @@
             "folder_exclude_patterns":
             [
                 "home/codeintel/db",
+
                 "home/config/sublime-text-3/Backup",
                 "home/config/sublime-text-3/Cache",
                 "home/config/sublime-text-3/Index",
@@ -20,8 +21,10 @@
                 "home/config/sublime-text-3/Packages/Theme - Default",
                 "home/config/sublime-text-3/Packages/User/GoSublime",
                 "home/config/sublime-text-3/Packages/User/Package Control.cache",
+
                 "home/vim/bundle/*",
                 "home/vim/undo",
+
                 "modules/*"
             ],
             "file_exclude_patterns":
@@ -29,10 +32,12 @@
                 "home/codeintel/codeintel.log",
                 "home/codeintel/README.txt",
                 "home/codeintel/VERSION",
+
                 "home/config/sublime-text-3/Packages/User/GoSublime-aux.sublime-settings",
                 "home/config/sublime-text-3/Packages/User/Package Control.ca-bundle",
                 "home/config/sublime-text-3/Packages/User/Package Control.ca-list",
                 "home/config/sublime-text-3/Packages/User/Package Control.last-run",
+
                 "etc/apt/sources.list.d/*.list.distUpgrade",
                 "etc/apt/sources.list.d/*.list.save"
             ]
