@@ -7,11 +7,20 @@
  */
 {
     "env": {
-        "PATH": "${HOME}/go/bin:${PATH}"
+        "PATH": "$HOME/go/bin:$PATH",
+        "GOPATH": "$HOME/go"
     },
     "shell": ["/bin/bash", "--login", "-c", "$CMD"],
     "gscomplete_enabled": true,
     "fmt_enabled": true,
     "fmt_tab_indent": true,
-    "fmt_tab_width": 4
+    "fmt_tab_width": 4,
+    "gslint_enabled": true,
+    "comp_lint_enabled": false,
+    "autocomplete_snippets": true,
+    "autocomplete_tests": false,
+    "autocomplete_builtins": false,
+    "autocomplete_closures": false,
+    "calltips": true,
+    "use_named_imports": false
 }
