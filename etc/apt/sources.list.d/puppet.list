@@ -1,0 +1,2 @@
+deb http://apt.puppetlabs.com saucy main
+deb-src http://apt.puppetlabs.com saucy main
