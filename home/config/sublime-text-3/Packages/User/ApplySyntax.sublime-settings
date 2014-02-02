@@ -14,7 +14,8 @@
                 {"file_name": ".*/\\.editorconfig$"},
                 {"file_name": ".*/\\.gitmodules$"},
                 {"file_name": ".*/\\.git/config$"},
-                {"file_name": ".*/htop/htoprc$"}
+                {"file_name": ".*/htop/htoprc$"},
+                {"file_name": ".*/terminator/config$"}
             ]
         },
         {
