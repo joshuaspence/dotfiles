@@ -8,7 +8,11 @@
     "username": "josh@joshuaspence.com",
     "license": "22d60be8f5b32840801f08c9d8",
 
-    "root_option": true,
+    "keep_focus": true,
+    "forward_sync": true,
+    "reverse_sync": true,
+
+    "partial_build": false,
     "open_pdf_on_load": true,
     "output_directory": "build",
 
