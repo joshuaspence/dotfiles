@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 ##
 # URL-encode a string.
 #
@@ -5,6 +7,8 @@
 #
 # @link http://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 #
-function urlencode() {
-	python -c 'import sys; import urllib; print urllib.quote_plus(sys.argv[1]);' $@
-}
+
+import sys
+import urllib
+
+print urllib.quote_plus(sys.argv[1])
