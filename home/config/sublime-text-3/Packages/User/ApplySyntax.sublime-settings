@@ -26,6 +26,12 @@
                 {"file_name": ".*/\\.bowerrc"},
                 {"file_name": ".*/\\.jshintrc"}
             ]
+        },
+        {
+            "name": "ShellScript/Shell-Unix-Generic",
+            "rules": [
+                {"file_name": ".*/\\.gitignore$"}
+            ]
         }
     ]
 }
