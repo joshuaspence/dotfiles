@@ -5,6 +5,7 @@
             "path": ".",
             "folder_exclude_patterns":
             [
+                "home/codeintel/db",
                 "home/config/sublime-text-3/Backup",
                 "home/config/sublime-text-3/Cache",
                 "home/config/sublime-text-3/Index",
@@ -25,6 +26,9 @@
             ],
             "file_exclude_patterns":
             [
+                "home/codeintel/codeintel.log",
+                "home/codeintel/README.txt",
+                "home/codeintel/VERSION",
                 "GoSublime-aux.sublime-settings",
                 "Package Control.ca-bundle",
                 "Package Control.ca-list",
