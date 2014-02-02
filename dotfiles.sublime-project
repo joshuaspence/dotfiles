@@ -29,11 +29,11 @@
                 "home/codeintel/codeintel.log",
                 "home/codeintel/README.txt",
                 "home/codeintel/VERSION",
-                "GoSublime-aux.sublime-settings",
-                "Package Control.ca-bundle",
-                "Package Control.ca-list",
-                "Package Control.last-run",
-                "*.list.save"
+                "home/config/sublime-text-3/Packages/User/GoSublime-aux.sublime-settings",
+                "home/config/sublime-text-3/Packages/User/Package Control.ca-bundle",
+                "home/config/sublime-text-3/Packages/User/Package Control.ca-list",
+                "home/config/sublime-text-3/Packages/User/Package Control.last-run",
+                "etc/apt/sources.list.d/*.list.save"
             ]
         }
     ]
