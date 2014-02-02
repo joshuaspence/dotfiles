@@ -3,5 +3,5 @@
 #\
 
 command -v go &>/dev/null && {
-    export GOPATH="${HOME}/go"
+    export GOPATH="${HOME}/.go"
 }
