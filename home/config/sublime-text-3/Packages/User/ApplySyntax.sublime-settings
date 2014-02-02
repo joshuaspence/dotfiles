@@ -12,7 +12,8 @@
             "name": "INI/INI",
             "rules": [
                 {"file_name": ".*/\\.editorconfig$"},
-                {"file_name": ".*/\\.gitmodules$"}
+                {"file_name": ".*/\\.gitmodules$"},
+                {"file_name": ".*/\\.git/config$"}
             ]
         },
         {
