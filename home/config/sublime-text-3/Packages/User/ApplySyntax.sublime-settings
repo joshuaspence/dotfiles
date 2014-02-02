@@ -13,7 +13,8 @@
             "rules": [
                 {"file_name": ".*/\\.editorconfig$"},
                 {"file_name": ".*/\\.gitmodules$"},
-                {"file_name": ".*/\\.git/config$"}
+                {"file_name": ".*/\\.git/config$"},
+                {"file_name": ".*/htop/htoprc$"}
             ]
         },
         {
