@@ -31,6 +31,9 @@
             ],
             "file_exclude_patterns":
             [
+                "etc/apt/sources.list.d/*.list.distUpgrade",
+                "etc/apt/sources.list.d/*.list.save",
+
                 "home/codeintel/codeintel.log",
                 "home/codeintel/README.txt",
                 "home/codeintel/VERSION",
@@ -38,10 +41,7 @@
                 "home/config/sublime-text-3/Packages/User/GoSublime-aux.sublime-settings",
                 "home/config/sublime-text-3/Packages/User/Package Control.ca-bundle",
                 "home/config/sublime-text-3/Packages/User/Package Control.ca-list",
-                "home/config/sublime-text-3/Packages/User/Package Control.last-run",
-
-                "etc/apt/sources.list.d/*.list.distUpgrade",
-                "etc/apt/sources.list.d/*.list.save"
+                "home/config/sublime-text-3/Packages/User/Package Control.last-run"
             ]
         }
     ]
