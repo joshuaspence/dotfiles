@@ -30,7 +30,8 @@
         {
             "name": "ShellScript/Shell-Unix-Generic",
             "rules": [
-                {"file_name": ".*/\\.gitignore$"}
+                {"file_name": ".*/\\.gitignore$"},
+                {"file_name": ".*/\\.git/info/exclude$"}
             ]
         }
     ]
