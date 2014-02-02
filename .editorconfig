@@ -12,3 +12,6 @@ insert_final_newline = true
 
 [home/config/htop/htoprc]
 trim_trailing_whitespace = false
+
+[home/config/terminator/config]
+indent_size = 2
