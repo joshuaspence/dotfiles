@@ -22,6 +22,8 @@
                 "home/config/sublime-text-3/Packages/User/GoSublime",
                 "home/config/sublime-text-3/Packages/User/Package Control.cache",
 
+                "home/shell/completion/ruby",
+
                 "home/vim/bundle/*",
                 "home/vim/undo",
 
