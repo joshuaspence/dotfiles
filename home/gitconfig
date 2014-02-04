@@ -120,20 +120,6 @@
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     whois = !sh -c 'git log --regexp-ignore-case -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -
 
-## Aliases for {@link http://github.com/joshuaspence/git-utils git-utils}.
-## Required here only for tab-completion.
-##
-## @todo Do I need this here?
-##
-## @{{{
-[alias]
-    forest = !git-forest
-    publish-branch = !git-publish-branch
-    rank-contributors = !git-rank-contributors
-    show-merges = !git-show-merges
-    wtf = !git-wtf
-## @}}}
-
 [apply]
     whitespace = fix
 
