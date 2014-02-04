@@ -1,0 +1,12 @@
+/**
+ * Syntax-specific settings for "INI" files.
+ */
+{
+    "extensions":
+    [
+        ".curlrc", "curlrc",
+        ".gitconfig", "gitconfig",
+        ".hgrc", "hgrc",
+        ".wgetrc", "wgetrc"
+    ]
+}

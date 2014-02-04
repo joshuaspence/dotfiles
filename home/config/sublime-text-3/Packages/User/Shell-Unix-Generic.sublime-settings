@@ -10,11 +10,9 @@
         ".bashrc", "bashrc",
         ".dotfilesrc", "dotfilesrc",
         ".gitattributes",
-        ".gitconfig", "gitconfig",
         ".gitignore",
         ".gituser",
         ".inputrc", "inputrc",
-        ".screenrc", "screenrc",
-        ".wgetrc", "wgetrc"
+        ".screenrc", "screenrc"
     ]
 }
