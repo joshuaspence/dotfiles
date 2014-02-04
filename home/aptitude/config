@@ -2,6 +2,12 @@
 ## Configuration file for {@link http://wiki.debian.org/Apt apt}.
 #\
 
+Apt {
+    Autoclean-After-Update "true";
+    Auto-Install "true";
+    Install-Recommends "true";
+}
+
 APT::Get {
     Assume-Yes "true";
     AutomaticRemove "true";
