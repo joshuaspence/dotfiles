@@ -133,9 +133,9 @@
         ##
         ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
         ## @{{{
-            ServerAliveCountMax 10
-            ServerAliveInterval 60
-            TCPKeepAlive no
+            #ServerAliveCountMax 10
+            #ServerAliveInterval 60
+            #TCPKeepAlive no
         ## @}}}
 
         ## Specifies whether to verify the remote key using DNS and SSHFP
