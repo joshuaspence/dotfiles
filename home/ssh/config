@@ -11,26 +11,6 @@
         IdentitiesOnly yes
         PasswordAuthentication no
         PubkeyAuthentication yes
-
-    ## EC2 @{{{
-        Host gunwatcher.ec2.joshuaspence.com gunwatcher.joshuaspence.com gunwatcher
-            HostName gunwatcher.ec2.joshuaspence.com
-            User ec2-user
-
-            ForwardAgent no
-            IdentitiesOnly yes
-            PasswordAuthentication no
-            PubkeyAuthentication yes
-
-        Host pear.ec2.joshuaspence.com pear.joshuaspence.com pear
-            HostName pear.ec2.joshuaspence.com
-            User ec2-user
-
-            ForwardAgent no
-            IdentitiesOnly yes
-            PasswordAuthentication no
-            PubkeyAuthentication yes
-    ## @}}}
 ## @}}}
 
 ## Freelancer @{{{
