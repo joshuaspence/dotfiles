@@ -2,7 +2,9 @@
 ## Configuration file for {@link http://wiki.debian.org/Apt apt}.
 #\
 
-APT::Get::Assume-Yes "true";
-APT::Get::AutomaticRemove "true";
-APT::Get::Install-Recommends "true";
-APT::Get::Install-Suggests "true";
+APT::Get {
+    Assume-Yes "true";
+    AutomaticRemove "true";
+    Install-Recommends "true";
+    Install-Suggests "true";
+}
