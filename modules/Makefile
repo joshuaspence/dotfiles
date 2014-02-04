@@ -24,7 +24,7 @@ git-sh:
 
 .PHONY: git-up
 git-up:
-	@$(todo)
+	@cd git-up && gem build git-up.gemspec && gem install git-up-*.gem
 
 .PHONY: git-wt-commit
 git-wt-commit:
