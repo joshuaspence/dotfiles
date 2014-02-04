@@ -89,21 +89,6 @@
             PasswordAuthentication no
             PubkeyAuthentication yes
     ## @}}}
-
-    ## Tunnels @{{{
-        Host db-slave-stats-tunnel
-            HostName analytics01.freelancer.com
-            User joshua
-
-            ForwardAgent no
-            IdentitiesOnly yes
-            PasswordAuthentication no
-            PubkeyAuthentication yes
-
-            # Port forwarding
-            ExitOnForwardFailure yes
-            LocalForward 3307 127.0.0.1:3306
-    ## @}}}
 ## @}}}
 
 ## Global @{{{
