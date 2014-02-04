@@ -26,9 +26,6 @@
     ## @link http://git.wiki.kernel.org/index.php/Aliases
     changes = diff --name-status
 
-    ## Count commits by author.
-    commit-count = shortlog --summary --numbered
-
     ## Show list of files in a conflict state.
     ##
     ## @link http://github.com/jacobwg/dotfiles/blob/master/bin/git-conflicts
