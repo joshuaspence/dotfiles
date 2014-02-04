@@ -22,6 +22,7 @@
 	path = modules/git-up
 	url = git://github.com/aanand/git-up.git
 	branch = master
+    ignore = dirty
 [submodule "modules/git-wt-commit"]
 	path = modules/git-wt-commit
 	url = git://gitorious.org/willgit/mainline.git
