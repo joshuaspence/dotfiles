@@ -1,16 +1,9 @@
 #/
-## Configuration file for {@link http://wiki.debian.org/Apt apt}.
+## Configuration file for aptitude.
 #\
 
-Apt {
+Aptitude {
     Autoclean-After-Update "true";
     Auto-Install "true";
     Install-Recommends "true";
-}
-
-APT::Get {
-    Assume-Yes "true";
-    AutomaticRemove "true";
-    Install-Recommends "true";
-    Install-Suggests "true";
 }
