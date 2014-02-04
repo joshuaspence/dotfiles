@@ -4,4 +4,5 @@
 
 command -v go &>/dev/null && {
     export GOPATH="${HOME}/.go"
+    export PATH="$PATH:$GOPATH/bin"
 }
