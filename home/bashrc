@@ -27,5 +27,4 @@ source_r "${HOME}/.shell/functions/"
 source_r "${HOME}/.shell/completion/"
 
 export PATH=$PATH:$HOME/.rvm/bin
-export PATH=$PATH:/opt/vagrant/bin
 export PATH=$PATH:$HOME/dotfiles/bin
