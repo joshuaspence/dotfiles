@@ -1,3 +1,5 @@
 #/
 ## Global `.gitignore` file for {@link http://git-scm.com/ git}.
 #\
+
+*.swp
