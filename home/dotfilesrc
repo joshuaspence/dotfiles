@@ -5,7 +5,9 @@
 [dotfiles]
 repository = ~/dotfiles/home
 packages = ['config']
-ignore = ['README.md']
+ignore = [
+    'README.md',
+    '.gitignore']
 externals = {
     '.adobe':      '/tmp',
     '.bzr.log':    '/dev/null',
