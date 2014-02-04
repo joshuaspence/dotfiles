@@ -6,4 +6,7 @@
 repository = ~/dotfiles/home
 packages = ['config']
 ignore = ['README.md']
-externals = {}
+externals = {
+    '.adobe':      '/tmp',
+    '.bzr.log':    '/dev/null',
+    '.macromedia': '/tmp'}
