@@ -8,29 +8,47 @@
         {
             "name": "INI/INI",
             "rules": [
-                {"file_name": ".*/\\.editorconfig$"},
-                {"file_name": ".*/\\.gitmodules$"},
-                {"file_name": ".*/\\.git/config$"},
-                {"file_name": ".*/htop/htoprc$"},
-                {"file_name": ".*/terminator/config$"}
+                {"file_name": ".*/\\.aws/config$"},
+                {"file_name": ".*/\\.config/htop/htoprc$"},
+                {"file_name": ".*/\\.config/terminator/config$"},
+                {"file_name": ".*/\\.git/config$"}
             ]
         },
         {
             "name": "JSON/JSON",
             "rules": [
-                {"file_name": ".*/\\.arcrc$"},
-                {"file_name": ".*/\\.arcconfig$"},
-                {"file_name": ".*/\\.(git|hg|svn)/arc/config$"},
-
-                {"file_name": ".*/\\.bowerrc"},
-                {"file_name": ".*/\\.jshintrc"}
+                {"file_name": ".*/\\.(git|hg|svn)/arc/config$"}
             ]
         },
         {
             "name": "ShellScript/Shell-Unix-Generic",
             "rules": [
-                {"file_name": ".*/\\.gitignore$"},
                 {"file_name": ".*/\\.git/info/exclude$"}
+            ]
+        },
+
+        // Dotfiles
+        {
+            "name": "INI/INI",
+            "rules": [
+                {"file_name": ".*/dotfiles/home/config/htop/htoprc$"},
+                {"file_name": ".*/dotfiles/home/config/terminator/config$"},
+                {"file_name": ".*/dotfiles/home/curlrc$"},
+                {"file_name": ".*/dotfiles/home/gitconfig$"},
+                {"file_name": ".*/dotfiles/home/hgrc$"},
+                {"file_name": ".*/dotfiles/home/wgetrc$"}
+            ]
+        },
+        {
+            "name": "ShellScript/Shell-Unix-Generic",
+            "rules": [
+                {"file_name": ".*/dotfiles/home/ackrc$"},
+                {"file_name": ".*/dotfiles/home/bash(logout|profile|rc)$"},
+                {"file_name": ".*/dotfiles/home/dotfilesrc$"},
+                {"file_name": ".*/dotfiles/home/gitignore$"},
+                {"file_name": ".*/dotfiles/home/gitshrc$"},
+                {"file_name": ".*/dotfiles/home/inputrc$"},
+                {"file_name": ".*/dotfiles/home/screenrc$"}
             ]
         }
     ]

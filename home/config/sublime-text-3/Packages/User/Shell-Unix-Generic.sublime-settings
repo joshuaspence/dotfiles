@@ -4,15 +4,16 @@
 {
 	"extensions":
     [
-        ".ackrc", "ackrc",
-        ".bash_logout", "bash_logout",
-        ".bash_profile", "bash_profile",
-        ".bashrc", "bashrc",
-        ".dotfilesrc", "dotfilesrc",
-        ".gitattributes",
+        ".ackrc",
+        ".bash_logout",
+        ".bash_profile",
+        ".bashrc",
+        ".dotfilesrc",
         ".gitignore",
-        ".gituser",
-        ".inputrc", "inputrc",
-        ".screenrc", "screenrc"
+        ".gitshrc",
+        ".inputrc",
+        ".jshintignore",
+        ".npmignore",
+        ".screenrc"
     ]
 }

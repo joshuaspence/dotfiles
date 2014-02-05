@@ -4,9 +4,14 @@
 {
     "extensions":
     [
-        ".curlrc", "curlrc",
-        ".gitconfig", "gitconfig",
-        ".hgrc", "hgrc",
-        ".wgetrc", "wgetrc"
+        ".boto",
+        ".curlrc",
+        ".editorconfig",
+        ".gitattributes",
+        ".gitconfig",
+        ".gitmodules",
+        ".gituser",
+        ".hgrc",
+        ".wgetrc"
     ]
 }

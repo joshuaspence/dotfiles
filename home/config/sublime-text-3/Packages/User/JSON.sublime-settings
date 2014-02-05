@@ -1,0 +1,12 @@
+/**
+ * Syntax-specific settings for "JSON" files.
+ */
+{
+    "extensions":
+    [
+        ".arcconfig",
+        ".arcrc",
+        ".bowerrc",
+        ".jshintrc"
+    ]
+}
