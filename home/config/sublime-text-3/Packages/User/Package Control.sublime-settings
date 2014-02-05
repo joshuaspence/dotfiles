@@ -21,13 +21,6 @@
 		"Pretty JSON",
 		"Puppet",
 		"SublimeCodeIntel",
-		"SublimeGit",
-		"SublimeLinter",
-		"SublimeLinter-contrib-puppet-lint",
-		"SublimeLinter-csslint",
-		"SublimeLinter-jscs",
-		"SublimeLinter-jshint",
-		"SublimeLinter-json",
-		"SublimeLinter-xmllint"
+		"SublimeGit"
 	]
 }
