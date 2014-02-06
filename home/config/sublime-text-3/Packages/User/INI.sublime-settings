@@ -4,6 +4,9 @@
 {
     "extensions":
     [
+        "gitconfig",
+        "hgrc",
+        "wgetrc",
         ".boto",
         ".curlrc",
         ".editorconfig",

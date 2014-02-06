@@ -4,6 +4,9 @@
 {
 	"extensions":
     [
+        "ackrc",
+        "gitshrc",
+        "inputrc",
         ".ackrc",
         ".bash_logout",
         ".bash_profile",
