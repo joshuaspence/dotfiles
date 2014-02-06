@@ -9,6 +9,7 @@
         "wgetrc",
         ".boto",
         ".curlrc",
+        ".dmrc",
         ".editorconfig",
         ".gitattributes",
         ".gitconfig",
