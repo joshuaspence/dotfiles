@@ -12,6 +12,7 @@
         ".gitmodules",
         ".gituser",
         ".hgrc",
+        ".jenkins",
         ".wgetrc"
     ]
 }
