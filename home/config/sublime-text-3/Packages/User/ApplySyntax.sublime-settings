@@ -17,6 +17,7 @@
         {
             "name": "JSON/JSON",
             "rules": [
+                {"file_name": ".*/\\.codeintel/config$"},
                 {"file_name": ".*/\\.(git|hg|svn)/arc/config$"}
             ]
         },
@@ -37,6 +38,12 @@
                 {"file_name": ".*/dotfiles/home/gitconfig$"},
                 {"file_name": ".*/dotfiles/home/hgrc$"},
                 {"file_name": ".*/dotfiles/home/wgetrc$"}
+            ]
+        },
+        {
+            "name": "JSON/JSON",
+            "rules": [
+                {"file_name": ".*/dotfiles/home/codeintel/config$"},
             ]
         },
         {
