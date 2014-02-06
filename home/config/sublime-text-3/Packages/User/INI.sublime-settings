@@ -13,6 +13,7 @@
         ".gituser",
         ".hgrc",
         ".jenkins",
+        ".s3cfg",
         ".wgetrc"
     ]
 }
