@@ -1,0 +1,9 @@
+/**
+ * Syntax-specific settings for "Groovy" files.
+ */
+{
+    "extensions":
+    [
+        ".dsl"
+    ]
+}
