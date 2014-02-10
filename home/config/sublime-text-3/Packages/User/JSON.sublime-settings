@@ -4,6 +4,7 @@
 {
     "extensions":
     [
+        "Godeps",
         ".arcconfig",
         ".arcrc",
         ".bowerrc",
