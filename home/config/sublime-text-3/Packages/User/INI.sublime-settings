@@ -11,6 +11,7 @@
         ".curlrc",
         ".dmrc",
         ".editorconfig",
+        ".gcfg",
         ".gitattributes",
         ".gitconfig",
         ".gitmodules",
