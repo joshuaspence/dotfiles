@@ -1,0 +1,9 @@
+/**
+ * Syntax-specific settings for "Ruby" files.
+ */
+{
+	"extensions":
+	[
+		"Puppetfile"
+	]
+}
