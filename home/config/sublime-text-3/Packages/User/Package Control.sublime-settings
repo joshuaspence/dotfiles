@@ -27,6 +27,7 @@
 		"SublimeLinter-jscs",
 		"SublimeLinter-jshint",
 		"SublimeLinter-json",
-		"SublimeLinter-xmllint"
+		"SublimeLinter-xmllint",
+		"Varnish VCL"
 	]
 }
