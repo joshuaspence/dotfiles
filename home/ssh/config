@@ -59,6 +59,15 @@
             IdentitiesOnly yes
             PasswordAuthentication no
             PubkeyAuthentication yes
+
+        Host puppet.syd.local
+           HostName puppet.syd.local
+           User ubuntu
+
+           ForwardAgent yes
+           IdentitiesOnly yes
+           PasswordAuthentication no
+           PubkeyAuthentication yes
     ## @}}}
 ## @}}}
 
