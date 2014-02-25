@@ -23,7 +23,7 @@
         PasswordAuthentication no
         PubkeyAuthentication yes
 
-    Host staging3.freelancer.com staging3
+    Host staging3.freelancer.com
         HostName staging3.freelancer.com
         User staging-josh
 
@@ -32,7 +32,7 @@
         PasswordAuthentication no
         PubkeyAuthentication yes
 
-    Host staging4.freelancer.com staging4
+    Host staging4.freelancer.com
         HostName staging4.freelancer.com
         User staging-josh
 
@@ -42,7 +42,7 @@
         PubkeyAuthentication yes
 
     ## Office @{{{
-        Host josh.syd.local local-staging
+        Host josh.syd.local
             HostName josh.syd.local
             User freelancer
 
