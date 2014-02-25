@@ -14,15 +14,6 @@
 ## @}}}
 
 ## Freelancer @{{{
-    Host analytics01.freelancer.com analytics01
-        HostName analytics01.freelancer.com
-        User joshua
-
-        ForwardAgent yes
-        IdentitiesOnly yes
-        PasswordAuthentication no
-        PubkeyAuthentication yes
-
     Host git.freelancer.com gitlab.freelancer.com
         HostName git.freelancer.com
         User git
