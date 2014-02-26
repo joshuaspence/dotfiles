@@ -8,6 +8,7 @@
         ".arcconfig",
         ".arcrc",
         ".bowerrc",
+        ".jscsrc",
         ".jshintrc"
     ]
 }
