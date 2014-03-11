@@ -12,6 +12,7 @@
     "fmt_enabled": true,
     "fmt_tab_indent": true,
     "fmt_tab_width": 4,
+    "fmt_cmd": ["goimports"],
     "gslint_enabled": true,
     "comp_lint_enabled": false,
     "autocomplete_snippets": true,
