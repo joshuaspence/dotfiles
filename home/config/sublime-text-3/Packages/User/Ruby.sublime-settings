@@ -4,6 +4,7 @@
 {
 	"extensions":
 	[
+        "Modulefile",
 		"Puppetfile"
 	]
 }
