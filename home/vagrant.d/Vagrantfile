@@ -1,3 +1,7 @@
+unless Vagrant.has_plugin?('vagrant-vbguest')
+  puts 'You should install the `vagrant-vbguest` plugin.'
+end
+
 Vagrant.configure('2') do |config|
   if Vagrant.has_plugin?('vagrant-vbguest')
     config.vbguest.no_install = true
