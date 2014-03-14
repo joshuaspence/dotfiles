@@ -2,6 +2,10 @@ unless Vagrant.has_plugin?('vagrant-cachier')
   puts 'You should install the `vagrant-cachier` plugin.'
 end
 
+unless Vagrant.has_plugin?('vagrant-hostmanager')
+  puts 'You should install the `vagrant-hostmanager` plugin.'
+end
+
 unless Vagrant.has_plugin?('vagrant-vbguest')
   puts 'You should install the `vagrant-vbguest` plugin.'
 end
