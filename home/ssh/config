@@ -49,6 +49,11 @@
         User ubuntu
         IdentityFile ~/.ssh/freelancer.com
 
+    Host jenkins-master.freelancer.com
+        HostName ec2-107-22-46-201.compute-1.amazonaws.com
+        User ubuntu
+        IdentityFile ~/.ssh/freelancer.com
+
     ## Office @{{{
         Host josh.syd.local
             HostName josh.syd.local
