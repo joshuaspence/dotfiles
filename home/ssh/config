@@ -14,6 +14,9 @@
 ## @}}}
 
 ## Freelancer @{{{
+    Host *.freelancer.com
+        IdentityFile ~/.ssh/freelancer.com
+
     Host git.freelancer.com gitlab.freelancer.com
         HostName git.freelancer.com
         User git
