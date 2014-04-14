@@ -41,6 +41,11 @@
         PasswordAuthentication no
         PubkeyAuthentication yes
 
+    Host devtools.freelancer.com
+        HostName devtools.freelancer.com
+        User ubuntu
+        IdentityFile ~/.ssh/freelancer.com
+
     ## Office @{{{
         Host josh.syd.local
             HostName josh.syd.local
