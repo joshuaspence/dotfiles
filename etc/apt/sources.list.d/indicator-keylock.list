@@ -1,2 +1,2 @@
-deb http://ppa.launchpad.net/tsbarnes/indicator-keylock-daily/ubuntu saucy main
-deb-src http://ppa.launchpad.net/tsbarnes/indicator-keylock-daily/ubuntu saucy main
+deb http://ppa.launchpad.net/tsbarnes/indicator-keylock-daily/ubuntu trusty main
+deb-src http://ppa.launchpad.net/tsbarnes/indicator-keylock-daily/ubuntu trusty main
