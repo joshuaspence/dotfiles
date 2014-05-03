@@ -104,16 +104,6 @@
         ## Specifies whether to use compression.
         Compression no
 
-        ## Enables the sharing of multiple sessions over a single network
-        ## connection.
-        ##
-        ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
-        ## @{{{
-            ControlMaster auto
-            ControlPath /tmp/ssh_mux_%h_%p_%r
-            ControlPersist 4h
-        ## @}}}
-
         ## Specifies whether the connection to the authentication agent (if any)
         ## will be forwarded to the remote machine.
         ForwardAgent no
