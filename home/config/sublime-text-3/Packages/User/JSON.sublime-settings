@@ -6,6 +6,7 @@
     [
         "Godeps",
         ".arcconfig",
+        ".arclint",
         ".arcrc",
         ".bowerrc",
         ".csslintrc",
