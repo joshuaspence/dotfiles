@@ -2,176 +2,168 @@
 ## Configuration file for {@link http://www.openssh.org/ SSH}.
 #\
 
-## Personal @{{{
-    Host git.github.com github
-        HostName git.github.com
-        User git
+Host git.github.com github
+    HostName git.github.com
+    User git
 
-        ForwardAgent no
-        IdentitiesOnly yes
-        PasswordAuthentication no
-        PubkeyAuthentication yes
-## @}}}
+    ForwardAgent no
+    IdentitiesOnly yes
+    PasswordAuthentication no
+    PubkeyAuthentication yes
 
-## Freelancer @{{{
-    Host *.freelancer.com
-        IdentityFile ~/.ssh/freelancer.com
+Host *.freelancer.com
+    IdentityFile ~/.ssh/freelancer.com
 
-    Host git.freelancer.com gitlab.freelancer.com
-        HostName git.freelancer.com
-        User git
+Host git.freelancer.com gitlab.freelancer.com
+    HostName git.freelancer.com
+    User git
 
-        ForwardAgent no
-        IdentitiesOnly yes
-        PasswordAuthentication no
-        PubkeyAuthentication yes
+    ForwardAgent no
+    IdentitiesOnly yes
+    PasswordAuthentication no
+    PubkeyAuthentication yes
 
-    Host staging3.freelancer.com
-        HostName staging3.freelancer.com
-        User staging-josh
+Host staging3.freelancer.com
+    HostName staging3.freelancer.com
+    User staging-josh
 
-        ForwardAgent yes
-        IdentitiesOnly yes
-        PasswordAuthentication no
-        PubkeyAuthentication yes
+    ForwardAgent yes
+    IdentitiesOnly yes
+    PasswordAuthentication no
+    PubkeyAuthentication yes
 
-    Host staging4.freelancer.com
-        HostName staging4.freelancer.com
-        User staging-josh
+Host staging4.freelancer.com
+    HostName staging4.freelancer.com
+    User staging-josh
 
-        ForwardAgent yes
-        IdentitiesOnly yes
-        PasswordAuthentication no
-        PubkeyAuthentication yes
+    ForwardAgent yes
+    IdentitiesOnly yes
+    PasswordAuthentication no
+    PubkeyAuthentication yes
 
-    Host devtools.freelancer.com
-        HostName devtools.freelancer.com
-        User ubuntu
-        IdentityFile ~/.ssh/freelancer.com
+Host devtools.freelancer.com
+    HostName devtools.freelancer.com
+    User ubuntu
+    IdentityFile ~/.ssh/freelancer.com
 
-    Host phabricator.freelancer.com
-        HostName phabricator.freelancer.com
-        User josh
-        IdentityFile ~/.ssh/freelancer.com
+Host phabricator.freelancer.com
+    HostName phabricator.freelancer.com
+    User josh
+    IdentityFile ~/.ssh/freelancer.com
 
-    Host phabricator-worker.freelancer.com
-        HostName ec2-54-234-71-144.compute-1.amazonaws.com
-        User josh
-        IdentityFile ~/.ssh/freelancer.com
+Host phabricator-worker.freelancer.com
+    HostName ec2-54-234-71-144.compute-1.amazonaws.com
+    User josh
+    IdentityFile ~/.ssh/freelancer.com
 
-    Host jenkins-master.freelancer.com
-        HostName ec2-107-22-46-201.compute-1.amazonaws.com
-        User ubuntu
-        IdentityFile ~/.ssh/freelancer.com
+Host jenkins-master.freelancer.com
+    HostName ec2-107-22-46-201.compute-1.amazonaws.com
+    User ubuntu
+    IdentityFile ~/.ssh/freelancer.com
 
-    Host jenkins-slave1.freelancer.com
-        HostName ec2-107-22-128-111.compute-1.amazonaws.com
-        User ubuntu
-        IdentityFile ~/.ssh/freelancer.com
+Host jenkins-slave1.freelancer.com
+    HostName ec2-107-22-128-111.compute-1.amazonaws.com
+    User ubuntu
+    IdentityFile ~/.ssh/freelancer.com
 
-    Host jenkins-slave2.freelancer.com
-        HostName ec2-54-221-179-195.compute-1.amazonaws.com
-        User ubuntu
-        IdentityFile ~/.ssh/freelancer.com
+Host jenkins-slave2.freelancer.com
+    HostName ec2-54-221-179-195.compute-1.amazonaws.com
+    User ubuntu
+    IdentityFile ~/.ssh/freelancer.com
 
-    Host jenkins-slave3.freelancer.com
-        HostName ec2-50-19-64-78.compute-1.amazonaws.com
-        User ubuntu
-        IdentityFile ~/.ssh/freelancer.com
+Host jenkins-slave3.freelancer.com
+    HostName ec2-50-19-64-78.compute-1.amazonaws.com
+    User ubuntu
+    IdentityFile ~/.ssh/freelancer.com
 
-    Host jenkins-slave4.freelancer.com
-        HostName ec2-54-196-13-67.compute-1.amazonaws.com
-        User ubuntu
-        IdentityFile ~/.ssh/freelancer.com
+Host jenkins-slave4.freelancer.com
+    HostName ec2-54-196-13-67.compute-1.amazonaws.com
+    User ubuntu
+    IdentityFile ~/.ssh/freelancer.com
 
-    ## Office @{{{
-        Host josh.syd.local
-            HostName josh.syd.local
-            User freelancer
+Host josh.syd.local
+    HostName josh.syd.local
+    User freelancer
 
-            ForwardAgent yes
-            IdentitiesOnly yes
-            PasswordAuthentication no
-            PubkeyAuthentication yes
+    ForwardAgent yes
+    IdentitiesOnly yes
+    PasswordAuthentication no
+    PubkeyAuthentication yes
 
-        Host puppet.syd.local
-           HostName puppet.syd.local
-           User ubuntu
+Host puppet.syd.local
+   HostName puppet.syd.local
+   User ubuntu
 
-           ForwardAgent yes
-           IdentitiesOnly yes
-           PasswordAuthentication no
-           PubkeyAuthentication yes
+   ForwardAgent yes
+   IdentitiesOnly yes
+   PasswordAuthentication no
+   PubkeyAuthentication yes
+
+Host *
+    ## Specifies whether to additionally check the host IP address in the
+    ## `~/.ssh/known_hosts` file.
+    CheckHostIP yes
+
+    ## Specifies whether to use compression.
+    Compression no
+
+    ## Specifies whether the connection to the authentication agent (if any)
+    ## will be forwarded to the remote machine.
+    ForwardAgent no
+
+    ## Specifies whether X11 connections will be automatically redirected
+    ## over the secure channel and "DISPLAY" set.
+    ##
+    ## @{{{
+        ForwardX11 no
+        ForwardX11Trusted yes
     ## @}}}
-## @}}}
 
-## Global @{{{
-    Host *
-        ## Specifies whether to additionally check the host IP address in the
-        ## `~/.ssh/known_hosts` file.
-        CheckHostIP yes
+    ## Specifies whether user authentication based on GSSAPI is allowed.
+    ##
+    ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
+    GSSAPIAuthentication no
 
-        ## Specifies whether to use compression.
-        Compression no
+    ## Indicates that `ssh` should hash host names and addresses when they
+    ## are added to `~/.ssh/known_hosts`.
+    HashKnownHosts yes
 
-        ## Specifies whether the connection to the authentication agent (if any)
-        ## will be forwarded to the remote machine.
-        ForwardAgent no
+    ## Specifies that `ssh` should only use the authentication identity
+    ## files configured in the `ssh` configuration files, even if
+    ## `ssh-agent` offers more identities.
+    IdentitiesOnly yes
 
-        ## Specifies whether X11 connections will be automatically redirected
-        ## over the secure channel and "DISPLAY" set.
-        ##
-        ## @{{{
-            ForwardX11 no
-            ForwardX11Trusted yes
-        ## @}}}
+    ## Specifies a file from which the user's DSA, ECDSA or RSA
+    ## authentication identity is read.
+    IdentityFile ~/.ssh/%h
 
-        ## Specifies whether user authentication based on GSSAPI is allowed.
-        ##
-        ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
-        GSSAPIAuthentication no
+    ## This option disables host authentication for localhost.
+    NoHostAuthenticationForLocalhost yes
 
-        ## Indicates that `ssh` should hash host names and addresses when they
-        ## are added to `~/.ssh/known_hosts`.
-        HashKnownHosts yes
+    ## Specifies whether to use password authentication.
+    PasswordAuthentication yes
 
-        ## Specifies that `ssh` should only use the authentication identity
-        ## files configured in the `ssh` configuration files, even if
-        ## `ssh-agent` offers more identities.
-        IdentitiesOnly yes
+    ## Allow local command execution via the "LocalCommand" option or using
+    ## the `!command` escape sequence in `ssh`.
+    PermitLocalCommand no
 
-        ## Specifies a file from which the user's DSA, ECDSA or RSA
-        ## authentication identity is read.
-        IdentityFile ~/.ssh/%h
+    ## Specifies the protocol versions `ssh` should support in order of
+    ## preference.
+    Protocol 2
 
-        ## This option disables host authentication for localhost.
-        NoHostAuthenticationForLocalhost yes
+    ## Specifies whether to try public key authentication.
+    PubkeyAuthentication yes
 
-        ## Specifies whether to use password authentication.
-        PasswordAuthentication yes
+    ## If the network disappears your connection will hang, but if it then
+    ## re-appears within 10 minutes it will resume working.
+    ##
+    ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
+    ## @{{{
+        #ServerAliveCountMax 10
+        #ServerAliveInterval 60
+        #TCPKeepAlive no
+    ## @}}}
 
-        ## Allow local command execution via the "LocalCommand" option or using
-        ## the `!command` escape sequence in `ssh`.
-        PermitLocalCommand no
-
-        ## Specifies the protocol versions `ssh` should support in order of
-        ## preference.
-        Protocol 2
-
-        ## Specifies whether to try public key authentication.
-        PubkeyAuthentication yes
-
-        ## If the network disappears your connection will hang, but if it then
-        ## re-appears within 10 minutes it will resume working.
-        ##
-        ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
-        ## @{{{
-            #ServerAliveCountMax 10
-            #ServerAliveInterval 60
-            #TCPKeepAlive no
-        ## @}}}
-
-        ## Specifies whether to verify the remote key using DNS and SSHFP
-        ## resource records.
-        VerifyHostKeyDNS yes
-## @}}}
+    ## Specifies whether to verify the remote key using DNS and SSHFP
+    ## resource records.
+    VerifyHostKeyDNS yes
