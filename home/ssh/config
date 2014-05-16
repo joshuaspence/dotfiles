@@ -46,13 +46,13 @@ Host devtools.freelancer.com
     User ubuntu
     IdentityFile ~/.ssh/freelancer.com
 
-Host phabricator.freelancer.com
-    HostName phabricator.freelancer.com
+Host phabricator-app1.freelancer.com
+    HostName phabricator-app1.freelancer.com
     User josh
     IdentityFile ~/.ssh/freelancer.com
 
-Host phabricator-worker.freelancer.com
-    HostName ec2-54-234-71-144.compute-1.amazonaws.com
+Host phabricator-worker1.freelancer.com
+    HostName phabricator-worker1.freelancer.com
     User josh
     IdentityFile ~/.ssh/freelancer.com
 
