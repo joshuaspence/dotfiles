@@ -56,29 +56,9 @@ Host phabricator-worker1.freelancer.com
     User josh
     IdentityFile ~/.ssh/freelancer.com
 
-Host jenkins-master.freelancer.com
-    HostName ec2-107-22-46-201.compute-1.amazonaws.com
-    User ubuntu
-    IdentityFile ~/.ssh/freelancer.com
-
-Host jenkins-slave1.freelancer.com
-    HostName ec2-107-22-128-111.compute-1.amazonaws.com
-    User ubuntu
-    IdentityFile ~/.ssh/freelancer.com
-
-Host jenkins-slave2.freelancer.com
-    HostName ec2-54-221-179-195.compute-1.amazonaws.com
-    User ubuntu
-    IdentityFile ~/.ssh/freelancer.com
-
-Host jenkins-slave3.freelancer.com
-    HostName ec2-50-19-64-78.compute-1.amazonaws.com
-    User ubuntu
-    IdentityFile ~/.ssh/freelancer.com
-
-Host jenkins-slave4.freelancer.com
-    HostName ec2-54-196-13-67.compute-1.amazonaws.com
-    User ubuntu
+Host ci.freelancer.com jenkins-master.freelancer.com
+    HostName ci.freelancer.com
+    User josh
     IdentityFile ~/.ssh/freelancer.com
 
 Host josh.syd.local
