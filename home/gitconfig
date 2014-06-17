@@ -191,6 +191,14 @@
 [merge]
     tool = meld
 
+[merge "celerity"]
+    name = Celerity Mapper
+    driver = php $GIT_DIR/../bin/celerity map
+
+[merge "libphutil"]
+    name = Libphutil Mapper
+    driver = arc liberate
+
 [mergetool]
     keepBackup = false
     prompt = false

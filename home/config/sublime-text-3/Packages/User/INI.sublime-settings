@@ -1,24 +1,30 @@
-/**
- * Syntax-specific settings for "INI" files.
- */
 {
-    "extensions":
-    [
-        "gitconfig",
-        "hgrc",
-        "wgetrc",
-        ".boto",
-        ".curlrc",
-        ".dmrc",
-        ".editorconfig",
-        ".gcfg",
-        ".gitattributes",
-        ".gitconfig",
-        ".gitmodules",
-        ".gituser",
-        ".hgrc",
-        ".jenkins",
-        ".s3cfg",
-        ".wgetrc"
-    ]
+	"apply_syntax_extensions":
+	[
+		".gitignore",
+		"ini.dist",
+		".npmrc"
+	],
+	"extensions":
+	[
+		"hgrc",
+		"wgetrc",
+		".npmrc",
+		".wgetrc",
+		".boto",
+		"gitconfig",
+		"ini.dist",
+		".hgrc",
+		".gitmodules",
+		".gcfg",
+		".gitconfig",
+		".s3cfg",
+		".editorconfig",
+		".dmrc",
+		".jenkins",
+		".gituser",
+		".curlrc",
+		".gitattributes",
+		".gitignore"
+	]
 }
