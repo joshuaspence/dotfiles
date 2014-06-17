@@ -11,6 +11,16 @@ Host git.github.com github
     PasswordAuthentication no
     PubkeyAuthentication yes
 
+Host secure.phabricator.com
+    HostName secure.phabricator.com
+    User dweller
+    IdentityFile ~/.ssh/phacility.com
+
+    ForwardAgent no
+    IdentitiesOnly yes
+    PasswordAuthentication no
+    PubkeyAuthentication yes
+
 Host *.freelancer.com
     IdentityFile ~/.ssh/freelancer.com
 
