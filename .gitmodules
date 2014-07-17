@@ -22,7 +22,7 @@
 	path = modules/git-up
 	url = git://github.com/aanand/git-up.git
 	branch = master
-    ignore = dirty
+	ignore = dirty
 [submodule "modules/hub"]
 	path = modules/hub
 	url = git://github.com/defunkt/hub.git
@@ -60,6 +60,6 @@
 	url = https://github.com/javan/whenever.git
 	branch = master
 [submodule "modules/willgit"]
-    path = modules/willgit
-    url = git://gitorious.org/willgit/mainline.git
-    branch = master
+	path = modules/willgit
+	url = git://gitorious.org/willgit/mainline.git
+	branch = master
