@@ -29,11 +29,11 @@
 	branch = master
 [submodule "modules/phabricator/arcanist"]
 	path = modules/phabricator/arcanist
-	url = git://github.com/facebook/arcanist.git
+	url = git://github.com/phacility/arcanist.git
 	branch = master
 [submodule "modules/phabricator/libphutil"]
 	path = modules/phabricator/libphutil
-	url = git://github.com/facebook/libphutil.git
+	url = git://github.com/phacility/libphutil.git
 	branch = master
 [submodule "modules/phpsh"]
 	path = modules/phpsh
