@@ -28,3 +28,4 @@ source_r "${HOME}/.shell/completion/"
 
 export PATH=$PATH:$HOME/.rvm/bin
 export PATH=$PATH:$HOME/dotfiles/bin
+[[ -s "/home/joshua/.gvm/scripts/gvm" ]] && source "/home/joshua/.gvm/scripts/gvm"

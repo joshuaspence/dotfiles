@@ -1,13 +1,15 @@
 [global_config]
   window_state = maximise
   tab_position = hidden
+  suppress_multiple_term_dialog = True
 [keybindings]
 [profiles]
   [[default]]
-    scrollback_lines = 10000
     scroll_on_output = False
-    background_image = None
+    font = Monospace 10
+    scrollback_lines = 10000
     scrollback_infinite = True
+    background_image = None
 [layouts]
   [[default]]
     [[[child1]]]
