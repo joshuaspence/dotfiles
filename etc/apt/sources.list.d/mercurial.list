@@ -1,2 +1,2 @@
-deb http://ppa.launchpad.net/mercurial-ppa/releases/ubuntu saucy main
-deb-src http://ppa.launchpad.net/mercurial-ppa/releases/ubuntu saucy main
+deb http://ppa.launchpad.net/mercurial-ppa/releases/ubuntu trusty main
+deb-src http://ppa.launchpad.net/mercurial-ppa/releases/ubuntu trusty main

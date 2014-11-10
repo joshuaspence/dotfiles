@@ -1,2 +1,2 @@
-deb http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main
-deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main
+deb http://ppa.launchpad.net/chris-lea/node.js/ubuntu utopic main
+deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu utopic main

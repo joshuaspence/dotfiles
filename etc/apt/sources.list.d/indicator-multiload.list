@@ -1,2 +1,2 @@
-deb http://ppa.launchpad.net/indicator-multiload/stable-daily/ubuntu saucy main
-deb-src http://ppa.launchpad.net/indicator-multiload/stable-daily/ubuntu saucy main
+deb http://ppa.launchpad.net/indicator-multiload/stable-daily/ubuntu utopic main
+deb-src http://ppa.launchpad.net/indicator-multiload/stable-daily/ubuntu utopic main
