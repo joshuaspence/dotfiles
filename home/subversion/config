@@ -1,6 +1,0 @@
-#/
-## Configuration file for {@link http://subversion.apache.org/ Subversion}.
-#\
-
-[helpers]
-merge-tool-cmd = meld
