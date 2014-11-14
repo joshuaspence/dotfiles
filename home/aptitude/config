@@ -1,9 +1,0 @@
-#/
-## Configuration file for aptitude.
-#\
-
-Aptitude {
-    Autoclean-After-Update "true";
-    Auto-Install "true";
-    Install-Recommends "true";
-}
