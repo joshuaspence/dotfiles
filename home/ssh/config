@@ -35,11 +35,6 @@ Host devtools.freelancer.com
     User ubuntu
     IdentityFile ~/.ssh/keys/freelancer.com
 
-Host phabricator-app1.freelancer.com
-    HostName phabricator-app1.freelancer.com
-    User josh
-    IdentityFile ~/.ssh/keys/freelancer.com
-
 Host phabricator.freelancer.com
     HostName phabricator.freelancer.com
     User josh
