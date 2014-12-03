@@ -1,5 +1,0 @@
-#/
-## `ssh` reads this file, and adds lines of the format "VARNAME=value" to the
-## environment if users are allowed to change their environment
-## (i.e. if "PermitUserEnvironment" is enabled in `~/.ssh/config`).
-#\

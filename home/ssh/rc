@@ -1,4 +1,0 @@
-#/
-## Commands in this file are executed by `ssh` when the user logs in, just
-## before the user's shell (or command) is started.
-#\
