@@ -29,24 +29,6 @@ Host git.freelancer.com gitlab.freelancer.com
     PasswordAuthentication no
     PubkeyAuthentication yes
 
-Host staging3.freelancer.com
-    HostName staging3.freelancer.com
-    User staging-josh
-
-    ForwardAgent yes
-    IdentitiesOnly yes
-    PasswordAuthentication no
-    PubkeyAuthentication yes
-
-Host staging4.freelancer.com
-    HostName staging4.freelancer.com
-    User staging-josh
-
-    ForwardAgent yes
-    IdentitiesOnly yes
-    PasswordAuthentication no
-    PubkeyAuthentication yes
-
 Host devtools.freelancer.com
     HostName devtools.freelancer.com
     User ubuntu
