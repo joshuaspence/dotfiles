@@ -76,15 +76,6 @@ Host josh.syd.local
     PasswordAuthentication no
     PubkeyAuthentication yes
 
-Host puppet.syd.local
-   HostName puppet.syd.local
-   User ubuntu
-
-   ForwardAgent yes
-   IdentitiesOnly yes
-   PasswordAuthentication no
-   PubkeyAuthentication yes
-
 Host *
     ## Specifies whether to additionally check the host IP address in the
     ## `~/.ssh/keys/known_hosts` file.
