@@ -18,6 +18,7 @@ Host secure.phabricator.com
     PubkeyAuthentication yes
 
 Host *.freelancer.com
+    User josh
     IdentityFile ~/.ssh/keys/freelancer.com
 
 Host git.freelancer.com gitlab.freelancer.com
