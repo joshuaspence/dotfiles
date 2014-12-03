@@ -14,5 +14,4 @@ externals = {
     '.bzr.log':    '/dev/null',
     '.macromedia': '/tmp'}
 packages = [
-    'config',
-    'vagrant.d']
+    'config']
