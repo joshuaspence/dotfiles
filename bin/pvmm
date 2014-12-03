@@ -1,0 +1,76 @@
+#!/bin/bash
+
+set -o errexit
+
+# Read the options.
+TEMP=`getopt -o i:r:su:v --long region:,staging,user:,verbose -n 'pvmm' -- "$@"`
+eval set -- "$TEMP"
+
+# Parameters.
+PSSH_OPTS=()
+VMM_OPTS=()
+
+# Extract options and their arguments into variables.
+while true; do
+    case "$1" in
+        -i)
+            PSSH_OPTS+=("--option 'IdentityFile $2'")
+            shift 2
+            ;;
+
+        -r|--region)
+            VMM_OPTS+=("--region=$2")
+            shift 2
+            ;;
+
+        -s|--staging)
+            VMM_OPTS+=("--staging")
+            shift
+            ;;
+
+        -u|--user)
+            PSSH_OPTS+=("--user=$2")
+            shift 2
+            ;;
+
+        -v|--verbose)
+            PSSH_OPTS+=("--inline")
+            shift
+            ;;
+
+        --)
+            shift
+            break
+            ;;
+
+        *)
+            echo "Internal error!" >&2
+            exit 1
+            ;;
+    esac
+done
+
+ROLE="$1"
+if [[ -z "$ROLE" ]]; then
+    echo "You must specify a role." >&2
+    exit 2
+fi
+
+HOSTS=()
+for HOST in $(eval "vmm list $(printf -- "%s " "${VMM_OPTS[@]}") '$ROLE'" | tail -n +2 | awk --re-interval -F' {2,50}' '{print $5}' ); do
+    if [[ $HOST != "" ]]; then
+        HOSTS+=($HOST)
+    fi
+done
+
+COMMAND="$2"
+if [[ -z "$COMMAND" ]]; then
+    # If no command was specified, then just list the hosts.
+    printf -- "%s\n" "${HOSTS[@]}"
+    exit 0
+fi
+
+PSSH_OPTS+=("--timeout=0")
+PSSH_OPTS+=("--option='StrictHostKeyChecking no'")
+
+eval "pssh $(printf -- "%s " "${PSSH_OPTS[@]}") $(printf -- "--host=%s " "${HOSTS[@]}") -- '$COMMAND'"
