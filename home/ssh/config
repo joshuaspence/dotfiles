@@ -50,24 +50,14 @@ Host ci.freelancer.com
     IdentityFile ~/.ssh/keys/freelancer.com
 
 Host *
-    ## Specifies whether to additionally check the host IP address in the
-    ## `~/.ssh/keys/known_hosts` file.
     CheckHostIP yes
-
-    ## Specifies whether to use compression.
     Compression no
-
-    ## Specifies whether the connection to the authentication agent (if any)
-    ## will be forwarded to the remote machine.
+    CompressionLevel 6
     ForwardAgent no
-
-    ## Specifies whether X11 connections will be automatically redirected
-    ## over the secure channel and "DISPLAY" set.
-    ##
-    ## @{{{
-        ForwardX11 no
-        ForwardX11Trusted yes
-    ## @}}}
+    ForwardX11 no
+    NoHostAuthenticationForLocalhost yes
+    PubkeyAuthentication yes
+    PasswordAuthentication yes
 
     ## Specifies whether user authentication based on GSSAPI is allowed.
     ##
@@ -87,22 +77,9 @@ Host *
     ## authentication identity is read.
     IdentityFile ~/.ssh/keys/%h
 
-    ## This option disables host authentication for localhost.
-    NoHostAuthenticationForLocalhost yes
-
-    ## Specifies whether to use password authentication.
-    PasswordAuthentication yes
-
     ## Allow local command execution via the "LocalCommand" option or using
     ## the `!command` escape sequence in `ssh`.
     PermitLocalCommand no
-
-    ## Specifies the protocol versions `ssh` should support in order of
-    ## preference.
-    Protocol 2
-
-    ## Specifies whether to try public key authentication.
-    PubkeyAuthentication yes
 
     ## If the network disappears your connection will hang, but if it then
     ## re-appears within 10 minutes it will resume working.
