@@ -1,4 +1,4 @@
-Host git.github.com github
+Host git.github.com
     HostName git.github.com
     User git
 
@@ -44,7 +44,7 @@ Host phabricator.freelancer.com
     User josh
     IdentityFile ~/.ssh/keys/git.freelancer.com
 
-Host ci.freelancer.com jenkins-master.freelancer.com
+Host ci.freelancer.com
     HostName ci.freelancer.com
     User josh
     IdentityFile ~/.ssh/keys/freelancer.com
