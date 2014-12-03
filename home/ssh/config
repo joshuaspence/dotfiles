@@ -1,7 +1,3 @@
-#/
-## Configuration file for {@link http://www.openssh.org/ SSH}.
-#\
-
 Host git.github.com github
     HostName git.github.com
     User git
@@ -61,10 +57,10 @@ Host phabricator-app1.freelancer.com
     User josh
     IdentityFile ~/.ssh/freelancer.com
 
-Host phabricator-worker1.freelancer.com
-    HostName phabricator-worker1.freelancer.com
+Host phabricator.freelancer.com
+    HostName phabricator.freelancer.com
     User josh
-    IdentityFile ~/.ssh/freelancer.com
+    IdentityFile ~/.ssh/git.freelancer.com
 
 Host ci.freelancer.com jenkins-master.freelancer.com
     HostName ci.freelancer.com
