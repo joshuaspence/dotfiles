@@ -17,7 +17,7 @@ Host secure.phabricator.com
     PasswordAuthentication no
     PubkeyAuthentication yes
 
-Host *.freelancer.com
+Host *.freelancer.com *.fln-dev.net
     User josh
     IdentityFile ~/.ssh/keys/freelancer.com
 
