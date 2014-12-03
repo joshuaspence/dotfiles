@@ -10,7 +10,7 @@ Host git.github.com github
 Host secure.phabricator.com
     HostName secure.phabricator.com
     User dweller
-    IdentityFile ~/.ssh/phacility.com
+    IdentityFile ~/.ssh/keys/phacility.com
 
     ForwardAgent no
     IdentitiesOnly yes
@@ -18,7 +18,7 @@ Host secure.phabricator.com
     PubkeyAuthentication yes
 
 Host *.freelancer.com
-    IdentityFile ~/.ssh/freelancer.com
+    IdentityFile ~/.ssh/keys/freelancer.com
 
 Host git.freelancer.com gitlab.freelancer.com
     HostName git.freelancer.com
@@ -50,22 +50,22 @@ Host staging4.freelancer.com
 Host devtools.freelancer.com
     HostName devtools.freelancer.com
     User ubuntu
-    IdentityFile ~/.ssh/freelancer.com
+    IdentityFile ~/.ssh/keys/freelancer.com
 
 Host phabricator-app1.freelancer.com
     HostName phabricator-app1.freelancer.com
     User josh
-    IdentityFile ~/.ssh/freelancer.com
+    IdentityFile ~/.ssh/keys/freelancer.com
 
 Host phabricator.freelancer.com
     HostName phabricator.freelancer.com
     User josh
-    IdentityFile ~/.ssh/git.freelancer.com
+    IdentityFile ~/.ssh/keys/git.freelancer.com
 
 Host ci.freelancer.com jenkins-master.freelancer.com
     HostName ci.freelancer.com
     User josh
-    IdentityFile ~/.ssh/freelancer.com
+    IdentityFile ~/.ssh/keys/freelancer.com
 
 Host josh.syd.local
     HostName josh.syd.local
@@ -87,7 +87,7 @@ Host puppet.syd.local
 
 Host *
     ## Specifies whether to additionally check the host IP address in the
-    ## `~/.ssh/known_hosts` file.
+    ## `~/.ssh/keys/known_hosts` file.
     CheckHostIP yes
 
     ## Specifies whether to use compression.
@@ -111,7 +111,7 @@ Host *
     GSSAPIAuthentication no
 
     ## Indicates that `ssh` should hash host names and addresses when they
-    ## are added to `~/.ssh/known_hosts`.
+    ## are added to `~/.ssh/keys/known_hosts`.
     HashKnownHosts yes
 
     ## Specifies that `ssh` should only use the authentication identity
@@ -121,7 +121,7 @@ Host *
 
     ## Specifies a file from which the user's DSA, ECDSA or RSA
     ## authentication identity is read.
-    IdentityFile ~/.ssh/%h
+    IdentityFile ~/.ssh/keys/%h
 
     ## This option disables host authentication for localhost.
     NoHostAuthenticationForLocalhost yes

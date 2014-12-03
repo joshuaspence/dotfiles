@@ -1,6 +1,3 @@
-/*
-!authorized_keys
-!config
-!environment
-!rc
-!.gitignore
+/keys/
+/known_hosts
+/known_hosts.old
