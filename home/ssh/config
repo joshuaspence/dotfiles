@@ -1,5 +1,4 @@
 Host git.github.com
-    HostName git.github.com
     User git
 
     ForwardAgent no
@@ -8,7 +7,6 @@ Host git.github.com
     PubkeyAuthentication yes
 
 Host secure.phabricator.com
-    HostName secure.phabricator.com
     User dweller
     IdentityFile ~/.ssh/keys/phacility.com
 
@@ -31,17 +29,14 @@ Host git.freelancer.com gitlab.freelancer.com
     PubkeyAuthentication yes
 
 Host devtools.freelancer.com
-    HostName devtools.freelancer.com
     User ubuntu
     IdentityFile ~/.ssh/keys/freelancer.com
 
 Host phabricator.freelancer.com
-    HostName phabricator.freelancer.com
     User josh
     IdentityFile ~/.ssh/keys/git.freelancer.com
 
 Host ci.freelancer.com
-    HostName ci.freelancer.com
     User josh
     IdentityFile ~/.ssh/keys/freelancer.com
 
