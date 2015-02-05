@@ -3,7 +3,7 @@
 set -o errexit
 
 # Read the options.
-TEMP=`getopt -o i:r:su:v --long region:,staging,user:,verbose -n 'pvmm' -- "$@"`
+TEMP=`getopt -o i:p:r:su:v --long parallel:,region:,staging,user:,verbose -n 'pvmm' -- "$@"`
 eval set -- "$TEMP"
 
 # Parameters.
@@ -15,6 +15,11 @@ while true; do
     case "$1" in
         -i)
             PSSH_OPTS+=("--option 'IdentityFile $2'")
+            shift 2
+            ;;
+
+        -p|--parallel)
+            PSSH_OPTS+=("--par=$2")
             shift 2
             ;;
 
@@ -51,6 +56,7 @@ while true; do
 done
 
 ROLE="$1"
+shift
 if [[ -z "$ROLE" ]]; then
     echo "You must specify a role." >&2
     exit 2
@@ -63,7 +69,7 @@ for HOST in $(eval "vmm list $(printf -- "%s " "${VMM_OPTS[@]}") '$ROLE'" | tail
     fi
 done
 
-COMMAND="$2"
+COMMAND="$@"
 if [[ -z "$COMMAND" ]]; then
     # If no command was specified, then just list the hosts.
     printf -- "%s\n" "${HOSTS[@]}"
