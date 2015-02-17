@@ -19,6 +19,9 @@ Host *.freelancer.com *.fln-dev.net
     User josh
     IdentityFile ~/.ssh/keys/freelancer.com
 
+Host *.syd1.fln-dev.net
+    StrictHostKeyChecking no
+
 Host git.freelancer.com gitlab.freelancer.com
     HostName git.freelancer.com
     User git
@@ -27,18 +30,6 @@ Host git.freelancer.com gitlab.freelancer.com
     IdentitiesOnly yes
     PasswordAuthentication no
     PubkeyAuthentication yes
-
-Host devtools.freelancer.com
-    User ubuntu
-    IdentityFile ~/.ssh/keys/freelancer.com
-
-Host phabricator.freelancer.com
-    User josh
-    IdentityFile ~/.ssh/keys/git.freelancer.com
-
-Host ci.freelancer.com
-    User josh
-    IdentityFile ~/.ssh/keys/freelancer.com
 
 Host *
     CheckHostIP yes
