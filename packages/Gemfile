@@ -1,7 +1,0 @@
-source 'https://rubygems.org'
-
-gem 'bundler', '1.6.2'
-gem 'git-up', '0.5.12'
-gem 'puppet', '3.4.3'
-gem 'puppet-lint ', '0.3.2'
-gem 'rake', '10.2.2'
