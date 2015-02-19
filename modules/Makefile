@@ -1,14 +1,10 @@
 .PHONY: all
-all: arc gist git-extras git-sh git-up git-wt-commit hub phpsh rename tig vimpager whenever
+all: gist git-extras git-sh git-up git-wt-commit hub phpsh rename tig vimpager whenever
 
 submake = make --no-print-directory -C $(1) $(2)
 sudo-install = sudo install -t /usr/local/bin $(foreach source,$(2),$(1)/$(source))
 sudo-submake = sudo $(call submake,$(1),$(2))
 todo = echo "$@: TODO"
-
-.PHONY: arc
-arc:
-	@sudo ln --force --symbolic $$(readlink -f phabricator/arcanist/bin/arc) /usr/local/bin
 
 .PHONY: gist
 gist:
