@@ -12,7 +12,7 @@ arc:
 
 .PHONY: gist
 gist:
-	@cd $@ && sudo rake install
+	@cd $@ && bundle install && sudo bundle exec rake install
 
 .PHONY: git-extras
 git-extras:
@@ -32,7 +32,7 @@ git-wt-commit:
 
 .PHONY: hub
 hub:
-	@cd hub && rake standalone && sudo rake install
+	@cd hub && bundle install && bundle exec rake standalone && sudo bundle exec rake install
 
 .PHONY: phpsh
 phpsh:
@@ -52,5 +52,5 @@ vimpager:
 
 .PHONY: whenever
 whenever:
-	@cd $@ && rake build && rake install
+	@cd $@ && bundle install && bundle exec rake build install
 
