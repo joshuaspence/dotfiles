@@ -1,5 +1,5 @@
 .PHONY: all
-all: arc gist git-extras git-sh git-up git-wt-commit hub phpsh rename spark tig vimpager whenever
+all: arc gist git-extras git-sh git-up git-wt-commit hub phpsh rename tig vimpager whenever
 
 submake = make --no-print-directory -C $(1) $(2)
 sudo-install = sudo install -t /usr/local/bin $(foreach source,$(2),$(1)/$(source))
@@ -41,10 +41,6 @@ phpsh:
 .PHONY: rename
 rename:
 	@$(call sudo-install,$@,rename)
-
-.PHONY: spark
-spark:
-	@$(call sudo-install,$@,spark)
 
 .PHONY: tig
 tig:

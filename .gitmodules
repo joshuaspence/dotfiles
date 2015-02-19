@@ -43,10 +43,6 @@
 	path = modules/rename
 	url = git://github.com/ap/rename.git
 	branch = master
-[submodule "modules/spark"]
-	path = modules/spark
-	url = git://github.com/holman/spark.git
-	branch = master
 [submodule "modules/tig"]
 	path = modules/tig
 	url = git://github.com/jonas/tig.git
