@@ -1,5 +1,5 @@
 .PHONY: all
-all: gist git-extras git-sh git-up git-wt-commit hub phpsh rename tig vimpager whenever
+all: gist git-extras git-sh git-up git-wt-commit hub rename tig vimpager whenever
 
 submake = make --no-print-directory -C $(1) $(2)
 sudo-install = sudo install -t /usr/local/bin $(foreach source,$(2),$(1)/$(source))
@@ -29,10 +29,6 @@ git-wt-commit:
 .PHONY: hub
 hub:
 	@cd hub && bundle install && bundle exec rake standalone && sudo bundle exec rake install
-
-.PHONY: phpsh
-phpsh:
-	@cd phpsh && python setup.py build && sudo python setup.py install
 
 .PHONY: rename
 rename:

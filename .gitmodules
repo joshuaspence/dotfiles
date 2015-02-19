@@ -35,10 +35,6 @@
 	path = modules/phabricator/libphutil
 	url = git://github.com/phacility/libphutil.git
 	branch = master
-[submodule "modules/phpsh"]
-	path = modules/phpsh
-	url = git://github.com/facebook/phpsh.git
-	branch = master
 [submodule "modules/rename"]
 	path = modules/rename
 	url = git://github.com/ap/rename.git
