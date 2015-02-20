@@ -36,7 +36,7 @@ rename:
 
 .PHONY: tig
 tig:
-	@$(call sudo-submake,$@,install prefix=/usr/local)
+	make --no-print-directory -C $@
 
 .PHONY: vimpager
 vimpager:
