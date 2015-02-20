@@ -37,11 +37,11 @@ rename:
 
 .PHONY: tig
 tig:
-	make --no-print-directory -C $@
+	@$(call submake,$@)
 
 .PHONY: vimpager
 vimpager:
-	make --no-print-directory -C $@
+	@$(call submake,$@)
 
 .PHONY: whenever
 whenever:
