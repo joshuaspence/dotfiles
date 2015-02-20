@@ -40,7 +40,7 @@ tig:
 
 .PHONY: vimpager
 vimpager:
-	@$(call sudo-submake,$@,install)
+	make --no-print-directory -C $@
 
 .PHONY: whenever
 whenever:
