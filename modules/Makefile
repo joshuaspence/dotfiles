@@ -1,5 +1,5 @@
 .PHONY: all
-all: gist git-extras git-sh git-up git-wt-commit hub rename tig vimpager whenever
+all: gist git-extras git-sh git-up git-wt-commit rename tig vimpager whenever
 
 submake = make --no-print-directory -C $(1) $(2)
 subrake = cd $(1) && bundle install && bundle exec rake $(2)
@@ -26,10 +26,6 @@ git-up:
 .PHONY: git-wt-commit
 git-wt-commit:
 	$(call sudo-install,$@/bin,git-publish-branch git-rank-contributors git-show-merges git-wt-add git-wtf)
-
-.PHONY: hub
-hub:
-	@cd hub && bundle install && bundle exec rake standalone && sudo bundle exec rake install
 
 .PHONY: rename
 rename:

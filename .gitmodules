@@ -23,10 +23,6 @@
 	url = git://github.com/aanand/git-up.git
 	branch = master
 	ignore = dirty
-[submodule "modules/hub"]
-	path = modules/hub
-	url = git://github.com/defunkt/hub.git
-	branch = master
 [submodule "modules/phabricator/arcanist"]
 	path = modules/phabricator/arcanist
 	url = git://github.com/phacility/arcanist.git

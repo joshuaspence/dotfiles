@@ -1,1 +1,0 @@
-../../../modules/hub/etc/hub.zsh_completion
