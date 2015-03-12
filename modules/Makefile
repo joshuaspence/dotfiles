@@ -1,5 +1,5 @@
 .PHONY: all
-all: git-extras git-sh git-up git-wt-commit tig vimpager
+all: git-extras git-sh git-wt-commit tig vimpager
 
 submake = make --no-print-directory -C $(1) $(2)
 subrake = cd $(1) && bundle install && bundle exec rake $(2)
@@ -14,10 +14,6 @@ git-extras:
 .PHONY: git-sh
 git-sh:
 	@$(call sudo-submake,$@,install)
-
-.PHONY: git-up
-git-up:
-	@cd git-up && gem build git-up.gemspec && gem install git-up-*.gem
 
 .PHONY: git-wt-commit
 git-wt-commit:

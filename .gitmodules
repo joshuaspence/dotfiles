@@ -14,11 +14,6 @@
 	path = modules/git-sh
 	url = git://github.com/rtomayko/git-sh.git
 	branch = master
-[submodule "modules/git-up"]
-	path = modules/git-up
-	url = git://github.com/aanand/git-up.git
-	branch = master
-	ignore = dirty
 [submodule "modules/phabricator/arcanist"]
 	path = modules/phabricator/arcanist
 	url = git://github.com/phacility/arcanist.git
