@@ -6,10 +6,6 @@
 	path = home/vim/bundle/vundle
 	url = git://github.com/gmarik/vundle.git
 	branch = master
-[submodule "modules/gist"]
-	path = modules/gist
-	url = git://github.com/defunkt/gist.git
-	branch = master
 [submodule "modules/git-extras"]
 	path = modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git

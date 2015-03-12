@@ -1,15 +1,11 @@
 .PHONY: all
-all: gist git-extras git-sh git-up git-wt-commit rename tig vimpager whenever
+all: git-extras git-sh git-up git-wt-commit rename tig vimpager whenever
 
 submake = make --no-print-directory -C $(1) $(2)
 subrake = cd $(1) && bundle install && bundle exec rake $(2)
 sudo-install = sudo install -t /usr/local/bin $(foreach source,$(2),$(1)/$(source))
 sudo-submake = sudo $(call submake,$(1),$(2))
 todo = echo "$@: TODO"
-
-.PHONY: gist
-gist:
-	@cd $@ && bundle install && sudo bundle exec rake install
 
 .PHONY: git-extras
 git-extras:
