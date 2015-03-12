@@ -43,10 +43,6 @@
 	path = modules/whenever
 	url = https://github.com/javan/whenever.git
 	branch = master
-[submodule "modules/willgit"]
-	path = modules/willgit
-	url = git://gitorious.org/willgit/mainline.git
-	branch = master
 [submodule "modules/rake-completion"]
 	path = modules/rake-completion
 	url = https://github.com/ai/rake-completion.git
