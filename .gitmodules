@@ -18,6 +18,9 @@
 	path = modules/phabricator/libphutil
 	url = git://github.com/phacility/libphutil.git
 	branch = master
+[submodule "modules/rake-completion"]
+    path = modules/rake-completion
+    url = https://github.com/ai/rake-completion.git
 [submodule "modules/tig"]
 	path = modules/tig
 	url = git://github.com/jonas/tig.git
@@ -30,6 +33,3 @@
 	path = modules/whenever
 	url = https://github.com/javan/whenever.git
 	branch = master
-[submodule "modules/rake-completion"]
-	path = modules/rake-completion
-	url = https://github.com/ai/rake-completion.git
