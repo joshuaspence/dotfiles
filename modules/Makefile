@@ -5,7 +5,6 @@ submake = make --no-print-directory -C $(1) $(2)
 
 .PHONY: git-extras
 git-extras:
-	@$(call submake,$@)
 	@sudo $(call submake,$@,install)
 
 .PHONY: tig
