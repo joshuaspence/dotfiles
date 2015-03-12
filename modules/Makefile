@@ -1,5 +1,5 @@
 .PHONY: all
-all: git-extras git-sh git-up git-wt-commit rename tig vimpager
+all: git-extras git-sh git-up git-wt-commit tig vimpager
 
 submake = make --no-print-directory -C $(1) $(2)
 subrake = cd $(1) && bundle install && bundle exec rake $(2)
@@ -22,10 +22,6 @@ git-up:
 .PHONY: git-wt-commit
 git-wt-commit:
 	$(call sudo-install,$@/bin,git-publish-branch git-rank-contributors git-show-merges git-wt-add git-wtf)
-
-.PHONY: rename
-rename:
-	@$(call sudo-install,$@,rename)
 
 .PHONY: tig
 tig:

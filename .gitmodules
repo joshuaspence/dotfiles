@@ -27,10 +27,6 @@
 	path = modules/phabricator/libphutil
 	url = git://github.com/phacility/libphutil.git
 	branch = master
-[submodule "modules/rename"]
-	path = modules/rename
-	url = git://github.com/ap/rename.git
-	branch = master
 [submodule "modules/tig"]
 	path = modules/tig
 	url = git://github.com/jonas/tig.git
