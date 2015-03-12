@@ -1,5 +1,5 @@
 .PHONY: all
-all: git-extras tig vimpager
+all: git-extras tig
 
 submake = make --no-print-directory -C $(1) $(2)
 
@@ -10,8 +10,4 @@ git-extras:
 
 .PHONY: tig
 tig:
-	@$(call submake,$@)
-
-.PHONY: vimpager
-vimpager:
 	@$(call submake,$@)
