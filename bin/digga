@@ -1,5 +1,0 @@
-#!/bin/bash
-# https://github.com/jacobwg/dotfiles/blob/master/bin/digga
-
-# All the dig info
-dig +nocmd "$1" any +multiline +noall +answer
