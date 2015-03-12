@@ -10,10 +10,6 @@
 	path = modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git
 	branch = master
-[submodule "modules/git-sh"]
-	path = modules/git-sh
-	url = git://github.com/rtomayko/git-sh.git
-	branch = master
 [submodule "modules/phabricator/arcanist"]
 	path = modules/phabricator/arcanist
 	url = git://github.com/phacility/arcanist.git

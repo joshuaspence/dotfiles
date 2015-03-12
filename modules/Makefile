@@ -1,5 +1,5 @@
 .PHONY: all
-all: git-extras git-sh git-wt-commit tig vimpager
+all: git-extras git-wt-commit tig vimpager
 
 submake = make --no-print-directory -C $(1) $(2)
 subrake = cd $(1) && bundle install && bundle exec rake $(2)
@@ -9,10 +9,6 @@ todo = echo "$@: TODO"
 
 .PHONY: git-extras
 git-extras:
-	@$(call sudo-submake,$@,install)
-
-.PHONY: git-sh
-git-sh:
 	@$(call sudo-submake,$@,install)
 
 .PHONY: git-wt-commit
