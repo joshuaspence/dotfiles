@@ -15,3 +15,6 @@ trim_trailing_whitespace = false
 
 [home/config/terminator/config]
 indent_size = 2
+
+[Makefile]
+indent_style = tab
