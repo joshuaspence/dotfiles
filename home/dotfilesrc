@@ -13,5 +13,3 @@ externals = {
     '.adobe':      '/tmp',
     '.bzr.log':    '/dev/null',
     '.macromedia': '/tmp'}
-packages = [
-    'config']
