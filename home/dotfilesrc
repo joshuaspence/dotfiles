@@ -9,7 +9,6 @@ ignore = [
     'README.md',
     '.gitignore']
 externals = {
-    'tmp':         '/tmp',
     '.adobe':      '/tmp',
     '.bzr.log':    '/dev/null',
     '.macromedia': '/tmp'}
