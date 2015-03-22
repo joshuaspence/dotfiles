@@ -1,9 +1,3 @@
-"/
-"" An (almost) empty configuration file for {@link http://www.vim.org/ vim}.
-"" Most {@link http://www.vim.org/ vim} configuration is done within the
-"" `~/.vim` directory.
-"\
-
 source ~/.vim/plugin/keymap/mapleader.vim
 source ~/.vim/plugin/keymap/maplocalleader.vim
 source ~/.vim/plugin/bundles.vim
