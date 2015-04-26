@@ -1,2 +1,2 @@
-deb https://deb.nodesource.com/node_0.12 utopic main
-deb-src https://deb.nodesource.com/node_0.12 utopic main
+deb https://deb.nodesource.com/node_0.12 vivid main
+deb-src https://deb.nodesource.com/node_0.12 vivid main

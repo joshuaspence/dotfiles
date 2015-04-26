@@ -1,2 +1,2 @@
-deb http://ppa.launchpad.net/webupd8team/java/ubuntu utopic main
-deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu utopic main
+deb http://ppa.launchpad.net/webupd8team/java/ubuntu vivid main
+deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu vivid main
