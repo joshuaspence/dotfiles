@@ -33,3 +33,6 @@
 	path = modules/whenever
 	url = https://github.com/javan/whenever.git
 	branch = master
+[submodule "home/rvm"]
+	path = home/rvm
+	url = https://github.com/rvm/rvm
