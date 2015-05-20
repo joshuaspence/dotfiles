@@ -36,3 +36,6 @@
 [submodule "home/rvm"]
 	path = home/rvm
 	url = https://github.com/rvm/rvm
+[submodule "home/nvm"]
+	path = home/nvm
+	url = https://github.com/creationix/nvm.git
