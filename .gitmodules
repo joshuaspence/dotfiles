@@ -39,3 +39,6 @@
 [submodule "home/nvm"]
 	path = home/nvm
 	url = https://github.com/creationix/nvm.git
+[submodule "home/gvm"]
+	path = home/gvm
+	url = https://github.com/moovweb/gvm
