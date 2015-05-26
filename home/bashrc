@@ -36,3 +36,6 @@ test -s "${HOME}/.gvm/scripts/gvm" && source "${HOME}/.gvm/scripts/gvm"
 # NVM
 export NVM_DIR="${HOME}/.nvm"
 test -s "${NVM_DIR}/nvm.sh" && source "${NVM_DIR}/nvm.sh"
+
+# Arcanist
+export PATH="../arcanist/bin:$PATH"
