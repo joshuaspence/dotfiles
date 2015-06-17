@@ -1,12 +1,4 @@
-"/
-"" Show the ruler.
-"\
-
 if has('cmdline_info')
+    " Show the ruler.
     set ruler
-
-    if has('statusline')
-        "" Display current column/line in the ruler.
-        set rulerformat=%l,%c ruler
-    endif
 endif

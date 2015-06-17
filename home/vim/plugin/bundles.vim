@@ -1,47 +1,24 @@
-"/
-"" Plugin configuration for {@link http://www.vim.org/ vim} with
-"" {@link http://github.com/gmarik/vundle Vundle}.
-"\
+"" Configuration for {@link http://github.com/gmarik/vundle Vundle}.
 
-"" Vundle pre-commands. @{{{
-    "" Ensure that the `~/.vim/bundle/` system works. @{{{
-        set nocompatible
-        filetype off
-        set rtp+=~/.vim/bundle/vundle/
-        call vundle#rc()
-    "" @}}}
+set nocompatible
+filetype off
 
-    "" Let Vundle manage Vundle.
-    Bundle 'gmarik/vundle'
-"" @}}}
+" Set the runtime path to include Vundle and initialize.
+set rtp+=~/.vim/bundle/vundle/
+call vundle#begin()
 
-"" Bundles @{{{
-    Bundle 'airblade/vim-gitgutter'
-    Bundle 'flazz/vim-colorschemes'
-    Bundle 'godlygeek/tabular'
-    Bundle 'mattn/gist-vim'
-    Bundle 'mattn/webapi-vim'
-    Bundle 'mileszs/ack.vim'
-    Bundle 'nathanaelkane/vim-indent-guides'
-    Bundle 'scrooloose/nerdtree'
-    Bundle 'scrooloose/syntastic'
-    Bundle 'sickill/vim-pasta'
-    Bundle 'thinca/vim-template'
-    Bundle 'tpope/vim-commentary'
-    Bundle 'tpope/vim-endwise'
-    Bundle 'tpope/vim-eunuch'
-    Bundle 'tpope/vim-fugitive'
-    Bundle 'tpope/vim-markdown'
-    Bundle 'tpope/vim-scriptease'
-    Bundle 'tpope/vim-sleuth'
-    Bundle 'tpope/vim-surround'
-    Bundle 'trailing-whitespace'
-    Bundle 'vim-scripts/closetag.vim'
-    Bundle 'vim-scripts/lastpos.vim'
-    Bundle 'vim-scripts/upAndDown'
-"" @}}}
+" Let Vundle manage Vundle.
+Bundle 'gmarik/vundle'
 
-"" Vundle post-commands. @{{{
-    "" Automatically detect file types. Must turn on after Vundle.
-    filetype plugin indent on
-"" @}}}
+" Bundles
+Bundle 'airblade/vim-gitgutter'
+Bundle 'flazz/vim-colorschemes'
+Bundle 'godlygeek/tabular'
+Bundle 'nathanaelkane/vim-indent-guides'
+Bundle 'scrooloose/nerdtree'
+Bundle 'scrooloose/syntastic'
+Bundle 'tpope/vim-fugitive'
+Bundle 'trailing-whitespace'
+
+call vundle#end()
+filetype plugin indent on

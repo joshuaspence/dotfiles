@@ -1,5 +1,2 @@
-"/
-"" Save the file when you switch buffers.
-"\
-
+" Save the file when you switch buffers.
 set autowrite

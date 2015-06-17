@@ -1,5 +1,2 @@
-"/
-"" Disable `vi` compatibility.
-"\
-
+" Disable `vi` compatibility.
 set nocompatible

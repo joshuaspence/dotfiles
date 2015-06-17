@@ -1,17 +1,14 @@
-"/
-"" Searching options.
-"\
-
+" Searching options.
 if has('extra_search')
-    "" Highlight search.
+    " Highlight search.
     set hlsearch
 
-    "" Case insensitive matching.
+    " Case insensitive matching.
     set incsearch
 endif
 
-"" Case sensitive matching when there's a capital letter.
+" Case sensitive matching when there's a capital letter.
 set ignorecase
 
-"" Show the 'best match so far' as search strings are typed.
+" Show the 'best match so far' as search strings are typed.
 set smartcase
