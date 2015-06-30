@@ -26,6 +26,7 @@
 		"Package Control",
 		"Pretty JSON",
 		"Puppet",
+		"SublimeCodeIntel",
 		"SublimeGit",
 		"SublimeLinter",
 		"SublimeLinter-contrib-puppet-lint",
@@ -34,6 +35,7 @@
 		"SublimeLinter-jshint",
 		"SublimeLinter-json",
 		"SublimeLinter-xmllint",
-		"Varnish VCL"
+		"Varnish VCL",
+		"VimL"
 	]
 }
