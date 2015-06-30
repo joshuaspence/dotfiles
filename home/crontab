@@ -12,10 +12,10 @@ set :output, {:error => '/tmp/cron-error.log', :standard => '/tmp/cron.log'}
 
 # Self-updating crontab.
 every :day, :at => '10:00am' do
-    command 'whenever --update-crontab --load-file ${HOME}/.crontab'
+  command 'whenever --update-crontab --load-file ${HOME}/.crontab'
 end
 
-# Delete pesky .goutputstream-* files.
+# Delete pesky `.goutputstream-*` files.
 every :reboot do
-	command 'find ~ -name ".goutputstream-[[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]]" -delete'
+  command 'find ~ -name ".goutputstream-[[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]]" -delete'
 end
