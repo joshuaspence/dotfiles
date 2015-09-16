@@ -15,7 +15,7 @@ Host secure.phabricator.com
     PasswordAuthentication no
     PubkeyAuthentication yes
 
-Host *.freelancer.com *.fln-dev.net
+Host *.freelancer.com *.fln-dev.net *.warriorforum.com *.flnltd.com
     User josh
     IdentityFile ~/.ssh/keys/freelancer.com
 
@@ -31,37 +31,29 @@ Host git.freelancer.com gitlab.freelancer.com
     PasswordAuthentication no
     PubkeyAuthentication yes
 
+Host *.internal.wf.flnltd.com
+    ProxyCommand ssh -q jump.warriorforum.com nc %h %p
+
+Host *.internal.wf-stg.flnltd.com
+    ProxyCommand ssh -q ec2-54-88-243-172.compute-1.amazonaws.com nc %h %p
+
 Host *
     CheckHostIP yes
     Compression no
     CompressionLevel 6
+    ExitOnForwardFailure yes
     ForwardAgent no
     ForwardX11 no
-    NoHostAuthenticationForLocalhost yes
-    PubkeyAuthentication yes
-    PasswordAuthentication yes
-
-    ## Specifies whether user authentication based on GSSAPI is allowed.
-    ##
-    ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
-    GSSAPIAuthentication no
-
-    ## Indicates that `ssh` should hash host names and addresses when they
-    ## are added to `~/.ssh/keys/known_hosts`.
     HashKnownHosts yes
-
-    ## Specifies that `ssh` should only use the authentication identity
-    ## files configured in the `ssh` configuration files, even if
-    ## `ssh-agent` offers more identities.
     IdentitiesOnly yes
-
-    ## Specifies a file from which the user's DSA, ECDSA or RSA
-    ## authentication identity is read.
     IdentityFile ~/.ssh/keys/%h
-
-    ## Allow local command execution via the "LocalCommand" option or using
-    ## the `!command` escape sequence in `ssh`.
+    NoHostAuthenticationForLocalhost yes
+    PasswordAuthentication yes
     PermitLocalCommand no
+    ProxyUseFdpass yes
+    PubkeyAuthentication yes
+    StrictHostKeyChecking ask
+    VerifyHostKeyDNS yes
 
     ## If the network disappears your connection will hang, but if it then
     ## re-appears within 10 minutes it will resume working.
@@ -72,7 +64,3 @@ Host *
         #ServerAliveInterval 60
         #TCPKeepAlive no
     ## @}}}
-
-    ## Specifies whether to verify the remote key using DNS and SSHFP
-    ## resource records.
-    VerifyHostKeyDNS yes
