@@ -32,10 +32,10 @@ Host git.freelancer.com gitlab.freelancer.com
     PubkeyAuthentication yes
 
 Host *.internal.wf.flnltd.com
-    ProxyCommand ssh -q jump.warriorforum.com nc %h %p
+    ProxyCommand ssh -W %h:%p jump.warriorforum.com
 
 Host *.internal.wf-stg.flnltd.com
-    ProxyCommand ssh -q ec2-54-88-243-172.compute-1.amazonaws.com nc %h %p
+    ProxyCommand ssh -W %h:%p ec2-54-88-243-172.compute-1.amazonaws.com
 
 Host *
     CheckHostIP yes
@@ -50,17 +50,15 @@ Host *
     NoHostAuthenticationForLocalhost yes
     PasswordAuthentication yes
     PermitLocalCommand no
-    ProxyUseFdpass yes
+    #ProxyUseFdpass yes
     PubkeyAuthentication yes
     StrictHostKeyChecking ask
     VerifyHostKeyDNS yes
 
-    ## If the network disappears your connection will hang, but if it then
-    ## re-appears within 10 minutes it will resume working.
-    ##
-    ## @link http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
-    ## @{{{
-        #ServerAliveCountMax 10
-        #ServerAliveInterval 60
-        #TCPKeepAlive no
-    ## @}}}
+    # http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
+    ControlMaster auto
+    ControlPath /tmp/ssh_mux_%h_%p_%r
+    ControlPersist 1h
+    ServerAliveCountMax 10
+    ServerAliveInterval 60
+    TCPKeepAlive no
