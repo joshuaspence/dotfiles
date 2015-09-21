@@ -1,3 +1,7 @@
+#==============================================================================#
+# Personal                                                                     #
+#==============================================================================#
+
 Host git.github.com
     User git
 
@@ -14,6 +18,11 @@ Host secure.phabricator.com
     IdentitiesOnly yes
     PasswordAuthentication no
     PubkeyAuthentication yes
+
+
+#==============================================================================#
+# Work                                                                         #
+#==============================================================================#
 
 Host *.freelancer.com *.fln-dev.net *.warriorforum.com *.flnltd.com
     User josh
@@ -40,6 +49,11 @@ Host *.internal.wf-stg.flnltd.com
 
 Host jump-stg.warriorforum.com
     HostName ec2-54-88-243-172.compute-1.amazonaws.com
+
+
+#==============================================================================#
+# Global                                                                       #
+#==============================================================================#
 
 Host *
     CheckHostIP yes
