@@ -58,7 +58,6 @@ Host *
     CheckHostIP yes
     Compression no
     CompressionLevel 6
-    ExitOnForwardFailure yes
     ForwardAgent no
     ForwardX11 no
     HashKnownHosts yes
