@@ -33,9 +33,13 @@ Host git.freelancer.com gitlab.freelancer.com
 
 Host *.internal.wf.flnltd.com
     ProxyCommand ssh -W %h:%p jump.warriorforum.com
+    ControlMaster no
 
 Host *.internal.wf-stg.flnltd.com
-    ProxyCommand ssh -W %h:%p ec2-54-88-243-172.compute-1.amazonaws.com
+    ProxyCommand ssh -W %h:%p jump-stg.warriorforum.com
+
+Host jump-stg.warriorforum.com
+    HostName ec2-54-88-243-172.compute-1.amazonaws.com
 
 Host *
     CheckHostIP yes
@@ -50,7 +54,6 @@ Host *
     NoHostAuthenticationForLocalhost yes
     PasswordAuthentication yes
     PermitLocalCommand no
-    #ProxyUseFdpass yes
     PubkeyAuthentication yes
     StrictHostKeyChecking ask
     VerifyHostKeyDNS yes
