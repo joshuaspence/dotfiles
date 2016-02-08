@@ -10,14 +10,6 @@
 	path = modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git
 	branch = master
-[submodule "modules/phabricator/arcanist"]
-	path = modules/phabricator/arcanist
-	url = git://github.com/phacility/arcanist.git
-	branch = master
-[submodule "modules/phabricator/libphutil"]
-	path = modules/phabricator/libphutil
-	url = git://github.com/phacility/libphutil.git
-	branch = master
 [submodule "modules/rake-completion"]
     path = modules/rake-completion
     url = https://github.com/ai/rake-completion.git
@@ -33,12 +25,4 @@
 	path = modules/whenever
 	url = https://github.com/javan/whenever.git
 	branch = master
-[submodule "home/rvm"]
-	path = home/rvm
-	url = https://github.com/rvm/rvm
-[submodule "home/nvm"]
-	path = home/nvm
-	url = https://github.com/creationix/nvm.git
-[submodule "home/gvm"]
-	path = home/gvm
-	url = https://github.com/moovweb/gvm
+

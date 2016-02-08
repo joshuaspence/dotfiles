@@ -1,1 +1,0 @@
-../../../modules/phabricator/arcanist/resources/shell/bash-completion

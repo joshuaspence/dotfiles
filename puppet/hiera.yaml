@@ -1,0 +1,9 @@
+---
+:backends:
+  - yaml
+:hierarchy:
+  - "node/%{::fqdn}"
+  - "osfamily/%{::osfamily}"
+  - common
+:yaml:
+  :datadir: 'hieradata'

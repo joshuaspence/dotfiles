@@ -1,7 +1,2 @@
-#/
-## Setup {@link https://rvm.io/ Ruby Version Manager (RVM)}, if it is available.
-#\
-
-if [[ -f $HOME/.rvm/scripts/rvm ]]; then
-    source "${HOME}/.rvm/scripts/rvm"
-fi
+source /usr/local/rvm/scripts/rvm
+export PATH="/usr/local/rvm/bin:$PATH"
