@@ -90,6 +90,7 @@ class base {
   }
 
   class { 'virtualbox':
+    version        => '5.0',
     package_ensure => 'latest',
   }
 
