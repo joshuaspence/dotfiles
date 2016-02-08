@@ -11,10 +11,12 @@ WGET   = /usr/bin/wget
 
 PUPPET_BIN_DIR = /opt/puppetlabs/puppet/bin
 FACTER = $(PUPPET_BIN_DIR)/facter
+GEM    = $(PUPPET_BIN_DIR)/gem
 HIERA  = $(PUPPET_BIN_DIR)/hiera
 PUPPET = $(PUPPET_BIN_DIR)/puppet
 R10K   = $(PUPPET_BIN_DIR)/r10k
 
+unexport GEM_HOME
 export PATH := $(PUPPET_BIN_DIR):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 .PHONY: all
@@ -36,10 +38,13 @@ r10k: ext_modules
 
 #=====================
 
-$(PUPPET_BIN_DIR)/*: | puppet.deb
-	$(SUDO) $(DPKG) --install $^
+$(PUPPET_BIN_DIR)/%: | puppet.deb
+	$(SUDO) $(DPKG) --install $|
 	$(SUDO) $(APT) update
 	$(SUDO) $(APT) install puppet-agent
+
+$(R10K): | $(GEM)
+	sudo $(GEM) install --force r10k
 
 ext_modules: Puppetfile | $(R10K)
 	$(R10K) puppetfile install --verbose
