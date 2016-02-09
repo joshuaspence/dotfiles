@@ -5,5 +5,9 @@ $schedule = undef
 node default {
   include base
 
-  personal { $::id: }
+  class { 'personal':
+    user  => $::id,
+    group => $::id,
+    home  => "/home/${::id}",
+  }
 }

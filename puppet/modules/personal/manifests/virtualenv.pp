@@ -1,26 +1,23 @@
-class personal::virtualenv(
-  $ensure   = 'present',
-  $packages = [],
-) {
+class personal::virtualenv {
 
-  validate_re($ensure, ['absent', 'present', 'latest'])
-  validate_array($packages)
+  $venv_dir = "${personal::home}/.venv"
 
-  python::virtualenv { $personal::user:
-    ensure   => $ensure ? {
-      absent  => 'absent',
-      present => 'present',
-      latest  => 'latest',
-    },
-    venv_dir => "${personal::home}/.venv",
-    owner    => $personal::user,
-    group    => $personal::group,
+  python::virtualenv { $venv_dir:
+    owner => $personal::user,
+    group => $personal::group,
   }
 
-  python::pip { $packages:
-    ensure     => $ensure,
-    virtualenv => "${personal::home}/.venv",
+  python::pip { [
+    'awscli',
+    'flake8',
+    'pep8',
+    'pssh',
+    'pylint',
+  ]:
+    ensure     => 'latest',
+    virtualenv => $venv_dir,
     owner      => $personal::user,
+    group      => $personal::group,
   }
 
 }

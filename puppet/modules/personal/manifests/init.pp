@@ -1,7 +1,7 @@
-define personal(
-  $user  = $name,
-  $group = $name,
-  $home  = "/home/$name",
+class personal(
+  $user,
+  $group,
+  $home,
 ) {
 
   validate_string($user)
@@ -12,29 +12,33 @@ define personal(
     fail("Running '${module_name}' as '${user}' is not allowed. Check that 'FACTER_id' is set correctly.")
   }
 
+  Exec {
+    user  => $user,
+    group => $group,
+  }
+
   File {
     owner => $user,
     group => $group,
   }
 
-  #user { $user:
-  #  ensure     => $user_ensure,
-  #  comment    => $comment,
-  #  groups     => $groups,
-  #  managehome => true,
-  #  shell      => $shell,
-  #}
+  user { $user:
+    ensure         => 'present',
+    comment        => 'Joshua Spence',
+    gid            => $group,
+    groups         => ['adm', 'sudo'],
+    home           => $home,
+    managehome     => true,
+    membership     => 'minimum',
+    purge_ssh_keys => true,
+    shell          => '/bin/bash',
+  }
 
-  #file { [
-  #  "/home/${user}",
-  #  "/home/${user}/.local",
-  #  "/home/${user}/.local/share",
-  #]:
-  #  mode    => '700',
-  #  owner   => $user,
-  #  ensure  => $directory_ensure,
-  #  require => User[$user],
-  #}
+  file { $home:
+    ensure  => 'directory',
+    mode    => '700',
+    require => User[$user],
+  }
 
   #file { "${personal::home}/bin":
   #  ensure => 'directory',
@@ -42,9 +46,10 @@ define personal(
   #  group  => $group,
   #}
 
-  #class { 'personal::dropbox': }
+  include personal::dropbox
+  include personal::virtualenv
+
   #class { 'personal::gsettings': }
-  #class { 'personal::virtualenv': }
 
   #dotfiles::sync { $user: }
 

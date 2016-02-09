@@ -1,40 +1,50 @@
 class personal::dropbox {
 
-  file { "${personal::home}/Dropbox":
+  $dropbox_dir = "${personal::home}/Dropbox"
+
+  file { $dropbox_dir:
     ensure => 'directory',
   }
 
   file { "${personal::home}/Desktop":
     ensure => 'link',
-    target => "${personal::home}/Dropbox/Desktop",
+    target => "${$dropbox_dir}/Desktop",
   }
   file { "${personal::home}/Documents":
     ensure => 'link',
-    target => "${personal::home}/Dropbox/Documents",
+    target => "${$dropbox_dir}/Documents",
   }
   file { "${personal::home}/Downloads":
     ensure => 'link',
-    target => "${personal::home}/Dropbox/Downloads",
+    target => "${$dropbox_dir}/Downloads",
   }
   file { "${personal::home}/Music":
     ensure => 'link',
-    target => "${personal::home}/Dropbox/Music",
+    target => "${$dropbox_dir}/Music",
   }
   file { "${personal::home}/Pictures":
     ensure => 'link',
-    target => "${personal::home}/Dropbox/Pictures",
+    target => "${$dropbox_dir}/Pictures",
   }
   file { "${personal::home}/Videos":
     ensure => 'link',
-    target => "${personal::home}/Dropbox/Videos",
+    target => "${$dropbox_dir}/Videos",
   }
 
-  #exec { 'dropbox autostart y':
-  #  creates => "${personal::home}/.config/autostart/dropbox.desktop",
-  #}
+  exec { 'dropbox autostart':
+    command => '/usr/bin/dropbox autostart y',
+    creates => "${personal::home}/.config/autostart/dropbox.desktop",
+    require => Package['dropbox'],
+  }
 
-  #exec { 'dropbox start':
-  #  unless => 'dropbox status',
-  #}
+  exec { 'dropbox start':
+    command => '/usr/bin/dropbox start',
+    unless  => '/usr/bin/dropbox running',
+    require => Package['dropbox'],
+  }
+
+  # dropbox lansync y
+  # dropbox status
+  # dropbox throttle
 
 }
