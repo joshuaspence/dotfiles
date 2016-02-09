@@ -64,10 +64,10 @@ class base {
 
   class { 'ssh':
     server_options      => {
-      PasswordAuthentication => 'no',
-      PermitEmptyPasswords   => 'no',
-      PermitRootLogin        => 'no',
-      PubkeyAuthentication   => 'yes',
+      'PasswordAuthentication' => 'no',
+      'PermitEmptyPasswords'   => 'no',
+      'PermitRootLogin'        => 'no',
+      'PubkeyAuthentication'   => 'yes',
     },
     client_options       => {},
     version              => 'latest',
