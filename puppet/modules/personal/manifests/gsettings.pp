@@ -1,23 +1,31 @@
 class personal::gsettings {
-  package { [
-    'dconf-cli',
-    'dconf-gsettings-backend',
-  ]:
-    ensure => 'latest',
+
+  personal::gsetting { 'launcher-hide-mode':
+    schema => 'org.compiz.unityshell',
+    path   => '/org/compiz/profiles/unity/plugins/unityshell/',
+    key    => 'launcher-hide-mode',
+    value  => 1,
   }
 
-  # See http://askubuntu.com/a/326773.
-  exec { '/usr/bin/dbus-launch /usr/bin/dconf write /org/compiz/profiles/unity/plugins/unityshell/launcher-hide-mode 1':
-    unless  => '/usr/bin/test $(/usr/bin/dconf read /org/compiz/profiles/unity/plugins/unityshell/launcher-hide-mode) -eq 1',
-    require => Package['dconf-cli'],
-    user => $personal::user,
-    group => $personal::group,
+  personal::gsetting { 'hsize':
+    schema => 'org.compiz.core',
+    path   => '/org/compiz/profiles/unity/plugins/core/',
+    key    => 'hsize',
+    value  => 3,
   }
 
-  #exec { 'gsettings set org.compiz.core:/org/compiz/profiles/unity/plugins/core/ hsize 3': }
-  #exec { 'gsettings set org.compiz.core:/org/compiz/profiles/unity/plugins/core/ vsize 5': }
+  personal::gsetting { 'vsize':
+    schema => 'org.compiz.core',
+    path   => '/org/compiz/profiles/unity/plugins/core/',
+    key    => 'hsize',
+    value  => 8,
+  }
 
-  #exec { 'dconf /com/canonical/unity/integrated-menus false': }
+  personal::gsetting { 'integrated-menus':
+    schema => 'com.canonical.Unity',
+    key    => 'integrated-menus',
+    value  => bool2str(false),
+  }
 
   #exec { 'dconf write /org/gnome/desktop/session/idle-delay 300': }
   #exec { 'dconf write /org/gnome/desktop/screensaver/lock-enabled true': }

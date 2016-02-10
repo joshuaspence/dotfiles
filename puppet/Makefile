@@ -24,7 +24,10 @@ all: r10k puppet
 
 .PHONY: puppet
 puppet: ext_modules | $(PUPPET)
-	$(SUDO) FACTER_id=$(USER) $(PUPPET) apply \
+	$(SUDO) \
+	    FACTER_dbus_session_bus_address=$(DBUS_SESSION_BUS_ADDRESS) \
+	    FACTER_id=$(USER) \
+	    $(PUPPET) apply \
 		--basemodulepath=./modules:./ext_modules \
 		--hiera_config=./hiera.yaml \
 		--strict_variables \
