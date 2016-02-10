@@ -47,16 +47,21 @@ class personal(
   #}
 
   include personal::dropbox
-  include personal::virtualenv
+  #include personal::virtualenv
 
   #class { 'personal::gsettings': }
 
-  #dotfiles::sync { $user: }
+  dotfiles::sync { $user:
+    home       => $home,
+    config     => "${home}/dotfiles/home/dotfilesrc",
+    repository => "${home}/dotfiles",
+  }
 
   # python::dotfile
 
   #vagrant::box { 'ubuntu/trusty64':
   #  ensure => 'added',
+  #  user   => $user,
   #}
 
   #vagrant::plugin { 'vagrant-aws':

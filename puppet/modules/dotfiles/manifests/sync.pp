@@ -1,35 +1,19 @@
 define dotfiles::sync(
-  $user,
-  $home = undef,
+  $user   = $name,
+  $group  = $name,
   $config = undef,
-  $force = false,
-  $repository = undef,
 ) {
 
-  $config_flag = $config ? {
-    undef => '',
-    default => "--config=${config}",
-  }
+  validate_string($user)
+  validate_string($group)
+  validate_absolute_path($config)
 
-  $home_flag = $home ? {
-    undef => '',
-    default => "--home=${home}",
-  }
-
-  $repo_flag = $repository ? {
-    undef   => '',
-    default => "--repo=${repository}",
-  }
-
-  $force_flag = $force ? {
-    false => '',
-    true  => '--force',
-  }
-
-  exec { 'dotfiles':
-    command => "dotfiles ${config_flag} ${home_flag} ${repo_flag} ${force_flag} --sync",
-    unless  => "dotfiles ${config_flag} ${home_flag} ${repo_flag} --check",
+  exec { "dotfiles":
+    command => "/usr/local/bin/dotfiles --config=${config} --force --sync",
+    unless  => "/usr/bin/test -z '$(/usr/local/bin/dotfiles --check --config=${config})'",
     user    => $user,
+    group   => $group,
+    require => Python::Pip['dotfiles'],
   }
 
 }
