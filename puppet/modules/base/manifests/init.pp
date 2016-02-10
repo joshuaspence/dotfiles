@@ -3,7 +3,7 @@ class base {
   include base::apt
   include base::git
   include base::java
-  include base::packages # TODO
+  include base::packages
   include base::php # TODO
   include base::ruby
   include base::tmp
