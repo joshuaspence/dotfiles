@@ -66,13 +66,13 @@ class base::php {
       # twig
       # varnish
       # v8js
-      #weakref  => {
-      #  ensure   => '0.2.6',
-      #  provider => 'pecl',
-      #},
+      weakref  => {
+        ensure   => '0.2.6',
+        provider => 'pecl',
+      },
       xdebug   => {
         ensure   => 'latest',
-        provider => 'apt',
+        provider => 'pecl',
       },
       xhprof   => {
         ensure   => 'latest',
