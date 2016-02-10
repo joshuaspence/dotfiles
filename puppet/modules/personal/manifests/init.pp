@@ -47,17 +47,16 @@ class personal(
   #}
 
   include personal::dropbox
+  include personal::gsettings
   #include personal::virtualenv
 
-  #class { 'personal::gsettings': }
-
   dotfiles::sync { $user:
-    home       => $home,
-    config     => "${home}/dotfiles/home/dotfilesrc",
-    repository => "${home}/dotfiles",
+    config => "${home}/dotfiles/home/dotfilesrc",
+    home   => $home,
   }
 
   # python::dotfile
+  # git::config
 
   #vagrant::box { 'ubuntu/trusty64':
   #  ensure => 'added',

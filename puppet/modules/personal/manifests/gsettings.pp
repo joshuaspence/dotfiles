@@ -1,20 +1,19 @@
 class personal::gsettings {
-  ensure_packages([
+  package { [
     'dconf-cli',
     'dconf-gsettings-backend',
-  ])
-
-  #Gnome::Gsettings {
-  #  user => $personal::user,
-  #}
-
-  gnome::gsettings { 'launcher-hide-mode':
-    schema => "org.compiz.unityshell",
-    key    => 'launcher-hide-mode',
-    value  => '1',
+  ]:
+    ensure => 'latest',
   }
 
-  #exec { 'gsettings set org.compiz.unityshell:/org/compiz/profiles/unity/plugins/unityshell/ launcher-hide-mode 1': }
+  # See http://askubuntu.com/a/326773.
+  exec { '/usr/bin/dbus-launch /usr/bin/dconf write /org/compiz/profiles/unity/plugins/unityshell/launcher-hide-mode 1':
+    unless  => '/usr/bin/test $(/usr/bin/dconf read /org/compiz/profiles/unity/plugins/unityshell/launcher-hide-mode) -eq 1',
+    require => Package['dconf-cli'],
+    user => $personal::user,
+    group => $personal::group,
+  }
+
   #exec { 'gsettings set org.compiz.core:/org/compiz/profiles/unity/plugins/core/ hsize 3': }
   #exec { 'gsettings set org.compiz.core:/org/compiz/profiles/unity/plugins/core/ vsize 5': }
 

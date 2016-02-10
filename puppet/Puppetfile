@@ -1,7 +1,6 @@
 moduledir 'ext_modules'
 
 mod 'puppetlabs/git', '0.4.0'
-#mod 'camptocamp/gnome', '0.1.10'
 #mod 'golja/gnupg', '1.2.3'
 mod 'jgazeley/lm_sensors', '0.2.1'
 mod 'puppetlabs/mysql', '3.6.2'
