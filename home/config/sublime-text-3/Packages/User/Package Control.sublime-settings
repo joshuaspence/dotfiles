@@ -2,6 +2,7 @@
 	"auto_upgrade": true,
 	"auto_upgrade_frequency": 0,
 	"auto_upgrade_last_run": null,
+	"bootstrapped": true,
 	"in_process_packages":
 	[
 	],

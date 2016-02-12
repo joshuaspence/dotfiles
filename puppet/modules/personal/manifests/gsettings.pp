@@ -17,7 +17,7 @@ class personal::gsettings {
   personal::gsetting { 'vsize':
     schema => 'org.compiz.core',
     path   => '/org/compiz/profiles/unity/plugins/core/',
-    key    => 'hsize',
+    key    => 'vsize',
     value  => 8,
   }
 
