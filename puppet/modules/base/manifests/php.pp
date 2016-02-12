@@ -52,6 +52,7 @@ class base::php {
       xdebug   => {
         ensure   => 'latest',
         provider => 'pecl',
+        zend     => true,
       },
       xhprof   => {
         ensure   => 'latest',
