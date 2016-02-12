@@ -12,13 +12,15 @@ class arcanist {
   }
 
   vcsrepo { 'arcanist':
-    path   => "${src_root}/arcanist",
-    source => 'https://github.com/phacility/arcanist.git',
+    path     => "${src_root}/arcanist",
+    source   => 'https://github.com/phacility/arcanist.git',
+    revision => 'master',
   }
 
   vcsrepo { 'libphutil':
-    path   => "${src_root}/libphutil",
-    source => 'https://github.com/phacility/libphutil.git',
+    path     => "${src_root}/libphutil",
+    source   => 'https://github.com/phacility/libphutil.git',
+    revision => 'master',
   }
 
   exec { "${src_root}/libphutil/scripts/build_xhpast.php":
