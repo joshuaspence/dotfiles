@@ -22,6 +22,12 @@ export PATH := $(PUPPET_BIN_DIR):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/b
 .PHONY: all
 all: r10k puppet
 
+.PHONY: clean
+clean:
+	$(RM) --force --recursive ext_modules/
+	$(RM) --force --recursive ssl/
+	$(RM) --force puppet.deb
+
 .PHONY: puppet
 puppet: ext_modules | $(PUPPET)
 	$(SUDO) \
