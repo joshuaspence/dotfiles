@@ -1,7 +1,5 @@
 # http://editorconfig.org/
 
-root = true
-
 [*.pp]
 indent_size = 2
 
