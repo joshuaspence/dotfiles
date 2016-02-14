@@ -4,6 +4,7 @@
 :hierarchy:
   - "node/%{::fqdn}"
   - "osfamily/%{::osfamily}"
+  - "virtual/%{::virtual}"
   - common
 :yaml:
   :datadir: 'hieradata'
