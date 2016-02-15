@@ -2,6 +2,7 @@
 #
 class base::php {
 
+  # TODO: See https://github.com/mayflower/puppet-php/issues/156.
   class { 'php':
     ensure       => 'latest',
     manage_repos => true,
@@ -51,8 +52,7 @@ class base::php {
       },
       xdebug   => {
         ensure   => 'latest',
-        provider => 'pecl',
-        zend     => true,
+        provider => 'apt',
       },
       xhprof   => {
         ensure   => 'latest',
