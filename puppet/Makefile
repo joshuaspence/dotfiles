@@ -26,7 +26,6 @@ all: r10k puppet
 .PHONY: clean
 clean:
 	$(RM) --force --recursive ext_modules/
-	$(RM) --force puppet.deb
 
 .PHONY: puppet
 puppet: ext_modules | $(PUPPET)
@@ -47,7 +46,7 @@ r10k: ext_modules
 
 #=====================
 
-$(PUPPET_BIN_DIR)/%: | puppet.deb
+$(PUPPET_BIN_DIR)/%: | /tmp/puppet.deb
 	$(SUDO) $(DPKG) --install $|
 	$(SUDO) $(APT) update
 	$(SUDO) $(APT) install puppet-agent
@@ -59,7 +58,7 @@ ext_modules: Puppetfile | $(R10K)
 	$(R10K) puppetfile install --verbose
 	$(R10K) puppetfile purge
 
-puppet.deb: | $(WGET)
+/tmp/puppet.deb: | $(WGET)
 	$(WGET) --output-document=$@ https://apt.puppetlabs.com/puppetlabs-release-pc1-$(DIST).deb
 
 $(WGET):
