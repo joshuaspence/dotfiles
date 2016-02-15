@@ -10,8 +10,3 @@
 	path = modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git
 	branch = master
-[submodule "modules/whenever"]
-	path = modules/whenever
-	url = https://github.com/javan/whenever.git
-	branch = master
-
