@@ -7,14 +7,21 @@ class personal::dropbox {
     require => File[$personal::home],
   }
 
-  personal::dropbox::link { [
-    'Desktop',
-    'Documents',
-    'Downloads',
-    'Music',
-    'Pictures',
-    'Videos',
-  ]: }
+  personal::dropbox::link {
+    [
+      'Desktop',
+      'Documents',
+      'Downloads',
+      'Music',
+      'Videos',
+    ]:
+      ensure => 'present';
+
+    [
+      'Pictures',
+    ]:
+      ensure => 'absent';
+  }
 
   Exec {
     require => Package['dropbox'],
