@@ -13,10 +13,6 @@
 [submodule "modules/rake-completion"]
     path = modules/rake-completion
     url = https://github.com/ai/rake-completion.git
-[submodule "modules/tig"]
-	path = modules/tig
-	url = git://github.com/jonas/tig.git
-	branch = master
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
