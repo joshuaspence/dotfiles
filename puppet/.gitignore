@@ -1,8 +1,5 @@
 # Packages
 /puppet.deb
 
-# Puppet
-/ssl/
-
 # r10k
 /ext_modules/
