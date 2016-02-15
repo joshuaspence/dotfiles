@@ -10,9 +10,6 @@
 	path = modules/git-extras
 	url = git://github.com/visionmedia/git-extras.git
 	branch = master
-[submodule "modules/rake-completion"]
-    path = modules/rake-completion
-    url = https://github.com/ai/rake-completion.git
 [submodule "modules/vimpager"]
 	path = modules/vimpager
 	url = git://github.com/rkitover/vimpager.git
