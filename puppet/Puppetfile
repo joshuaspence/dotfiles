@@ -3,7 +3,6 @@ moduledir 'ext_modules'
 mod 'puppetlabs/git', '0.4.0'
 mod 'jgazeley/lm_sensors', '0.2.1'
 mod 'puppetlabs/mysql', '3.6.2'
-mod 'puppet/nodejs', '1.3.0'
 mod 'puppetlabs/ntp', '4.1.2'
 mod 'mayflower/php', '3.4.2'
 mod 'puppetlabs/ruby', '0.4.0'
@@ -25,6 +24,11 @@ mod 'puppetlabs/apt', :git => 'https://github.com/puppetlabs/puppetlabs-apt'
 # https://github.com/puppetlabs/puppetlabs-java/commit/ca2171043ee2f73c5e43c8adf59e72b52c91ebe2,
 # which adds support for Ubuntu 15.10.
 mod 'puppetlabs/java', :git => 'https://github.com/puppetlabs/puppetlabs-java'
+
+# The latest release (version 1.3.0) doesn't contain
+# https://github.com/voxpupuli/puppet-nodejs/pull/199, which fixes
+# https://github.com/voxpupuli/puppet-nodejs/issues/158.
+mod 'puppet/nodejs', :git => 'https://github.com/voxpupuli/puppet-nodejs'
 
 # The latest release (version 1.11.0) doesn't contain
 # https://github.com/stankevich/puppet-python/pull/286, which fixes
