@@ -13,48 +13,48 @@ class base::php {
     pear_ensure  => 'latest',
     phpunit      => true,
     extensions   => {
-      apcu     => {
+      apcu      => {
         ensure   => 'latest',
         provider => 'apt',
       },
-      curl     => {
+      curl      => {
         ensure   => 'latest',
         provider => 'apt',
       },
-      intl     => {
+      intl      => {
         ensure   => 'latest',
         provider => 'apt',
       },
-      json     => {
+      json      => {
         ensure   => 'latest',
         provider => 'apt',
       },
-      mysql    => {
+      mysql     => {
         ensure   => 'latest',
         provider => 'apt',
       },
-      proctitle => {
+      proctitle  => {
         ensure   => 'latest',
         provider => 'pecl',
         source   => 'channel://pecl.php.net/proctitle-0.1.2',
       },
-      readline => {
+      readline  => {
         ensure   => 'latest',
         provider => 'apt',
       },
-      sqlite   => {
+      sqlite    => {
         ensure   => 'latest',
         provider => 'apt',
       },
-      weakref  => {
+      'Weakref' => {
         ensure   => '0.2.6',
         provider => 'pecl',
       },
-      xdebug   => {
+      xdebug    => {
         ensure   => 'latest',
         provider => 'apt',
       },
-      xhprof   => {
+      xhprof    => {
         ensure   => 'latest',
         provider => 'pecl',
         source   => 'channel://pecl.php.net/xhprof-0.9.4',
