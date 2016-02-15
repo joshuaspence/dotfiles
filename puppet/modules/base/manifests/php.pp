@@ -49,6 +49,7 @@ class base::php {
       'Weakref' => {
         ensure   => '0.2.6',
         provider => 'pecl',
+        so_name  => 'weakref',
       },
       xdebug    => {
         ensure   => 'latest',
