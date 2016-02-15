@@ -1,14 +1,15 @@
+# Environment
 DIST  := $(shell lsb_release --codename --short)
-EMPTY :=
-SPACE := $(EMPTY) $(EMPTY)
 USER  := $(shell whoami)
 
+# Core Commands
 APT    = /usr/bin/apt-get
 DPKG   = /usr/bin/dpkg
 RM     = /bin/rm
 SUDO   = /usr/bin/sudo
 WGET   = /usr/bin/wget
 
+# Commands
 PUPPET_BIN_DIR = /opt/puppetlabs/puppet/bin
 FACTER = $(PUPPET_BIN_DIR)/facter
 GEM    = $(PUPPET_BIN_DIR)/gem
@@ -25,7 +26,6 @@ all: r10k puppet
 .PHONY: clean
 clean:
 	$(RM) --force --recursive ext_modules/
-	$(RM) --force --recursive ssl/
 	$(RM) --force puppet.deb
 
 .PHONY: puppet
@@ -59,5 +59,8 @@ ext_modules: Puppetfile | $(R10K)
 	$(R10K) puppetfile install --verbose
 	$(R10K) puppetfile purge
 
-puppet.deb:
+puppet.deb: | $(WGET)
 	$(WGET) --output-document=$@ https://apt.puppetlabs.com/puppetlabs-release-pc1-$(DIST).deb
+
+$(WGET):
+	$(SUDO) $(APT) install wget
