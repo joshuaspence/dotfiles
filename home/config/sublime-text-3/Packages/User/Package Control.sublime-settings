@@ -1,32 +1,28 @@
 {
-	"auto_upgrade": true,
-	"auto_upgrade_frequency": 0,
-	"auto_upgrade_last_run": null,
-	"bootstrapped": true,
-	"in_process_packages":
-	[
-	],
-	"install_missing": true,
-	"installed_packages":
-	[
-		"Alignment",
-		"ApplySyntax",
-		"ChangeQuotes",
-		"Clipboard History",
-		"DocBlockr",
-		"EditorConfig",
-		"GitGutter",
-		"Gradle_Language",
-		"INI",
-		"LaTeXing",
-		"LESS",
-		"nginx",
-		"Package Control",
-		"Pretty JSON",
-		"Puppet",
-		"SublimeCodeIntel",
-		"SublimeGit",
-		"Varnish VCL",
-		"VimL"
-	]
+    "auto_upgrade": true,
+    "auto_upgrade_frequency": 0,
+    "auto_upgrade_last_run": null,
+    "bootstrapped": true,
+    "in_process_packages": [],
+    "install_missing": true,
+    "installed_packages": [
+        "Alignment",
+        "ApplySyntax",
+        "ChangeQuotes",
+        "DocBlockr",
+        "EditorConfig",
+        "GitGutter",
+        "Gradle_Language",
+        "INI",
+        "LaTeXing",
+        "LESS",
+        "nginx",
+        "Package Control",
+        "Pretty JSON",
+        "Puppet",
+        "SublimeCodeIntel",
+        "SublimeGit",
+        "Varnish VCL",
+        "VimL"
+    ]
 }
