@@ -1,29 +1,27 @@
 {
-	"apply_syntax_extensions":
-	[
-		"bash",
-		"sh",
-		"zsh"
-	],
-	"extensions":
-	[
-		"zsh",
-		".screenrc",
-		"inputrc",
-		".jshintignore",
-		".npmignore",
-		".ackrc",
-		"sh",
-		"gitshrc",
-		"profile",
-		".gitshrc",
-		".profile",
-		".bashrc",
-		"ackrc",
-		"bash",
-		".inputrc",
-		".bash_logout",
-		".dotfilesrc",
-		".bash_profile"
-	]
+    "apply_syntax_extensions": [
+        "bash",
+        "sh",
+        "zsh"
+    ],
+    "extensions": [
+        "zsh",
+        ".screenrc",
+        "inputrc",
+        ".jshintignore",
+        ".npmignore",
+        ".ackrc",
+        "sh",
+        "gitshrc",
+        "profile",
+        ".gitshrc",
+        ".profile",
+        ".bashrc",
+        "ackrc",
+        "bash",
+        ".inputrc",
+        ".bash_logout",
+        ".dotfilesrc",
+        ".bash_profile"
+    ]
 }

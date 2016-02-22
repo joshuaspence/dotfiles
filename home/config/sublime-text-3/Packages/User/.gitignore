@@ -1,5 +1,10 @@
+# Apply Syntax
+/ApplySyntax.ext-list
+
 # Package Control
 /Package Control.cache/
 /Package Control.ca-bundle
 /Package Control.ca-list
 /Package Control.last-run
+/Package Control.merged-ca-bundle
+/Package Control.user-ca-bundle

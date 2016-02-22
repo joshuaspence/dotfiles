@@ -1,24 +1,22 @@
 {
-	"apply_syntax_extensions":
-	[
-		"thor",
-		"jbuilder",
-		"podspec",
-		"rb",
-		"simplecov",
-		"rake",
-		"rabl"
-	],
-	"extensions":
-	[
-		"thor",
-		"podspec",
-		"rb",
-		"jbuilder",
-		"Puppetfile",
-		"simplecov",
-		"rake",
-		"Modulefile",
-		"rabl"
-	]
+    "apply_syntax_extensions": [
+        "thor",
+        "jbuilder",
+        "podspec",
+        "rb",
+        "simplecov",
+        "rake",
+        "rabl"
+    ],
+    "extensions": [
+        "thor",
+        "podspec",
+        "rb",
+        "jbuilder",
+        "Puppetfile",
+        "simplecov",
+        "rake",
+        "Modulefile",
+        "rabl"
+    ]
 }
