@@ -80,6 +80,10 @@ class base {
     config_file_replace => true,
   }
 
+  class { 'terraform':
+    version => '0.6.11',
+  }
+
   class { 'timezone':
     timezone    => 'Australia/Sydney',
     autoupgrade => true,
