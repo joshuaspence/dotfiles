@@ -23,6 +23,11 @@ class personal::dropbox {
       ensure => 'absent';
   }
 
+  file { "${dropbox_home}/Documents/Add-in Express":
+    ensure => 'absent',
+    force  => true,
+  }
+
   Exec {
     require => Package['dropbox'],
   }
