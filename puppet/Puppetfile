@@ -31,6 +31,9 @@ mod 'puppetlabs/java', :git => 'https://github.com/puppetlabs/puppetlabs-java'
 # https://github.com/voxpupuli/puppet-nodejs/issues/158.
 mod 'puppet/nodejs', :git => 'https://github.com/voxpupuli/puppet-nodejs'
 
+# See https://github.com/counsyl/puppet-packer/pull/7.
+mod 'counsyl/packer', :git => 'https://github.com/joshuaspence/puppet-packer'
+
 # The latest release (version 1.11.0) doesn't contain
 # https://github.com/stankevich/puppet-python/pull/286, which fixes
 # https://github.com/stankevich/puppet-python/issues/256.
@@ -45,3 +48,7 @@ mod 'puppetlabs/inifile', '1.4.3'
 mod 'nanliu/staging', '1.0.3'
 mod 'example42/yum', '2.1.25'
 mod 'darin/zypprepo', '1.0.2'
+
+# See https://github.com/counsyl/puppet-sys/pull/14 and
+# https://github.com/counsyl/puppet-sys/pull/15.
+mod 'counsyl/sys', :git => 'https://github.com/joshuaspence/puppet-sys'

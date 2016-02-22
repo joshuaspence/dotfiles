@@ -41,6 +41,10 @@ class base {
     package_ensure => 'latest',
   }
 
+  class { 'packer':
+    version => '0.7.5',
+  }
+
   class { 'puppet':
     ensure => 'latest',
   }
