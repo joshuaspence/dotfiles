@@ -85,7 +85,7 @@ class base {
   }
 
   class { 'terraform':
-    version => '0.6.13',
+    version => '0.6.14',
   }
 
   class { 'timezone':
