@@ -8,9 +8,6 @@ GEM    := $(PUPPET_BIN_DIR)/gem
 PUPPET := $(PUPPET_BIN_DIR)/puppet
 R10K   := $(PUPPET_BIN_DIR)/r10k
 
-unexport GEM_HOME
-export PATH := $(PUPPET_BIN_DIR):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
 .PHONY: all
 /all: r10k puppet
 
