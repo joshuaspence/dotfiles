@@ -41,7 +41,7 @@ $(PUPPET_BIN_DIR)/%:
 	sudo apt-get --quiet --yes install puppet-agent
 
 $(R10K): | $(GEM)
-	sudo $(GEM) install --force --no-rdoc --no-ri r10k
+	sudo $(GEM) install --no-rdoc --no-ri r10k
 
 ext_modules: Puppetfile | $(R10K)
 	$(R10K) puppetfile install --verbose
