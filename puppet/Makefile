@@ -9,7 +9,7 @@ PUPPET := $(PUPPET_BIN_DIR)/puppet
 R10K   := $(PUPPET_BIN_DIR)/r10k
 
 .PHONY: all
-/all: r10k puppet
+all: r10k puppet
 
 .PHONY: clean
 clean:
