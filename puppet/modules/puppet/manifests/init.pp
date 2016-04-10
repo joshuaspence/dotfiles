@@ -6,7 +6,7 @@ class puppet(
 
   validate_re($ensure, '^(absent|present|latest)$')
 
-  apt::source { 'puppetlabs':
+  apt::source { 'puppetlabs-pc1':
     ensure   => $ensure ? {
       absent  => 'absent',
       present => 'present',
@@ -22,7 +22,7 @@ class puppet(
 
   package { 'puppet-agent':
     ensure  => $ensure,
-    require => Apt::Source['puppetlabs'],
+    require => Apt::Source['puppetlabs-pc1'],
   }
 
 }
