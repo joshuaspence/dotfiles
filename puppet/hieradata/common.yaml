@@ -1,1 +1,2 @@
 ---
+packer::base_url: 'https://releases.hashicorp.com/packer/'
