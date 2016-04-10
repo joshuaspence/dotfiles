@@ -35,7 +35,7 @@ r10k: ext_modules
 #===============================================================================
 
 $(PUPPET_BIN_DIR)/%:
-	wget --no-verbose --output-document=/tmp/puppet.deb https://apt.puppetlabs.com/puppetlabs-release-pc1-$(DIST).deb
+	wget --config=/dev/null --no-verbose --output-document=/tmp/puppet.deb https://apt.puppetlabs.com/puppetlabs-release-pc1-$(DIST).deb
 	sudo dpkg --install /tmp/puppet.deb
 	sudo apt-get update
 	sudo apt-get --yes install puppet-agent
