@@ -16,7 +16,7 @@ clean:
 	rm --force --recursive ext_modules/
 
 .PHONY: puppet
-puppet: ext_modules | $(PUPPET)
+puppet: | $(PUPPET)
 	sudo \
 	    FACTER_dbus_session_bus_address=$(DBUS_SESSION_BUS_ADDRESS) \
 	    FACTER_id=$(USER) \
