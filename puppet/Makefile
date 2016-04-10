@@ -37,8 +37,8 @@ r10k: ext_modules
 $(PUPPET_BIN_DIR)/%:
 	wget --config=/dev/null --no-verbose --output-document=/tmp/puppet.deb https://apt.puppetlabs.com/puppetlabs-release-pc1-$(DIST).deb
 	sudo dpkg --install /tmp/puppet.deb
-	sudo apt-get update
-	sudo apt-get --yes install puppet-agent
+	sudo apt-get --quiet update
+	sudo apt-get --quiet --yes install puppet-agent
 
 $(R10K): | $(GEM)
 	sudo $(GEM) install --force --no-rdoc --no-ri r10k
