@@ -38,3 +38,7 @@ test -s "${NVM_DIR}/nvm.sh" && source "${NVM_DIR}/nvm.sh"
 
 # Arcanist
 export PATH="../arcanist/bin:$PATH"
+
+export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+[[ -s "/home/josh/.gvm/scripts/gvm" ]] && source "/home/josh/.gvm/scripts/gvm"

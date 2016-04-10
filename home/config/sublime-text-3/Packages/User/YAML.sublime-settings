@@ -1,7 +1,9 @@
 {
-    "extensions": [
-        "yaml",
-        "yml",
-        ".gemrc"
-    ]
+	"extensions":
+	[
+		"yaml",
+		"yml",
+		".gemrc",
+		"yml.dist"
+	]
 }

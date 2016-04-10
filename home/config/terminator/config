@@ -5,12 +5,11 @@
 [keybindings]
 [profiles]
   [[default]]
-    background_image = None
-    scrollback_lines = 10000
-    use_system_font = False
     scroll_on_output = False
-    font = Monospace 12
+    font = Monospace 16
+    scrollback_lines = 10000
     scrollback_infinite = True
+    background_image = None
 [layouts]
   [[default]]
     [[[child1]]]
