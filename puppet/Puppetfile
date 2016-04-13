@@ -38,3 +38,7 @@ mod 'darin/zypprepo', '1.0.2'
 # See https://github.com/counsyl/puppet-sys/pull/14 and
 # https://github.com/counsyl/puppet-sys/pull/15.
 mod 'counsyl/sys', :git => 'https://github.com/joshuaspence/puppet-sys'
+
+# The latest version (version 5.2.0) doesn't contain
+# https://github.com/garethr/garethr-docker/pull/499.
+mod 'garethr/docker', :git => 'https://github.com/joshuaspence/garethr-docker'

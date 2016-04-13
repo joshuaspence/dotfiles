@@ -7,6 +7,7 @@ class base {
   include base::php # TODO
   include base::ruby
   include base::tmp
+  include docker
   include lm_sensors
 
   class { 'arcanist': }
