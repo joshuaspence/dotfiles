@@ -15,6 +15,9 @@ all: r10k puppet
 clean:
 	rm --force --recursive ext_modules/
 
+.PHONY: install
+install: $(PUPPET)
+
 .PHONY: puppet
 puppet: | $(PUPPET)
 	sudo \
@@ -24,10 +27,7 @@ puppet: | $(PUPPET)
 		--basemodulepath=./modules:./ext_modules \
 		--hiera_config=./hiera.yaml \
 		--strict_variables \
-		manifests/site.pp
-
-.PHONY: install
-install: $(PUPPET)
+		./manifests/site.pp
 
 .PHONY: r10k
 r10k: ext_modules
@@ -44,5 +44,5 @@ $(R10K): | $(GEM)
 	sudo $(GEM) install --no-rdoc --no-ri r10k
 
 ext_modules: Puppetfile | $(R10K)
-	$(R10K) puppetfile install --verbose
+	$(R10K) puppetfile install --moduledir=$@ --puppetfile=$< --verbose
 	$(R10K) puppetfile purge
