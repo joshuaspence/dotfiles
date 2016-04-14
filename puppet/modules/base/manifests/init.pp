@@ -7,104 +7,30 @@ class base {
   include base::php # TODO
   include base::ruby
   include base::tmp
+
+  include arcanist
   include docker
+  include dotfiles
+  include dropbox
+  include google_chrome
+  include hipchat
   include lm_sensors
-
-  class { 'arcanist': }
-
-  class { 'dotfiles':
-    ensure => 'latest',
-  }
-
-  class { 'dropbox':
-    ensure => 'latest',
-  }
-
-  class { 'google_chrome':
-    ensure => 'latest',
-  }
-
-  class { 'hipchat':
-    ensure => 'latest',
-  }
-
-  class { 'mysql::client':
-    package_ensure => 'latest',
-  }
+  include mysql::client
+  include ntp
+  include packer
+  include puppet
+  include python
+  include spotify
+  include sublime_text
+  include ssh
+  include sudo
+  include terraform
+  include timezone
+  include vagrant
+  include virtualbox
+  include wget
 
   # TODO: See https://github.com/voxpupuli/puppet-nodejs/issues/165.
-  class { 'nodejs':
-    nodejs_package_ensure => 'latest',
-    repo_url_suffix       => '5.x',
-  }
-
-  class { 'ntp':
-    package_ensure => 'latest',
-  }
-
-  class { 'packer':
-    version => '0.10.0',
-  }
-
-  class { 'puppet':
-    ensure => 'latest',
-  }
-
-  class { 'python':
-    ensure     => 'latest',
-    version    => 'system',
-    pip        => 'latest',
-    dev        => 'latest',
-    virtualenv => 'latest',
-    provider   => 'pip',
-  }
-
-  class { 'spotify':
-    ensure => 'latest',
-  }
-
-  class { 'sublime_text':
-    ensure => 'latest',
-  }
-
-  class { 'ssh':
-    server_options      => {
-      'PasswordAuthentication' => 'no',
-      'PermitEmptyPasswords'   => 'no',
-      'PermitRootLogin'        => 'no',
-      'PubkeyAuthentication'   => 'yes',
-    },
-    client_options       => {},
-    version              => 'latest',
-    storeconfigs_enabled => false,
-  }
-
-  class { 'sudo':
-    package_ensure      => 'latest',
-    purge               => true,
-    config_file_replace => true,
-  }
-
-  class { 'terraform':
-    version => '0.6.14',
-  }
-
-  class { 'timezone':
-    timezone    => 'Australia/Sydney',
-    autoupgrade => true,
-  }
-
-  class { 'vagrant':
-    ensure => 'latest',
-  }
-
-  class { 'virtualbox':
-    version        => '5.0',
-    package_ensure => 'latest',
-  }
-
-  class { 'wget':
-    version => 'latest',
-  }
+  include nodejs
 
 }

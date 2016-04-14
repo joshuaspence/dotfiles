@@ -1,3 +1,38 @@
 ---
 docker::ensure: 'latest'
+dotfiles::ensure: 'latest'
+dropbox::ensure: 'latest'
+google_chrome::ensure: 'latest'
+hipchat::ensure: 'latest'
+mysql::client::package_ensure: 'latest'
+nodejs::nodejs_package_ensure: 'latest'
+nodejs::repo_url_suffix: '5.x'
+ntp::package_ensure: 'latest'
 packer::base_url: 'https://releases.hashicorp.com/packer/'
+packer::version: '0.10.0'
+puppet::ensure: 'latest'
+python::dev: 'latest'
+python::ensure: 'latest'
+python::pip: 'latest'
+python::provider: 'pip'
+python::virtualenv: 'latest'
+spotify::ensure: 'latest'
+ssh::client_options: {}
+ssh::server_options:
+  PasswordAuthentication: 'no'
+  PermitEmptyPasswords: 'no'
+  PermitRootLogin: 'no'
+  PubkeyAuthentication: 'yes'
+ssh::storeconfigs_enabled: false
+ssh::version: 'latest'
+sublime_text::ensure: 'latest'
+sudo::config_file_replace: true
+sudo::package_ensure: 'latest'
+sudo::purge: true
+terraform::version: '0.6.14'
+timezone::autoupgrade: true
+timezone::timezone: 'Australia/Sydney'
+vagrant::ensure: 'latest'
+virtualbox::package_ensure: 'latest'
+virtualbox::version: '5.0'
+wget::version: 'latest'
