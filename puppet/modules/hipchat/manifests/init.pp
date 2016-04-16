@@ -12,16 +12,15 @@ class hipchat(
       present => 'present',
       latest  => 'present',
     },
-    location => "http://downloads.hipchat.com/${kernel}/apt",
-    release  => 'stable',
+    location => "https://atlassian.artifactoryonline.com/atlassian/hipchat-apt-client",
     repos    => 'main',
     include  => {
       deb => true,
       src => false,
     },
     key      => {
-      id     => '69F57C04EA38EEE7A47E9BCCAAD4AA21729B5780',
-      source => 'https://www.hipchat.com/keys/hipchat-linux.key',
+      id     => 'FD1ACC751D0106938C1E6B33EBA59E53CC64091D',
+      source => 'https://atlassian.artifactoryonline.com/atlassian/api/gpg/key/public',
     },
   }
 
