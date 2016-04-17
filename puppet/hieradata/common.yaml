@@ -13,7 +13,6 @@ ntp::servers:
   - '1.ubuntu.pool.ntp.org'
   - '2.ubuntu.pool.ntp.org'
   - '3.ubuntu.pool.ntp.org'
-packer::base_url: 'https://releases.hashicorp.com/packer/'
 packer::version: '0.10.0'
 puppet::ensure: 'latest'
 python::dev: 'latest'
@@ -41,3 +40,6 @@ vagrant::ensure: 'latest'
 virtualbox::package_ensure: 'latest'
 virtualbox::version: '5.0'
 wget::version: 'latest'
+
+# See https://github.com/counsyl/puppet-packer/pull/7.
+packer::base_url: 'https://releases.hashicorp.com/packer/'

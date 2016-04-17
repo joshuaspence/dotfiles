@@ -4,25 +4,28 @@ class base {
   include base::git
   include base::java
   include base::packages
-  include base::php # TODO
+  include base::php
   include base::ruby
   include base::tmp
 
   include arcanist
-  include docker
   include dotfiles
   include dropbox
-  include google_chrome
   include hipchat
+  include puppet
+  include python
+  include spotify
+  include ssh
+
+  #=============================================================================
+
+  include docker
+  include google_chrome
   include lm_sensors
   include mysql::client
   include ntp
   include packer
-  include puppet
-  include python
-  include spotify
   include sublime_text
-  include ssh
   include sudo
   include terraform
   include timezone
@@ -32,5 +35,4 @@ class base {
 
   # TODO: See https://github.com/voxpupuli/puppet-nodejs/issues/165.
   include nodejs
-
 }
