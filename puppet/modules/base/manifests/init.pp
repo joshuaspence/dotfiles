@@ -9,7 +9,6 @@ class base {
   include base::tmp
 
   include arcanist
-  include dotfiles
   include puppet
   include ssh
 

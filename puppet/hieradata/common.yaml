@@ -1,6 +1,5 @@
 ---
 docker::ensure: 'latest'
-dotfiles::ensure: 'latest'
 dropbox::ensure: 'latest'
 google_chrome::ensure: 'latest'
 hipchat::ensure: 'latest'
