@@ -29,6 +29,7 @@ class base {
   include sudo
   include terraform
   include timezone
+  include tmpreaper
   include vagrant
   include virtualbox
   include wget
