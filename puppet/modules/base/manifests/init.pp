@@ -10,21 +10,21 @@ class base {
 
   include arcanist
   include dotfiles
-  include dropbox
-  include hipchat
   include puppet
-  include python
-  include spotify
   include ssh
 
   #=============================================================================
 
   include docker
+  include dropbox
   include google_chrome
+  include hipchat
   include lm_sensors
   include mysql::client
   include ntp
   include packer
+  include python
+  include spotify
   include sublime_text
   include sudo
   include terraform
