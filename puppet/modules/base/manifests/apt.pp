@@ -81,6 +81,6 @@ class base::apt(
   }
 
   # See https://forge.puppetlabs.com/puppetlabs/apt#adding-new-sources-or-ppas.
-  Class['Apt::Update'] -> Package <| title != 'apt-transport-https' and title != 'ca-certificates' |>
+  Class['Apt::Update'] -> Package <| provider == 'apt' |>
 
 }

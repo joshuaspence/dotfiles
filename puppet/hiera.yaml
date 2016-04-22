@@ -5,6 +5,6 @@
   - "node/%{::fqdn}"
   - "osfamily/%{::osfamily}"
   - "virtual/%{::virtual}"
-  - common
+  - 'common'
 :yaml:
   :datadir: 'hieradata'

@@ -1,6 +1,7 @@
 ---
 docker::ensure: 'latest'
 dropbox::ensure: 'latest'
+git::package_ensure: 'latest'
 google_chrome::ensure: 'latest'
 hipchat::ensure: 'latest'
 mysql::client::package_ensure: 'latest'
@@ -13,6 +14,9 @@ ntp::servers:
   - '2.ubuntu.pool.ntp.org'
   - '3.ubuntu.pool.ntp.org'
 packer::version: '0.10.0'
+php::ensure: 'latest'
+php::fpm: false
+php::pear_ensure: 'latest'
 puppet::ensure: 'latest'
 python::dev: 'latest'
 python::ensure: 'latest'
@@ -42,3 +46,14 @@ wget::version: 'latest'
 
 # See https://github.com/counsyl/puppet-packer/pull/7.
 packer::base_url: 'https://releases.hashicorp.com/packer/'
+
+# PHP7 support
+php::ext_tool_enable: '/usr/sbin/phpenmod'
+php::ext_tool_query: '/usr/sbin/phpquery -v 7.0'
+php::fpm_service_name: 'php7.0-fpm'
+php::manage_repos: false
+php::package_prefix: 'php-'
+php::params::cfg_root: '/etc/php/7.0'
+
+# TODO: See https://github.com/voxpupuli/puppet-nodejs/issues/165.
+nodejs::npm_package_ensure: 'absent'

@@ -4,19 +4,7 @@ class base::php {
 
   # TODO: See https://github.com/mayflower/puppet-php/issues/156.
   class { 'php':
-    ensure       => 'latest',
-    manage_repos => true,
-    fpm          => false,
-    dev          => true,
-    composer     => true,
-    pear         => true,
-    pear_ensure  => 'latest',
-    phpunit      => true,
     extensions   => {
-      apcu      => {
-        ensure   => 'latest',
-        provider => 'apt',
-      },
       curl      => {
         ensure   => 'latest',
         provider => 'apt',
@@ -42,24 +30,25 @@ class base::php {
         ensure   => 'latest',
         provider => 'apt',
       },
-      sqlite    => {
-        ensure   => 'latest',
-        provider => 'apt',
-      },
+      #sqlite    => {
+      #        ensure   => 'latest',
+      #       provider => 'apt',
+      #     },
       'Weakref' => {
-        ensure   => '0.2.6',
+        ensure   => 'latest',
         provider => 'pecl',
+        source   => 'channel://pecl.php.net/Weakref-0.3.2',
         so_name  => 'weakref',
       },
       xdebug    => {
         ensure   => 'latest',
-        provider => 'apt',
-      },
-      xhprof    => {
-        ensure   => 'latest',
         provider => 'pecl',
-        source   => 'channel://pecl.php.net/xhprof-0.9.4',
       },
+      #xhprof    => {
+      #  ensure   => 'latest',
+      #       provider => 'pecl',
+      #       source   => 'channel://pecl.php.net/xhprof-0.9.4',
+      #     },
     },
   }
 
