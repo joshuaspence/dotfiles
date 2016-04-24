@@ -23,6 +23,12 @@ python::ensure: 'latest'
 python::pip: 'latest'
 python::provider: 'pip'
 python::virtualenv: 'latest'
+rvm::version: 'latest'
+rvm::install_dependencies: false
+rvm::manage_rvmrc: true
+rvm::system_users: []
+rvm::system_rubies: {}
+rvm::rvm_gems: {}
 spotify::ensure: 'latest'
 ssh::client_options: {}
 ssh::server_options:

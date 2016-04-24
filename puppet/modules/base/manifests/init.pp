@@ -4,7 +4,7 @@ class base {
   include base::java
   include base::packages
   include base::php
-  include base::ruby
+  #include base::ruby
 
   include arcanist
   include puppet
@@ -25,6 +25,7 @@ class base {
   include ntp
   include packer
   include python
+  include rvm
   include spotify
   include sublime_text
   include sudo
