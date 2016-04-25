@@ -5,7 +5,6 @@ mod 'puppetlabs/git', '0.4.0'
 mod 'jgazeley/lm_sensors', '0.2.1'
 mod 'puppetlabs/mysql', '3.7.0'
 mod 'puppetlabs/ntp', '4.1.2'
-mod 'counsyl/packer', '0.9.17'
 mod 'stankevich/python', '1.12.0'
 mod 'maestrodev/rvm', '1.13.1'
 mod 'saz/ssh', '2.8.1'
@@ -32,6 +31,9 @@ mod 'puppetlabs/java', :git => 'https://github.com/puppetlabs/puppetlabs-java'
 # https://github.com/voxpupuli/puppet-nodejs/pull/199, which fixes
 # https://github.com/voxpupuli/puppet-nodejs/issues/158.
 mod 'puppet/nodejs', :git => 'https://github.com/voxpupuli/puppet-nodejs'
+
+# See https://github.com/counsyl/puppet-packer/pull/7.
+mod 'counsyl/packer', :git => 'https://github.com/joshuaspence/puppet-packer'
 
 # The latest release (version 3.4.2) doesn't work with PHP 7.0.
 # See https://github.com/mayflower/puppet-php/issues/146.

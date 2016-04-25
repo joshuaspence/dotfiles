@@ -50,9 +50,6 @@ virtualbox::package_ensure: 'latest'
 virtualbox::version: '5.0'
 wget::version: 'latest'
 
-# See https://github.com/counsyl/puppet-packer/pull/7.
-packer::base_url: 'https://releases.hashicorp.com/packer/'
-
 # PHP7 support
 php::ext_tool_enable: '/usr/sbin/phpenmod'
 php::ext_tool_query: '/usr/sbin/phpquery -v 7.0'
