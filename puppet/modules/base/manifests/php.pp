@@ -13,6 +13,10 @@ class base::php {
         ensure   => 'latest',
         provider => 'apt',
       },
+      imagick    => {
+        ensure   => 'latest',
+        provider => 'apt',
+      },
       json      => {
         ensure   => 'latest',
         provider => 'apt',
@@ -49,6 +53,10 @@ class base::php {
       #       provider => 'pecl',
       #       source   => 'channel://pecl.php.net/xhprof-0.9.4',
       #     },
+      yaml      => {
+        ensure   => 'latest',
+        provider => 'pecl',
+      },
     },
   }
 
