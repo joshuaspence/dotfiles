@@ -1,6 +1,6 @@
 moduledir 'ext_modules'
 
-mod 'puppetlabs/apt', '2.2.2'
+mod 'puppetlabs/apt', :git => 'https://github.com/puppetlabs/puppetlabs-apt'
 mod 'puppetlabs/git', '0.4.0'
 mod 'jgazeley/lm_sensors', '0.2.1'
 mod 'puppetlabs/mysql', '3.7.0'
