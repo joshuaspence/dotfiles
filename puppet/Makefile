@@ -44,5 +44,5 @@ $(R10K): | $(GEM)
 	sudo $(GEM) install --no-rdoc --no-ri r10k
 
 ext_modules: Puppetfile | $(R10K)
-	$(R10K) puppetfile install --moduledir=$@ --puppetfile=$< --verbose
+	$(R10K) puppetfile install --verbose
 	$(R10K) puppetfile purge
