@@ -41,7 +41,12 @@ $(PUPPET_BIN_DIR)/%:
 	sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes install puppet-agent
 
 $(R10K): | $(GEM)
-	sudo $(GEM) install --quiet --no-document r10k
+	sudo $(GEM) install \
+	    --quiet \
+	    --no-document \
+	    --bindir /opt/puppetlabs/puppet/bin \
+	    --install-dir /opt/puppetlabs/puppet/lib/ruby/gems/2.1.0 \
+	    r10k
 
 ext_modules: Puppetfile | $(R10K)
 	$(R10K) puppetfile install --verbose
