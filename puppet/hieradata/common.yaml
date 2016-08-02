@@ -42,7 +42,7 @@ sublime_text::ensure: 'latest'
 sudo::config_file_replace: true
 sudo::package_ensure: 'latest'
 sudo::purge: true
-terraform::version: '0.6.16'
+terraform::version: '0.7.0'
 timezone::autoupgrade: true
 timezone::timezone: 'Australia/Sydney'
 vagrant::ensure: 'latest'
