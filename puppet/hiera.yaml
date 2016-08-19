@@ -1,6 +1,6 @@
 ---
 :backends:
-  - yaml
+  - 'yaml'
 :hierarchy:
   - "node/%{::fqdn}"
   - "osfamily/%{::osfamily}"
