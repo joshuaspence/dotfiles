@@ -55,6 +55,11 @@ class personal(
     home   => $home,
   }
 
+  # The existence of this file suppresses the "sudo hint".
+  file { "${home}/.sudo_as_admin_successful":
+    ensure => 'file',
+  }
+
   # python::dotfile
   # git::config
 
