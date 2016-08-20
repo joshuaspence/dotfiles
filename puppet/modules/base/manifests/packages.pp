@@ -145,6 +145,8 @@ class base::packages {
     'unrar',
     'unzip',
     'vim',
+    'visualboyadvance',
+    'visualboyadvance-gtk',
     'vlc',
     'whois',
     'wireshark',
