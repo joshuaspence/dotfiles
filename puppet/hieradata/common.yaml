@@ -48,7 +48,6 @@ timezone::timezone: 'Australia/Sydney'
 vagrant::ensure: 'latest'
 virtualbox::package_ensure: 'latest'
 virtualbox::version: '5.0'
-wget::version: 'latest'
 
 # PHP7 support
 php::ext_tool_enable: '/usr/sbin/phpenmod'
