@@ -10,7 +10,7 @@ mod 'puppet/nodejs', '2.0.1'
 mod 'puppetlabs/ntp', '4.2.0'
 mod 'counsyl/packer', '0.9.18'
 mod 'mayflower/php', '4.0.0-beta1'
-mod 'stankevich/python', '1.14.0'
+mod 'stankevich/python', '1.18.2'
 mod 'maestrodev/rvm', '1.13.1'
 mod 'saz/ssh', '2.8.1'
 mod 'puppetlabs/stdlib', :latest
