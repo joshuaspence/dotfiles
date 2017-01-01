@@ -12,7 +12,7 @@ mod 'counsyl/packer', '0.9.18'
 mod 'mayflower/php', '4.0.0-beta1'
 mod 'stankevich/python', '1.18.2'
 mod 'maestrodev/rvm', '1.13.1'
-mod 'saz/ssh', '2.8.1'
+mod 'saz/ssh', '2.9.1'
 mod 'puppetlabs/stdlib', :latest
 mod 'saz/sudo', '3.1.0'
 mod 'inkblot/terraform', '1.0.1'
