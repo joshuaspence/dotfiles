@@ -38,12 +38,12 @@ class base::php {
       #        ensure   => 'latest',
       #       provider => 'apt',
       #     },
-      'Weakref' => {
-        ensure   => 'latest',
-        provider => 'pecl',
-        source   => 'channel://pecl.php.net/Weakref-0.3.2',
-        so_name  => 'weakref',
-      },
+      #'Weakref' => {
+      #  ensure   => 'latest',
+      #  provider => 'pecl',
+      #  source   => 'channel://pecl.php.net/Weakref-0.3.2',
+      #  so_name  => 'weakref',
+      #},
       xdebug    => {
         ensure   => 'latest',
         provider => 'pecl',
