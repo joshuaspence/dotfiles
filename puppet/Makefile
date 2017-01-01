@@ -23,31 +23,28 @@ puppet: | $(PUPPET)
 	sudo \
 	    FACTER_dbus_session_bus_address=$(DBUS_SESSION_BUS_ADDRESS) \
 	    FACTER_id=$(USER) \
-	    $(PUPPET) apply \
-		--basemodulepath=./modules:./ext_modules \
-		--hiera_config=./hiera.yaml \
-		--strict_variables \
-		./manifests/site.pp
+	    $(PUPPET) apply --config=./puppet.conf ./manifests/site.pp
 
 .PHONY: r10k
 r10k: ext_modules
 
 #===============================================================================
 
+ext_modules: Puppetfile | $(R10K)
+	$(R10K) puppetfile install --verbose
+	$(R10K) puppetfile purge
+
+#===============================================================================
+# Bootstrapping.
+#-------------------------------------------------------------------------------
+# These targets are used to install Puppet and R10K.
+#===============================================================================
+
 $(PUPPET_BIN_DIR)/%:
-	wget --config=/dev/null --no-verbose --output-document=/tmp/puppet.deb https://apt.puppetlabs.com/puppetlabs-release-pc1-$(DIST).deb
+	wget --no-verbose --config=/dev/null --output-document=/tmp/puppet.deb 'https://apt.puppetlabs.com/puppetlabs-release-pc1-$(DIST).deb'
 	sudo dpkg --install /tmp/puppet.deb
 	sudo apt-get --quiet update
 	sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes install puppet-agent
 
 $(R10K): | $(GEM)
-	sudo $(GEM) install \
-	    --quiet \
-	    --no-document \
-	    --bindir /opt/puppetlabs/puppet/bin \
-	    --install-dir /opt/puppetlabs/puppet/lib/ruby/gems/2.1.0 \
-	    r10k
-
-ext_modules: Puppetfile | $(R10K)
-	$(R10K) puppetfile install --verbose
-	$(R10K) puppetfile purge
+	sudo $(GEM) install --quiet --no-document r10k
