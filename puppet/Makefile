@@ -23,7 +23,7 @@ puppet: | $(PUPPET)
 	sudo \
 	    FACTER_dbus_session_bus_address=$(DBUS_SESSION_BUS_ADDRESS) \
 	    FACTER_id=$(USER) \
-	    $(PUPPET) apply --config=./puppet.conf ./manifests/site.pp
+	    $(PUPPET) apply --confdir=. ./manifests/site.pp
 
 .PHONY: r10k
 r10k: ext_modules
