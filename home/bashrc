@@ -42,3 +42,6 @@ export PATH="../arcanist/bin:$PATH"
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
 [[ -s "/home/josh/.gvm/scripts/gvm" ]] && source "/home/josh/.gvm/scripts/gvm"
+
+# added by travis gem
+[ -f /home/josh/.travis/travis.sh ] && source /home/josh/.travis/travis.sh

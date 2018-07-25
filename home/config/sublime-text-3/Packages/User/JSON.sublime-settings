@@ -1,15 +1,15 @@
 {
 	"extensions":
 	[
-		".jshintrc",
-		".arcconfig",
-		".csslintrc",
-		".eslintrc",
-		".jscsrc",
-		"geojson",
-		".arcrc",
 		".bowerrc",
+		".eslintrc",
+		".arcconfig",
+		".jscsrc",
 		".arclint",
-		"Godeps"
+		"Godeps",
+		".arcrc",
+		".csslintrc",
+		".jshintrc",
+		"geojson"
 	]
 }

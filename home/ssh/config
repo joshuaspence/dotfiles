@@ -24,6 +24,10 @@ Host secure.phabricator.com
 # Work                                                                         #
 #==============================================================================#
 
+Host *.amazonaws.com *.compute.internal
+    ForwardAgent yes
+    IdentityFile ~/.ssh/keys/freelancer.com
+
 Host *.freelancer.com *.fln-dev.net *.warriorforum.com *.flnltd.com
     User josh
     IdentityFile ~/.ssh/keys/freelancer.com
@@ -58,7 +62,7 @@ Host *
     CheckHostIP yes
     Compression no
     CompressionLevel 6
-    ForwardAgent no
+    ForwardAgent yes
     ForwardX11 no
     HashKnownHosts yes
     IdentitiesOnly yes

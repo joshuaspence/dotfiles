@@ -2,9 +2,9 @@
 	"extensions":
 	[
 		"svg",
-		"xml",
-		"xml.dist",
 		"xslt",
+		"xml.dist",
+		"xml",
 		"xsd"
 	]
 }

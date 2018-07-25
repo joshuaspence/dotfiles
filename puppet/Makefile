@@ -1,15 +1,20 @@
-# Environment
+# Configuration
 DIST := $(shell lsb_release --codename --short)
 USER := $(shell whoami)
 
 # Commands
 PUPPET_BIN_DIR := /opt/puppetlabs/puppet/bin
-GEM    := $(PUPPET_BIN_DIR)/gem
+GEM := $(PUPPET_BIN_DIR)/gem
 PUPPET := $(PUPPET_BIN_DIR)/puppet
-R10K   := $(PUPPET_BIN_DIR)/r10k
+LIBRARIAN_PUPPET := $(PUPPET_BIN_DIR)/librarian-puppet
+
+# Environment
+export PATH := /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+unexport GEM_HOME
+unexport GEM_PATH
 
 .PHONY: all
-all: r10k puppet
+all: librarian-puppet puppet
 
 .PHONY: clean
 clean:
@@ -25,14 +30,13 @@ puppet: | $(PUPPET)
 	    FACTER_id=$(USER) \
 	    $(PUPPET) apply --confdir=. ./manifests/site.pp
 
-.PHONY: r10k
-r10k: ext_modules
+.PHONY: librarian-puppet
+librarian-puppet: ext_modules
 
 #===============================================================================
 
-ext_modules: Puppetfile | $(R10K)
-	$(R10K) puppetfile install --verbose
-	$(R10K) puppetfile purge
+ext_modules: Puppetfile Puppetfile.lock | $(LIBRARIAN_PUPPET)
+	PATH=$(PUPPET_BIN_DIR):$$PATH $(LIBRARIAN_PUPPET) install --path=$@ --verbose
 
 #===============================================================================
 # Bootstrapping.
@@ -46,5 +50,5 @@ $(PUPPET_BIN_DIR)/%:
 	sudo apt-get --quiet update
 	sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes install puppet-agent
 
-$(R10K): | $(GEM)
-	sudo $(GEM) install --quiet --no-document r10k
+$(LIBRARIAN_PUPPET): | $(GEM)
+	sudo $(GEM) install --quiet --no-document librarian-puppet

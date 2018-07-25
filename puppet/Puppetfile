@@ -1,4 +1,6 @@
-moduledir 'ext_modules'
+forge 'https://forgeapi.puppetlabs.com'
+
+#moduledir 'ext_modules'
 
 mod 'puppetlabs/apt', '2.3.0'
 mod 'garethr/docker', '5.3.0'
@@ -9,11 +11,11 @@ mod 'puppetlabs/mysql', '3.10.0'
 mod 'puppet/nodejs', '2.2.0'
 mod 'puppetlabs/ntp', '6.0.0'
 mod 'counsyl/packer', '0.9.18'
-mod 'mayflower/php', '4.0.0-beta1'
+#mod 'mayflower/php', '4.0.0-beta1'
 mod 'stankevich/python', '1.18.2'
 mod 'maestrodev/rvm', '1.13.1'
 mod 'saz/ssh', '2.9.1'
-mod 'puppetlabs/stdlib', :latest
+mod 'puppetlabs/stdlib' #, :latest
 mod 'saz/sudo', '3.1.0'
 mod 'inkblot/terraform', '1.0.1'
 mod 'saz/timezone', '3.3.0'
@@ -23,17 +25,6 @@ mod 'puppetlabs/vcsrepo', '1.5.0'
 mod 'puppet/virtualbox', '1.7.3'
 mod 'maestrodev/wget', '1.7.3'
 
-# Dependencies.
-mod 'camptocamp/archive', '0.9.0'
-mod 'puppetlabs/concat', '2.1.0'
-mod 'stahnma/epel', '1.2.2'
-mod 'golja/gnupg', '1.2.3'
-mod 'treydock/gpg_key', '0.0.3'
-mod 'puppetlabs/inifile', '1.5.0'
-mod 'nanliu/staging', '1.0.3'
-mod 'example42/yum', '2.1.27'
-mod 'darin/zypprepo', '1.0.2'
-
 # See https://github.com/counsyl/puppet-sys/pull/14 and
 # https://github.com/counsyl/puppet-sys/pull/15.
-mod 'counsyl/sys', :git => 'https://github.com/joshuaspence/puppet-sys' # check
+#mod 'counsyl/sys', :git => 'https://github.com/joshuaspence/puppet-sys' # check
