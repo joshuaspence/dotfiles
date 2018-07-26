@@ -1,0 +1,7 @@
+Host *
+  Compression yes
+  ForwardAgent no
+  ForwardX11 no
+  IdentityFile ~/.ssh/keys/%h
+  PasswordAuthentication no
+  PubkeyAuthentication yes
