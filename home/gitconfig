@@ -1,0 +1,12 @@
+[alias]
+  amend = commit --amend
+  branches = branch --all
+  remotes = remote --verbose
+  tags = tag --list
+
+[core]
+  editor = vim
+  excludesFile = ~/.gitignore
+
+[include]
+  path = ~/.gituser
