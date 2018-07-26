@@ -79,3 +79,4 @@ fi
 command -v source_r >/dev/null || source "${HOME}/.shell/functions/source_r.sh"
 source_r "${HOME}/.shell/config"
 source_r "${HOME}/.shell/environment"
+source_r "${HOME}/.shell/completion"
