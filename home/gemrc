@@ -1,5 +1,0 @@
-#/
-## Configuration file for {@link http://rubygems.org/ RubyGems}.
-#\
-
-gem: --no-ri --no-rdoc

@@ -1,14 +1,5 @@
-#/
-## Configuration file for {@link http://github.com/jbernard/dotfiles dotfiles}.
-#\
-
 [dotfiles]
 repository = ~/dotfiles/home
+externals = {}
+ignore = []
 packages = ['config']
-ignore = [
-    'README.md',
-    '.gitignore']
-externals = {
-    '.adobe':      '/tmp',
-    '.bzr.log':    '/dev/null',
-    '.macromedia': '/tmp'}

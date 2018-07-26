@@ -1,8 +1,0 @@
-/**
- * Syntax-specific settings for "Markdown" files.
- */
-{
-	"word_wrap": "auto",
-    "wrap_width": 81,
-    "spell_check": true
-}

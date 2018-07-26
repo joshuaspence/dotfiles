@@ -1,8 +1,0 @@
-/**
- * Package configuration for
- * {@link https://github.com/dzhibas/SublimePrettyJson PrettyJson}.
- */
-{
-    "indent": 4,
-    "sort_keys": false
-}

@@ -1,8 +1,0 @@
-# librarian-puppet
-/ext_modules/
-/vendor/puppet/
-/.librarian/
-/.tmp/
-
-# Puppet
-/ssl/

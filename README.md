@@ -1,13 +1,6 @@
-Overview
-========
-This repository contains various Unix configuration files that I use often.
-
-Disclaimer
-==========
-Anyone else is welcome to use these configuration files for their own personal
-use, but I take no responsibility or liability for any losses or damages
-incurred. TODO
+This repository contains my dotfiles.
 
 Instructions
 ============
-TODO
+I manage my dotfiles using [`dotfiles`](https://pypi.org/project/dotfiles/).
+Basically, just run `dootfiles --sync`.

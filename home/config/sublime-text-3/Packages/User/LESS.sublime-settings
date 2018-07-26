@@ -1,6 +1,0 @@
-/**
- * Package configuration for {@link https://github.com/danro/LESS-sublime LESS}.
- */
-{
-    "auto_insert_semicolon": true
-}

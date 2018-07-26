@@ -1,8 +1,0 @@
-[submodule "home/shell/completion/ruby"]
-	path = home/shell/completion/ruby
-	url = git://github.com/mernen/completion-ruby.git
-	branch = master
-[submodule "home/vim/bundle/vundle"]
-	path = home/vim/bundle/vundle
-	url = git://github.com/gmarik/vundle.git
-	branch = master
