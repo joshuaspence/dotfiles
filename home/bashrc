@@ -85,3 +85,6 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+command -v source_r >/dev/null || source "${HOME}/.shell/functions/source_r.sh"
+source_r "${HOME}/.shell/environment"
