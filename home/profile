@@ -1,0 +1,12 @@
+# Executed by the command interpreter for login shells.
+
+# If running bash.
+if [ -n "$BASH_VERSION" ]; then
+  # Include `.bashrc` if it exists.
+  if [ -f "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
+  fi
+fi
+
+# Set `$PATH` so it includes user's private bin directories.
+PATH="$HOME/bin:$HOME/.local/bin:$PATH"
