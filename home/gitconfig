@@ -22,3 +22,6 @@
 
 [include]
   path = ~/.gituser
+
+[merge]
+  tool = meld
