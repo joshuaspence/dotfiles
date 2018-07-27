@@ -10,9 +10,6 @@ esac
 # values of LINES and COLUMNS.
 shopt -s checkwinsize
 
-# Make `less` more friendly for non-text input file.
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
-
 # Set variable identifying the chroot you work in.
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
   debian_chroot=$(cat /etc/debian_chroot)
