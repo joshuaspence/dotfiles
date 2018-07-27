@@ -16,6 +16,9 @@
   # Prune all stale remote branches.
   prune-all = !git remote | xargs -n 1 git remote prune
 
+[color "diff"]
+  meta = yellow bold
+
 [color "status"]
   changed = yellow
   untracked = cyan
