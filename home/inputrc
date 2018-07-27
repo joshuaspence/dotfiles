@@ -19,3 +19,11 @@ set mark-symlinked-directories on
 # Do not autocomplete hidden files unless the pattern explicitly begins with a
 # dot.
 set match-hidden-files off
+
+# Use an internal `more`-like pager to display a screenful of possible
+# completions at a time.
+set page-completions on
+
+# Alters the default completion behavior when inserting a single match into
+# the line.
+set skip-completed-text on
