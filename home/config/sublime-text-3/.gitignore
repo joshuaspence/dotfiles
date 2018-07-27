@@ -2,3 +2,12 @@
 /Installed Packages/
 /Lib/
 /Local/
+
+# Packages
+/Packages/*
+!/Packages/User/
+
+# Package Control
+/Packages/User/Package Control.cache/
+/Packages/User/Package Control.merged-ca-bundle
+/Packages/User/Package Control.user-ca-bundle
