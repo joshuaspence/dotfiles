@@ -2,4 +2,4 @@
 repository = ~/dotfiles/home
 externals = {}
 ignore = ['.gitignore']
-packages = ['config', 'ssh']
+packages = ['config', 'ssh', 'venv']

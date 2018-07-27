@@ -1,0 +1,2 @@
+dotfiles==0.6.4
+pkg-resources==0.0.0
