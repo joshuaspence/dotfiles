@@ -1,0 +1,25 @@
+[global_config]
+  always_split_with_profile = True
+  enabled_plugins = LaunchpadCodeURLHandler, APTURLHandler, LaunchpadBugURLHandler
+  focus = mouse
+  inactive_color_offset = 0.76
+  title_hide_sizetext = True
+  window_state = maximise
+[keybindings]
+[layouts]
+  [[default]]
+    [[[child1]]]
+      parent = window0
+      profile = default
+      type = Terminal
+    [[[window0]]]
+      parent = ""
+      type = Window
+[plugins]
+[profiles]
+  [[default]]
+    background_image = None
+    font = Monospace 14
+    scroll_on_output = False
+    scrollback_infinite = True
+    use_system_font = False
