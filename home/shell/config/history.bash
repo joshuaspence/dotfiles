@@ -1,6 +1,3 @@
-# Append to the history , don't overwrite it.
-shopt -s histappend
-
 # Entries beginning with space aren't added into history, and duplicate
 # entries will be erased (leaving the most recent entry).
 HISTCONTROL='ignorespace:erasedups'
