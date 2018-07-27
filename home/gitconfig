@@ -30,6 +30,9 @@
   editor = vim
   excludesFile = ~/.gitignore
 
+[diff]
+  tool = meld
+
 [include]
   path = ~/.gituser
 
