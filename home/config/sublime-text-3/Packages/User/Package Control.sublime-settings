@@ -1,12 +1,14 @@
 {
-  "bootstrapped": true,
-  "installed_packages": [
-    "EditorConfig",
-    "Gradle_Language",
-    "Logstash Syntax Highlighting",
-    "Pretty JSON",
-    "Puppet",
-    "Terraform",
-    "Varnish VCL"
-  ]
+	"bootstrapped": true,
+	"installed_packages":
+	[
+		"EditorConfig",
+		"Gradle_Language",
+		"Logstash Syntax Highlighting",
+		"Package Control",
+		"Pretty JSON",
+		"Puppet",
+		"Terraform",
+		"Varnish VCL"
+	]
 }
