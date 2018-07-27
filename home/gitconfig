@@ -19,6 +19,9 @@
 [color "diff"]
   meta = yellow bold
 
+[color "grep"]
+  filename = yellow bold
+
 [color "status"]
   changed = yellow
   untracked = cyan
