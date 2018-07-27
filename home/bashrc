@@ -53,11 +53,6 @@ esac
 # Colored GCC warnings and errors.
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-# Alias definitions.
-if [ -f ~/.bash_aliases ]; then
-  . ~/.bash_aliases
-fi
-
 # Enable programmable completion features.
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
