@@ -1,0 +1,25 @@
+$include /etc/inputrc
+
+# Show automatically how parentheses (and other matching delimiters) match in
+# the text. Whenever you type a self-inserting character that is a closing
+# delimiter, the cursor moves momentarily to the location of the matching
+# opening delimiter, provided that is on the screen.
+set blink-matching-paren on
+
+# Make tab autocomplete regardless of filename case.
+set completion-ignore-case on
+
+# The maximum number of characters to be the common prefix to display for
+# completions.
+set completion-prefix-display-length 3
+
+# Don't echo contrl characters (such as `^C`). Note this only works for the 
+# command line itself, not if already running a command.
+set echo-control-characters off
+
+# Immediately add a trailing slash when autocompleting symlinks to directories.
+set mark-symlinked-directories on
+
+# Do not autocomplete hidden files unless the pattern explicitly begins with a
+# dot.
+set match-hidden-files off
