@@ -16,6 +16,10 @@
   # Prune all stale remote branches.
   prune-all = !git remote | xargs -n 1 git remote prune
 
+[color "status"]
+  changed = yellow
+  untracked = cyan
+
 [core]
   editor = vim
   excludesFile = ~/.gitignore
