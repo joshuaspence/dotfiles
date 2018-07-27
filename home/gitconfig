@@ -1,8 +1,20 @@
 [alias]
   amend = commit --amend
   branches = branch --all
+  empty-tree = hash-object -t tree /dev/null
+  pretty-log = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   remotes = remote --verbose
   tags = tag --list
+  unfuck = !git fsck && git prune-all && git gc --aggressive --auto
+
+  # List the files that have changed.
+  changed = diff --name-only
+
+  # List files that are not under version control.
+  ls-ignored = ls-files --exclude-standard --ignored --others
+
+  # Prune all stale remote branches.
+  prune-all = !git remote | xargs -n 1 git remote prune
 
 [core]
   editor = vim
