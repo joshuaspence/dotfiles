@@ -1,5 +1,8 @@
-# Normal colors
+# https://wiki.archlinux.org/index.php/Bash/Prompt_customization#Common_capabilities
+
 COLOR_NONE='\e[0m'
+
+# Normal colors
 COLOR_BLACK='\e[0;30m'
 COLOR_RED='\e[0;31m'
 COLOR_GREEN='\e[0;32m'
@@ -33,13 +36,14 @@ BACKGROUND_WHITE='\e[47m'
 STYLE_PLAIN='\e[0m'
 STYLE_BOLD='\e[1m'
 STYLE_NOBOLD='\e[22m'
+STYLE_DIM='\e[2m'
 STYLE_ITALIC='\e[3m'
 STYLE_NOITALIC='\e[23m'
 STYLE_UNDERLINE='\e[4m'
 STYLE_NOUNDERLINE='\e[24m'
 STYLE_BLINKING='\e[5m'
 STYLE_NOBLINKING='\e[25m'
-STYLE_INVERSE='\e[7m'
-STYLE_NOINVERSE='\e[27m'
+STYLE_HIGHLIGHT='\e[7m'
+STYLE_NOHIGHLIGHT='\e[27m'
 STYLE_STRIKETHROUGH='\e[9m'
 STYLE_NOSTRIKETHROUGH='\e[29m'
