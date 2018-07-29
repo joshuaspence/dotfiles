@@ -6,11 +6,11 @@ function shell_prompt() {
   local -r separator_tail=$'\xE2\x94\xBC'
   local -r tick=$'\xE2\x9C\x93'
 
-  local -r host="\[${COLOR_CYAN}\]\\H\[${COLOR_NONE}\]"
-  local -r pwd="\[${COLOR_GREEN}\]\\w\[${COLOR_NONE}\]"
+  local -r host="\[${COLOR_CYAN}\]\H\[${COLOR_NONE}\]"
+  local -r pwd="\[${COLOR_GREEN}\]\w\[${COLOR_NONE}\]"
   local -r status="\[\$([[ \$? != 0 ]] && echo -n '${BOLDCOLOR_RED}${cross}${COLOR_NONE}' || echo -n '${BOLDCOLOR_GREEN}${tick}${COLOR_NONE}')\]"
-  local -r time="\[${COLOR_BLUE}\]\\t\[${COLOR_NONE}\]"
-  local -r user="\[${COLOR_YELLOW}\]\\u\[${COLOR_NONE}\]"
+  local -r time="\[${COLOR_BLUE}\]\t\[${COLOR_NONE}\]"
+  local -r user="\[${COLOR_YELLOW}\]\u\[${COLOR_NONE}\]"
 
   echo -n "${joiner_topleft}${separator}"
   echo -n "[${status}]"
