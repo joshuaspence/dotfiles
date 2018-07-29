@@ -25,3 +25,4 @@ function shell_prompt() {
 
 PS1="$(shell_prompt)"
 PS2='... > '
+PS4='+'
