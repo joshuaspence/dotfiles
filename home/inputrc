@@ -27,3 +27,6 @@ set page-completions on
 # Alters the default completion behavior when inserting a single match into
 # the line.
 set skip-completed-text on
+
+"\e[A": history-search-backward
+"\e[B": history-search-forward
