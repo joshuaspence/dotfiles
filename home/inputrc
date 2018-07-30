@@ -1,3 +1,5 @@
+# NOTE: `bind -p` can be used to show current bindings.
+
 $include /etc/inputrc
 
 # Show automatically how parentheses (and other matching delimiters) match in
