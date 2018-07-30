@@ -1,0 +1,1 @@
+alias whence='type -a'
