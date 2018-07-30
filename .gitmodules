@@ -1,0 +1,3 @@
+[submodule "home/shell/modules/go-pkg-complete"]
+	path = home/shell/modules/go-pkg-complete
+	url = https://github.com/skelterjohn/go-pkg-complete.git
