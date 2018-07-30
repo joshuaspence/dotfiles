@@ -10,4 +10,4 @@ HISTFILESIZE="${HISTSIZE}"
 HISTFILE="${HOME}/.bash_history"
 
 # Exclude certain commands from the history file.
-HISTIGNORE='cd:history:ls:pwd'
+HISTIGNORE='cd:history:ls:pwd:exit'
