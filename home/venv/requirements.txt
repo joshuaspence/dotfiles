@@ -12,3 +12,4 @@ PyYAML==3.13
 rsa==3.4.2
 s3transfer==0.1.13
 six==1.11.0
+speedtest-cli==2.0.2
