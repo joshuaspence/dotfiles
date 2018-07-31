@@ -1,6 +1,6 @@
 # Entries beginning with space aren't added into history, and duplicate
 # entries will be erased (leaving the most recent entry).
-HISTCONTROL='ignorespace:erasedups'
+HISTCONTROL='ignorespace:ignoredups'
 
 # Lots of history. 
 HISTSIZE=10000000000
