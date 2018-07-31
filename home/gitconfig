@@ -4,8 +4,10 @@
   empty-tree = hash-object -t tree /dev/null
   pretty-log = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   remotes = remote --verbose
+  squash = rebase --interactive --autosquash
   tags = tag --list
   unfuck = !git fsck && git prune-all && git gc --aggressive --auto
+  unstage = reset HEAD
 
   # List the files that have changed.
   changed = diff --name-only
