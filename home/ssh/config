@@ -1,3 +1,5 @@
+Include config.d/*.conf
+
 Host *
   Compression yes
   ForwardAgent no
