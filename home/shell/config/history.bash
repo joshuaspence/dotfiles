@@ -10,7 +10,7 @@ HISTFILESIZE="${HISTSIZE}"
 HISTFILE="${HOME}/.bash_history"
 
 # Exclude certain commands from the history file.
-HISTIGNORE='bg:cd:fg:history:ls:pwd:exit'
+HISTIGNORE='bg:cd:exit:fg:history:ls:pwd:exit'
 
 # Whenever displaying the prompt, write the previous line to disk.
 export PROMPT_COMMAND='history -w'
