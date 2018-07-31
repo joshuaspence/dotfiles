@@ -1,0 +1,15 @@
+set nocompatible
+filetype off
+
+" Initialize Vundle.
+set runtimepath+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" Let Vundle manage Vundle.
+Plugin 'VundleVim/Vundle.vim'
+
+" TODO: Automatically install plugins.
+" See https://github.com/VundleVim/Vundle.vim/issues/414.
+
+call vundle#end()
+filetype plugin indent on
