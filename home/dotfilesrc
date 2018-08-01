@@ -1,5 +1,5 @@
 [dotfiles]
 repository = ~/dotfiles/home
 externals = {}
-ignore = ['.gitignore', '*.swp']
+ignore = ['.gitignore']
 packages = ['config', 'ssh', 'venv', 'vim', 'vim/bundle']
