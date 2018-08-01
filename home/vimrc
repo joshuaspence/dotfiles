@@ -10,6 +10,7 @@ Plugin 'VundleVim/Vundle.vim'
 
 " Plugins.
 Plugin 'editorconfig/editorconfig-vim'
+Plugin 'matze/vim-move'
 
 " TODO: Automatically install plugins.
 " See https://github.com/VundleVim/Vundle.vim/issues/414.
