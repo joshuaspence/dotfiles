@@ -3,7 +3,7 @@ Include config.d/*.conf
 Host *
   Compression yes
   ForwardAgent no
-  ForwardX11 no
+  ForwardX11 yes
   IdentityFile ~/.ssh/keys/%h
   PasswordAuthentication no
   PubkeyAuthentication yes
