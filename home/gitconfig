@@ -1,5 +1,5 @@
 [alias]
-  amend = commit --amend
+  amend = commit --amend --no-edit
   branches = branch --all
   empty-tree = hash-object -t tree /dev/null
   pretty-log = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
