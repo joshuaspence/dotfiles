@@ -32,3 +32,4 @@ set skip-completed-text on
 
 "\e[A": history-search-backward
 "\e[B": history-search-forward
+"\e[3;3~": kill-word
