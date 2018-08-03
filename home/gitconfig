@@ -1,4 +1,5 @@
 [alias]
+  aliases = config --get-regexp alias
   amend = commit --amend --no-edit
   branches = branch --all
   commit-all = !git add --all && git commit --all
