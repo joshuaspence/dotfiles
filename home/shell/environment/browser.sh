@@ -1,9 +1,9 @@
 if [[ -n $DISPLAY ]] && command -v google-chrome &>/dev/null; then
-  export BROWSER=$(command -v google-chrome)
+  export BROWSER=google-chrome
 elif [[ -n $DISPLAY ]] && command -v firefox &>/dev/null; then
-  export BROWSER=$(command -v firefox)
+  export BROWSER=firefox
 elif command -v lynx &>/dev/null; then
-  export BROWSER=$(command -v lynx)
+  export BROWSER=lynx
 else
   unset BROWSER
   echo 'No command set for $BROWSER' >&2
