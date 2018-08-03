@@ -43,3 +43,6 @@
 
 [mergetool]
   keepBackup = false
+
+[protocol]
+  version = 2
