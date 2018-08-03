@@ -13,6 +13,10 @@
   # List the files that have changed.
   changed = diff --name-only
 
+  # Ignore changes to a tracked file.
+  ignore-changes = update-index --assume-unchanged
+  unignore-changes = update-index --no-assume-unchanged
+
   # List files that are not under version control.
   ls-ignored = ls-files --exclude-standard --ignored --others
 
