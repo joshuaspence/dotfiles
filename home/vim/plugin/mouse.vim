@@ -1,1 +1,3 @@
-set mouse=a
+if has('mouse')
+  set mouse=a
+endif
