@@ -9,3 +9,5 @@ VIRTUAL_ENV_DISABLE_PROMPT=1
 if [[ -f $HOME/.venv/bin/activate ]]; then
   source "${HOME}/.venv/bin/activate"
 fi
+
+# TODO: Automatically/periodically install dependencies.
