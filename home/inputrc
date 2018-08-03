@@ -11,7 +11,7 @@ set blink-matching-paren on
 # Make tab autocomplete regardless of filename case.
 set completion-ignore-case on
 
-# Don't echo contrl characters (such as `^C`). Note this only works for the 
+# Don't echo control characters (such as `^C`). Note this only works for the
 # command line itself, not if already running a command.
 set echo-control-characters off
 
