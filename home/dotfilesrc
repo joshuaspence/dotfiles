@@ -2,4 +2,12 @@
 repository = ~/dotfiles/home
 externals = {}
 ignore = ['.gitignore']
-packages = ['config', 'config/sublime-text-3', 'config/sublime-text-3/Packages', 'config/sublime-text-3/Packages/User', 'ssh', 'venv', 'vim', 'vim/bundle']
+packages = [
+  'config',
+  'config/sublime-text-3',
+  'config/sublime-text-3/Packages',
+  'config/sublime-text-3/Packages/User',
+  'ssh',
+  'venv',
+  'vim',
+  'vim/bundle']
