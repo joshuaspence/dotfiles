@@ -5,7 +5,7 @@ shopt -s cdspell
 # Save all lines of a multiple-line command in the same history entry.
 shopt -s cmdhist
 
-# Check the window size after each command and, if necessary, update the 
+# Check the window size after each command and, if necessary, update the
 # values of `$LINES` and `$COLUMNS`.
 shopt -s checkwinsize
 
