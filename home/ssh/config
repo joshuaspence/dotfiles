@@ -1,5 +1,8 @@
 Include config.d/*.conf
 
+Host github.com
+  ForwardX11 no
+
 Host *
   Compression yes
   ForwardAgent no
