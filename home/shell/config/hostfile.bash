@@ -1,1 +1,1 @@
-unset HOSTFILE
+HOSTFILE=~/.ssh/known_hosts
