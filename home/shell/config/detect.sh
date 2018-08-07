@@ -11,3 +11,10 @@ if [[ $- == *i* ]]; then
 else
   INTERACTIVE_SHELL=false
 fi
+
+# Detect login shell.
+if [[ $0 == -* ]]; then
+  LOGIN_SHELL=true
+else
+  LOGIN_SHELL=false
+fi
