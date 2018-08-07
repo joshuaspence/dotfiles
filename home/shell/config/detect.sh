@@ -1,8 +1,8 @@
 # Detect color support.
 if [[ -n $COLORTERM || $(tput colors) > 2 ]]; then
-  CLICOLOR=true
+  CLI_COLOR=true
 else
-  CLICOLOR=false
+  CLI_COLOR=false
 fi
 
 # Detect interactive shell.
