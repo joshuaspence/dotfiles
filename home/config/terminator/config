@@ -18,8 +18,10 @@
 [plugins]
 [profiles]
   [[default]]
+    audible_bell = True
     background_image = None
     font = Monospace 14
     scroll_on_output = False
     scrollback_infinite = True
     use_system_font = False
+    visible_bell = True
