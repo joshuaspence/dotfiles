@@ -1,12 +1,9 @@
 Include config.d/*.conf
 
-Host github.com
-  ForwardX11 no
-
 Host *
   Compression yes
   ForwardAgent no
-  ForwardX11 yes
+  ForwardX11 no
   IdentityFile ~/.ssh/keys/%h
   PasswordAuthentication no
   PubkeyAuthentication yes
