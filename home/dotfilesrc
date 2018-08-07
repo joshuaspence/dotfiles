@@ -6,7 +6,6 @@ packages = [
   'config',
   'config/sublime-text-3',
   'config/sublime-text-3/Packages',
-  'config/sublime-text-3/Packages/User',
   'ssh',
   'venv',
   'vim',
