@@ -1,5 +1,5 @@
 [alias]
-  aliases = config --get-regexp alias
+  aliases = !git config --get-regexp '^alias\\.' | colrm 1 6 | sed 's/[ ]/ = /'
   amend = commit --amend --no-edit
   branches = branch --all
   commit-all = !git add --all && git commit --all
