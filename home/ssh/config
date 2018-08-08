@@ -1,6 +1,7 @@
 Include config.d/*.conf
 
 Host *
+  AddKeysToAgent yes
   Compression yes
   ForwardAgent no
   ForwardX11 no
