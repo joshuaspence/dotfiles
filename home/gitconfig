@@ -8,7 +8,7 @@
   remotes = remote --verbose
   squash = rebase --interactive --autosquash
   tags = tag --list
-  unfuck = !git fsck && git prune-all && git gc --aggressive --auto
+  unfuck = !git fsck && git remote prune origin && git gc --aggressive --auto
   unstage = reset HEAD
   untrack = rm --cache
 
@@ -21,9 +21,6 @@
 
   # List files that are not under version control.
   ls-ignored = ls-files --exclude-standard --ignored --others
-
-  # Prune all stale remote branches.
-  prune-all = !git remote | xargs -n 1 git remote prune
 
 [color "diff"]
   meta = yellow bold
