@@ -57,3 +57,7 @@
 
 [protocol]
   version = 2
+
+[rerere]
+  # Remember merge conflict resolutions.
+  enabled = true
