@@ -1,0 +1,7 @@
+export LESS_TERMCAP_mb=$(printf "${BOLDCOLOR_RED}")
+export LESS_TERMCAP_md=$(printf "${BOLDCOLOR_YELLOW}")
+export LESS_TERMCAP_me=$(printf "${COLOR_NONE}")
+export LESS_TERMCAP_se=$(printf "${COLOR_NONE}")
+export LESS_TERMCAP_so=$(printf "${BACKGROUND_BLUE}${BOLDCOLOR_WHITE}")
+export LESS_TERMCAP_ue=$(printf "${COLOR_NONE}")
+export LESS_TERMCAP_us=$(printf "${BOLDCOLOR_WHITE}")
