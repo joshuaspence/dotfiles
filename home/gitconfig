@@ -10,6 +10,7 @@
   tags = tag --list
   unfuck = !git fsck && git prune-all && git gc --aggressive --auto
   unstage = reset HEAD
+  untrack = rm --cache
 
   # List the files that have changed.
   changed = diff --name-only
