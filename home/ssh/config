@@ -6,6 +6,7 @@ Host *
   ExitOnForwardFailure yes
   ForwardAgent no
   ForwardX11 no
+  GSSAPIAuthentication no
   HashKnownHosts no
   IdentityFile ~/.ssh/keys/%h
   PasswordAuthentication no
