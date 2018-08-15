@@ -1,3 +1,4 @@
+IgnoreUnknown Include
 Include config.d/*.conf
 
 Host *
