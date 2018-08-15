@@ -9,11 +9,4 @@ before_install:
 install:
   - 'dotfiles --repo home --config home/dotfilesrc --home /tmp/home --sync'
 script:
-  # Validate cURL configuration.
-  - '! curl --config home/curlrc --version 2>&1 >/dev/null | grep ^'
-
-  # Validate SSH configuration.
-  - 'docker run --entrypoint /usr/bin/ssh --volume $TRAVIS_BUILD_DIR:/dotfiles chamunks/alpine-openssh -F /dotfiles/home/ssh/config -G localhost >/dev/null'
-
-  # Validate `wget` configuration.
-  - 'wget --config home/wgetrc --version'
+  - 'make test'
