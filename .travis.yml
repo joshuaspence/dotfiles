@@ -1,9 +1,13 @@
 ---
 language: 'shell'
 os: 'ubuntu'
+services:
+  - 'docker'
 
 before_install:
   - 'sudo pip install --quiet dotfiles'
 install:
-  - 'dotfiles --repo home --config home/dotfilesrc --sync'
-
+  - 'dotfiles --repo home --config home/dotfilesrc --home /tmp/home --sync'
+script:
+  # Validate SSH configuration.
+  - 'docker run --entrypoint /usr/bin/ssh --volume $TRAVIS_BUILD_DIR:/dotfiles chamunks/alpine-openssh -F /dotfiles/home/ssh/config -G localhost >/dev/null'
