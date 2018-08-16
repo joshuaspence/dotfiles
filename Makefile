@@ -7,7 +7,7 @@ test-curl:
 
 .PHONY: test-dotfiles
 test-dotfiles:
-	dotfiles --config home/dotfilesrc --list >/dev/null
+	dotfiles --config home/dotfilesrc --list
 
 .PHONY: test-ssh
 test-ssh:
