@@ -1,9 +1,13 @@
 .PHONY: test
-test: test-curl test-ssh test-wget
+test: test-curl test-dotfiles test-ssh test-wget
 
 .PHONY: test-curl
 test-curl:
 	! curl --config home/curlrc --version 2>&1 >/dev/null | grep ^
+
+.PHONY: test-dotfiles
+test-dotfiles:
+	dotfiles --config home/dotfilesrc --list >/dev/null
 
 .PHONY: test-ssh
 test-ssh:
