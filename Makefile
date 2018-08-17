@@ -1,3 +1,21 @@
+.PHONY: install
+install: install-dotfiles install-composer install-virtualenv
+
+.PHONY: install-composer
+install-composer: install-dotfiles
+	composer global install
+
+.PHONY: install-dotfiles
+install-dotfiles: home/dotfilesrc
+	dotfiles --repo $(<D) --config $< --sync
+
+.PHONY: install-virtualenv
+install-virtualenv: home/venv/requirements.txt | $(HOME)/.venv/bin/activate
+	bash -c "source $(HOME)/.venv/bin/activate && pip install --requirement $<"
+
+$(HOME)/.venv/bin/activate:
+	virtualenv $(dir $(@D))
+
 .PHONY: test
 test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget
 
