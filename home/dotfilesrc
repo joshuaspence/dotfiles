@@ -4,6 +4,7 @@ externals = {}
 ignore = ['.gitignore']
 packages = [
   'config',
+  'config/composer',
   'config/sublime-text-3',
   'config/sublime-text-3/Packages',
   'ssh',

@@ -1,5 +1,9 @@
 .PHONY: test
-test: test-curl test-dotfiles test-ssh test-wget
+test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget
+
+.PHONY: test-composer
+test-composer:
+	docker run --volume $(CURDIR)/home/config/composer:/app composer install --dry-run >/dev/null
 
 .PHONY: test-curl
 test-curl:

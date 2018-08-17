@@ -1,0 +1,9 @@
+{
+  "config": {
+    "classmap-authoritative": true,
+    "sort-packages": true
+  },
+  "require": {
+    "psy/psysh": "^0.9.7"
+  }
+}
