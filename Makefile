@@ -19,9 +19,9 @@ test-ssh: home/ssh/config
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
-	$(eval VENV := $(shell mktemp --directory))
-	@virtualenv --quiet $(VENV)
-	bash -c "source $(VENV)/bin/activate && pip install --requirement $< --quiet"
+	$(eval VENV := $(shell mktemp --directory --tmpdir venv.XXXXXX))
+	virtualenv --quiet $(VENV)
+	bash -c "source $(VENV)/bin/activate && pip install --requirement $< --isolated --quiet --no-cache-dir"
 	@rm --recursive --force $(VENV)
 
 .PHONY: test-wget
