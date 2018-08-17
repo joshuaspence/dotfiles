@@ -15,7 +15,7 @@ test-dotfiles: home/dotfilesrc
 
 .PHONY: test-ssh
 test-ssh: home/ssh/config
-	docker run --entrypoint /usr/bin/ssh --volume $(CURDIR):/dotfiles chamunks/alpine-openssh -F /dotfiles/$< -G -T localhost >/dev/null
+	docker run --entrypoint /usr/bin/ssh --volume $(abspath $<):/root/.ssh/config chamunks/alpine-openssh -F /root/.ssh/config -G -T localhost >/dev/null
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
