@@ -7,6 +7,6 @@ services:
 before_install:
   - 'sudo pip install --quiet dotfiles'
 install:
-  - 'dotfiles --repo home --config home/dotfilesrc --home /tmp/home --sync'
+  - 'make install-virtualenv'
 script:
   - 'make test'

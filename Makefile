@@ -10,18 +10,21 @@ install-composer: install-dotfiles
 	composer global install
 
 .PHONY: install-dotfiles
-install-dotfiles: home/dotfilesrc
+install-dotfiles: home/dotfilesrc | install-virtualenv
 	dotfiles --repo $(<D) --config $< --sync
 
 .PHONY: install-virtualenv
-install-virtualenv: home/venv/requirements.txt | $(HOME)/.venv/bin/activate
+install-virtualenv: home/venv/requirements.txt | $(HOME)/.venv/bin/pip-sync
 	. $(HOME)/.venv/bin/activate && pip-sync $<
 
-$(HOME)/.venv/bin/activate:
-	virtualenv $(dir $(@D))
+$(HOME)/.venv:
+	virtualenv $@
 
-home/venv/requirements.txt: home/venv/requirements.in
-	pip-compile --output-file $@ $< >/dev/null
+$(HOME)/.venv/bin/pip-%: | $(HOME)/.venv
+	. $(HOME)/.venv/bin/activate && pip install pip-tools
+
+home/venv/requirements.txt: home/venv/requirements.in | $(HOME)/.venv/bin/pip-compile
+	$(HOME)/.venv/bin/pip-compile --output-file $@ $< >/dev/null
 
 .PHONY: test
 test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget
