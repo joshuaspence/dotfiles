@@ -1,7 +1,9 @@
 [dotfiles]
 repository = ~/dotfiles/home
 externals = {}
-ignore = ['.gitignore']
+ignore = [
+  '.gitignore',
+  'requirements.in']
 packages = [
   'config',
   'config/composer',

@@ -11,10 +11,13 @@ install-dotfiles: home/dotfilesrc
 
 .PHONY: install-virtualenv
 install-virtualenv: home/venv/requirements.txt | $(HOME)/.venv/bin/activate
-	bash -c "source $(HOME)/.venv/bin/activate && pip install --requirement $<"
+	. $(HOME)/.venv/bin/activate && pip-sync $<
 
 $(HOME)/.venv/bin/activate:
 	virtualenv $(dir $(@D))
+
+home/venv/requirements.txt: home/venv/requirements.in
+	pip-compile --output-file $@ $< >/dev/null
 
 .PHONY: test
 test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget
