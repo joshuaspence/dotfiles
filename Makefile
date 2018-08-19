@@ -38,7 +38,7 @@ test-curl: home/curlrc
 	! curl --config $< --version 2>&1 >/dev/null | grep ^
 
 .PHONY: test-dotfiles
-test-dotfiles: home/dotfilesrc
+test-dotfiles: home/dotfilesrc | $(HOME)/.venv
 	dotfiles --repo $(<D) --config $< --list >/dev/null
 
 .PHONY: test-ssh
