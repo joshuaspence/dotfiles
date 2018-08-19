@@ -1,3 +1,7 @@
+.PHONY: init-submodules
+init-submodules:
+	git submodule update --init --recursive
+
 .PHONY: install
 install: install-dotfiles install-composer install-virtualenv
 
