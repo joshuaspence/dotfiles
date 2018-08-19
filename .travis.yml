@@ -1,4 +1,6 @@
 ---
+git:
+  quiet: true
 language: 'shell'
 os: 'ubuntu'
 services:
