@@ -6,7 +6,7 @@ init-submodules:
 install: install-dotfiles install-composer install-virtualenv
 
 .PHONY: install-composer
-install-composer: install-dotfiles
+install-composer: home/config/composer/composer.lock | install-dotfiles
 	composer global install
 
 .PHONY: install-dotfiles
@@ -30,8 +30,11 @@ home/venv/requirements.txt: home/venv/requirements.in | $(HOME)/.venv/bin/pip-co
 test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget
 
 .PHONY: test-composer
-test-composer: home/config/composer/composer.json home/config/composer/composer.lock
+test-composer: home/config/composer/composer.lock
 	docker run --volume $(CURDIR)/$(<D):/app composer install --dry-run >/dev/null
+
+home/config/composer/composer.lock: home/config/composer/composer.json
+	composer global update
 
 .PHONY: test-curl
 test-curl: home/curlrc
