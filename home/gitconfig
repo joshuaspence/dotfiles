@@ -6,6 +6,7 @@
   empty-tree = hash-object -t tree /dev/null
   pretty-log = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   remotes = remote --verbose
+  reword = commit --amend
   root = rev-parse --show-toplevel
   squash = rebase --interactive --autosquash
   tags = tag --list
