@@ -1,9 +1,2 @@
 export rvm_create_flag=1
-export rvm_environments_path="${HOME}/.rvm/environments"
-export rvm_gem_options='--no-document'
-export rvm_gems_cache_path="${HOME}/.rvm/gems_cache"
-export rvm_gems_path="${HOME}/.rvm/gems"
 export rvm_install_on_use_flag=1
-export rvm_log_path="${HOME}/.rvm/log"
-export rvm_user_path="${HOME}/.rvm/user"
-export rvm_wrappers_path="${HOME}/.rvm/wrappers"
