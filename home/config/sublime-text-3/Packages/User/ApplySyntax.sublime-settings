@@ -32,7 +32,7 @@
     {
       "syntax": "Ruby/Ruby",
       "rules": [
-        {"file_path": "/Puppetfile$"},
+        {"file_path": ".*/Puppetfile$"},
       ]
     }
   ]
