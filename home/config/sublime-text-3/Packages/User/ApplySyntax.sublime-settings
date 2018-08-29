@@ -10,7 +10,7 @@
   // Auto add extensions to language settings file in User folder.
   // Do not manually remove "apply_syntax_extensions" from the settings file.
   // "extenstions" are ignored by "match": "all" setting.
-  "add_exts_to_lang_settings": true,
+  "add_exts_to_lang_settings": false,
 
   // Control level of logging in the console.
   // (true|false|"verbose")
