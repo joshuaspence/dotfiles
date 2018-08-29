@@ -21,7 +21,9 @@
         ".arcconfig",
         ".arclint",
         ".arcrc",
-        ".arcunit"
+        ".arcunit",
+        "sublime-project",
+        "sublime-workspace"
       ],
       "rules": [
         {"file_path": ".*/composer\\.lock$"},
@@ -31,13 +33,6 @@
       "syntax": "Ruby/Ruby",
       "rules": [
         {"file_path": "/Puppetfile$"},
-      ]
-    },
-    {
-      "syntax": "ShellScript/Shell-Unix-Generic",
-      "rules": [
-        {"file_path": ".*/dotfiles/home/bash(_(logout|profile)|rc)$"},
-        {"file_path": ".*/dotfiles/home/(hushlogin|profile|rvmrc)$"}
       ]
     }
   ]
