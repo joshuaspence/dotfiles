@@ -1,3 +1,4 @@
 {
-  "ignore_whitespace": "all"
+  "ignore_whitespace": "all",
+  "show_status_bar_text": false
 }
