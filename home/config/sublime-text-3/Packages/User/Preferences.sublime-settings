@@ -16,7 +16,6 @@
 	],
 	"scroll_past_end": false,
 	"shift_tab_unindent": true,
-	"show_full_path": false,
 	"spell_check": true,
 	"translate_tabs_to_spaces": true,
 	"trim_trailing_white_space_on_save": true
