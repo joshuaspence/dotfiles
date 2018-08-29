@@ -10,6 +10,7 @@
 		"Dockerfile Syntax Highlighting",
 		"EditorConfig",
 		"Git",
+		"GitGutter",
 		"Gradle_Language",
 		"INI",
 		"Logstash Syntax Highlighting",
