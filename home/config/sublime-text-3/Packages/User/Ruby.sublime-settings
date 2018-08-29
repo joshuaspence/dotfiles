@@ -1,5 +1,12 @@
 {
   "extensions": [
-    "Puppetfile"
+    "rb",
+    "jbuilder",
+    "podspec",
+    "rake",
+    "rabl",
+    "Puppetfile",
+    "thor",
+    "simplecov"
   ]
 }

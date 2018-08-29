@@ -3,6 +3,12 @@
     ".arcconfig",
     ".arclint",
     ".arcunit",
+    ".bowerrc",
+    ".csslintrc",
+    ".eslintrc",
+    ".jshintrc",
+    ".jscsrc",
+    "geojson",
     "composer.lock"
   ]
 }
