@@ -1,21 +1,26 @@
 {
-    "always_show_minimap_viewport": true,
-    "bold_folder_labels": true,
-    "default_line_ending": "unix",
-    "draw_minimap_border": true,
-    "ensure_newline_at_eof_on_save": true,
-    "font_size": 14,
-    "gutter": true,
-    "highlight_line": true,
-    "highlight_modified_tabs": true,
-    "remember_full_screen": true,
-    "rulers": [
-        80
-    ],
-    "scroll_past_end": false,
-    "shift_tab_unindent": true,
-    "show_full_path": false,
-    "spell_check": true,
-    "translate_tabs_to_spaces": true,
-    "trim_trailing_white_space_on_save": true
+	"always_show_minimap_viewport": true,
+	"bold_folder_labels": true,
+	"default_line_ending": "unix",
+	"draw_minimap_border": true,
+	"ensure_newline_at_eof_on_save": true,
+	"font_size": 14,
+	"gutter": true,
+	"highlight_line": true,
+	"highlight_modified_tabs": true,
+	"ignored_packages":
+	[
+		"Vintage"
+	],
+	"remember_full_screen": true,
+	"rulers":
+	[
+		80
+	],
+	"scroll_past_end": false,
+	"shift_tab_unindent": true,
+	"show_full_path": false,
+	"spell_check": true,
+	"translate_tabs_to_spaces": true,
+	"trim_trailing_white_space_on_save": true
 }
