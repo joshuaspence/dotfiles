@@ -1,18 +1,22 @@
 {
-  "bootstrapped": true,
-  "in_process_packages": [],
-  "installed_packages": [
-    "ApplySyntax",
-    "DocBlockr",
-    "Dockerfile Syntax Highlighting",
-    "EditorConfig",
-    "Git",
-    "Gradle_Language",
-    "Logstash Syntax Highlighting",
-    "Package Control",
-    "Pretty JSON",
-    "Puppet",
-    "Terraform",
-    "Varnish VCL"
-  ]
+	"bootstrapped": true,
+	"in_process_packages":
+	[
+	],
+	"installed_packages":
+	[
+		"ApplySyntax",
+		"DocBlockr",
+		"Dockerfile Syntax Highlighting",
+		"EditorConfig",
+		"Git",
+		"Gradle_Language",
+		"INI",
+		"Logstash Syntax Highlighting",
+		"Package Control",
+		"Pretty JSON",
+		"Puppet",
+		"Terraform",
+		"Varnish VCL"
+	]
 }
