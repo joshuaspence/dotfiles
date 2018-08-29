@@ -5,6 +5,7 @@
 	],
 	"installed_packages":
 	[
+		"DocBlockr",
 		"Dockerfile Syntax Highlighting",
 		"EditorConfig",
 		"Git",
