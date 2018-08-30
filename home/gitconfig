@@ -47,6 +47,7 @@
   untracked = cyan
 
 [core]
+  autocrlf = input
   editor = vim
   excludesFile = ~/.gitignore
   untrackedCache = true
