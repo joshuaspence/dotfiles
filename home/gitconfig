@@ -24,6 +24,9 @@
   # List files that are not under version control.
   ls-ignored = ls-files --exclude-standard --ignored --others
 
+[apply]
+  whitespace = fix
+
 [color "diff"]
   meta = yellow bold
 
