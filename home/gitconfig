@@ -60,6 +60,9 @@
   required = true
   smudge = git-lfs smudge -- %f
 
+[help]
+  autoCorrect = 10
+
 [merge]
   tool = meld
 
