@@ -30,6 +30,9 @@
 [apply]
   whitespace = fix
 
+[branch]
+  autoSetupRebase = always
+
 [color]
   ui = true
 
