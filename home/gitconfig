@@ -48,6 +48,7 @@
   excludesFile = ~/.gitignore
 
 [diff]
+  noprefix = true
   tool = meld
 
 [filter "lfs"]
