@@ -50,9 +50,6 @@
   required = true
   smudge = git-lfs smudge -- %f
 
-[include]
-  path = ~/.gituser
-
 [merge]
   tool = meld
 
@@ -65,3 +62,11 @@
 [rerere]
   # Remember merge conflict resolutions.
   enabled = true
+
+[user]
+  name = Joshua Spence
+  email = josh@joshuaspence.com
+
+# Override email address for work repositories.
+[includeIf "gitdir:~/workspace/freelancer/"]
+  path = ~/.gituser-freelancer
