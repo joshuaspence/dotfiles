@@ -49,6 +49,7 @@
 [core]
   editor = vim
   excludesFile = ~/.gitignore
+  untrackedCache = true
 
 [diff]
   noprefix = true
