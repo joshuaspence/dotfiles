@@ -30,6 +30,9 @@
 [apply]
   whitespace = fix
 
+[color]
+  ui = true
+
 [color "diff"]
   meta = yellow bold
 
