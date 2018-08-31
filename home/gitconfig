@@ -93,6 +93,9 @@
   # Remember merge conflict resolutions.
   enabled = true
 
+[status]
+  showStash = true
+
 [user]
   name = Joshua Spence
   email = josh@joshuaspence.com
