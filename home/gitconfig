@@ -90,7 +90,6 @@
   autoSquash = true
 
 [rerere]
-  # Remember merge conflict resolutions.
   enabled = true
 
 [status]
