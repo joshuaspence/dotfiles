@@ -53,6 +53,7 @@
   untrackedCache = true
 
 [diff]
+  algorithm = patience
   noprefix = true
   tool = meld
 
