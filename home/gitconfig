@@ -58,6 +58,10 @@
   renames = copy
   tool = meld
 
+[fetch]
+  prune = true
+  pruneTags = true
+
 [filter "lfs"]
   clean = git-lfs clean -- %f
   process = git-lfs filter-process
