@@ -55,6 +55,7 @@
 [diff]
   algorithm = patience
   noprefix = true
+  renames = copy
   tool = meld
 
 [filter "lfs"]
