@@ -83,6 +83,9 @@
 [pull]
   rebase = true
 
+[push]
+  default = upstream
+
 [rerere]
   # Remember merge conflict resolutions.
   enabled = true
