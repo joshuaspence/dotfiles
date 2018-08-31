@@ -95,6 +95,7 @@
 
 [status]
   showStash = true
+  showUntrackedFiles = all
 
 [user]
   name = Joshua Spence
