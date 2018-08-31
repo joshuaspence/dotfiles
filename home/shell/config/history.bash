@@ -1,16 +1,17 @@
-# Entries beginning with space aren't added into history, and duplicate
-# entries will be erased (leaving the most recent entry).
-HISTCONTROL='ignorespace:ignoredups'
-
-# Lots of history. 
-HISTSIZE=10000000000
-HISTFILESIZE="${HISTSIZE}"
-
-# File where the history is stored.
-HISTFILE="${HOME}/.bash_history"
+HISTCONTROL='ignoreboth'
+HISTFILESIZE=1048576
+HISTSIZE=1048576
 
 # Exclude certain commands from the history file.
-HISTIGNORE='bg:cd:exit:fg:history:ls:pwd:exit'
+HISTIGNORE='[bf]g:clear:exit:history:ls:pwd'
 
 # Whenever displaying the prompt, write the previous line to disk.
-export PROMPT_COMMAND='history -w'
+# See https://unix.stackexchange.com/a/48113.
+PROMPT_COMMAND='history -a; history -c; history -r'
+
+# Save all lines of a multiple-line command in the same history entry.
+shopt -s cmdhist
+shopt -s lithist
+
+# Append to the history file, don't overwrite it.
+shopt -s histappend

@@ -2,9 +2,6 @@
 # will be corrected.
 shopt -s cdspell
 
-# Save all lines of a multiple-line command in the same history entry.
-shopt -s cmdhist
-
 # Check the window size after each command and, if necessary, update the
 # values of `$LINES` and `$COLUMNS`.
 shopt -s checkwinsize
@@ -19,6 +16,3 @@ shopt -s extglob
 # The pattern `**` used in a filename expansion context will match all files
 # and zero or more directories and subdirectories.
 shopt -s globstar
-
-# Append to the history file, don't overwrite it.
-shopt -s histappend
