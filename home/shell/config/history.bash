@@ -7,7 +7,7 @@ HISTIGNORE='[bf]g:clear:exit:history:ls:pwd'
 
 # Whenever displaying the prompt, write the previous line to disk.
 # See https://unix.stackexchange.com/a/48113.
-PROMPT_COMMAND='history -a; history -c; history -r'
+PROMPT_COMMAND='history -w'
 
 # Save all lines of a multiple-line command in the same history entry.
 shopt -s cmdhist
