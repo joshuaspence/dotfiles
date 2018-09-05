@@ -36,6 +36,7 @@
 [clean]
   requireForce = false
 
+
 [color "diff"]
   meta = yellow bold
 
@@ -70,6 +71,9 @@
 
 [help]
   autoCorrect = 10
+
+[log]
+  date = local
 
 [merge]
   tool = meld
