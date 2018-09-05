@@ -2,6 +2,12 @@
 init-submodules:
 	git submodule update --init --recursive
 
+.PHONY: compile
+compile: home/bashrc
+
+home/bashrc: src/bashrc $(wildcard src/**.sh) $(wildcard src/**.bash)
+	gawk --file=tools/compiler/compiler.gawk -- --addpath src --extended --output $@ $<
+
 .PHONY: install
 install: install-dotfiles install-composer install-virtualenv
 
@@ -10,7 +16,7 @@ install-composer: home/config/composer/composer.lock | install-dotfiles
 	composer global install
 
 .PHONY: install-dotfiles
-install-dotfiles: home/dotfilesrc | install-virtualenv
+install-dotfiles: home/dotfilesrc home/bashrc | install-virtualenv
 	dotfiles --repo $(<D) --config $< --sync
 
 .PHONY: install-virtualenv

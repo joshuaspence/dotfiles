@@ -54,14 +54,9 @@ if ! shopt -oq posix; then
   fi
 fi
 
-source "${HOME}/dotfiles/tools/loader/loader-extended.bash"
-loader_addpath "${HOME}/.shell"
-
 includex "config/**.sh"
 includex "config/**.bash"
 includex "functions/**.sh"
-includex "functions/**.bash"
 includex "environment/**.sh"
-includex "environment/**.bash"
 includex "completion/**.sh"
 includex "completion/**.bash"
