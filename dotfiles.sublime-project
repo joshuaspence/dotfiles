@@ -5,6 +5,12 @@
   "settings": {
     "project_syntaxes": [
       {
+        "syntax": "INI/INI",
+        "rules": [
+          {"file_path": ".*/home/config/htop/htoprc$"}
+        ]
+      },
+      {
         "syntax": "ShellScript/Bash",
         "rules": [
           {"file_path": ".*/home/bash(_(logout|profile)|rc)$"}
