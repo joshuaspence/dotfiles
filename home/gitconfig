@@ -33,6 +33,9 @@
 [branch]
   autoSetupRebase = always
 
+[clean]
+  requireForce = false
+
 [color]
   ui = true
 
