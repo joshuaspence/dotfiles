@@ -36,9 +36,6 @@
 [clean]
   requireForce = false
 
-[color]
-  ui = true
-
 [color "diff"]
   meta = yellow bold
 
