@@ -1,5 +1,7 @@
+# shellcheck disable=SC2034
+
 # Detect color support.
-if [[ -n $COLORTERM || $(tput colors) > 2 ]]; then
+if [[ -n $COLORTERM || $(tput colors) -gt 2 ]]; then
   CLI_COLOR=true
 else
   CLI_COLOR=false

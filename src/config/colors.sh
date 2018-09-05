@@ -1,4 +1,5 @@
 # https://wiki.archlinux.org/index.php/Bash/Prompt_customization#Common_capabilities
+# shellcheck disable=SC2034
 
 COLOR_NONE='\e[0m'
 
