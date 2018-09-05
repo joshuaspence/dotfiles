@@ -1,4 +1,5 @@
-# TODO: Use `${NVM_DIR}` here.
-if [[ -d "${HOME}/.nvm" ]]; then
-  source "${HOME}/.nvm/bash_completion"
+include environment/nvm.sh
+
+if [[ -z "$NVM_DIR}" ]]; then
+  source "${NVM_DIR}/bash_completion"
 fi

@@ -5,7 +5,7 @@ init-submodules:
 .PHONY: compile
 compile: home/bashrc
 
-home/bashrc: src/bashrc $(wildcard src/**.sh) $(wildcard src/**.bash)
+home/bashrc: src/bashrc $(wildcard src/**/*.sh) $(wildcard src/**/*.bash)
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --extended --output $@ $<
 
 .PHONY: install
