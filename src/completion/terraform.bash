@@ -1,3 +1,3 @@
-if [[ -f /usr/local/bin/terraform ]]; then
-  complete -C /usr/local/bin/terraform terraform
+if command -v terraform &>/dev/null; then
+  complete -C terraform terraform
 fi
