@@ -1,3 +1,3 @@
-if [[ -d "${HOME}/.config/composer" ]]; then
-  export PATH="${PATH}:${HOME}/.config/composer/vendor/bin"
+if command -v composer &>/dev/null; then
+  export PATH="${PATH}:$(composer config --global home)/vendor/bin"
 fi
