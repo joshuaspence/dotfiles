@@ -13,7 +13,8 @@
       {
         "syntax": "INI/INI",
         "rules": [
-          {"file_path": ".*/home/config/htop/htoprc$"}
+          {"file_path": ".*/home/config/htop/htoprc$"},
+          {"file_path": ".*/home/dotfilesrc$"}
         ]
       },
       {
