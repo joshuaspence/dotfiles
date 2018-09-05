@@ -1,5 +1,7 @@
 # Enable colored output for `ls`.
-if [ -x /usr/bin/dircolors ]; then
-  eval "$(dircolors --bourne-shell)"
+if command -v dircolors &>/dev/null; then
+  eval "$(dircolors)"
   alias ls='ls --color=auto --human-readable'
+else
+  alias ls='ls --human-readable'
 fi
