@@ -75,6 +75,7 @@
 [log]
   date = local
   follow = true
+  mailmap = true
 
 [merge]
   tool = meld
