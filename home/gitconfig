@@ -74,6 +74,7 @@
 
 [log]
   date = local
+  follow = true
 
 [merge]
   tool = meld
