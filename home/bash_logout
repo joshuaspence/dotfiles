@@ -1,6 +1,6 @@
-# Run commands before a login shell exits.
-
 # When leaving the console, clear the screen to increase privacy.
-if [ "$SHLVL" = 1 ]; then
-  [ -x /usr/bin/clear_console ] && /usr/bin/clear_console -q
+if [ "${SHLVL}" = 1 ]; then
+  if command -v clear_console &>/dev/null; then
+    /usr/bin/clear_console --quiet
+  fi
 fi
