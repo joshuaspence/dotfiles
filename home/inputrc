@@ -1,4 +1,5 @@
 # NOTE: `bind -p` can be used to show current bindings.
+# NOTE: Use `read` to figure out key bindings.
 
 $include /etc/inputrc
 
