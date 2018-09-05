@@ -32,6 +32,10 @@ $(HOME)/.venv/bin/pip-%: | $(HOME)/.venv
 home/venv/requirements.txt: home/venv/requirements.in | $(HOME)/.venv/bin/pip-compile
 	$(HOME)/.venv/bin/pip-compile --output-file $@ $< >/dev/null
 
+.PHONY: shellcheck
+shellcheck:
+	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090 --shell=bash $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile home/profile
+
 .PHONY: test
 test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget
 
