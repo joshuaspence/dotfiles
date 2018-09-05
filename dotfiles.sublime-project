@@ -5,6 +5,12 @@
   "settings": {
     "project_syntaxes": [
       {
+        "syntax": "Git Formats/Git Config",
+        "rules": [
+          {"file_path": ".*/home/gituser-\\w+$"}
+        ]
+      },
+      {
         "syntax": "INI/INI",
         "rules": [
           {"file_path": ".*/home/config/htop/htoprc$"}
@@ -29,7 +35,7 @@
       {
         "syntax": "SSH Config/SSH Config",
         "rules": [
-          {"file_path": ".*/home/ssh/config$"},
+          {"file_path": ".*/home/ssh/config$"}
         ]
       }
     ]
