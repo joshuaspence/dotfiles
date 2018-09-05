@@ -55,8 +55,14 @@ if ! shopt -oq posix; then
   fi
 fi
 
-command -v source_r >/dev/null || source "${HOME}/.shell/functions/source_r.sh"
-source_r "${HOME}/.shell/config"
-source_r "${HOME}/.shell/functions"
-source_r "${HOME}/.shell/environment"
-source_r "${HOME}/.shell/completion"
+source "${HOME}/dotfiles/tools/loader/loader-extended.bash"
+loader_addpath "${HOME}/.shell"
+
+includex "config/**.sh"
+includex "config/**.bash"
+includex "functions/**.sh"
+includex "functions/**.bash"
+includex "environment/**.sh"
+includex "environment/**.bash"
+includex "completion/**.sh"
+includex "completion/**.bash"
