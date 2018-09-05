@@ -11,4 +11,5 @@ before_install:
 install:
   - 'make install-virtualenv'
 script:
+  - 'make compile'
   - 'make test'
