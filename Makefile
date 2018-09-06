@@ -32,9 +32,13 @@ $(HOME)/.venv/bin/pip-%: | $(HOME)/.venv
 home/venv/requirements.txt: home/venv/requirements.in | $(HOME)/.venv/bin/pip-compile
 	$(HOME)/.venv/bin/pip-compile --output-file $@ $< >/dev/null
 
+.PHONY: lint
+lint: shellcheck
+
+# TODO: Remove some of these exclusions.
 .PHONY: shellcheck
-shellcheck:
-	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090 --shell=bash $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile home/profile
+shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile home/profile
+	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC2016,SC2028,SC2034,SC2046,SC2059,SC2068,SC2086,SC2145,SC2153,SC2154,SC2155,SC2207 --shell=bash $^
 
 .PHONY: test
 test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget

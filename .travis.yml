@@ -12,4 +12,5 @@ install:
   - 'make install-virtualenv'
 script:
   - 'make compile'
+  - 'make lint'
   - 'make test'
