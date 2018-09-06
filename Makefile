@@ -39,7 +39,7 @@ lint: shellcheck
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: shellcheck
 shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile home/profile src/bashrc
-	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2034,SC2046,SC2059,SC2154,SC2155 --shell=bash $^
+	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2154,SC2155 --shell=bash $^
 
 .PHONY: test
 test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget
