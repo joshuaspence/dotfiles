@@ -23,7 +23,7 @@
           "bash"
         ],
         "rules": [
-          {"file_path": ".*/(home|src)/bash(_(logout|profile)|rc)$"}
+          {"file_path": ".*/home/bash(_(logout|profile)|rc)$"}
         ]
       },
       {

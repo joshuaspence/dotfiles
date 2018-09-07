@@ -5,7 +5,7 @@ init-submodules:
 .PHONY: compile
 compile: home/bashrc
 
-home/bashrc: src/bashrc $(wildcard src/**/*.sh) $(wildcard src/**/*.bash)
+home/bashrc: src/bashrc.bash $(wildcard src/**/*.sh) $(wildcard src/**/*.bash)
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --extended --output $@ $<
 
 .PHONY: install
@@ -38,7 +38,7 @@ lint: shellcheck
 # TODO: Remove some of these exclusions.
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: shellcheck
-shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile home/profile src/bashrc
+shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile home/profile
 	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
 
 .PHONY: test
