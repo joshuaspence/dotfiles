@@ -26,3 +26,11 @@ function shell_prompt() {
 PS1="$(shell_prompt)"
 PS2='... > '
 PS4='+'
+
+case "${TERM}" in
+  xterm*|rxvt*)
+    PS1="\[\e]0;\u@\h: \w\a\]${PS1}"
+    ;;
+  *)
+    ;;
+esac

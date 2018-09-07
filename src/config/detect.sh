@@ -20,3 +20,8 @@ if [[ $0 == -* ]]; then
 else
   LOGIN_SHELL=false
 fi
+
+case "${TERM}" in
+  xterm-color|*-256color)
+    color_prompt=yes;;
+esac
