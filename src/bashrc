@@ -4,9 +4,7 @@ if [[ $- != *i* ]]; then
   return
 fi
 
-includex "config/**.sh"
-includex "config/**.bash"
-includex "functions/**.sh"
-includex "environment/**.sh"
-includex "completion/**.sh"
-includex "completion/**.bash"
+includex -regex 'config/.+\.\(sh\|bash\)$'
+includex -regex 'completion/.+\.\(sh\|bash\)$'
+includex -regex 'environment/.+\.\(sh\|bash\)$'
+includex -regex 'functions/.+\.\(sh\|bash\)$'
