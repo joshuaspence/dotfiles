@@ -1,8 +1,8 @@
 # If not running interactively, don't do anything.
-case $- in
-  *i*) ;;
-    *) return;;
-esac
+# See https://unix.stackexchange.com/a/257613.
+if [[ $- != *i* ]]; then
+  return
+fi
 
 includex "config/**.sh"
 includex "config/**.bash"
