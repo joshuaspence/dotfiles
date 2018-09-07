@@ -1,5 +1,5 @@
 IgnoreUnknown Include
-Include config.d/*.conf
+Include conf.d/*.conf
 
 Host *
   AddKeysToAgent yes
