@@ -1,3 +1,4 @@
+# TODO: Consider `$SSH_CONNECTION`.
 function shell_prompt() {
   local -r cross=$'\xE2\x9C\x97'
   local -r joiner_bottomleft=$'\xE2\x94\x94'
