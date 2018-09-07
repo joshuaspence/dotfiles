@@ -20,15 +20,11 @@
       {
         "syntax": "ShellScript/Bash",
         "extensions": [
-          "bash"
+          "bash",
+          "sh"
         ],
         "rules": [
-          {"file_path": ".*/home/bash(_(logout|profile)|rc)$"}
-        ]
-      },
-      {
-        "syntax": "ShellScript/Shell-Unix-Generic",
-        "rules": [
+          {"file_path": ".*/home/bash(_(logout|profile)|rc)$"},
           {"file_path": ".*/home/(hushlogin|profile)$"},
           {"file_path": ".*/home/(rvmrc)$"}
         ]
