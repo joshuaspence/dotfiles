@@ -1,4 +1,4 @@
-command -v less &>/dev/null && {
+if command -v less &>/dev/null; then
   # Disable history.
-  export LESSHISTFILE='-'  
-}
+  export LESSHISTFILE='-'
+fi
