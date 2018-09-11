@@ -4,6 +4,7 @@ Include conf.d/*.conf
 Host *
   AddKeysToAgent yes
   Compression yes
+  ConnectTimeout 10
   ExitOnForwardFailure yes
   ForwardAgent no
   ForwardX11 no
