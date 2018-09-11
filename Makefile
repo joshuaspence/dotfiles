@@ -42,7 +42,7 @@ shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout h
 	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
 
 .PHONY: test
-test: test-composer test-curl test-dotfiles test-ssh test-virtualenv test-wget
+test: test-composer test-curl test-dotfiles test-gpg test-ssh test-virtualenv test-wget
 
 .PHONY: test-composer
 test-composer: home/config/composer/composer.lock
@@ -58,6 +58,10 @@ test-curl: home/curlrc
 .PHONY: test-dotfiles
 test-dotfiles: home/dotfilesrc | $(HOME)/.venv
 	dotfiles --repo $(<D) --config $< --list >/dev/null
+
+.PHONY: test-gpg
+test-gpg: home/gnupg/gpg.conf
+	docker run --volume $(abspath $<):/gnupg/gpg.conf stevenctimm/gpgridvanilla gpg --homedir /gnupg --no-permission-warning --list-config
 
 .PHONY: test-ssh
 test-ssh: home/ssh/config
