@@ -1,1 +1,1 @@
-setlocal wrap formatoptions<
+set textwidth=0
