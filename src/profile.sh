@@ -5,5 +5,4 @@ if [ -n "${BASH_VERSION}" ]; then
   fi
 fi
 
-# Set `$PATH` so it includes user's private bin directories.
-PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+includex environment/**.sh
