@@ -1,4 +1,5 @@
 {
   "ignore_whitespace": "all",
+  "show_line_annotation": false,
   "show_status_bar_text": false
 }
