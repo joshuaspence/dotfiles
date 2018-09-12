@@ -41,7 +41,7 @@ lint: shellcheck
 # TODO: Remove some of these exclusions.
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: shellcheck
-shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile home/profile
+shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile
 	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
 
 .PHONY: test
