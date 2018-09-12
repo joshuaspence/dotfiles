@@ -3,9 +3,12 @@ init-submodules:
 	git submodule update --init --recursive
 
 .PHONY: compile
-compile: home/bashrc
+compile: home/bashrc home/profile
 
 home/bashrc: src/bashrc.bash $(wildcard src/**/*.sh) $(wildcard src/**/*.bash)
+	gawk --file=tools/compiler/compiler.gawk -- --addpath src --extended --output $@ $<
+
+home/profile: src/profile.sh $(wildcard src/**/*.sh)
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --extended --output $@ $<
 
 .PHONY: install
