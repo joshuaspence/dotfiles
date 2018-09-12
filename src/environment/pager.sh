@@ -1,5 +1,6 @@
 if command -v less &>/dev/null; then
-  export PAGER='less --ignore-case --chop-long-lines --no-init'
+  export LESS='--ignore-case --chop-long-lines --no-init'
+  export PAGER='less'
 elif command -v more &>/dev/null; then
   export PAGER='more'
 else
