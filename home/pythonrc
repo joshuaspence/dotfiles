@@ -1,0 +1,10 @@
+import sys
+
+if sys.version_info.major < 3:
+  try:
+    import readline
+  except ImportError:
+    sys.stderr.write('Module readline not available. Tab completion is disabled.\n')
+  else:
+    import rlcompleter
+    readline.parse_and_bind('tab: complete')

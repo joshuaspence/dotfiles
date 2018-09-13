@@ -18,6 +18,12 @@
         ]
       },
       {
+        "syntax": "Python/Python",
+        "rules": [
+          {"file_path": ".*/home/pythonrc$"}
+        ]
+      },
+      {
         "syntax": "Ruby/Ruby",
         "rules": [
           {"file_path": ".*/home/irbrc$"}
