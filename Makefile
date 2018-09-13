@@ -42,14 +42,14 @@ lint: shellcheck
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: shellcheck
 shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout home/bash_profile
-	docker run --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
+	docker run --rm --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
 
 .PHONY: test
 test: test-composer test-curl test-dotfiles test-gpg test-ssh test-virtualenv test-wget
 
 .PHONY: test-composer
 test-composer: home/config/composer/composer.lock
-	docker run --volume $(CURDIR)/$(<D):/app composer install --dry-run >/dev/null
+	docker run --rm --volume $(CURDIR)/$(<D):/app composer install --dry-run >/dev/null
 
 home/config/composer/composer.lock: home/config/composer/composer.json
 	composer global update
@@ -64,11 +64,11 @@ test-dotfiles: home/dotfilesrc | $(HOME)/.venv
 
 .PHONY: test-gpg
 test-gpg: home/gnupg/gpg.conf
-	docker run --volume $(abspath $<):/gnupg/gpg.conf stevenctimm/gpgridvanilla gpg --homedir /gnupg --no-permission-warning --list-config
+	docker run --rm --volume $(abspath $<):/gnupg/gpg.conf stevenctimm/gpgridvanilla gpg --homedir /gnupg --no-permission-warning --list-config
 
 .PHONY: test-ssh
 test-ssh: home/ssh/config
-	docker run --entrypoint /usr/bin/ssh --volume $(abspath $<):/root/.ssh/config chamunks/alpine-openssh -F /root/.ssh/config -G -T localhost >/dev/null
+	docker run --entrypoint /usr/bin/ssh --rm --volume $(abspath $<):/root/.ssh/config chamunks/alpine-openssh -F /root/.ssh/config -G -T localhost >/dev/null
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
