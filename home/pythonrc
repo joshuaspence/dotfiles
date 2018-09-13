@@ -8,3 +8,25 @@ if sys.version_info.major < 3:
   else:
     import rlcompleter
     readline.parse_and_bind('tab: complete')
+
+    class Completer(rlcompleter.Completer):
+      '''Identical to `rlcompleter.Completer` except that a "tab" insertion
+      is enabled if there's no text for completion.
+
+      The default "tab" is four spaces. You can initialize this class with
+      "\t" as the tab if you wish to use a genuine tab instead.
+      '''
+
+      def __init__(self, tab='  '):
+        self.tab = tab
+        rlcompleter.Completer.__init__(self)
+
+      def complete(self, text, state):
+        if text == '':
+          readline.insert_text(self.tab)
+          return None
+        else:
+          return rlcompleter.Completer.complete(self, text, state)
+
+    readline.set_completer(Completer().complete)
+
