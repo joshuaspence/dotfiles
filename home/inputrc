@@ -1,38 +1,15 @@
 # NOTE: `bind -p` can be used to show current bindings.
 # NOTE: Use `read` to figure out key bindings.
-
 $include /etc/inputrc
 
-# Show automatically how parentheses (and other matching delimiters) match in
-# the text. Whenever you type a self-inserting character that is a closing
-# delimiter, the cursor moves momentarily to the location of the matching
-# opening delimiter, provided that is on the screen.
+# https://www.gnu.org/software/bash/manual/html_node/Readline-Init-File-Syntax.html
 set blink-matching-paren on
-
-# Make tab autocomplete regardless of filename case.
 set completion-ignore-case on
-
-# Don't echo control characters (such as `^C`). Note this only works for the
-# command line itself, not if already running a command.
 set echo-control-characters off
-
-# Immediately add a trailing slash when autocompleting symlinks to directories.
 set mark-symlinked-directories on
-
-# Do not autocomplete hidden files unless the pattern explicitly begins with a
-# dot.
 set match-hidden-files off
-
-# Use an internal `more`-like pager to display a screenful of possible
-# completions at a time.
 set page-completions on
-
-# Words which have more than one possible completion cause the matches to be
-# listed immediately instead of ringing the bell.
 set show-all-if-ambiguous on
-
-# Alters the default completion behavior when inserting a single match into
-# the line.
 set skip-completed-text on
 
 "\e[A": history-search-backward
