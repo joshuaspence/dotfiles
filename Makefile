@@ -45,7 +45,7 @@ shellcheck: $(wildcard src/**/*.sh) $(wildcard src/**/*.bash) home/bash_logout h
 	docker run --rm --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
 
 .PHONY: test
-test: test-composer test-curl test-dotfiles test-gpg test-ssh test-virtualenv test-wget
+test: test-composer test-curl test-dotfiles test-editline test-git test-gpg test-irb test-python test-readline test-rvm test-screen test-ssh test-vim test-virtualenv test-wget
 
 .PHONY: test-composer
 test-composer: home/config/composer/composer.lock
@@ -62,13 +62,45 @@ test-curl: home/curlrc
 test-dotfiles: home/dotfilesrc | $(HOME)/.venv
 	dotfiles --repo $(<D) --config $< --list >/dev/null
 
+.PHONY: test-editline
+test-editline:
+	true
+
+.PHONY: test-git
+test-git:
+	true
+
 .PHONY: test-gpg
 test-gpg: home/gnupg/gpg.conf
 	docker run --rm --volume $(abspath $<):/gnupg/gpg.conf stevenctimm/gpgridvanilla gpg --homedir /gnupg --no-permission-warning --list-config
 
+.PHONY: test-irb
+test-irb:
+	true
+
+.PHONY: test-python
+test-python:
+	true
+
+.PHONY: test-readline
+test-readline:
+	true
+
+.PHONY: test-rvm
+test-rvm:
+	true
+
+.PHONY: test-screen
+test-screen:
+	true
+
 .PHONY: test-ssh
 test-ssh: home/ssh/config
 	docker run --entrypoint /usr/bin/ssh --rm --volume $(abspath $<):/root/.ssh/config chamunks/alpine-openssh -F /root/.ssh/config -G -T localhost >/dev/null
+
+.PHONY: test-vim
+test-vim:
+	true
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
