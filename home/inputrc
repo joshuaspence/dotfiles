@@ -10,6 +10,7 @@ set mark-symlinked-directories on
 set match-hidden-files off
 set page-completions on
 set show-all-if-ambiguous on
+set show-all-if-unmodified on
 set skip-completed-text on
 set visible-stats on
 
