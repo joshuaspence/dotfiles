@@ -18,6 +18,12 @@
         ]
       },
       {
+        "syntax": "Ruby/Ruby",
+        "rules": [
+          {"file_path": ".*/home/irbrc$"}
+        ]
+      },
+      {
         "syntax": "ShellScript/Bash",
         "extensions": [
           "bash",
