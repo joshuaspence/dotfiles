@@ -27,6 +27,10 @@ set match-hidden-files off
 # completions at a time.
 set page-completions on
 
+# Words which have more than one possible completion cause the matches to be
+# listed immediately instead of ringing the bell.
+set show-all-if-ambiguous on
+
 # Alters the default completion behavior when inserting a single match into
 # the line.
 set skip-completed-text on
