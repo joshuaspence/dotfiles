@@ -1,8 +1,5 @@
-if [ -n "${BASH_VERSION}" ]; then
-  # Include `.bashrc` if it exists.
-  if [ -f "${HOME}/.bashrc" ]; then
-    . "${HOME}/.bashrc"
-  fi
+if test -n "${BASH_VERSION}" && -f "${HOME}/.bashrc"; then
+  . "${HOME}/.bashrc"
 fi
 
 # For some reason, `virtualenv` is resetting `$PATH`. As such, we must setup
