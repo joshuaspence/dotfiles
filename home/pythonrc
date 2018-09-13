@@ -1,6 +1,7 @@
 import os
 import sys
 
+# Enable tab completion.
 if sys.version_info.major < 3:
   try:
     import readline
@@ -32,6 +33,7 @@ if sys.version_info.major < 3:
 
     readline.set_completer(Completer().complete)
 
+# Enable command history.
 try:
   import readline
 except ImportError:
@@ -52,3 +54,4 @@ else:
     atexit.register(readline.write_history_file, pyhistory)
 
   readline.set_history_length(1048576)
+
