@@ -1,13 +1,5 @@
-# shellcheck disable=SC2034
-
-# Detect color support.
-if [[ -n $COLORTERM || $(tput colors) -gt 2 ]]; then
-  CLI_COLOR=true
-else
-  CLI_COLOR=false
-fi
-
 # Detect interactive shell.
+# shellcheck disable=SC2034
 if [[ $- == *i* ]]; then
   INTERACTIVE_SHELL=true
 else
@@ -15,13 +7,9 @@ else
 fi
 
 # Detect login shell.
-if [[ $0 == -* ]]; then
+# shellcheck disable=SC2034
+if shopt -q login_shell; then
   LOGIN_SHELL=true
 else
   LOGIN_SHELL=false
 fi
-
-case "${TERM}" in
-  xterm-color|*-256color)
-    color_prompt=yes;;
-esac
