@@ -24,12 +24,11 @@ PS1=$(
   echo -n "[${pwd}]"
   echo -n "${separator}${separator_tail} "
 )
-
 PS2='... > '
 PS4='+'
 
 case "${TERM}" in
-  xterm*|rxvt*)
+  xterm*)
     PS1="\[\e]0;\u@\h: \w\a\]${PS1}"
     ;;
   *)
