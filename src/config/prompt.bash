@@ -10,7 +10,7 @@ function shell_prompt() {
   local -r pwd="\[${COLOR_GREEN}\]\w\[${COLOR_NONE}\]"
   local -r status="\[\$([[ \$? == 0 ]] && printf '${BOLDCOLOR_GREEN}${tick}${COLOR_NONE}' || printf '${BOLDCOLOR_RED}${cross}${COLOR_NONE}')\]"
   local -r time="\[${COLOR_BLUE}\]\t\[${COLOR_NONE}\]"
-  local -r user="\[${COLOR_YELLOW}\]\u\[${COLOR_NONE}\]"
+  local -r user="\[\$([[ \$EUID == 0 ]] && printf '${COLOR_RED}' || printf '${COLOR_YELLOW}')\]\u\[${COLOR_NONE}\]"
 
   echo -n "${joiner_topleft}${separator}"
   echo -n "[${status}]"
