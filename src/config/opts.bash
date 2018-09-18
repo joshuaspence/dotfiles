@@ -19,3 +19,9 @@ shopt -s extglob
 # The pattern `**` used in a filename expansion context will match all files
 # and zero or more directories and subdirectories.
 shopt -s globstar
+
+# User is given the opportunity to re-edit a failed history substitution.
+shopt -s histreedit
+
+# The results of history substitution are not immediately passed to the shell parser.
+shopt -s histverify
