@@ -1,4 +1,3 @@
-# TODO: Consider `$SSH_CONNECTION`.
 function shell_prompt() {
   local -r cross=$'\xE2\x9C\x97'
   local -r joiner_bottomleft=$'\xE2\x94\x94'
@@ -7,9 +6,9 @@ function shell_prompt() {
   local -r separator_tail=$'\xE2\x95\xBC'
   local -r tick=$'\xE2\x9C\x93'
 
-  local -r host="\[${COLOR_CYAN}\]\H\[${COLOR_NONE}\]"
+  local -r host="\[${COLOR_CYAN}\]\[\$([[ -n \$SSH_CONNECTION ]] && printf '\H' || printf 'localhost')\]\[${COLOR_NONE}\]"
   local -r pwd="\[${COLOR_GREEN}\]\w\[${COLOR_NONE}\]"
-  local -r status="\[\$([[ \$? == 0 ]] && echo -n '${BOLDCOLOR_GREEN}${tick}${COLOR_NONE}' || echo -n '${BOLDCOLOR_RED}${cross}${COLOR_NONE}')\]"
+  local -r status="\[\$([[ \$? == 0 ]] && printf '${BOLDCOLOR_GREEN}${tick}${COLOR_NONE}' || printf '${BOLDCOLOR_RED}${cross}${COLOR_NONE}')\]"
   local -r time="\[${COLOR_BLUE}\]\t\[${COLOR_NONE}\]"
   local -r user="\[${COLOR_YELLOW}\]\u\[${COLOR_NONE}\]"
 
