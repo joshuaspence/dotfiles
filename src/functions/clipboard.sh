@@ -1,5 +1,8 @@
-# TODO: It would be nice if we could add `-in` or `-out` automatically based
-# on input/output redirection.
-if command -v xclip &>/dev/null; then
-  alias clipboard='xclip -selection clipboard'
-fi
+function clipboard() {
+  # If standard input is a pipe then forward the stream to the clipboard.
+  if ! test -t 0; then
+    xclip -in -selection clipboard < /dev/stdin
+  fi
+
+  xclip -out -selection clipboard
+}
