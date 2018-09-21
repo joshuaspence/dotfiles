@@ -16,7 +16,7 @@ PS1=$(
   readonly separator_tail=$'\xE2\x95\xBC'
   readonly tick='\xE2\x9C\x93'
 
-  readonly host="\[${color_cyan}\]\[\$([[ -n \$SSH_CONNECTION ]] && printf '\H' || printf 'localhost')\]\[${color_none}\]"
+  readonly host="\[${color_cyan}\]\[\$([[ -n \$SSH_CONNECTION ]] && printf 'ssh(\H)' || printf 'localhost')\]\[${color_none}\]"
   readonly pwd="\[${color_green}\]\w\[${color_none}\]"
   readonly status="\[\$([[ \$? == 0 ]] && printf '${boldcolor_green}${tick}${color_none}' || printf '${boldcolor_red}${cross}${color_none}')\]"
   readonly time="\[${color_blue}\]\t\[${color_none}\]"
@@ -27,6 +27,7 @@ PS1=$(
   echo -n "${separator}"
   echo -n "[${user}@${host}]"
   echo -n "${separator}"
+  echo -n "\[\$( [[ \$TERM == screen ]] && printf \"[${color_yellow}\${TERM}:\${WINDOW}${color_none}]${separator}\" )\]"
   echo -n "[${time}]"
   echo -n "\n${joiner_bottomleft}${separator}"
   echo -n "[${pwd}]"
