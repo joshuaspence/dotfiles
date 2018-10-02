@@ -21,6 +21,9 @@ endef
 # Targets
 #===============================================================================
 
+.PHONY: all
+all: init-submodules compile install
+
 .PHONY: init-submodules
 init-submodules:
 	git submodule update --init --recursive
