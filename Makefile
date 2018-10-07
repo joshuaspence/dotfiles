@@ -47,7 +47,7 @@ install-dotfiles: home/dotfilesrc
 
 .PHONY: install-virtualenv
 install-virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
-	$(VIRTUALENV)/bin/pip-sync $<
+	$(VIRTUALENV)/bin/pip-sync --quiet $<
 
 .PHONY: lint
 lint: shellcheck
@@ -60,6 +60,7 @@ shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile
 
 .PHONY: test
 test: \
+	test-bootstrap \
 	test-composer \
 	test-curl \
 	test-dotfiles \
@@ -78,6 +79,20 @@ test: \
 	test-vim \
 	test-virtualenv \
 	test-wget
+
+.PHONY: test-bootstrap
+test-bootstrap:
+	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu bash -c '\
+		set -o errexit; \
+		\
+		apt-get update --quiet --quiet; \
+		apt-get install --quiet --quiet --no-install-recommends --yes ca-certificates gawk git make python virtualenv; \
+		\
+		cd ~; \
+		git clone /dotfiles; \
+		cd dotfiles; \
+		make init-submodules compile install-virtualenv install-dotfiles; \
+	'
 
 .PHONY: test-composer
 test-composer: home/config/composer/composer.lock
@@ -163,6 +178,8 @@ $(VIRTUALENV):
 
 $(VIRTUALENV)/bin/pip-%: | $(VIRTUALENV)
 	. $(VIRTUALENV)/bin/activate && pip install --quiet pip-tools
+
+$(VIRTUALENV)/bin/%: install-virtualenv
 
 .SECONDEXPANSION:
 $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
