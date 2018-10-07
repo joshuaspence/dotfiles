@@ -32,17 +32,18 @@ init-submodules:
 compile: $(SHELL_TARGETS)
 
 .PHONY: install
-install: \
-	install-composer \
-	install-dotfiles \
-	install-virtualenv
+install: install-dotfiles
+ifneq ($(shell command -v composer 2>/dev/null),)
+install: install-composer
+endif
+install: install-virtualenv
 
 .PHONY: install-composer
 install-composer: home/config/composer/composer.lock
 	$(COMPOSER) install
 
 .PHONY: install-dotfiles
-install-dotfiles: home/dotfilesrc
+install-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 	$(VIRTUALENV)/bin/dotfiles --force --repo $(<D) --config $< --sync
 
 .PHONY: install-virtualenv
@@ -91,7 +92,7 @@ test-bootstrap:
 		cd ~; \
 		git clone /dotfiles; \
 		cd dotfiles; \
-		make init-submodules compile install-virtualenv install-dotfiles; \
+		make all; \
 	'
 
 .PHONY: test-composer
@@ -175,6 +176,8 @@ test-wget: home/wgetrc
 
 $(VIRTUALENV):
 	virtualenv --quiet $@
+
+$(VIRTUALENV)/bin/dotfiles: install-virtualenv
 
 $(VIRTUALENV)/bin/pip-%: | $(VIRTUALENV)
 	. $(VIRTUALENV)/bin/activate && pip install --quiet pip-tools
