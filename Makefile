@@ -43,7 +43,7 @@ install-composer: home/config/composer/composer.lock
 
 .PHONY: install-dotfiles
 install-dotfiles: home/dotfilesrc
-	dotfiles --repo $(<D) --config $< --sync
+	$(VIRTUALENV)/bin/dotfiles --repo $(<D) --config $< --sync
 
 .PHONY: install-virtualenv
 install-virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
