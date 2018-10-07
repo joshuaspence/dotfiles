@@ -96,6 +96,7 @@
   autoSquash = true
 
 [rerere]
+  autoUpdate = true
   enabled = true
 
 [status]
