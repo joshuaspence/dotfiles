@@ -87,7 +87,7 @@ test-bootstrap:
 		set -o errexit; \
 		\
 		apt-get update --quiet --quiet; \
-		apt-get install --quiet --quiet --no-install-recommends --yes ca-certificates gawk git make python virtualenv; \
+		apt-get install --quiet --quiet --no-install-recommends --yes ca-certificates gawk git make python virtualenv >/dev/null; \
 		\
 		cd ~; \
 		git clone /dotfiles; \
