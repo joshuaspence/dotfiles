@@ -65,7 +65,6 @@ test: \
 	test-composer \
 	test-curl \
 	test-dotfiles \
-	test-editline \
 	test-git \
 	test-gpg \
 	test-htop \
@@ -105,10 +104,6 @@ test-curl: home/curlrc
 .PHONY: test-dotfiles
 test-dotfiles: home/dotfilesrc | $(VIRTUALENV)
 	dotfiles --repo $(<D) --config $< --list >/dev/null
-
-.PHONY: test-editline
-test-editline: home/editrc
-	true
 
 .PHONY: test-git
 test-git: home/gitconfig
