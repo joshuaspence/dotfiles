@@ -73,7 +73,6 @@ test: \
 	test-python \
 	test-readline \
 	test-rvm \
-	test-screen \
 	test-ssh \
 	test-sublime-text \
 	test-terminator \
@@ -137,10 +136,6 @@ test-readline: home/inputrc
 
 .PHONY: test-rvm
 test-rvm: home/rvmrc
-	true
-
-.PHONY: test-screen
-test-screen: home/screenrc
 	true
 
 .PHONY: test-ssh
