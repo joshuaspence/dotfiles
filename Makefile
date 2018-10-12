@@ -8,6 +8,7 @@ VIRTUALENV = $(HOME)/.venv
 #===============================================================================
 # Target Definitions
 #===============================================================================
+SUBMODULES    = $(shell git config --file .gitmodules --get-regexp path | awk '{ print $$2 }')
 SHELL_TARGETS = home/bashrc home/profile
 
 #===============================================================================
@@ -25,11 +26,7 @@ endef
 #===============================================================================
 
 .PHONY: all
-all: init-submodules compile install
-
-.PHONY: init-submodules
-init-submodules:
-	git submodule update --init --recursive
+all: submodules compile install
 
 .PHONY: compile
 compile: $(SHELL_TARGETS)
@@ -61,6 +58,9 @@ lint: shellcheck
 .PHONY: shellcheck
 shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
+
+.PHONY: submodules
+submodules: $(SUBMODULES)
 
 .PHONY: test
 test: \
@@ -161,6 +161,13 @@ test-wget: home/wgetrc
 #===============================================================================
 # Rules
 #===============================================================================
+
+.SECONDEXPANSION:
+ $(SUBMODULES): $$@/.git
+
+$(addsuffix /.git,$(SUBMODULES)): .gitmodules
+	git submodule update --init --recursive $(dir $@)
+	@touch $@
 
 $(VIRTUALENV):
 	virtualenv --quiet $@
