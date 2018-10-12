@@ -1,3 +1,4 @@
 defscrollback 1048576
+mousetrack on
 startup_message off
 termcapinfo xterm|xterm-* ti@:te@
