@@ -66,7 +66,6 @@ test: \
 	test-curl \
 	test-dotfiles \
 	test-git \
-	test-gpg \
 	test-htop \
 	test-irb \
 	test-python \
@@ -108,10 +107,6 @@ test-dotfiles: home/dotfilesrc | $(VIRTUALENV)
 .PHONY: test-git
 test-git: home/gitconfig
 	true
-
-.PHONY: test-gpg
-test-gpg: home/gnupg/gpg.conf
-$(DOCKER_RUN) --volume $(abspath $<):/gnupg/gpg.conf stevenctimm/gpgridvanilla gpg --homedir /gnupg --no-permission-warning --list-config
 
 .PHONY: test-htop
 test-htop:
