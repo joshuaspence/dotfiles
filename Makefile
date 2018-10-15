@@ -8,8 +8,8 @@ VIRTUALENV = $(HOME)/.venv
 #===============================================================================
 # Target Definitions
 #===============================================================================
-SUBMODULES    = $(shell git config --file .gitmodules --get-regexp path | awk '{ print $$2 }')
 SHELL_TARGETS = home/bashrc home/profile
+SUBMODULES    = $(shell git config --file .gitmodules --get-regexp '^submodule\..*\.path$$' | awk '{ print $$2 }')
 
 #===============================================================================
 # Functions
