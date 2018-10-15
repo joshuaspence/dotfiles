@@ -31,25 +31,21 @@ all: submodules compile install
 .PHONY: compile
 compile: $(SHELL_TARGETS)
 
+.PHONY: composer
+composer: home/config/composer/composer.json home/config/composer/composer.lock
+	COMPOSER=$(abspath $<) $(COMPOSER) install
+
 .PHONY: install
-install: install-dotfiles install-virtualenv
+install: dotfiles virtualenv
 
 # Composer is a soft dependency, so don't worry if it's not installed.
 ifneq ($(shell command -v composer 2>/dev/null),)
-install: install-composer
+install: composer
 endif
 
-.PHONY: install-composer
-install-composer: home/config/composer/composer.json home/config/composer/composer.lock
-	COMPOSER=$(abspath $<) $(COMPOSER) install
-
-.PHONY: install-dotfiles
-install-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
+.PHONY: dotfiles
+dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 	$(VIRTUALENV)/bin/dotfiles --force --repo $(<D) --config $< --sync
-
-.PHONY: install-virtualenv
-install-virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
-	$(VIRTUALENV)/bin/pip-sync --quiet $<
 
 .PHONY: lint
 lint: shellcheck
@@ -159,6 +155,10 @@ test-virtualenv: home/venv/requirements.txt
 test-wget: home/wgetrc
 	wget --config $< --version >/dev/null
 
+.PHONY: virtualenv
+virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
+	$(VIRTUALENV)/bin/pip-sync --quiet $<
+
 #===============================================================================
 # Rules
 #===============================================================================
@@ -173,12 +173,12 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 $(VIRTUALENV):
 	virtualenv --quiet $@
 
-$(VIRTUALENV)/bin/dotfiles: install-virtualenv
+$(VIRTUALENV)/bin/dotfiles: virtualenv
 
 $(VIRTUALENV)/bin/pip-%: | $(VIRTUALENV)
 	. $(VIRTUALENV)/bin/activate && pip install --quiet pip-tools
 
-$(VIRTUALENV)/bin/%: install-virtualenv
+$(VIRTUALENV)/bin/%: virtualenv
 
 .SECONDEXPANSION:
 $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
