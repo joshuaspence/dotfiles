@@ -40,8 +40,8 @@ install: install-composer
 endif
 
 .PHONY: install-composer
-install-composer: home/config/composer/composer.lock
-	$(COMPOSER) install
+install-composer: home/config/composer/composer.json home/config/composer/composer.lock
+	COMPOSER=$(abspath $<) $(COMPOSER) install
 
 .PHONY: install-dotfiles
 install-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
