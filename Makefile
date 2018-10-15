@@ -32,11 +32,12 @@ all: submodules compile install
 compile: $(SHELL_TARGETS)
 
 .PHONY: install
-install: install-dotfiles
+install: install-dotfiles install-virtualenv
+
+# Composer is a soft dependency, so don't worry if it's not installed.
 ifneq ($(shell command -v composer 2>/dev/null),)
 install: install-composer
 endif
-install: install-virtualenv
 
 .PHONY: install-composer
 install-composer: home/config/composer/composer.lock
