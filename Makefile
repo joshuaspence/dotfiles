@@ -130,7 +130,7 @@ test-rvm: home/rvmrc
 
 .PHONY: test-ssh
 test-ssh: home/ssh/config
-	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/root/.ssh/config:ro chamunks/alpine-openssh -F /root/.ssh/config -G -T localhost >/dev/null
+	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/ssh-config:ro chamunks/alpine-openssh -F /ssh-config -G -T localhost >/dev/null
 
 .PHONY: test-sublime-text
 test-sublime-text:
