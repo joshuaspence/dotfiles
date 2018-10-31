@@ -8,7 +8,7 @@ VIRTUALENV = $(HOME)/.venv
 #===============================================================================
 # Target Definitions
 #===============================================================================
-SHELL_TARGETS = $(basename $(wildcard src/*.*sh))
+SHELL_TARGETS = $(addprefix home/,$(basename $(notdir $(wildcard src/*.*sh))))
 SUBMODULES    = $(shell git config --file .gitmodules --get-regexp '^submodule\..*\.path$$' | awk '{ print $$2 }')
 
 #===============================================================================
