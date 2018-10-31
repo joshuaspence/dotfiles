@@ -9,7 +9,7 @@ services:
 before_install:
   - 'sudo pip install --quiet dotfiles'
 install:
-  - 'make install-virtualenv'
+  - 'make virtualenv'
 script:
   - 'make compile'
   - 'make lint'
