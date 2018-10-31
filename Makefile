@@ -185,7 +185,7 @@ $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --extended --output $@ $<
 
 home/config/composer/composer.lock: home/config/composer/composer.json
-	$(COMPOSER) update --quiet
+	COMPOSER=$(abspath $<) $(COMPOSER) update --quiet
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	pip-compile $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null
