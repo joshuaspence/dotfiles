@@ -54,7 +54,7 @@ lint: shellcheck
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: shellcheck
 shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
 
 .PHONY: submodules
 submodules: $(SUBMODULES)
@@ -94,7 +94,7 @@ test-bootstrap:
 
 .PHONY: test-composer
 test-composer: home/config/composer/composer.lock
-	$(DOCKER_RUN) --volume $(abspath $(<D)):/app composer install --dry-run --quiet
+	$(DOCKER_RUN) --volume $(abspath $(<D)):/app:ro composer install --dry-run --quiet
 
 .PHONY: test-curl
 test-curl: home/curlrc
@@ -130,7 +130,7 @@ test-rvm: home/rvmrc
 
 .PHONY: test-ssh
 test-ssh: home/ssh/config
-	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/root/.ssh/config chamunks/alpine-openssh -F /root/.ssh/config -G -T localhost >/dev/null
+	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/root/.ssh/config:ro chamunks/alpine-openssh -F /root/.ssh/config -G -T localhost >/dev/null
 
 .PHONY: test-sublime-text
 test-sublime-text:
