@@ -101,8 +101,8 @@ test-curl: home/curlrc
 	$(call check_stdout_empty,curl --config $< --version)
 
 .PHONY: test-dotfiles
-test-dotfiles: home/dotfilesrc | $(VIRTUALENV)
-	dotfiles --repo $(<D) --config $< --list >/dev/null
+test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
+	$(VIRTUALENV)/bin/dotfiles --repo $(<D) --config $< --list >/dev/null
 
 .PHONY: test-git
 test-git: home/gitconfig
