@@ -187,6 +187,6 @@ $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
 home/config/composer/composer.lock: home/config/composer/composer.json
 	$(COMPOSER) update --quiet
 
-# TODO: All `--upgrade` to be passed to `pip-compile`.
+# TODO: Allow `--upgrade` to be passed to `pip-compile`.
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	pip-compile --output-file $@ $< >/dev/null
