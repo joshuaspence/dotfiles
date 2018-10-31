@@ -33,7 +33,7 @@ compile: $(SHELL_TARGETS)
 
 .PHONY: composer
 composer: home/config/composer/composer.json home/config/composer/composer.lock
-	COMPOSER=$(abspath $<) $(COMPOSER) install
+	COMPOSER=$(abspath $<) $(COMPOSER) install --quiet
 
 .PHONY: install
 install: dotfiles virtualenv
