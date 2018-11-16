@@ -21,6 +21,10 @@ define check_stdout_empty
 	! $(1) 2>&1 >/dev/null | grep ^
 endef
 
+define pip_install
+	. $(VIRTUALENV)/bin/activate && pip install --constraint home/venv/requirements.txt --quiet $(1)
+endef
+
 #===============================================================================
 # Targets
 #===============================================================================
@@ -173,10 +177,10 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 $(VIRTUALENV):
 	virtualenv --quiet $@
 
-$(VIRTUALENV)/bin/dotfiles: virtualenv
+$(VIRTUALENV)/bin/dotfiles: | $(VIRTUALENV)
 
 $(VIRTUALENV)/bin/pip-%: | $(VIRTUALENV)
-	. $(VIRTUALENV)/bin/activate && pip install --quiet pip-tools
+	$(call pip_install,pip-tools)
 
 $(VIRTUALENV)/bin/%: virtualenv
 
