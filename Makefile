@@ -178,6 +178,7 @@ $(VIRTUALENV):
 	virtualenv --quiet $@
 
 $(VIRTUALENV)/bin/dotfiles: | $(VIRTUALENV)
+	$(call pip_install,dotfiles)
 
 $(VIRTUALENV)/bin/pip-%: | $(VIRTUALENV)
 	$(call pip_install,pip-tools)
