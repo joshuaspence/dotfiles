@@ -159,6 +159,17 @@ test-virtualenv: home/venv/requirements.txt
 test-wget: home/wgetrc
 	wget --config $< --version >/dev/null
 
+.PHONY: upgrade
+upgrade: upgrade-composer
+
+.PHONY: upgrade-composer
+upgrade-composer:
+	composer self-update --clean-backups --quiet --no-interaction
+
+.PHONY: upgrade-pip
+upgrade-pip:
+	pip install --upgrade pip
+
 .PHONY: virtualenv
 virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
 	$(VIRTUALENV)/bin/pip-sync --quiet $<
