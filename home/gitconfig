@@ -83,6 +83,9 @@
 [mergetool]
   keepBackup = false
 
+[pager]
+  branch = false
+
 [protocol]
   version = 2
 
