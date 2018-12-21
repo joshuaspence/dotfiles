@@ -1,9 +1,10 @@
 #===============================================================================
 # Macros
 #===============================================================================
-COMPOSER   = composer global
-DOCKER_RUN = docker run --rm
-VIRTUALENV = $(HOME)/.venv
+COMPOSER    = composer global
+DOCKER_RUN  = docker run --rm
+PIP_INSTALL = $(VIRTUALENV)/bin/pip install --constraint home/venv/requirements.txt --quiet
+VIRTUALENV  = $(HOME)/.venv
 
 #===============================================================================
 # Target Definitions
@@ -19,10 +20,6 @@ SUBMODULES    = $(shell git config --file .gitmodules --get-regexp '^submodule\.
 # See https://stackoverflow.com/a/25496589.
 define check_stdout_empty
 	! $(1) 2>&1 >/dev/null | grep ^
-endef
-
-define pip_install
-	. $(VIRTUALENV)/bin/activate && pip install --constraint home/venv/requirements.txt --quiet $(1)
 endef
 
 #===============================================================================
@@ -193,10 +190,10 @@ $(VIRTUALENV):
 	virtualenv --quiet $@
 
 $(VIRTUALENV)/bin/dotfiles: | $(VIRTUALENV)
-	$(call pip_install,dotfiles)
+	$(PIP_INSTALL) dotfiles
 
 $(VIRTUALENV)/bin/pip-%: | $(VIRTUALENV)
-	$(call pip_install,pip-tools)
+	$(PIP_INSTALL) pip-tools
 
 $(VIRTUALENV)/bin/%: virtualenv
 
