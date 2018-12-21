@@ -170,6 +170,10 @@ upgrade-composer:
 upgrade-pip:
 	pip install --upgrade pip
 
+.PHONY: upgrade-submodules
+upgrade-submodules:
+	git submodule update --init --recursive --remote
+
 .PHONY: virtualenv
 virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
 	$(VIRTUALENV)/bin/pip-sync --quiet $<
@@ -182,7 +186,7 @@ virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
  $(SUBMODULES): $$@/.git
 
 $(addsuffix /.git,$(SUBMODULES)): .gitmodules
-	git submodule update --init --recursive $(dir $@)
+	git submodule update --init --recursive -- $(dir $@)
 	@touch $@
 
 $(VIRTUALENV):
