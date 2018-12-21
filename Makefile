@@ -160,7 +160,7 @@ test-wget: home/wgetrc
 	wget --config $< --version >/dev/null
 
 .PHONY: upgrade
-upgrade: upgrade-composer
+upgrade: upgrade-composer upgrade-pip upgrade-submodules
 
 .PHONY: upgrade-composer
 upgrade-composer:
