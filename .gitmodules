@@ -1,14 +1,14 @@
 [submodule "home/shell/modules/go-pkg-complete"]
-	path = src/modules/go-pkg-complete
-	url = https://github.com/skelterjohn/go-pkg-complete.git
+  path = src/modules/go-pkg-complete
+  url = https://github.com/skelterjohn/go-pkg-complete.git
 [submodule "home/vim/bundle/Vundle.vim"]
-	path = home/vim/bundle/Vundle.vim
-	url = https://github.com/VundleVim/Vundle.vim.git
+  path = home/vim/bundle/Vundle.vim
+  url = https://github.com/VundleVim/Vundle.vim.git
 [submodule "tools/compiler"]
   path = tools/compiler
   url = https://git.code.sf.net/p/loader/code
   branch = compilers
 [submodule "tools/loader"]
-	path = tools/loader
-	url = https://git.code.sf.net/p/loader/code
-	branch = extended
+  path = tools/loader
+  url = https://git.code.sf.net/p/loader/code
+  branch = extended
