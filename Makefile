@@ -202,7 +202,7 @@ $(VIRTUALENV)/bin/%: virtualenv
 
 .SECONDEXPANSION:
 $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
-	gawk --file=tools/compiler/compiler.gawk -- --addpath src --extended --output $@ $<
+	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
 
 home/config/composer/composer.lock: home/config/composer/composer.json
 	COMPOSER=$(abspath $<) $(COMPOSER) update --quiet
