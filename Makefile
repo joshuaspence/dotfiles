@@ -3,7 +3,6 @@
 #===============================================================================
 COMPOSER    = composer global
 DOCKER_RUN  = docker run --rm
-PIP_INSTALL = $(VIRTUALENV)/bin/pip install --constraint home/venv/requirements.txt --quiet
 VIRTUALENV  = $(HOME)/.venv
 
 #===============================================================================
@@ -20,6 +19,13 @@ SUBMODULES    = $(shell git config --file .gitmodules --get-regexp '^submodule\.
 # See https://stackoverflow.com/a/25496589.
 define check_stdout_empty
 	! $(1) 2>&1 >/dev/null | grep ^
+endef
+
+# Define a target to install a Python package.
+# Should be used in conjunction with `eval`.
+define virtualenv_target
+$(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD)): | $$(VIRTUALENV)
+	$(VIRTUALENV)/bin/pip install --constraint home/venv/requirements.txt --quiet $(1)
 endef
 
 #===============================================================================
@@ -189,11 +195,8 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 $(VIRTUALENV):
 	virtualenv --quiet $@
 
-$(VIRTUALENV)/bin/dotfiles: | $(VIRTUALENV)
-	$(PIP_INSTALL) dotfiles
-
-$(VIRTUALENV)/bin/pip-compile $(VIRTUALENV)/bin/pip-sync: | $(VIRTUALENV)
-	$(PIP_INSTALL) pip-tools
+$(eval $(call virtualenv_target,dotfiles,dotfiles))
+$(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
 
 .SECONDEXPANSION:
 $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
