@@ -3,6 +3,7 @@
 #===============================================================================
 COMPOSER    = composer global
 DOCKER_RUN  = docker run --rm
+MAKE       += --no-print-directory
 VIRTUALENV  = $(HOME)/.venv
 
 #===============================================================================
@@ -172,6 +173,11 @@ upgrade-composer:
 .PHONY: upgrade-pip
 upgrade-pip:
 	pip install --upgrade pip
+
+.PHONY: upgrade-python-packages
+upgrade-python-packages:
+	@touch home/venv/requirements.in
+	@$(MAKE) home/venv/requirements.txt UPGRADE=1
 
 .PHONY: upgrade-submodules
 upgrade-submodules:
