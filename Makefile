@@ -161,7 +161,7 @@ test-virtualenv: home/venv/requirements.txt
 
 .PHONY: test-wget
 test-wget: home/wgetrc
-	wget --config $< --version >/dev/null
+	$(DOCKER_RUN) --volume $(abspath $<):/wgetrc:ro inutano/wget wget --config /wgetrc --version >/dev/null
 
 .PHONY: upgrade
 upgrade: upgrade-composer upgrade-pip upgrade-submodules
