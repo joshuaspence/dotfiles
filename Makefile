@@ -192,7 +192,7 @@ $(VIRTUALENV):
 $(VIRTUALENV)/bin/dotfiles: | $(VIRTUALENV)
 	$(PIP_INSTALL) dotfiles
 
-$(VIRTUALENV)/bin/pip-%: | $(VIRTUALENV)
+$(VIRTUALENV)/bin/pip-compile $(VIRTUALENV)/bin/pip-sync: | $(VIRTUALENV)
 	$(PIP_INSTALL) pip-tools
 
 $(VIRTUALENV)/bin/%: virtualenv
