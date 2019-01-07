@@ -170,6 +170,11 @@ upgrade: upgrade-composer upgrade-pip upgrade-submodules
 upgrade-composer:
 	composer self-update --clean-backups --quiet --no-interaction
 
+.PHONY: upgrade-composer-packages
+upgrade-composer-packages:
+	@touch home/config/composer/composer.json
+	@$(MAKE) home/config/composer/composer.lock
+
 .PHONY: upgrade-pip
 upgrade-pip:
 	pip install --upgrade pip
