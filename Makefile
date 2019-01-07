@@ -195,8 +195,6 @@ $(VIRTUALENV)/bin/dotfiles: | $(VIRTUALENV)
 $(VIRTUALENV)/bin/pip-compile $(VIRTUALENV)/bin/pip-sync: | $(VIRTUALENV)
 	$(PIP_INSTALL) pip-tools
 
-$(VIRTUALENV)/bin/%: virtualenv
-
 .SECONDEXPANSION:
 $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
