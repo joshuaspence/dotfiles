@@ -205,6 +205,7 @@ $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
 
 home/config/composer/composer.lock: home/config/composer/composer.json
 	COMPOSER=$(abspath $<) $(COMPOSER) update --quiet
+	@touch $@
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	pip-compile $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null
