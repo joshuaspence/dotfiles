@@ -153,8 +153,15 @@ test-virtualenv: home/venv/requirements.txt
 test-wget: home/wgetrc
 	$(DOCKER_RUN) --volume $(abspath $<):/wgetrc:ro inutano/wget wget --config /wgetrc --version >/dev/null
 
+.PHONY: update
+update: update-submodules
+
+.PHONY: update-submodules
+update-submodules:
+	git submodule update --init --recursive --remote
+
 .PHONY: upgrade
-upgrade: upgrade-composer upgrade-pip upgrade-submodules
+upgrade: upgrade-composer upgrade-pip
 
 .PHONY: upgrade-composer
 upgrade-composer:
@@ -173,10 +180,6 @@ upgrade-pip:
 upgrade-python-packages:
 	@touch home/venv/requirements.in
 	@$(MAKE) home/venv/requirements.txt UPGRADE=1
-
-.PHONY: upgrade-submodules
-upgrade-submodules:
-	git submodule update --init --recursive --remote
 
 .PHONY: virtualenv
 virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
