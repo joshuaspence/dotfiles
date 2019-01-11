@@ -104,7 +104,7 @@ test-composer: home/config/composer/composer.lock
 
 .PHONY: test-curl
 test-curl: home/curlrc
-	$(call check_stdout_empty,$(DOCKER_RUN) --volume $(abspath $<):/curlrc:ro appropriate/curl --config /curlrc --version)
+	$(call check_stdout_empty,curl --config $< --version)
 
 .PHONY: test-dotfiles
 test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
