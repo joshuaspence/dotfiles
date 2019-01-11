@@ -154,11 +154,21 @@ test-wget: home/wgetrc
 	$(DOCKER_RUN) --volume $(abspath $<):/wgetrc:ro inutano/wget wget --config /wgetrc --version >/dev/null
 
 .PHONY: update
-update: update-submodules
+update: update-composer update-submodules update-virtualenv
+
+.PHONY: update-composer
+update-composer:
+	@touch home/config/composer/composer.json
+	@$(MAKE) home/config/composer/composer.lock
 
 .PHONY: update-submodules
 update-submodules:
 	git submodule update --init --recursive --remote
+
+.PHONY: update-virtualenv
+update-virtualenv:
+	@touch home/venv/requirements.in
+	@$(MAKE) home/venv/requirements.txt UPGRADE=1
 
 .PHONY: upgrade
 upgrade: upgrade-composer upgrade-pip
@@ -167,19 +177,9 @@ upgrade: upgrade-composer upgrade-pip
 upgrade-composer:
 	composer self-update --clean-backups --no-interaction
 
-.PHONY: upgrade-composer-packages
-upgrade-composer-packages:
-	@touch home/config/composer/composer.json
-	@$(MAKE) home/config/composer/composer.lock
-
 .PHONY: upgrade-pip
 upgrade-pip:
 	pip install --upgrade pip
-
-.PHONY: upgrade-python-packages
-upgrade-python-packages:
-	@touch home/venv/requirements.in
-	@$(MAKE) home/venv/requirements.txt UPGRADE=1
 
 .PHONY: virtualenv
 virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
