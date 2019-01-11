@@ -74,7 +74,6 @@ test: \
 	test-curl \
 	test-dotfiles \
 	test-git \
-	test-htop \
 	test-irb \
 	test-python \
 	test-readline \
@@ -115,10 +114,6 @@ test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 .PHONY: test-git
 test-git: home/gitconfig
 	$(DOCKER_RUN) --volume $(abspath $<):/gitconfig:ro alpine/git config --file /gitconfig --list >/dev/null
-
-.PHONY: test-htop
-test-htop:
-	true
 
 .PHONY: test-irb
 test-irb: home/irbrc
