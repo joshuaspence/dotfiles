@@ -158,7 +158,7 @@ upgrade: upgrade-composer upgrade-pip upgrade-submodules
 
 .PHONY: upgrade-composer
 upgrade-composer:
-	composer self-update --clean-backups --quiet --no-interaction
+	composer self-update --clean-backups --no-interaction
 
 .PHONY: upgrade-composer-packages
 upgrade-composer-packages:
