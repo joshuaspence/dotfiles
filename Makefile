@@ -144,10 +144,7 @@ test-vim: home/vimrc home/vim
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
-	$(eval VENV := $(shell mktemp --directory --tmpdir venv.XXXXXX))
-	@virtualenv --quiet $(VENV)
-	. $(VENV)/bin/activate && pip install --requirement $< --isolated --quiet --no-cache-dir
-	@rm --recursive --force $(VENV)
+	$(DOCKER_RUN) --volume $(abspath $<):/requirements.txt:ro python:2.7 pip install --requirement /requirements.txt --quiet
 
 .PHONY: test-wget
 test-wget: home/wgetrc
