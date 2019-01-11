@@ -114,7 +114,7 @@ test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 
 .PHONY: test-git
 test-git: home/gitconfig
-	true
+	$(DOCKER_RUN) --volume $(abspath $<):/gitconfig:ro alpine/git config --file /gitconfig --list >/dev/null
 
 .PHONY: test-htop
 test-htop:
