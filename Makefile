@@ -99,8 +99,8 @@ test-bootstrap:
 	'
 
 .PHONY: test-composer
-test-composer: home/config/composer/composer.lock
-	$(DOCKER_RUN) --volume $(abspath $(<D)):/app:ro composer install --dry-run --quiet
+test-composer: home/config/composer/composer.json home/config/composer/composer.lock
+	$(DOCKER_RUN) $(foreach file,$^,--volume $(abspath $(file)):/app/$(notdir $(file)):ro) composer install --quiet
 
 .PHONY: test-curl
 test-curl: home/curlrc
