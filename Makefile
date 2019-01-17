@@ -79,7 +79,6 @@ test: \
 	test-readline \
 	test-ssh \
 	test-sublime-text \
-	test-terminator \
 	test-vim \
 	test-virtualenv \
 	test-wget
@@ -132,10 +131,6 @@ test-ssh: home/ssh/config
 
 .PHONY: test-sublime-text
 test-sublime-text:
-	true
-
-.PHONY: test-terminator
-test-terminator:
 	true
 
 .PHONY: test-vim
