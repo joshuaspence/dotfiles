@@ -6,10 +6,6 @@ os: 'ubuntu'
 services:
   - 'docker'
 
-before_install:
-  - 'sudo pip install --quiet dotfiles'
-install:
-  - 'make virtualenv'
 script:
   - 'make compile'
   - 'make lint'
