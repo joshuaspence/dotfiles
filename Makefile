@@ -142,8 +142,9 @@ test-vim: home/vimrc home/vim
 		$(foreach PATH,$(sort $(filter-out home/vim/bundle,$(wildcard home/vim/* home/vim/bundle/*))),--volume $(abspath $(PATH)):$(patsubst home/vim/%,/root/.vim/%,$(PATH)):ro) \
 		--volume $(abspath .git/modules/home/vim/bundle/Vundle.vim):/.git/modules/home/vim/bundle/Vundle.vim:ro \
 		thinca/vim \
+		-E -s \
 		-u NONE \
-		-c 'try | source ~/.vimrc | catch | cquit | endtry | quit'
+		-c 'try | source ~/.vimrc | catch | execute "!echo" shellescape(v:exception) | cquit | endtry | quit'
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
