@@ -99,7 +99,7 @@ test-bootstrap:
 
 .PHONY: test-composer
 test-composer: home/config/composer/composer.json home/config/composer/composer.lock
-	$(DOCKER_RUN) $(foreach file,$^,--volume $(abspath $(file)):/app/$(notdir $(file)):ro) composer install --quiet
+	$(DOCKER_RUN) $(foreach FILE,$^,--volume $(abspath $(FILE)):/app/$(notdir $(FILE)):ro) composer install --quiet
 
 .PHONY: test-curl
 test-curl: home/curlrc
@@ -135,7 +135,15 @@ test-sublime-text:
 
 .PHONY: test-vim
 test-vim: home/vimrc home/vim
-	true
+	$(DOCKER_RUN) \
+	   --tty \
+		--volume $(abspath home/vimrc):/root/.vimrc:ro \
+		--volume $(abspath home/vim):/root/.vim:ro \
+		$(foreach PATH,$(sort $(filter-out home/vim/bundle,$(wildcard home/vim/* home/vim/bundle/*))),--volume $(abspath $(PATH)):$(patsubst home/vim/%,/root/.vim/%,$(PATH)):ro) \
+		--volume $(abspath .git/modules/home/vim/bundle/Vundle.vim):/.git/modules/home/vim/bundle/Vundle.vim:ro \
+		thinca/vim \
+		-u NONE \
+		-c 'try | source ~/.vimrc | catch | cquit | endtry | quit'
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
