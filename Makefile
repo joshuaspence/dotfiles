@@ -204,7 +204,7 @@ $(eval $(call virtualenv_target,dotfiles,dotfiles))
 $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
 
 .SECONDEXPANSION:
-$(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh)
+$(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh) $(filter src/%,$(SUBMODULES)) | tools/compiler
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
 
 home/config/composer/composer.lock: home/config/composer/composer.json
