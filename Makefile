@@ -134,15 +134,15 @@ test-sublime-text:
 	true
 
 .PHONY: test-vim
-test-vim: home/vimrc home/vim
+test-vim: home/vimrc home/vim home/vim/bundle $(wildcard home/vim/**/*)
 	$(DOCKER_RUN) \
-	   --volume $(abspath home/vimrc):/root/.vimrc:ro \
-		--volume $(abspath home/vim):/root/.vim:ro \
-		$(foreach PATH,$(sort $(filter-out home/vim/bundle,$(wildcard home/vim/* home/vim/bundle/*))),--volume $(abspath $(PATH)):$(patsubst home/vim/%,/root/.vim/%,$(PATH)):ro) \
-		--volume $(abspath .git/modules/home/vim/bundle/Vundle.vim):/.git/modules/home/vim/bundle/Vundle.vim:ro \
+		--tty \
+		$(foreach PATH,$< $(sort $(filter-out $(word 3,$^),$(shell find $(word 2,$^) $(word 3,$^) -mindepth 1 -maxdepth 1 -type d))),--volume $(abspath $(PATH)):$(patsubst home/vim%,/root/.vim%,$(PATH)):ro) \
+		--volume $(abspath .git/modules):/.git/modules:ro \
 		thinca/vim \
 		-u NONE \
 		-c 'try | source ~/.vimrc | catch | silent execute "!echo" shellescape(v:exception) | cquit | endtry | quit'
+
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
