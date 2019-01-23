@@ -188,7 +188,7 @@ virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
  $(SUBMODULES): $$@/.git
 
 $(addsuffix /.git,$(SUBMODULES)): .gitmodules
-	git submodule update --init --recursive -- $(dir $@)
+	git submodule --quiet update --init --recursive -- $(dir $@)
 	@touch $@
 
 $(VIRTUALENV):
