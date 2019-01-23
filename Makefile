@@ -85,16 +85,12 @@ test: \
 
 .PHONY: test-bootstrap
 test-bootstrap:
-	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu bash -c '\
-		set -o errexit; \
-		\
+	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu bash -e -c '\
 		apt-get update --quiet --quiet; \
-		apt-get install --quiet --quiet --no-install-recommends --yes ca-certificates gawk git make python virtualenv >/dev/null; \
+		apt-get install --no-install-recommends --quiet --quiet --yes ca-certificates gawk git make python virtualenv >/dev/null; \
 		\
-		cd ~; \
-		git clone /dotfiles; \
-		cd dotfiles; \
-		make all; \
+		git clone --quiet /dotfiles ~/dotfiles; \
+		make --directory ~/dotfiles submodules; \
 	'
 
 .PHONY: test-composer
