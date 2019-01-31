@@ -111,7 +111,7 @@ test-git: home/gitconfig
 
 .PHONY: test-irb
 test-irb: home/irbrc
-	true
+	$(DOCKER_RUN) --volume $(abspath $<):/irbrc:ro instructure/rvm bash -c -l 'ruby -r irb /irbrc'
 
 .PHONY: test-python
 test-python: home/pythonrc
