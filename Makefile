@@ -115,7 +115,7 @@ test-irb: home/irbrc
 
 .PHONY: test-python
 test-python: home/pythonrc
-	true
+	$(DOCKER_RUN) --volume $(abspath $<):/pythonrc:ro python python /pythonrc
 
 .PHONY: test-readline
 test-readline: home/inputrc
