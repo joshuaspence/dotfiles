@@ -67,6 +67,8 @@ shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile
 .PHONY: submodules
 submodules: $(SUBMODULES)
 
+# TODO: Run all `test-*` targets automatically.
+# See https://stackoverflow.com/a/26339924/1369417.
 .PHONY: test
 test: \
 	test-bootstrap \
