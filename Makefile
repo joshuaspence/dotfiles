@@ -76,7 +76,6 @@ test: \
 	test-git \
 	test-irb \
 	test-python \
-	test-readline \
 	test-ssh \
 	test-sublime-text \
 	test-vim \
@@ -117,14 +116,11 @@ test-irb: home/irbrc
 test-python: home/pythonrc
 	$(DOCKER_RUN) --volume $(abspath $<):/pythonrc:ro python python /pythonrc
 
-.PHONY: test-readline
-test-readline: home/inputrc
-	true
-
 .PHONY: test-ssh
 test-ssh: home/ssh/config
 	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/ssh-config:ro chamunks/alpine-openssh -F /ssh-config -G -T localhost >/dev/null
 
+# TODO: Implement this.
 .PHONY: test-sublime-text
 test-sublime-text:
 	true
