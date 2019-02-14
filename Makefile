@@ -140,7 +140,7 @@ test-vim: home/vimrc home/vim home/vim/bundle $(wildcard home/vim/**/*)
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
-	$(DOCKER_RUN) --volume $(abspath $<):/requirements.txt:ro python:2.7 pip install --requirement /requirements.txt --quiet
+	$(DOCKER_RUN) --volume $(abspath $<):/requirements.txt:ro python:2.7 pip install --requirement /requirements.txt --quiet --disable-pip-version-check
 
 .PHONY: test-wget
 test-wget: home/wgetrc
