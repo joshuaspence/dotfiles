@@ -5,8 +5,6 @@
 #    pip-compile --output-file home/venv/requirements.txt home/venv/requirements.in
 #
 awscli==1.16.84
-babel==2.6.0              # via bashate
-bashate==0.6.0
 botocore==1.12.74         # via awscli, s3transfer
 click==7.0                # via pip-tools
 colorama==0.3.9           # via awscli
@@ -14,12 +12,10 @@ docutils==0.14            # via awscli, botocore
 dotfiles==0.6.4
 futures==3.2.0            # via s3transfer
 jmespath==0.9.3           # via botocore
-pbr==5.1.1                # via bashate
 pip-tools==3.2.0
 pssh==2.3.1
 pyasn1==0.4.5             # via rsa
 python-dateutil==2.7.5    # via botocore
-pytz==2018.7              # via babel
 pyyaml==3.13              # via awscli
 rsa==3.4.2                # via awscli
 s3transfer==0.1.13        # via awscli
