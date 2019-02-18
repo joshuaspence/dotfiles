@@ -22,16 +22,13 @@ PS1=$(
   readonly time="\[${color_blue}\]\t\[${color_none}\]"
   readonly user="\[\$([[ \$EUID == 0 ]] && printf '${color_red}' || printf '${color_yellow}')\]\u\[${color_none}\]"
 
-  echo -n "${joiner_topleft}${separator}"
-  echo -n "[${status}]"
-  echo -n "${separator}"
-  echo -n "[${user}@${host}]"
-  echo -n "${separator}"
-  echo -n "\[\$( [[ \$TERM == screen ]] && printf \"[${color_yellow}\${TERM}:\${WINDOW}${color_none}]${separator}\" )\]"
-  echo -n "[${time}]"
-  echo -n "\n${joiner_bottomleft}${separator}"
-  echo -n "[${pwd}]"
-  echo -n "${separator}${separator_tail} "
+  printf \
+    "${joiner_topleft}${separator}[%s]${separator}[%s@%s]${separator}%s[%s]\n${joiner_bottomleft}${separator}[%s]${separator}${separator_tail} " \
+    "${status}" \
+    "${user}" "${host}" \
+    "\[\$( [[ \$TERM == screen ]] && printf '[\[${color_yellow}\]%s:%d\[${color_none}\]]${separator}' \"\${TERM}\" \"\${WINDOW}\" )\]" \
+    "${time}" \
+    "${pwd}"
 )
 PS2='... > '
 PS4='+'

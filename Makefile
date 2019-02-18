@@ -58,11 +58,10 @@ dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 .PHONY: lint
 lint: shellcheck
 
-# TODO: Remove some of these exclusions.
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: shellcheck
-shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091,SC2028,SC2046,SC2059,SC2155 --shell=bash $^
+shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile home/hushlogin home/rvmrc
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090 --shell=bash $^
 
 .PHONY: submodules
 submodules: $(SUBMODULES)
