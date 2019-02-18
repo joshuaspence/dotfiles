@@ -47,6 +47,8 @@ composer: home/config/composer/composer.json home/config/composer/composer.lock
 install: dotfiles virtualenv
 
 # Composer is a soft dependency, so don't worry if it's not installed.
+#
+# TODO: Make Composer a hard dependency.
 ifneq ($(shell command -v composer 2>/dev/null),)
 install: composer
 endif
@@ -199,7 +201,7 @@ $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh) $(filter src/%,$(SUBMO
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
 
 home/config/composer/composer.lock: home/config/composer/composer.json
-	COMPOSER=$(abspath $<) $(COMPOSER) update --quiet
+	COMPOSER=$(abspath $<) COMPOSER_HOME $(COMPOSER) update --quiet
 	@touch $@
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
