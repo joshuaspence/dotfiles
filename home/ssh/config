@@ -1,6 +1,16 @@
 IgnoreUnknown Include
 Include conf.d/*.conf
 
+Host jump.*
+  ForwardAgent yes
+
+  # Multiplex SSH connections, but only for jump hosts (for now) since I have
+  # had issues with multiplexed connections in the past (although I never took
+  # the time to properly investigate).
+  ControlMaster auto
+  ControlPath ~/.ssh/connections/%h_%p_%r
+  ControlPersist 1h
+
 Host *
   AddKeysToAgent yes
   Compression yes
@@ -16,13 +26,3 @@ Host *
   ServerAliveCountMax 8
   ServerAliveInterval 15
   TCPKeepAlive yes
-
-Host jump.*
-  ForwardAgent yes
-
-  # Multiplex SSH connections, but only for jump hosts (for now) since I have
-  # had issues with multiplexed connections in the past (although I never took
-  # the time to properly investigate).
-  ControlMaster auto
-  ControlPath ~/.ssh/connections/%h_%p_%r
-  ControlPersist 1h
