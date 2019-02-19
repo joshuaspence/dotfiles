@@ -1,0 +1,7 @@
+---
+AllCops:
+  Include:
+    - 'home/irbrc'
+
+Style/NumericLiterals:
+  Enabled: false

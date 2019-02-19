@@ -60,15 +60,19 @@ dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 # TODO: Run all `lint-*` targets automatically.
 # See https://stackoverflow.com/a/26339924/1369417.
 .PHONY: lint
-lint: lint-shellcheck lint-yamllint
+lint: lint-rubocop lint-shellcheck lint-yamllint
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
 lint-shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile home/hushlogin home/rvmrc
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090 --shell=bash $^
 
+.PHONY: lint-rubocop
+lint-rubocop: home/irbrc
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) lendinghome/rubocop --config .rubocop.yml $^
+
 .PHONY: lint-yamllint
-lint-yamllint: .travis.yml .yamllint | $(VIRTUALENV)/bin/yamllint
+lint-yamllint: $(wildcard *.yml *.yaml .*.yml .*.yaml) .yamllint | $(VIRTUALENV)/bin/yamllint
 	$(VIRTUALENV)/bin/yamllint --strict $^
 
 .PHONY: submodules
