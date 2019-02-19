@@ -60,7 +60,10 @@ dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 # TODO: Run all `lint-*` targets automatically.
 # See https://stackoverflow.com/a/26339924/1369417.
 .PHONY: lint
-lint: lint-rubocop lint-shellcheck lint-yamllint
+lint: \
+	lint-rubocop \
+	lint-shellcheck \
+	lint-yamllint
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
