@@ -57,13 +57,19 @@ endif
 dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 	$(VIRTUALENV)/bin/dotfiles --force --repo $(<D) --config $< --sync
 
+# TODO: Run all `lint-*` targets automatically.
+# See https://stackoverflow.com/a/26339924/1369417.
 .PHONY: lint
-lint: shellcheck
+lint: lint-shellcheck lint-yamllint
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
-.PHONY: shellcheck
-shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile home/hushlogin home/rvmrc
+.PHONY: lint-shellcheck
+lint-shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile home/hushlogin home/rvmrc
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090 --shell=bash $^
+
+.PHONY: lint-yamllint
+lint-yamllint: .travis.yml .yamllint | $(VIRTUALENV)/bin/yamllint
+	$(VIRTUALENV)/bin/yamllint --strict $^
 
 .PHONY: submodules
 submodules: $(SUBMODULES)
@@ -195,6 +201,7 @@ $(VIRTUALENV):
 
 $(eval $(call virtualenv_target,dotfiles,dotfiles))
 $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
+$(eval $(call virtualenv_target,yamllint,yamllint))
 
 .SECONDEXPANSION:
 $(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh) $(filter src/%,$(SUBMODULES)) | tools/compiler

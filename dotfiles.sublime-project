@@ -46,6 +46,12 @@
         "rules": [
           {"file_path": ".*/home/ssh/config$"}
         ]
+      },
+      {
+        "syntax": "YAML/YAML",
+        "rules": [
+          {"file_path": ".*/\\.yamllint$"}
+        ]
       }
     ]
   }

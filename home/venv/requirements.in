@@ -3,3 +3,4 @@ dotfiles
 pip-tools
 pssh
 speedtest-cli
+yamllint

@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:key-ordering
 language: 'shell'
 os: 'ubuntu'
 services:
