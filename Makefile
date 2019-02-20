@@ -65,10 +65,16 @@ dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 # See https://stackoverflow.com/a/26339924/1369417.
 .PHONY: lint
 lint: \
+	lint-flake8 \
 	lint-jsonlint \
+	lint-pylint \
 	lint-rubocop \
 	lint-shellcheck \
 	lint-yamllint
+
+.PHONY: lint-flake8
+lint-flake8: home/pythonrc | $(VIRTUALENV)/bin/flake8
+	$(VIRTUALENV)/bin/flake8 $^
 
 # TODO: We should list all of the files to be linted as dependencies of
 # the `lint-jsonlint` target, but `make` doesn't properly handle filenames
@@ -77,6 +83,10 @@ lint: \
 .PHONY: lint-jsonlint
 lint-jsonlint: $(call rwildcard,,*.json) $(call rwildcard,,*.sublime-project)
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^ $(shell find . \( -name '*.sublime-settings' -o -name '*.sublime-keymap' \) -printf '%P\0' | xargs --null printf '%q ')
+
+.PHONY: lint-pylint
+lint-pylint: home/pythonrc | $(VIRTUALENV)/bin/pylint
+	$(VIRTUALENV)/bin/pylint $^
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
@@ -220,7 +230,9 @@ $(VIRTUALENV):
 	virtualenv --quiet $@
 
 $(eval $(call virtualenv_target,dotfiles,dotfiles))
+$(eval $(call virtualenv_target,flake8,flake8))
 $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
+$(eval $(call virtualenv_target,pylint,pylint))
 $(eval $(call virtualenv_target,yamllint,yamllint))
 
 .SECONDEXPANSION:

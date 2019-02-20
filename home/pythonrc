@@ -5,8 +5,8 @@ import sys
 if sys.version_info.major < 3:
   try:
     import readline
-  except ImportError as e:
-    sys.stderr.write(e)
+  except ImportError as err:
+    sys.stderr.write(err)
     sys.stderr.write('Module readline not available. Tab completion is disabled.\n')
   else:
     import rlcompleter
@@ -28,22 +28,23 @@ if sys.version_info.major < 3:
         if text == '':
           readline.insert_text(self.tab)
           return None
-        else:
-          return rlcompleter.Completer.complete(self, text, state)
+
+        return rlcompleter.Completer.complete(self, text, state)
 
     readline.set_completer(Completer().complete)
 
 # Enable command history.
 try:
+  # pylint: disable=ungrouped-imports
   import readline
 except ImportError:
   sys.stderr.write('Module readline not available. Command-line history is disabled.\n')
 else:
-  pyhistory = os.path.expanduser('~/.python_history')
+  PYHISTORY = os.path.expanduser('~/.python_history')
 
   # Restore command-line history.
-  if os.path.isfile(pyhistory):
-    readline.read_history_file(pyhistory)
+  if os.path.isfile(PYHISTORY):
+    readline.read_history_file(PYHISTORY)
 
   # Save command-line history when Python exits.
   try:
@@ -51,7 +52,6 @@ else:
   except ImportError:
     sys.stderr.write('Module atexit not availabkeCommand-line history will not be saved when Python exits.\n')
   else:
-    atexit.register(readline.write_history_file, pyhistory)
+    atexit.register(readline.write_history_file, PYHISTORY)
 
   readline.set_history_length(1048576)
-
