@@ -70,12 +70,13 @@ lint: \
 	lint-shellcheck \
 	lint-yamllint
 
-# NOTE: We can't use `$(wildcard **/*.sublime-settings)` because
-# `make` doesn't handle filenames containing spaces. See
+# TODO: We should list all of the files to be linted as dependencies of
+# the `lint-jsonlint` target, but `make` doesn't properly handle filenames
+# containing spaces. See
 # https://www.cmcrossroads.com/article/gnu-make-meets-file-names-spaces-them.
 .PHONY: lint-jsonlint
 lint-jsonlint: $(call rwildcard,,*.json) $(call rwildcard,,*.sublime-project)
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^ home/config/sublime-text-3/Packages/User/*.sublime-*
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^ $(shell find . \( -name '*.sublime-settings' -o -name '*.sublime-keymap' \) -printf '%P\0' | xargs --null printf '%q ')
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
