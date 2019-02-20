@@ -22,6 +22,10 @@ define check_stdout_empty
 	! $(1) 2>&1 >/dev/null | grep ^
 endef
 
+# The `wildcard` function doesn't recurse into subdirectories.
+# See https://stackoverflow.com/a/12959764/1369417.
+rwildcard = $(wildcard $1$2) $(foreach dir,$(wildcard $1*),$(call rwildcard,$(dir)/,$2))
+
 # Define a target to install a Python package.
 # Should be used in conjunction with `eval`.
 define virtualenv_target
@@ -70,12 +74,12 @@ lint: \
 # `make` doesn't handle filenames containing spaces. See
 # https://www.cmcrossroads.com/article/gnu-make-meets-file-names-spaces-them.
 .PHONY: lint-jsonlint
-lint-jsonlint: $(wildcard **/*.json) $(wildcard *.sublime-project)
+lint-jsonlint: $(call rwildcard,,*.json) $(call rwildcard,,*.sublime-project)
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^ home/config/sublime-text-3/Packages/User/*.sublime-*
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
-lint-shellcheck: $(wildcard src/**/*.*sh) home/bash_logout home/bash_profile home/hushlogin home/rvmrc
+lint-shellcheck: $(call rwildcard,src,*.*sh) home/bash_logout home/bash_profile home/hushlogin home/rvmrc
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090 --shell=bash $^
 
 .PHONY: lint-rubocop
@@ -83,7 +87,7 @@ lint-rubocop: home/irbrc
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) lendinghome/rubocop --config .rubocop.yml $^
 
 .PHONY: lint-yamllint
-lint-yamllint: $(wildcard *.yml *.yaml .*.yml .*.yaml) .yamllint | $(VIRTUALENV)/bin/yamllint
+lint-yamllint: $(call rwildcard,,*.yaml) $(call rwildcard,,*.yml) $(call rwildcard,,.*.yaml) $(call rwildcard,,.*.yml) .yamllint | $(VIRTUALENV)/bin/yamllint
 	$(VIRTUALENV)/bin/yamllint --strict $^
 
 .PHONY: submodules
@@ -219,7 +223,7 @@ $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
 $(eval $(call virtualenv_target,yamllint,yamllint))
 
 .SECONDEXPANSION:
-$(SHELL_TARGETS): src/$$(@F).*sh $(wildcard src/**/*.*sh) $(filter src/%,$(SUBMODULES)) | tools/compiler
+$(SHELL_TARGETS): src/$$(@F).*sh $(call rwildcard,src,*.*sh) $(filter src/%,$(SUBMODULES)) | tools/compiler
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
 
 home/config/composer/composer.lock: home/config/composer/composer.json
