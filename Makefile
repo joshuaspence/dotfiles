@@ -61,9 +61,17 @@ dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 # See https://stackoverflow.com/a/26339924/1369417.
 .PHONY: lint
 lint: \
+	lint-jsonlint \
 	lint-rubocop \
 	lint-shellcheck \
 	lint-yamllint
+
+# NOTE: We can't use `$(wildcard **/*.sublime-settings)` because
+# `make` doesn't handle filenames containing spaces. See
+# https://www.cmcrossroads.com/article/gnu-make-meets-file-names-spaces-them.
+.PHONY: lint-jsonlint
+lint-jsonlint: $(wildcard **/*.json) $(wildcard *.sublime-project)
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^ home/config/sublime-text-3/Packages/User/*.sublime-*
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck

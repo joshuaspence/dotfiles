@@ -26,13 +26,13 @@
         "sublime-workspace"
       ],
       "rules": [
-        {"file_path": ".*/composer\\.lock$"},
+        {"file_path": ".*/composer\\.lock$"}
       ]
     },
     {
       "syntax": "Ruby/Ruby",
       "rules": [
-        {"file_path": ".*/Puppetfile$"},
+        {"file_path": ".*/Puppetfile$"}
       ]
     },
     {
