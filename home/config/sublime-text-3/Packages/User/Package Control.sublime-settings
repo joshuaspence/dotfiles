@@ -18,6 +18,7 @@
 		"Puppet",
 		"SSH Config",
 		"Terraform",
-		"Varnish VCL"
+		"Varnish VCL",
+		"VimL"
 	]
 }

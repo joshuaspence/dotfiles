@@ -52,6 +52,12 @@
         ]
       },
       {
+        "syntax": "VimL/VimL",
+        "rules": [
+          {"file_path": ".*/home/vimrc$"}
+        ]
+      },
+      {
         "syntax": "YAML/YAML",
         "rules": [
           {"file_path": ".*/\\.yamllint$"}
