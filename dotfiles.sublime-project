@@ -12,6 +12,10 @@
       },
       {
         "syntax": "INI/INI",
+        "extensions": [
+          ".flake8",
+          ".pylintrc"
+        ],
         "rules": [
           {"file_path": ".*/home/config/htop/htoprc$"},
           {"file_path": ".*/home/dotfilesrc$"}
@@ -38,7 +42,7 @@
         "rules": [
           {"file_path": ".*/home/bash(_(logout|profile)|rc)$"},
           {"file_path": ".*/home/(hushlogin|profile)$"},
-          {"file_path": ".*/home/(rvmrc)$"}
+          {"file_path": ".*/home/rvmrc$"}
         ]
       },
       {
