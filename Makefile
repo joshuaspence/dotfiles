@@ -240,7 +240,7 @@ $(SHELL_TARGETS): src/$$(@F).*sh $(call rwildcard,src,*.*sh) $(filter src/%,$(SU
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
 
 home/config/composer/composer.lock: home/config/composer/composer.json
-	COMPOSER=$(abspath $<) COMPOSER_HOME $(COMPOSER) update --quiet
+	COMPOSER=$(abspath $<) $(COMPOSER) update --quiet
 	@touch $@
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
