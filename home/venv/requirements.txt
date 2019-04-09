@@ -5,12 +5,12 @@
 #    pip-compile --output-file home/venv/requirements.txt home/venv/requirements.in
 #
 astroid==1.6.5            # via pylint
-awscli==1.16.123
+awscli==1.16.140
 backports.functools-lru-cache==1.5  # via astroid, isort, pylint
-botocore==1.12.113        # via awscli, s3transfer
+botocore==1.12.130        # via awscli, s3transfer
 click==7.0                # via pip-tools
 colorama==0.3.9           # via awscli
-configparser==3.7.3       # via entrypoints, flake8, pylint
+configparser==3.7.4       # via entrypoints, flake8, pylint
 docutils==0.14            # via awscli, botocore
 dotfiles==0.6.4
 entrypoints==0.3          # via flake8
@@ -18,12 +18,12 @@ enum34==1.1.6             # via astroid, flake8
 flake8==3.7.7
 functools32==3.2.3.post2  # via flake8
 futures==3.2.0            # via isort, s3transfer
-isort==4.3.15             # via pylint
+isort==4.3.17             # via pylint
 jmespath==0.9.4           # via botocore
 lazy-object-proxy==1.3.1  # via astroid
 mccabe==0.6.1             # via flake8, pylint
 pathspec==0.5.9           # via yamllint
-pip-tools==3.4.0
+pip-tools==3.6.0
 pssh==2.3.1
 pyasn1==0.4.5             # via rsa
 pycodestyle==2.5.0        # via flake8
