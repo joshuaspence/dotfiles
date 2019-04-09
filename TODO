@@ -1,0 +1,33 @@
+home/vim/after/ftplugin/gitcommit.vim
+home/vim/bundle/Vundle.vim
+home/vim/plugin/buffer.vim
+home/vim/plugin/list.vim
+home/vim/plugin/mouse.vim
+home/vim/plugin/move.vim
+home/vim/plugin/search.vim
+home/vim/plugin/temp.vim
+home/vim/plugin/visual.vim
+home/vimrc
+
+# ~/.vimrc
+https://github.com/adampetrovic/dotfiles/tree/master/vim
+https://github.com/numard/myconfigs/blob/master/.vimrc
+https://github.com/rtomayko/dotfiles/blob/rtomayko/.vimrc
+https://github.com/rtomayko/dotfiles/blob/rtomayko/.gvimrc
+https://github.com/jsok/dotfiles/blob/master/vimrc
+https://github.com/dotphiles/dotphiles/tree/master/vim
+https://github.com/necolas/dotfiles/tree/master/vim
+https://github.com/MikeMcQuaid/dotfiles/blob/master/vimrc
+https://github.com/silverwind/dotfiles/blob/master/.vimrc
+https://github.com/anaoum/dotfiles/tree/master/vim
+https://github.com/solarnz/dotfiles/tree/master/vim
+https://github.com/mitchellh/dotfiles/blob/master/vimrc
+
+~/.config/autostart/
+~/.config/bleachbit/
+~/.config/gtk-2.0/
+~/.config/menus/
+~/.config/psysh/
+Tig
+diff-so-fancy
+grc (http://www.linuxcertif.com/man/1/grc/)
