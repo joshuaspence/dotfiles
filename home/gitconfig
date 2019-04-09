@@ -106,6 +106,9 @@
   showStash = true
   showUntrackedFiles = all
 
+[url "git@github.com:"]
+  insteadof = github:
+
 [user]
   name = Joshua Spence
   email = josh@joshuaspence.com
