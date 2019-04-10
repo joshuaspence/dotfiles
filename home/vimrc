@@ -14,9 +14,13 @@ Plugin 'vim-syntastic/syntastic'
 Plugin 'myint/syntastic-extras'
 Plugin 'matze/vim-move'
 Plugin 'tpope/vim-sensible'
+Plugin 'Valloric/YouCompleteMe'
 
 " TODO: Automatically install plugins.
 " See https://github.com/VundleVim/Vundle.vim/issues/414.
+
+" TODO: Compile `ycmd`.
+" See https://github.com/Valloric/YouCompleteMe.
 
 call vundle#end()
 filetype plugin indent on

@@ -217,7 +217,12 @@ virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
 
 .PHONY: vundle
 vundle: home/vimrc
-	vim -u NONE -c 'source home/vimrc' -c PluginInstall -c PluginUpdate -c qall
+	vim \
+	  -u NONE \
+	  -c 'source home/vimrc' \
+	  -c PluginInstall -c PluginUpdate \
+	  -c 'silent !~/.vim/bundle/YouCompleteMe/install.py --clang-completer --go-completer --java-completer --ts-completer' \
+	  -c qall
 
 #===============================================================================
 # Rules
