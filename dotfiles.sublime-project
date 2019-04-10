@@ -8,7 +8,11 @@
         "home/config/sublime-text-3/Packages/User/Package Control.user-ca-bundle"
       ],
       "folder_exclude_patterns": [
-        "home/config/sublime-text-3/Packages/User/Package Control.cache"
+        "home/config/sublime-text-3/Packages/User/Package Control.cache",
+        "home/vim/bundle/Vundle.vim",
+        "src/modules/go-pkg-complete",
+        "tools/compiler",
+        "tools/loader"
       ],
       "index_exclude_patterns": [
         "home/bashrc",
