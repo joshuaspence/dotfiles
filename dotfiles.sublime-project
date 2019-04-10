@@ -1,6 +1,20 @@
 {
   "folders": [
-    {"path": "."}
+    {
+      "path": ".",
+      "file_exclude_patterns": [
+        "home/config/sublime-text-3/Packages/User/Package Control.last-run",
+        "home/config/sublime-text-3/Packages/User/Package Control.merged-ca-bundle",
+        "home/config/sublime-text-3/Packages/User/Package Control.user-ca-bundle"
+      ],
+      "folder_exclude_patterns": [
+        "home/config/sublime-text-3/Packages/User/Package Control.cache"
+      ],
+      "index_exclude_patterns": [
+        "home/bashrc",
+        "home/profile"
+      ]
+    }
   ],
   "settings": {
     "project_syntaxes": [
