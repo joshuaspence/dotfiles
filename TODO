@@ -6,6 +6,7 @@ home/vim/plugin/mouse.vim
 home/vim/plugin/move.vim
 home/vim/plugin/nerdtree.vim
 home/vim/plugin/search.vim
+home/vim/plugin/sudo.vim
 home/vim/plugin/syntastic.vim
 home/vim/plugin/temp.vim
 home/vim/plugin/visual.vim
