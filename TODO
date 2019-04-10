@@ -29,6 +29,7 @@ https://github.com/mitchellh/dotfiles/blob/master/vimrc
 ~/.config/gtk-2.0/
 ~/.config/menus/
 ~/.config/psysh/
+~/.config/user-dirs.dirs
 Tig
 diff-so-fancy
 grc (http://www.linuxcertif.com/man/1/grc/)
@@ -36,3 +37,4 @@ tmux
 ~/.gnupg/
 vscode
 TaskWarrior (~/.taskrc)
+Meld
