@@ -8,6 +8,7 @@ home/vim/plugin/search.vim
 home/vim/plugin/temp.vim
 home/vim/plugin/visual.vim
 home/vimrc
+src/environment/pyenv.sh (see https://github.com/pyenv/pyenv#advanced-configuration)
 
 # ~/.vimrc
 https://github.com/adampetrovic/dotfiles/tree/master/vim
