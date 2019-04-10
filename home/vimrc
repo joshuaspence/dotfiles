@@ -10,6 +10,7 @@ Plugin 'VundleVim/Vundle.vim'
 
 " Plugins.
 Plugin 'editorconfig/editorconfig-vim'
+Plugin 'scrooloose/nerdtree'
 Plugin 'vim-syntastic/syntastic'
 Plugin 'myint/syntastic-extras'
 Plugin 'matze/vim-move'

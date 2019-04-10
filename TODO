@@ -4,6 +4,7 @@ home/vim/plugin/buffer.vim
 home/vim/plugin/list.vim
 home/vim/plugin/mouse.vim
 home/vim/plugin/move.vim
+home/vim/plugin/nerdtree.vim
 home/vim/plugin/search.vim
 home/vim/plugin/syntastic.vim
 home/vim/plugin/temp.vim
