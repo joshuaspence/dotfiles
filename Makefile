@@ -48,7 +48,7 @@ composer: home/config/composer/composer.json home/config/composer/composer.lock
 	COMPOSER=$(abspath $<) $(COMPOSER) install --quiet
 
 .PHONY: install
-install: dotfiles virtualenv
+install: dotfiles virtualenv vundle
 
 # Composer is a soft dependency, so don't worry if it's not installed.
 #
@@ -214,6 +214,10 @@ upgrade-pip:
 .PHONY: virtualenv
 virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
 	$(VIRTUALENV)/bin/pip-sync --quiet $<
+
+.PHONY: vundle
+vundle: home/vimrc
+	vim -u NONE -c 'source home/vimrc' -c PluginInstall -c PluginUpdate -c qall
 
 #===============================================================================
 # Rules
