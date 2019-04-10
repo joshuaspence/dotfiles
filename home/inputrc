@@ -22,3 +22,9 @@ set visible-stats on
 $if Bash
   Space: magic-space
 $endif
+
+# Pressing TAB will list all completions and select the first one. Pressing it
+# again will cycle through available completions. Shift-TAB cycles completions
+# backwards.
+TAB: menu-complete
+"\e[Z": menu-complete-backward
