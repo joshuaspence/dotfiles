@@ -50,7 +50,7 @@ else:
   try:
     import atexit
   except ImportError:
-    sys.stderr.write('Module atexit not availabkeCommand-line history will not be saved when Python exits.\n')
+    sys.stderr.write('Module atexit not available. Command-line history will not be saved when Python exits.\n')
   else:
     atexit.register(readline.write_history_file, PYHISTORY)
 
