@@ -6,7 +6,7 @@ set runtimepath+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
 " Let Vundle manage Vundle.
-Plugin 'VundleVim/Vundle.vim'
+Plugin 'VundleVim/Vundle.vim', {'pinned': 1}
 
 " Plugins.
 Plugin 'editorconfig/editorconfig-vim'
