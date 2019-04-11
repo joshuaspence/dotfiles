@@ -32,6 +32,7 @@ if sys.version_info.major < 3:
         return rlcompleter.Completer.complete(self, text, state)
 
     readline.set_completer(Completer().complete)
+    del readline, rlcompleter
 
 # Enable command history.
 try:
@@ -53,5 +54,9 @@ else:
     sys.stderr.write('Module atexit not available. Command-line history will not be saved when Python exits.\n')
   else:
     atexit.register(readline.write_history_file, PYHISTORY)
+    del atexit
 
   readline.set_history_length(1048576)
+  del readline
+
+del os, sys
