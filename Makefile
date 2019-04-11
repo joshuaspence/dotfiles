@@ -220,7 +220,7 @@ vundle: home/vimrc
 	vim \
 	  -u NONE \
 	  -c 'source home/vimrc' \
-	  -c PluginInstall -c PluginUpdate \
+	  -c PluginInstall -c PluginUpdate -c PluginClean! \
 	  -c 'silent !~/.vim/bundle/YouCompleteMe/install.py --clang-completer --go-completer --java-completer --ts-completer' \
 	  -c qall
 
