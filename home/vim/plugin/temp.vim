@@ -13,4 +13,5 @@ if exists('&undodir')
     call mkdir($HOME.'/.vim/undo')
   endif
   set undodir=~/.vim/undo
+  set undofile
 endif
