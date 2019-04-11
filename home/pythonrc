@@ -32,7 +32,6 @@ if sys.version_info.major < 3:
         return rlcompleter.Completer.complete(self, text, state)
 
     readline.set_completer(Completer().complete)
-    del readline, rlcompleter
 
 # Enable command history.
 try:
@@ -57,6 +56,5 @@ else:
     del atexit
 
   readline.set_history_length(1048576)
-  del readline
 
 del os, sys
