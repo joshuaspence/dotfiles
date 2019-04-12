@@ -16,10 +16,10 @@ SUBMODULES    = $(shell git config --file .gitmodules --get-regexp '^submodule\.
 # Functions
 #===============================================================================
 
-# Check that a command produces no standard output.
+# Check that a command produces no output to standard error.
 # See https://stackoverflow.com/a/25496589.
-define check_stdout_empty
-	! $(1) 2>&1 >/dev/null | grep ^
+define check_stderr_empty
+! $(1) 2>&1 >/dev/null | grep ^
 endef
 
 # The `wildcard` function doesn't recurse into subdirectories.
@@ -146,7 +146,7 @@ test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 
 .PHONY: test-gem
 test-gem: home/gemrc
-	$(DOCKER_RUN) --volume $(abspath $<):/etc/gemrc:ro instructure/rvm bash -c -l '$(call check_stdout_empty,gem --version)'
+	$(DOCKER_RUN) --volume $(abspath $<):/etc/gemrc:ro instructure/rvm bash -c -l '$(call check_stderr_empty,gem --version)'
 
 .PHONY: test-git
 test-git: home/gitconfig
