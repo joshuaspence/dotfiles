@@ -112,6 +112,7 @@ test: \
 	test-composer \
 	test-curl \
 	test-dotfiles \
+	test-gem \
 	test-git \
 	test-irb \
 	test-python \
@@ -142,6 +143,10 @@ test-curl: home/curlrc
 .PHONY: test-dotfiles
 test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 	$(VIRTUALENV)/bin/dotfiles --repo $(<D) --config $< --list >/dev/null
+
+.PHONY: test-gem
+test-gem: home/gemrc
+	$(DOCKER_RUN) --volume $(abspath $<):/etc/gemrc:ro instructure/rvm bash -c -l '$(call check_stdout_empty,gem --version)'
 
 .PHONY: test-git
 test-git: home/gitconfig

@@ -78,6 +78,7 @@
       {
         "syntax": "YAML/YAML",
         "rules": [
+          {"file_path": ".*/home/gemrc$"},
           {"file_path": ".*/\\.yamllint$"}
         ]
       }
