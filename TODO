@@ -41,6 +41,7 @@ tmux
 vscode
 TaskWarrior (~/.taskrc)
 Meld
+gitsh
 
 # Vim plugins
 vim-airline/vim-airline
