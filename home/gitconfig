@@ -27,6 +27,9 @@
   # List files that are not under version control.
   ls-ignored = ls-files --exclude-standard --ignored --others
 
+  # List all repositories in my workspace.
+  workspace = "!find ~/workspace -type d -exec sh -c 'git -C {} rev-parse --git-dir >/dev/null 2>&1' \\; -prune -print | sort"
+
 [apply]
   whitespace = fix
 
