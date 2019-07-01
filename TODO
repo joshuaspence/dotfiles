@@ -46,3 +46,6 @@ gitsh
 # Vim plugins
 vim-airline/vim-airline
 tpope/vim-*
+
+# GAM
+https://github.com/jay0lee/GAM
