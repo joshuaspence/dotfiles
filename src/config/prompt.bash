@@ -5,6 +5,7 @@ PS1=$(
   readonly color_yellow='\e[0;33m'
   readonly color_blue='\e[0;34m'
   readonly color_cyan='\e[0;36m'
+  # shellcheck disable=SC2034
   readonly color_white='\e[0;37m'
   readonly boldcolor_red='\e[1;31m'
   readonly boldcolor_green='\e[1;32m'
