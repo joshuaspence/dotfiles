@@ -49,3 +49,7 @@ tpope/vim-*
 
 # GAM
 https://github.com/jay0lee/GAM
+
+# Docker
+- Add alias for `docker stop $(docker ps -q)`
+- Add alias for `docker rm $(docker ps -aq)`
