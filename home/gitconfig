@@ -39,7 +39,6 @@
 [clean]
   requireForce = false
 
-
 [color "diff"]
   meta = yellow bold
 
@@ -88,9 +87,6 @@
 
 [pager]
   branch = false
-
-[protocol]
-  version = 2
 
 [pull]
   rebase = true
