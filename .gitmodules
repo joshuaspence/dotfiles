@@ -13,5 +13,5 @@
   url = https://git.code.sf.net/p/loader/code
   branch = extended
 [submodule "src/modules/completion-ruby"]
-	path = src/modules/completion-ruby
-	url = https://github.com/mernen/completion-ruby.git
+  path = src/modules/completion-ruby
+  url = https://github.com/mernen/completion-ruby.git
