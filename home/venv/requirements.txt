@@ -4,7 +4,6 @@
 #
 #    pip-compile --output-file=home/venv/requirements.txt home/venv/requirements.in
 #
-astroid==2.2.5            # via pylint
 awscli==1.16.226
 boto3==1.9.216            # via cloudtoken-plugin.saml
 botocore==1.12.216        # via awscli, boto3, s3transfer
@@ -20,27 +19,20 @@ colorama==0.3.9           # via awscli
 cssselect==1.1.0          # via pyquery
 docutils==0.15.2          # via awscli, botocore
 dotfiles==0.6.4
-entrypoints==0.3          # via flake8, keyring
-flake8==3.7.8
+entrypoints==0.3          # via keyring
 flask==1.1.1              # via cloudtoken
 idna==2.8                 # via requests
-isort==4.3.21             # via pylint
 itsdangerous==1.1.0       # via flask
 jinja2==2.10.1            # via flask
 jmespath==0.9.4           # via boto3, botocore
 keyring==19.1.0           # via cloudtoken
 keyrings.alt==3.1.1       # via cloudtoken
-lazy-object-proxy==1.4.2  # via astroid
 lxml==4.4.1               # via cloudtoken-plugin.centrify, pyquery
 markupsafe==1.1.1         # via jinja2
-mccabe==0.6.1             # via flake8, pylint
 pathspec==0.5.9           # via yamllint
 pip-tools==4.1.0
 pssh==2.3.1
 pyasn1==0.4.6             # via rsa
-pycodestyle==2.5.0        # via flake8
-pyflakes==2.1.1           # via flake8
-pylint==2.3.1
 pyquery==1.4.0            # via cloudtoken-plugin.centrify
 python-dateutil==2.8.0    # via botocore
 pyyaml==5.1.2             # via awscli, cloudtoken, yamllint
@@ -48,10 +40,8 @@ requests==2.22.0          # via cloudtoken, cloudtoken-plugin.centrify
 rsa==3.4.2                # via awscli
 s3transfer==0.2.1         # via awscli, boto3
 schedule==0.6.0           # via cloudtoken
-six==1.12.0               # via astroid, keyrings.alt, pip-tools, python-dateutil
+six==1.12.0               # via keyrings.alt, pip-tools, python-dateutil
 speedtest-cli==2.1.2
-typed-ast==1.4.0          # via astroid
 urllib3==1.25.3           # via botocore, requests
 werkzeug==0.15.5          # via flask
-wrapt==1.11.2             # via astroid
 yamllint==1.17.0

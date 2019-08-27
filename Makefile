@@ -73,8 +73,8 @@ lint: \
 	lint-yamllint
 
 .PHONY: lint-flake8
-lint-flake8: home/pythonrc | $(VIRTUALENV)/bin/flake8
-	$(VIRTUALENV)/bin/flake8 $^
+lint-flake8: home/pythonrc
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) pipelinecomponents/flake8 flake8 $^
 
 # TODO: We should list all of the files to be linted as dependencies of
 # the `lint-jsonlint` target, but `make` doesn't properly handle filenames
@@ -84,9 +84,10 @@ lint-flake8: home/pythonrc | $(VIRTUALENV)/bin/flake8
 lint-jsonlint: $(call rwildcard,,*.json) $(call rwildcard,,*.sublime-project)
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^ $(shell find . \( -name '*.sublime-settings' -o -name '*.sublime-keymap' \) -printf '%P\0' | xargs --null printf '%q ')
 
+# TODO: Why do we need `--ignore=pylint`?
 .PHONY: lint-pylint
-lint-pylint: home/pythonrc | $(VIRTUALENV)/bin/pylint
-	$(VIRTUALENV)/bin/pylint $^
+lint-pylint: home/pythonrc
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) cytopia/pylint pylint --ignore=pylint $^
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck

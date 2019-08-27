@@ -6,7 +6,3 @@ pip-tools
 pssh
 speedtest-cli
 yamllint
-
-# TODO: These should be development dependencies.
-flake8
-pylint
