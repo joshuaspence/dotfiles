@@ -80,6 +80,7 @@ lint-flake8: home/pythonrc
 # the `lint-jsonlint` target, but `make` doesn't properly handle filenames
 # containing spaces. See
 # https://www.cmcrossroads.com/article/gnu-make-meets-file-names-spaces-them.
+# TODO: Is `%q` a valid conversion specification for `printf`?
 .PHONY: lint-jsonlint
 lint-jsonlint: $(call rwildcard,,*.json) $(call rwildcard,,*.sublime-project)
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^ $(shell find . \( -name '*.sublime-settings' -o -name '*.sublime-keymap' \) -printf '%P\0' | xargs --null printf '%q ')
