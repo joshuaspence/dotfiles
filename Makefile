@@ -241,7 +241,7 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 	@touch $@
 
 $(VIRTUALENV):
-	virtualenv --quiet $@
+	virtualenv --python=python3 --quiet $@
 
 $(eval $(call virtualenv_target,dotfiles,dotfiles))
 $(eval $(call virtualenv_target,flake8,flake8))
