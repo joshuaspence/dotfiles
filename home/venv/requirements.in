@@ -2,7 +2,11 @@ awscli
 cloudtoken
 cloudtoken-plugin.centrify
 dotfiles
-pip-tools
 pssh
 speedtest-cli
 yamllint
+
+# The latest version of `pip-tools` requires Python >= 3.5.0,
+# which isn't installed in Travis by default (see
+# https://travis-ci.org/joshuaspence/dotfiles/builds/577179184). 
+pip-tools<4.1.0
