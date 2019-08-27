@@ -29,6 +29,7 @@ rwildcard = $(wildcard $1$2) $(foreach dir,$(wildcard $1*),$(call rwildcard,$(di
 # Define a target to install a Python package.
 # Should be used in conjunction with `eval`.
 define virtualenv_target
+.INTERMEDIATE: $(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD))
 $(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD)): | $$(VIRTUALENV)
 	$(VIRTUALENV)/bin/pip install --constraint home/venv/requirements.txt --quiet $(1)
 endef
@@ -99,6 +100,7 @@ lint-shellcheck: $(call rwildcard,src,*.*sh) home/bash_logout home/bash_profile 
 lint-rubocop: home/irbrc
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) lendinghome/rubocop --config .rubocop.yml $^
 
+# TODO: This should be run from a Docker container.
 .PHONY: lint-yamllint
 lint-yamllint: $(call rwildcard,,*.yaml) $(call rwildcard,,*.yml) $(call rwildcard,,.*.yaml) $(call rwildcard,,.*.yml) .yamllint | $(VIRTUALENV)/bin/yamllint
 	$(VIRTUALENV)/bin/yamllint --strict $^
@@ -242,6 +244,7 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 	git submodule --quiet update --init --recursive -- $(dir $@)
 	@touch $@
 
+.INTERMEDIATE: $(VIRTUALENV)
 $(VIRTUALENV):
 	virtualenv --python=python3 --quiet $@
 
