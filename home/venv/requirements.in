@@ -1,4 +1,6 @@
 awscli
+cloudtoken
+cloudtoken-plugin.centrify
 dotfiles
 pip-tools
 pssh
