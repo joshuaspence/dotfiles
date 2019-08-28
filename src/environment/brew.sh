@@ -1,3 +1,7 @@
+if [[ $(uname) == "Darwin" && ${BASH_VERSINFO[0]} -lt 4 ]]; then
+  echo "bash ${BASH_VERSION} detected. Recommend upgrading to a later version." >&2 
+fi
+
 # coreutils
 if test -d /usr/local/opt/coreutils; then
   export PATH="/usr/local/opt/coreutils/libexec/gnubin:${PATH}"
