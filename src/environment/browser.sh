@@ -5,8 +5,6 @@ elif test -n "${DISPLAY}" && command -v firefox &>/dev/null; then
 elif command -v lynx &>/dev/null; then
   export BROWSER='lynx'
 else
-  unset BROWSER
-
-  # shellcheck disable=SC2016
-  echo 'No command set for $BROWSER' >&2
+  # TODO: Should we just always use `open`?
+  export BROWSER='open'
 fi
