@@ -1,6 +1,9 @@
-function windir() {
-  echo "/mnt/$1" | sed 's/\\/\//g' | sed 's/\b\(.\):/\L\1/g'
+# TODO: These functions should only be defined when using WSL.
+
+function win_desktop() {
+  wslpath $(powershell.exe -c "Write-Host ([Environment]::GetFolderPath('Desktop')) -NoNewLine")
 }
 
-# DESKTOP=$(windir `powershell.exe -c "Write-Host ([Environment]::GetFolderPath('Desktop')) -NoNewLine"`)
-# MY_DOCUMENTS=$(windir `powershell.exe -c "Write-Host ([Environment]::GetFolderPath('MyDocuments')) -NoNewLine"`)
+function win_mydocuments() {
+  wslpath $(powershell.exe -c "Write-Host ([Environment]::GetFolderPath('MyDocuments')) -NoNewLine")
+}
