@@ -42,6 +42,7 @@ vscode
 TaskWarrior (~/.taskrc)
 Meld
 gitsh
+virtualenvwrapper
 
 # Vim plugins
 vim-airline/vim-airline
