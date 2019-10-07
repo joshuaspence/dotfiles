@@ -4,10 +4,12 @@
 #
 #    pip-compile --output-file=home/venv/requirements.txt home/venv/requirements.in
 #
+asn1crypto==1.0.1         # via cryptography
 awscli==1.16.226
 boto3==1.9.216            # via cloudtoken-plugin.saml
-botocore==1.12.216        # via awscli, boto3, s3transfer
+botocore==1.12.216        # via awscli, boto3, ec2instanceconnectcli, s3transfer
 certifi==2019.6.16        # via requests
+cffi==1.12.3              # via cryptography
 chardet==3.0.4            # via requests
 click==7.0                # via flask, pip-tools
 cloudtoken-plugin.centrify==0.1.255
@@ -16,9 +18,11 @@ cloudtoken-plugin.saml==0.1.255  # via cloudtoken
 cloudtoken-plugin.shell-exporter==0.1.255  # via cloudtoken
 cloudtoken==0.1.255
 colorama==0.3.9           # via awscli
+cryptography==2.7         # via ec2instanceconnectcli
 cssselect==1.1.0          # via pyquery
 docutils==0.15.2          # via awscli, botocore
 dotfiles==0.6.4
+ec2instanceconnectcli==1.0.0
 entrypoints==0.3          # via keyring
 flask==1.1.1              # via cloudtoken
 idna==2.8                 # via requests
@@ -33,6 +37,7 @@ pathspec==0.5.9           # via yamllint
 pip-tools==4.0.0
 pssh==2.3.1
 pyasn1==0.4.6             # via rsa
+pycparser==2.19           # via cffi
 pyquery==1.4.0            # via cloudtoken-plugin.centrify
 python-dateutil==2.8.0    # via botocore
 pyyaml==5.1.2             # via awscli, cloudtoken, yamllint
@@ -40,7 +45,7 @@ requests==2.22.0          # via cloudtoken, cloudtoken-plugin.centrify
 rsa==3.4.2                # via awscli
 s3transfer==0.2.1         # via awscli, boto3
 schedule==0.6.0           # via cloudtoken
-six==1.12.0               # via keyrings.alt, pip-tools, python-dateutil
+six==1.12.0               # via cryptography, keyrings.alt, pip-tools, python-dateutil
 speedtest-cli==2.1.2
 urllib3==1.25.3           # via botocore, requests
 werkzeug==0.15.5          # via flask
