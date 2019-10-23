@@ -54,3 +54,32 @@ https://github.com/jay0lee/GAM
 # Docker
 - Add alias for `docker stop $(docker ps -q)`
 - Add alias for `docker rm $(docker ps -aq)`
+
+# Brew
+- `atlas-cli`
+- `aws-iam-authenticator`
+- `bash`
+- `bash-completion`
+- `coreutils`
+- `docker-completion`
+- `docker-compose-completion`
+- `findutils`
+- `gawk`
+- `git`
+- `gnu-getopt`
+- `go`
+- `jq`
+- `kubernetes-cli`
+- `kubernetes-helm`
+- `micros-cli`
+- `mitmproxy`
+- `node`
+- `packer`
+- `packer-completion`
+- `pip-completion`
+- `python`
+- `readline`
+- `ruby`
+- `terraform`
+- `vim`
+- `wget`
