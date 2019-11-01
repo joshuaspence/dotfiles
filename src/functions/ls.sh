@@ -1,3 +1,5 @@
+include environment/brew.sh
+
 # Enable colored output for `ls`.
 if command -v dircolors &>/dev/null; then
   eval "$(dircolors)"
