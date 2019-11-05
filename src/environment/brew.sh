@@ -1,5 +1,5 @@
 if [[ $(uname) == "Darwin" && ${BASH_VERSINFO[0]} -lt 4 ]]; then
-  echo "bash ${BASH_VERSION} detected. Recommend upgrading to a later version." >&2 
+  echo "bash ${BASH_VERSION} detected. Recommend upgrading to a later version." >&2
 fi
 
 # coreutils
@@ -17,6 +17,12 @@ if test -d /usr/local/opt/gnu-getopt; then
   export PATH="/usr/local/opt/gnu-getopt/bin:${PATH}"
 fi
 
+# libpq
+if test -d /usr/local/opt/libpq; then
+  export PATH="/usr/local/opt/libpq/bin:${PATH}"
+fi
+
+# python
 if test -d /usr/local/opt/python; then
   export PATH="/usr/local/opt/python/libexec/bin:${PATH}"
 fi
