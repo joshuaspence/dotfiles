@@ -112,6 +112,5 @@
   name = Joshua Spence
   email = josh@joshuaspence.com
 
-# Override email address for work repositories.
 [includeIf "gitdir:~/workspace/atlassian/"]
-  path = ~/.gituser-atlassian
+  path = ~/.gitconfig-atlassian
