@@ -113,5 +113,5 @@
   email = josh@joshuaspence.com
 
 # Override email address for work repositories.
-[includeIf "gitdir:~/workspace/freelancer/"]
-  path = ~/.gituser-freelancer
+[includeIf "gitdir:~/workspace/atlassian/"]
+  path = ~/.gituser-atlassian
