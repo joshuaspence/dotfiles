@@ -1,8 +1,2 @@
 [user]
   email = jspence2@atlassian.com
-
-[url "git@bitbucket.org:"]
-  insteadOf = https://bitbucket.org/
-
-[url "ssh://git@stash.atlassian.com:7997/"]
-  insteadOf = https://stash.atlassian.com/scm/
