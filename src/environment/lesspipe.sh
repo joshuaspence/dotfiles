@@ -1,6 +1,8 @@
 if command -v less &>/dev/null; then
   if command -v lesspipe &>/dev/null; then
     eval "$(lesspipe)"
+  elif command -v lesspipe.sh &>/dev/null; then
+    eval "$(lesspipe.sh)"
   else
    unset LESSOPEN
    unset LESSCLOSE
