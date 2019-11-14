@@ -4,9 +4,9 @@
 #
 #    pip-compile --output-file=home/venv/requirements.txt home/venv/requirements.in
 #
-awscli==1.16.274
-boto3==1.10.10            # via cloudtoken-plugin.saml
-botocore==1.13.10         # via awscli, boto3, ec2instanceconnectcli, s3transfer
+awscli==1.16.282
+boto3==1.10.18            # via cloudtoken-plugin.saml
+botocore==1.13.18         # via awscli, boto3, ec2instanceconnectcli, s3transfer
 certifi==2019.9.11        # via requests
 cffi==1.13.2              # via cryptography
 chardet==3.0.4            # via requests
@@ -46,6 +46,6 @@ s3transfer==0.2.1         # via awscli, boto3
 schedule==0.6.0           # via cloudtoken
 six==1.13.0               # via cryptography, keyrings.alt, pip-tools, python-dateutil
 speedtest-cli==2.1.2
-urllib3==1.25.6           # via botocore, requests
+urllib3==1.25.7           # via botocore, requests
 werkzeug==0.16.0          # via flask
 yamllint==1.18.0
