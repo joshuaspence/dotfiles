@@ -86,3 +86,9 @@ https://github.com/jay0lee/GAM
 - `vim`
 - `wget`
 - https://www.speedtest.net/apps/cli
+
+# Krew
+- `ctx`
+- `doctor`
+- `ingress-nginx`
+- `ns`
