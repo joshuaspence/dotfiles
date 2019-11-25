@@ -4,7 +4,6 @@ cloudtoken-plugin.centrify
 dotfiles
 ec2instanceconnectcli
 pssh
-speedtest-cli
 yamllint
 
 # The latest version of `pip-tools` requires Python >= 3.5.0,

@@ -45,7 +45,6 @@ rsa==3.4.2                # via awscli
 s3transfer==0.2.1         # via awscli, boto3
 schedule==0.6.0           # via cloudtoken
 six==1.13.0               # via cryptography, keyrings.alt, pip-tools, python-dateutil
-speedtest-cli==2.1.2
 urllib3==1.25.7           # via botocore, requests
 werkzeug==0.16.0          # via flask
 yamllint==1.18.0
