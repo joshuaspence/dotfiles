@@ -20,7 +20,7 @@ Host *
   ForwardX11 no
   GSSAPIAuthentication no
   HashKnownHosts no
-  IdentityFile ~/.ssh/keys/%h.key
+  IdentityFile ~/.ssh/keys/%h
   PasswordAuthentication no
   PubkeyAuthentication yes
   ServerAliveCountMax 8
