@@ -263,4 +263,4 @@ home/config/composer/composer.lock: home/config/composer/composer.json
 	@touch $@
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
-	pip-compile $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null
+	$(VIRTUALENV)/bin/pip-compile $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null
