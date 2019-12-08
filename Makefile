@@ -232,5 +232,8 @@ $(eval $(call virtualenv_target,yamllint,yamllint))
 $(SHELL_TARGETS): src/$$(@F).*sh $(call rwildcard,src,*.*sh) $(filter src/%,$(SUBMODULES)) | tools/compiler
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
 
+home/.gitignore: $(SHELL_TARGETS)
+	$(file >$@) $(foreach TARGET,$^,$(file >>$@,/$(notdir $(TARGET))))
+
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null

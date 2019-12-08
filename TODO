@@ -1,5 +1,4 @@
 .flake8
-.gitignore
 .gitmodules
 .pylintrc
 .rubocop.yml
