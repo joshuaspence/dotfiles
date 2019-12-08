@@ -1,7 +1,6 @@
 #===============================================================================
 # Macros
 #===============================================================================
-COMPOSER    = composer global
 DOCKER_RUN  = docker run --rm
 MAKE       += --no-print-directory
 VIRTUALENV  = $(HOME)/.venv
@@ -44,19 +43,8 @@ all: submodules compile install
 .PHONY: compile
 compile: $(SHELL_TARGETS)
 
-.PHONY: composer
-composer: home/config/composer/composer.json home/config/composer/composer.lock
-	COMPOSER=$(abspath $<) $(COMPOSER) install --quiet
-
 .PHONY: install
 install: dotfiles virtualenv vundle
-
-# Composer is a soft dependency, so don't worry if it's not installed.
-#
-# TODO: Make Composer a hard dependency.
-ifneq ($(shell command -v composer 2>/dev/null),)
-install: composer
-endif
 
 .PHONY: dotfiles
 dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
@@ -113,7 +101,6 @@ submodules: $(SUBMODULES)
 .PHONY: test
 test: \
 	test-bootstrap \
-	test-composer \
 	test-curl \
 	test-dotfiles \
 	test-gem \
@@ -135,10 +122,6 @@ test-bootstrap:
 		git clone --quiet /dotfiles ~/dotfiles; \
 		make --directory ~/dotfiles submodules; \
 	'
-
-.PHONY: test-composer
-test-composer: home/config/composer/composer.json home/config/composer/composer.lock
-	$(DOCKER_RUN) $(foreach FILE,$^,--volume $(abspath $(FILE)):/app/$(notdir $(FILE)):ro) composer install --quiet
 
 .PHONY: test-curl
 test-curl: home/curlrc
@@ -193,12 +176,7 @@ test-wget: home/wgetrc
 	$(DOCKER_RUN) --volume $(abspath $<):/wgetrc:ro inutano/wget wget --config /wgetrc --version >/dev/null
 
 .PHONY: update
-update: update-composer update-submodules update-virtualenv
-
-.PHONY: update-composer
-update-composer:
-	@touch home/config/composer/composer.json
-	@$(MAKE) home/config/composer/composer.lock
+update: update-submodules update-virtualenv
 
 .PHONY: update-submodules
 update-submodules:
@@ -210,11 +188,7 @@ update-virtualenv:
 	@$(MAKE) home/venv/requirements.txt UPGRADE=1
 
 .PHONY: upgrade
-upgrade: upgrade-composer upgrade-pip
-
-.PHONY: upgrade-composer
-upgrade-composer:
-	composer self-update --clean-backups --no-interaction
+upgrade: upgrade-pip
 
 .PHONY: upgrade-pip
 upgrade-pip:
@@ -257,10 +231,6 @@ $(eval $(call virtualenv_target,yamllint,yamllint))
 .SECONDEXPANSION:
 $(SHELL_TARGETS): src/$$(@F).*sh $(call rwildcard,src,*.*sh) $(filter src/%,$(SUBMODULES)) | tools/compiler
 	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
-
-home/config/composer/composer.lock: home/config/composer/composer.json
-	COMPOSER=$(abspath $<) $(COMPOSER) update --quiet
-	@touch $@
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null

@@ -9,9 +9,6 @@ Makefile
 dotfiles.sublime-project
 home/bash_logout
 home/bash_profile
-home/config/composer/composer.json
-home/config/composer/composer.lock
-home/config/composer/config.json
 home/config/gtk-3.0/bookmarks
 home/config/htop/.editorconfig
 home/config/htop/htoprc
@@ -79,7 +76,6 @@ src/completion/nvm.bash
 src/completion/pip.bash
 src/completion/ruby.bash
 src/completion/rvm.sh
-src/completion/symfony.bash
 src/completion/terraform.bash
 src/completion/velero.bash
 src/config/cdpath.bash
@@ -93,7 +89,6 @@ src/config/opts.sh
 src/config/prompt.bash
 src/environment/bin.sh
 src/environment/browser.sh
-src/environment/composer.sh
 src/environment/ec2-scripts.sh
 src/environment/editor.sh
 src/environment/gcc.sh
