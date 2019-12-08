@@ -29,11 +29,11 @@ itsdangerous==1.1.0       # via flask
 jeepney==0.4.1            # via secretstorage
 jinja2==2.10.3            # via flask
 jmespath==0.9.4           # via boto3, botocore
-keyring==19.3.0           # via cloudtoken
-keyrings.alt==3.2.0       # via cloudtoken
+keyring==20.0.0           # via cloudtoken
+keyrings.alt==3.4.0       # via cloudtoken
 lxml==4.4.2               # via cloudtoken-plugin.centrify, pyquery
 markupsafe==1.1.1         # via jinja2
-more-itertools==8.0.1     # via zipp
+more-itertools==8.0.2     # via zipp
 pathspec==0.6.0           # via yamllint
 pip-tools==4.3.0
 pssh==2.3.1
@@ -47,7 +47,7 @@ rsa==3.4.2                # via awscli
 s3transfer==0.2.1         # via awscli, boto3
 schedule==0.6.0           # via cloudtoken
 secretstorage==3.1.1      # via keyring
-six==1.13.0               # via cryptography, keyrings.alt, pip-tools, python-dateutil
+six==1.13.0               # via cryptography, pip-tools, python-dateutil
 urllib3==1.25.7           # via botocore, requests
 werkzeug==0.16.0          # via flask
 yamllint==1.19.0
