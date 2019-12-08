@@ -2,9 +2,6 @@
 /home/bashrc
 /home/profile
 
-# Sublime Text
-/dotfiles.sublime-workspace
-
 # Temporary
 /compiler.calls.obj
 /compiler.comp.obj
