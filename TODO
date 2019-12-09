@@ -43,7 +43,6 @@ home/ssh/authorized_keys
 home/ssh/config
 home/sudo_as_admin_successful
 home/venv/requirements.in
-home/venv/requirements.txt
 home/vim/after/ftplugin/gitcommit.vim
 home/vim/bundle/Vundle.vim
 home/vim/plugin/buffer.vim
@@ -125,8 +124,6 @@ src/modules/go-pkg-complete
 src/profile.sh
 src/setup/cloudtoken.sh
 src/setup/ssh.sh
-tools/compiler
-tools/loader
 home/kube/config
 
 # ~/.vimrc
