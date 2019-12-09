@@ -6,6 +6,7 @@
 .yamllint
 Makefile
 dotfiles.sublime-project
+home/aws
 home/bash_logout
 home/bash_profile
 home/config/gtk-3.0/bookmarks
