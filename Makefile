@@ -91,7 +91,7 @@ lint-rubocop: home/irbrc
 # TODO: This should be run from a Docker container.
 .PHONY: lint-yamllint
 lint-yamllint: $(call rwildcard,,*.yaml) $(call rwildcard,,*.yml) $(call rwildcard,,.*.yaml) $(call rwildcard,,.*.yml) .yamllint | $(VIRTUALENV)/bin/yamllint
-	$(VIRTUALENV)/bin/yamllint --strict $^
+	$(VIRTUALENV)/bin/yamllint --strict $(filter-out tools/bats-%,$^)
 
 .PHONY: submodules
 submodules: $(SUBMODULES)
