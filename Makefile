@@ -109,6 +109,7 @@ test: \
 	test-python \
 	test-ssh \
 	test-sublime-text \
+	test-unit \
 	test-vim \
 	test-virtualenv \
 	test-wget
@@ -156,6 +157,10 @@ test-ssh: home/ssh/config
 test-sublime-text:
 	true
 
+.PHONY: test-unit
+test-unit:
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) bats/bats --recursive test/
+
 .PHONY: test-vim
 test-vim: home/vimrc home/vim home/vim/bundle $(wildcard home/vim/**/*)
 	$(DOCKER_RUN) \
@@ -165,7 +170,6 @@ test-vim: home/vimrc home/vim home/vim/bundle $(wildcard home/vim/**/*)
 		thinca/vim \
 		-u NONE \
 		-c 'try | source ~/.vimrc | catch | silent execute "!echo" shellescape(v:exception) | cquit | endtry | quit'
-
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
