@@ -1,10 +1,9 @@
 #!/usr/bin/env bats
 
-load '../../tools/bats-assert/load'
-load '../../tools/bats-support/load'
+load ../helper
 
 @test "test" {
-  load $BATS_TEST_DIRNAME/../../src/functions/shrug.sh
+  load src/functions/shrug.sh
   run shrug
 
   assert_success
