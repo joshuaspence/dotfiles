@@ -1,8 +1,6 @@
-#!/usr/bin/env bats
-
 load ../helper
 
-@test "test" {
+@test 'test' {
   load src/functions/shrug.sh
   run shrug
 

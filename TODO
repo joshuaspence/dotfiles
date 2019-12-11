@@ -109,7 +109,6 @@ src/functions/coreutils.sh
 src/functions/grep.sh
 src/functions/ldap.sh
 src/functions/ls.sh
-src/functions/open.sh
 src/functions/path.sh
 src/functions/settitle.sh
 src/functions/shrug.sh
