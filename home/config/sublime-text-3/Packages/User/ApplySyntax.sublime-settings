@@ -3,6 +3,12 @@
   "debug": false,
   "syntaxes": [
     {
+      "syntax": "ShellScript/Bash",
+      "extensions": [
+        "bats"
+      ]
+    },
+    {
       "syntax": "Groovy/Groovy",
       "rules": [
         {"file_path": ".*/Jenkinsfile$"},
