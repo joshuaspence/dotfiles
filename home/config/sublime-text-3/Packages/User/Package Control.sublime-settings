@@ -12,13 +12,11 @@
 		"Git",
 		"GitGutter",
 		"INI",
-		"Logstash Syntax Highlighting",
 		"Package Control",
 		"Pretty JSON",
 		"Puppet",
 		"SSH Config",
 		"Terraform",
-		"Varnish VCL",
 		"VimL"
 	]
 }

@@ -9,10 +9,7 @@ home/aws
 home/bash_logout
 home/bash_profile
 home/config/gtk-3.0/bookmarks
-home/config/htop/.editorconfig
 home/config/htop/htoprc
-home/config/sublime-text-3/.editorconfig
-home/config/sublime-text-3/.gitignore
 home/config/sublime-text-3/Packages/User/ApplySyntax.sublime-settings
 home/config/sublime-text-3/Packages/User/Base File.sublime-settings
 home/config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap
