@@ -16,4 +16,3 @@ packages = [
     'vim',
     'vim/bundle',
   ]
-

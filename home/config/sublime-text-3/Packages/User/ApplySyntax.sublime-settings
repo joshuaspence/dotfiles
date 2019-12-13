@@ -17,6 +17,10 @@
     },
     {
       "syntax": "INI/INI",
+      "extensions": [
+        ".flake8",
+        ".pylintrc"
+      ],
       "rules": [
         {"file_path": ".*/\\.aws/(config|credentials)$"}
       ]
@@ -46,6 +50,12 @@
       "rules": [
         {"file_path": ".*/\\.ssh/conf\\.d/.+\\.conf$"}
       ]
+    },
+    {
+      "syntax": "YAML/YAML",
+        "extensions": [
+          ".yamllint"
+        ]
     }
   ]
 }
