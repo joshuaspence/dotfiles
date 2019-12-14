@@ -119,7 +119,7 @@ src/setup/cloudtoken.sh
 src/setup/ssh.sh
 home/kube/config
 test/helper.bash
-test/functions/shrug.bats
+test/functions/open.bats
 
 # ~/.vimrc
 https://github.com/adampetrovic/dotfiles/tree/master/vim
