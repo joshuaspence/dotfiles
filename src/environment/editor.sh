@@ -1,4 +1,4 @@
-if test -n "${DISPLAY}" && command -v subl &>/dev/null; then
+if test -v DISPLAY && command -v subl &>/dev/null; then
   export EDITOR='subl --new-window --wait'
 elif command -v vim &>/dev/null; then
   export EDITOR='vim'
