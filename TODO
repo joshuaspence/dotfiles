@@ -31,7 +31,6 @@ home/gitignore
 home/hushlogin
 home/inputrc
 home/irbrc
-home/minikube/config/config.json
 home/pythonrc
 home/rvmrc
 home/screenrc
