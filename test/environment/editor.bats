@@ -8,7 +8,7 @@ function teardown() {
   unstub vim || true
 }
 
-@test '\$EDITOR=subl when \$DISPLAY is set' {
+@test "\$EDITOR=subl when \$DISPLAY is set" {
   DISPLAY=:0
   stub subl
 
@@ -16,7 +16,7 @@ function teardown() {
   assert_equal "${EDITOR}" 'subl --new-window --wait'
 }
 
-@test '\$EDITOR=vim when \$DISPLAY is not set' {
+@test "\$EDITOR=vim when \$DISPLAY is not set" {
   stub subl
   stub vim
 
@@ -24,14 +24,14 @@ function teardown() {
   assert_equal "${EDITOR}" vim
 }
 
-@test '\$EDITOR=vim' {
+@test "\$EDITOR=vim" {
   stub vim
 
   load src/environment/editor.sh
   assert_equal "${EDITOR}" vim
 }
 
-@test '\$EDITOR=' {
+@test "\$EDITOR=" {
   load src/environment/editor.sh
   assert_equal "${EDITOR}" ''
 }

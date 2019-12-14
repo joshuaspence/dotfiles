@@ -119,6 +119,7 @@ src/setup/cloudtoken.sh
 src/setup/ssh.sh
 home/kube/config
 test/helper.bash
+test/environment/editor.bats
 test/functions/open.bats
 
 # ~/.vimrc
