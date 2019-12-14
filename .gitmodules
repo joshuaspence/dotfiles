@@ -17,3 +17,6 @@
   path = tools/compiler
   url = https://git.code.sf.net/p/loader/code
   branch = compilers
+[submodule "tools/bats-mock"]
+	path = tools/bats-mock
+	url = https://github.com/jasonkarns/bats-mock

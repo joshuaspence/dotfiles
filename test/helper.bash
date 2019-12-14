@@ -1,11 +1,11 @@
 # Taken from https://stackoverflow.com/a/18839557.
-copy_function() {
+function copy_function() {
   test -n "$(declare -f "$1")" || return
   eval "${_/$1/$2}"
 }
 
 # Taken from https://stackoverflow.com/a/18839557.
-rename_function() {
+function rename_function() {
   copy_function "$@" || return
   unset -f "$1"
 }
@@ -19,3 +19,4 @@ function load() {
 
 load 'tools/bats-assert/load.bash'
 load 'tools/bats-support/load.bash'
+load 'tools/bats-mock/stub.bash'
