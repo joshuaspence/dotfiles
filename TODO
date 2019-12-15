@@ -10,6 +10,7 @@ home/bash_logout
 home/bash_profile
 home/config/atlassian/atlas/atlas.toml
 home/config/atlassian/atlas/plugins-installed.toml
+home/config/bleachbit/bleachbit.ini
 home/config/gtk-3.0/bookmarks
 home/config/htop/htoprc
 home/config/sublime-text-3/Packages/User/ApplySyntax.sublime-settings
