@@ -8,6 +8,8 @@ ignore = [
 externals = {}
 packages = [
     'config',
+    'config/atlassian',
+    'config/atlassian/atlas',
     'config/sublime-text-3',
     'config/sublime-text-3/Packages',
     'minikube',

@@ -1,0 +1,23 @@
+########################################################################################################################
+# atlas.toml – `atlas` configuration
+#
+# This configuration file is used primarily by the `atlas` command.
+#
+########################################################################################################################
+
+# Where to direct log messages to
+log_file = "logs/foo.log"
+
+# Configures the "plugins" command
+[plugins]
+  # Path to the file containing the installed plugins
+  installed = "~/.config/atlassian/atlas/plugins-installed.toml"
+
+  # Path to the file containing the available plugins for installation
+  available = "~/.config/atlassian/atlas/plugins-available.toml"
+
+  # Path to the directory to use for caching plugin metadata
+  cache = "~/.cache/atlassian/atlas/plugins"
+
+  # URL to where the available plugins "master" copy is located and will be synced with
+  registry  = "https://statlas.prod.atl-paas.net/atlas-cli-config/prod/plugins-available.toml"
