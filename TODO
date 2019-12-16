@@ -71,6 +71,7 @@ src/completion/kubectl.bash
 src/completion/minikube.bash
 src/completion/nvm.bash
 src/completion/pip.bash
+src/completion/pollidev.sh
 src/completion/ruby.bash
 src/completion/rvm.sh
 src/completion/terraform.bash
