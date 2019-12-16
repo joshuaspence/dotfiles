@@ -62,6 +62,7 @@ home/vim/plugin/visual.vim
 home/vimrc
 home/wgetrc
 src/bashrc.bash
+src/completion/atlas.sh
 src/completion/awscli.sh
 src/completion/bash-completion.bash
 src/completion/ec2-scripts.bash
