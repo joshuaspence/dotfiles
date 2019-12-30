@@ -110,6 +110,7 @@ src/functions/grep.sh
 src/functions/ldap.sh
 src/functions/ls.sh
 src/functions/path.sh
+src/functions/say.sh
 src/functions/settitle.sh
 src/functions/ssh-add-key.sh
 src/functions/upgrade-all.sh
