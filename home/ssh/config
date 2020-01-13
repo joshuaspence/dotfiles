@@ -11,6 +11,9 @@ Host jump.*
   ControlPath ~/.ssh/connections/%h_%p_%r
   ControlPersist 1h
 
+Host github.com
+  IdentityFile ~/.ssh/keys/github.key
+
 Host *
   AddKeysToAgent yes
   Compression yes
