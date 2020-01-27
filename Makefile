@@ -43,6 +43,11 @@ all: submodules compile install
 .PHONY: compile
 compile: $(SHELL_TARGETS)
 
+# TODO: Improve this.
+.PHONY: diff
+diff:
+	$(foreach SHELL_TARGET,$(SHELL_TARGETS),bash -x -c 'diff --unified $(SHELL_TARGET) <(gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --extended src/$(notdir $(SHELL_TARGET)).*sh 2>/dev/null)'; echo; )
+
 .PHONY: install
 install: dotfiles virtualenv vundle
 
