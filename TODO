@@ -115,6 +115,7 @@ src/functions/settitle.sh
 src/functions/ssh-add-key.sh
 src/functions/upgrade-all.sh
 src/functions/utf8-encode.sh
+src/functions/virtualenv.sh
 src/functions/whatismyip.sh
 src/functions/whence.sh
 src/functions/wsl.sh
