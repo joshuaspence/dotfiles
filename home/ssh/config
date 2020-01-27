@@ -11,6 +11,9 @@ Host jump.*
   ControlPath ~/.ssh/connections/%h_%p_%r
   ControlPersist 1h
 
+Host bitbucket.org stash.atlassian.com
+  IdentityFile ~/.ssh/keys/bitbucket.key
+
 Host github.com
   IdentityFile ~/.ssh/keys/github.key
 
