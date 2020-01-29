@@ -1,4 +1,4 @@
-if test -f "${HOME}/.venv/bin/activate"; then
+if ! test -v VIRTUAL_ENV && test -f "${HOME}/.venv/bin/activate"; then
   # Don't include virtualenv name in prompt
   # (see https://github.com/pypa/virtualenv/issues/5).
   #
