@@ -4,9 +4,9 @@
 #
 #    pip-compile --output-file=home/venv/requirements.txt home/venv/requirements.in
 #
-awscli==1.16.298
-boto3==1.10.34            # via cloudtoken-plugin.saml
-botocore==1.13.34         # via awscli, boto3, ec2instanceconnectcli, s3transfer
+awscli==1.17.9
+boto3==1.11.9             # via cloudtoken-plugin.saml
+botocore==1.14.9          # via awscli, boto3, ec2instanceconnectcli, s3transfer
 certifi==2019.11.28       # via requests
 cffi==1.13.2              # via cryptography
 chardet==3.0.4            # via requests
@@ -24,31 +24,30 @@ dotfiles==0.6.4
 ec2instanceconnectcli==1.0.0
 flask==1.1.1              # via cloudtoken
 idna==2.8                 # via requests
-importlib-metadata==1.2.0  # via keyring
+importlib-metadata==1.5.0  # via keyring
 itsdangerous==1.1.0       # via flask
-jeepney==0.4.1            # via secretstorage
-jinja2==2.10.3            # via flask
+jeepney==0.4.2            # via keyring, secretstorage
+jinja2==2.11.0            # via flask
 jmespath==0.9.4           # via boto3, botocore
-keyring==20.0.0           # via cloudtoken
+keyring==21.1.0           # via cloudtoken
 keyrings.alt==3.4.0       # via cloudtoken
-lxml==4.4.2               # via cloudtoken-plugin.centrify, pyquery
+lxml==4.5.0               # via cloudtoken-plugin.centrify, pyquery
 markupsafe==1.1.1         # via jinja2
-more-itertools==8.0.2     # via zipp
-pathspec==0.6.0           # via yamllint
-pip-tools==4.3.0
+pathspec==0.7.0           # via yamllint
+pip-tools==4.4.0
 pssh==2.3.1
 pyasn1==0.4.8             # via rsa
 pycparser==2.19           # via cffi
 pyquery==1.4.1            # via cloudtoken-plugin.centrify
-python-dateutil==2.8.0    # via botocore
-pyyaml==5.1.2             # via awscli, cloudtoken, yamllint
+python-dateutil==2.8.1    # via botocore
+pyyaml==5.2               # via awscli, cloudtoken, yamllint
 requests==2.22.0          # via cloudtoken, cloudtoken-plugin.centrify
 rsa==3.4.2                # via awscli
-s3transfer==0.2.1         # via awscli, boto3
+s3transfer==0.3.2         # via awscli, boto3
 schedule==0.6.0           # via cloudtoken
-secretstorage==3.1.1      # via keyring
-six==1.13.0               # via cryptography, pip-tools, python-dateutil
-urllib3==1.25.7           # via botocore, requests
-werkzeug==0.16.0          # via flask
-yamllint==1.19.0
-zipp==0.6.0               # via importlib-metadata
+secretstorage==3.1.2      # via keyring
+six==1.14.0               # via cryptography, pip-tools, python-dateutil
+urllib3==1.25.8           # via botocore, requests
+werkzeug==0.16.1          # via flask
+yamllint==1.20.0
+zipp==2.1.0               # via importlib-metadata
