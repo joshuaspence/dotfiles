@@ -3,7 +3,7 @@
   summary = "Manage artifacts stored in Shipyard"
   version = "v2.6.1"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
@@ -11,7 +11,7 @@
   summary = "Service Layer Authentication"
   version = "0.0-483-gb62bf23"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
@@ -19,7 +19,7 @@
   summary = "Statlas auth and upload cli"
   version = "22-527cccc"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
@@ -27,7 +27,7 @@
   summary = "Micros plugin for atlas-cli"
   version = "102-98a2063"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/micros"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -35,7 +35,7 @@
   summary = "A simple and quick way to thank your fellow Atlassians from the command line."
   version = "1.2.9"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/kudos"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/kudos"
   channel = "stable"
 
 [[plugin]]
@@ -43,5 +43,13 @@
   summary = "The unofficial PerfHammer client."
   version = "0.0.4"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/hammertime"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/hammertime"
+  channel = "stable"
+
+[[plugin]]
+  name = "asap"
+  summary = "ASAP Key management, ASAP requests, and token generation & validation"
+  version = "build-168-6357ed7"
+  sha256 = ""
+  exec = "~/.local/share/atlassian/atlas/plugin/asap"
   channel = "stable"
