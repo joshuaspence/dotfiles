@@ -1,33 +1,33 @@
 [[plugin]]
   name = "shipyard"
   summary = "Manage artifacts stored in Shipyard"
-  version = "v2.6.1"
+  version = "v2.7.0"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
   name = "slauth"
   summary = "Service Layer Authentication"
-  version = "0.0-483-gb62bf23"
+  version = "0.0-508-g761cf4a"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
   name = "statlas"
   summary = "Statlas auth and upload cli"
-  version = "22-527cccc"
+  version = "build-81-4eee79c"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
   name = "micros"
   summary = "Micros plugin for atlas-cli"
-  version = "102-98a2063"
+  version = "105-437c531"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
+  exec = "~/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -51,5 +51,5 @@
   summary = "ASAP Key management, ASAP requests, and token generation & validation"
   version = "build-168-6357ed7"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/asap"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/asap"
   channel = "stable"
