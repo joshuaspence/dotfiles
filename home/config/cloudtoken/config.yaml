@@ -1,0 +1,8 @@
+plugins:
+    pre_auth:
+    auth:
+        - saml
+    post_auth:
+        - export_credentials_shell
+        - export_credentials_json
+#       - export_credentials_awscli

@@ -10,6 +10,7 @@ packages = [
     'config',
     'config/atlassian',
     'config/atlassian/atlas',
+    'config/cloudtoken',
     'config/sublime-text-3',
     'config/sublime-text-3/Packages',
     'minikube',
