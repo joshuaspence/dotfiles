@@ -3,7 +3,7 @@
   summary = "Manage artifacts stored in Shipyard"
   version = "v2.7.0"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
@@ -11,7 +11,7 @@
   summary = "Service Layer Authentication"
   version = "0.0-508-g761cf4a"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
@@ -19,7 +19,7 @@
   summary = "Statlas auth and upload cli"
   version = "build-81-4eee79c"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
@@ -27,7 +27,7 @@
   summary = "Micros plugin for atlas-cli"
   version = "105-437c531"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/micros"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -52,4 +52,12 @@
   version = "build-168-6357ed7"
   sha256 = ""
   exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/asap"
+  channel = "stable"
+
+[[plugin]]
+  name = "share"
+  summary = "Plugin to share secrets with other atlassians"
+  version = "23-cecd176"
+  sha256 = ""
+  exec = "~/.local/share/atlassian/atlas/plugin/share"
   channel = "stable"
