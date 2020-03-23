@@ -9,9 +9,9 @@
 [[plugin]]
   name = "slauth"
   summary = "Service Layer Authentication"
-  version = "0.0-533-ge667adc"
+  version = "0.0-536-g0fbee7f"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
@@ -19,13 +19,13 @@
   summary = "Statlas auth and upload cli"
   version = "build-106-121e809"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
   name = "micros"
   summary = "Micros plugin for atlas-cli"
-  version = "125-06471b2"
+  version = "129-2253911"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
@@ -35,7 +35,7 @@
   summary = "A simple and quick way to thank your fellow Atlassians from the command line."
   version = "2.4.1"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/kudos"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/kudos"
   channel = "stable"
 
 [[plugin]]
@@ -49,7 +49,7 @@
 [[plugin]]
   name = "asap"
   summary = "ASAP Key management, ASAP requests, and token generation & validation"
-  version = "build-216-392a5bd"
+  version = "build-223-52bda2b"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/asap"
   channel = "stable"
