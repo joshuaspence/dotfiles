@@ -118,5 +118,5 @@
   name = Joshua Spence
   email = josh@joshuaspence.com
 
-[includeIf "gitdir:~/workspace/atlassian/"]
+[includeIf "gitdir:~/workspace/atlassian*/"]
   path = ~/.gitconfig-atlassian
