@@ -5,5 +5,4 @@ dotfiles
 ec2instanceconnectcli
 pip-tools
 pssh
-git+https://github.com/TripElephant/redpush.git
 yamllint
