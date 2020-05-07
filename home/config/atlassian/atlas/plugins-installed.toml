@@ -11,13 +11,13 @@
   summary = "Service Layer Authentication"
   version = "0.0-557-g4da2ae7"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
   name = "statlas"
   summary = "Statlas auth and upload cli"
-  version = "build-125-cdc01a3"
+  version = "build-131-4e1b3ac"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
@@ -57,7 +57,7 @@
 [[plugin]]
   name = "share"
   summary = "Plugin to share secrets with other atlassians"
-  version = "40-35e121b"
+  version = "51-4cfd4bf"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/share"
+  exec = "~/.local/share/atlassian/atlas/plugin/share"
   channel = "stable"
