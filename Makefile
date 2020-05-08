@@ -111,6 +111,7 @@ test: \
 	test-gem \
 	test-git \
 	test-irb \
+	test-psql \
 	test-python \
 	test-ssh \
 	test-sublime-text \
@@ -148,6 +149,11 @@ test-git: home/gitconfig
 .PHONY: test-irb
 test-irb: home/irbrc
 	$(DOCKER_RUN) --volume $(abspath $<):/irbrc:ro instructure/rvm bash -c -l 'ruby -r irb /irbrc'
+
+# TODO
+.PHONY: test-psql
+test-psql: home/psqlrc
+	true
 
 .PHONY: test-python
 test-python: home/pythonrc
