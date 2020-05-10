@@ -17,7 +17,7 @@
 [[plugin]]
   name = "statlas"
   summary = "Statlas auth and upload cli"
-  version = "build-131-4e1b3ac"
+  version = "build-132-8c2561e"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
@@ -59,5 +59,5 @@
   summary = "Plugin to share secrets with other atlassians"
   version = "51-4cfd4bf"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/share"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/share"
   channel = "stable"
