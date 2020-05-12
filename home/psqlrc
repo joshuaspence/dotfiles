@@ -1,0 +1,7 @@
+\set QUIET 1
+
+\set COMP_KEYWORD_CASE upper
+\pset null (null)
+\pset pager off
+
+\unset QUIET
