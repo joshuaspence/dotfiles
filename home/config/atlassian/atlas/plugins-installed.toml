@@ -19,15 +19,15 @@
   summary = "Statlas auth and upload cli"
   version = "build-132-8c2561e"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
   name = "micros"
   summary = "Micros plugin for atlas-cli"
-  version = "145-d593796"
+  version = "147-2d73f93"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
+  exec = "~/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -57,7 +57,7 @@
 [[plugin]]
   name = "share"
   summary = "Plugin to share secrets with other atlassians"
-  version = "51-4cfd4bf"
+  version = "56-a5ab012"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/share"
+  exec = "~/.local/share/atlassian/atlas/plugin/share"
   channel = "stable"
