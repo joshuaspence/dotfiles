@@ -13,6 +13,7 @@ packages = [
     'config/cloudtoken',
     'config/sublime-text-3',
     'config/sublime-text-3/Packages',
+    'jira.d',
     'minikube',
     'ssh',
     'venv',

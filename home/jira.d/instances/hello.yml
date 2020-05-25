@@ -1,0 +1,4 @@
+---
+endpoint: 'https://hello.atlassian.net'
+password-source: 'keyring'
+user: 'jspence2@atlassian.com'

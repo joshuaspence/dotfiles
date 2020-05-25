@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+cat "${HOME}/.jira.d/instances/${JIRA_INSTANCE:-hello}.yml"
