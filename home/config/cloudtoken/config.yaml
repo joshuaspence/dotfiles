@@ -1,8 +1,19 @@
 ---
+defaults:
+  centrify:
+    appkey: 'aa23927a-08ea-4530-8fc3-2bd0b311f4ab'
+    auth_preferences:
+      - 'Password'
+      - 'MFA (US-East-1)'
+    tenant_id: 'AAS0641'
+    vanity_id: 'atlassian'
+  mfa-method: 'passcode'
+  system-username: 'jspence2'
 plugins:
   auth:
+    - 'centrify'
     - 'saml'
   post_auth:
     - 'export_credentials_shell'
     - 'export_credentials_json'
-  pre_auth: []
+  pre_auth: null
