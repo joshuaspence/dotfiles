@@ -1,4 +1,3 @@
-# yamllint disable-file
 #!/bin/bash
 
 set -o errexit
