@@ -14,6 +14,7 @@ plugins:
     - 'centrify'
     - 'saml'
   post_auth:
-    - 'export_credentials_shell'
+    - 'export_credentials_awscli'
     - 'export_credentials_json'
+    - 'export_credentials_shell'
   pre_auth: null
