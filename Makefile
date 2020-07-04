@@ -87,7 +87,7 @@ lint-pylint: home/pythonrc
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
 lint-shellcheck: $(call rwildcard,src,*.*sh) $(call rwildcard,test,*.*sh) $(call rwildcard,test,*.bats) home/bash_logout home/bash_profile home/hushlogin home/rvmrc
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090 --shell=bash $^
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091 --shell=bash $^
 
 .PHONY: lint-rubocop
 lint-rubocop: home/irbrc
