@@ -2,10 +2,6 @@
 path = home/vim/bundle/Vundle.vim
 url = https://github.com/VundleVim/Vundle.vim.git
 
-[submodule "src/modules/completion-ruby"]
-path = src/modules/completion-ruby
-url = https://github.com/mernen/completion-ruby.git
-
 [submodule "src/modules/go-pkg-complete"]
 path = src/modules/go-pkg-complete
 url = https://github.com/skelterjohn/go-pkg-complete.git
