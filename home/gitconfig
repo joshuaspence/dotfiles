@@ -1,122 +1,122 @@
 [advice]
-  statusHints = false
+statusHints = false
 
 [alias]
-  aliases = !git config --get-regexp '^alias\\.' | colrm 1 6 | sed 's/[ ]/ = /'
-  amend = commit --amend --no-edit
-  branches = branch --all
-  commit-all = !git add --all && git commit --all
-  empty-tree = hash-object -t tree /dev/null
-  pretty-log = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
-  remotes = remote --verbose
-  reword = commit --amend
-  root = rev-parse --show-toplevel
-  squash = rebase --interactive --autosquash
-  tags = tag --list
-  unfuck = !git fsck && git remote prune origin && git gc --aggressive --auto
-  unstage = reset HEAD
-  untrack = rm --cache
+aliases = !git config --get-regexp '^alias\\.' | colrm 1 6 | sed 's/[ ]/ = /'
+amend = commit --amend --no-edit
+branches = branch --all
+commit-all = !git add --all && git commit --all
+empty-tree = hash-object -t tree /dev/null
+pretty-log = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+remotes = remote --verbose
+reword = commit --amend
+root = rev-parse --show-toplevel
+squash = rebase --interactive --autosquash
+tags = tag --list
+unfuck = !git fsck && git remote prune origin && git gc --aggressive --auto
+unstage = reset HEAD
+untrack = rm --cache
 
-  # List the files that have changed.
-  changed = diff --name-only
+# List the files that have changed.
+changed = diff --name-only
 
-  # Ignore changes to a tracked file.
-  ignore-changes = update-index --assume-unchanged
-  unignore-changes = update-index --no-assume-unchanged
+# Ignore changes to a tracked file.
+ignore-changes = update-index --assume-unchanged
+unignore-changes = update-index --no-assume-unchanged
 
-  # List files that are not under version control.
-  ls-ignored = ls-files --exclude-standard --ignored --others
+# List files that are not under version control.
+ls-ignored = ls-files --exclude-standard --ignored --others
 
-  # List all repositories in my workspace.
-  workspace = "!find ~/workspace -type d -exec sh -c 'git -C {} rev-parse --git-dir >/dev/null 2>&1' \\; -prune -print | sort"
+# List all repositories in my workspace.
+workspace = "!find ~/workspace -type d -exec sh -c 'git -C {} rev-parse --git-dir >/dev/null 2>&1' \\; -prune -print | sort"
 
 [apply]
-  whitespace = fix
+whitespace = fix
 
 [branch]
-  autoSetupRebase = always
+autoSetupRebase = always
 
 [clean]
-  requireForce = false
+requireForce = false
 
 [color "diff"]
-  meta = yellow bold
+meta = yellow bold
 
 [color "grep"]
-  filename = yellow bold
+filename = yellow bold
 
 [color "status"]
-  changed = yellow
-  untracked = cyan
+changed = yellow
+untracked = cyan
 
 [core]
-  autocrlf = input
-  editor = vim
-  excludesFile = ~/.gitignore
-  untrackedCache = true
+autocrlf = input
+editor = vim
+excludesFile = ~/.gitignore
+untrackedCache = true
 
 [diff]
-  algorithm = patience
-  noprefix = true
-  renames = copy
-  tool = meld
+algorithm = patience
+noprefix = true
+renames = copy
+tool = meld
 
 [fetch]
-  prune = true
-  pruneTags = true
+prune = true
+pruneTags = true
 
 [filter "lfs"]
-  clean = git-lfs clean -- %f
-  process = git-lfs filter-process
-  required = true
-  smudge = git-lfs smudge -- %f
+clean = git-lfs clean -- %f
+process = git-lfs filter-process
+required = true
+smudge = git-lfs smudge -- %f
 
 [help]
-  autoCorrect = 10
+autoCorrect = 10
 
 [log]
-  date = local
-  follow = true
-  mailmap = true
+date = local
+follow = true
+mailmap = true
 
 [merge]
-  tool = meld
+tool = meld
 
 [mergetool]
-  keepBackup = false
+keepBackup = false
 
 [pager]
-  branch = false
+branch = false
 
 [pull]
-  rebase = true
+rebase = true
 
 [push]
-  default = upstream
+default = upstream
 
 [rebase]
-  autoSquash = true
+autoSquash = true
 
 [rerere]
-  autoUpdate = true
-  enabled = true
+autoUpdate = true
+enabled = true
 
 [status]
-  showStash = true
-  showUntrackedFiles = all
+showStash = true
+showUntrackedFiles = all
 
 [url "git@bitbucket.org:"]
-  insteadOf = https://bitbucket.org/
+insteadOf = https://bitbucket.org/
 
 [url "git@github.com:"]
-  insteadof = github:
+insteadof = github:
 
 [url "ssh://git@stash.atlassian.com:7997/"]
-  insteadOf = https://stash.atlassian.com/scm/
+insteadOf = https://stash.atlassian.com/scm/
 
 [user]
-  name = Joshua Spence
-  email = josh@joshuaspence.com
+name = Joshua Spence
+email = josh@joshuaspence.com
 
 [includeIf "gitdir:~/workspace/atlassian*/"]
-  path = ~/.gitconfig-atlassian
+path = ~/.gitconfig-atlassian
