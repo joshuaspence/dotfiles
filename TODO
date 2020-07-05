@@ -1,4 +1,3 @@
-.editorconfig
 .flake8
 .gitignore
 .pylintrc
@@ -135,18 +134,12 @@ src/functions/virtualenv.sh
 src/functions/whatismyip.sh
 src/functions/whence.sh
 src/functions/wsl.sh
-src/modules/completion-ruby
-src/modules/go-pkg-complete
 src/profile.sh
 src/setup/cloudtoken.sh
 src/setup/ssh.sh
 test/environment/editor.bats
 test/functions/open.bats
 test/helper.bash
-tools/bats-assert
-tools/bats-mock
-tools/bats-support
-tools/compiler
 
 # ~/.vimrc
 https://github.com/adampetrovic/dotfiles/tree/master/vim
