@@ -1,7 +1,6 @@
 .editorconfig
 .flake8
 .gitignore
-.gitmodules
 .pylintrc
 .rubocop.yml
 .travis.yml

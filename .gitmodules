@@ -10,6 +10,10 @@ url = https://github.com/skelterjohn/go-pkg-complete.git
 path = tools/bats-assert
 url = https://github.com/ztombol/bats-assert.git
 
+[submodule "tools/bats-mock"]
+path = tools/bats-mock
+url = https://github.com/jasonkarns/bats-mock
+
 [submodule "tools/bats-support"]
 path = tools/bats-support
 url = https://github.com/ztombol/bats-support.git
@@ -18,7 +22,3 @@ url = https://github.com/ztombol/bats-support.git
 path = tools/compiler
 url = https://git.code.sf.net/p/loader/code
 branch = compilers
-
-[submodule "tools/bats-mock"]
-path = tools/bats-mock
-url = https://github.com/jasonkarns/bats-mock
