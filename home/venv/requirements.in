@@ -1,6 +1,9 @@
 awscli
 cloudtoken
+cloudtoken-plugin.awscli-exporter
 cloudtoken-plugin.centrify
+cloudtoken-plugin.json-exporter
+cloudtoken-plugin.shell-exporter
 dotfiles
 ec2instanceconnectcli
 pip-tools

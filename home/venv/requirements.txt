@@ -11,12 +11,14 @@ certifi==2019.11.28       # via requests
 cffi==1.13.2              # via cryptography
 chardet==3.0.4            # via requests
 click==7.0                # via flask, pip-tools
+cloudtoken-plugin.awscli-exporter==0.1.255
 cloudtoken-plugin.centrify==0.1.255
-cloudtoken-plugin.json-exporter==0.1.255  # via cloudtoken
+cloudtoken-plugin.json-exporter==0.1.255
 cloudtoken-plugin.saml==0.1.255  # via cloudtoken
-cloudtoken-plugin.shell-exporter==0.1.255  # via cloudtoken
+cloudtoken-plugin.shell-exporter==0.1.255
 cloudtoken==0.1.255
 colorama==0.4.1           # via awscli
+configparser==5.0.0       # via cloudtoken-plugin.awscli-exporter
 cryptography==2.8         # via ec2instanceconnectcli, secretstorage
 cssselect==1.1.0          # via pyquery
 docutils==0.15.2          # via awscli, botocore
