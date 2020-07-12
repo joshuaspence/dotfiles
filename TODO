@@ -80,6 +80,7 @@ src/completion/awscli.sh
 src/completion/bash-completion.bash
 src/completion/ec2-scripts.bash
 src/completion/fluxctl.bash
+src/completion/gh.bash
 src/completion/golang.bash
 src/completion/helm.bash
 src/completion/kubectl.bash
