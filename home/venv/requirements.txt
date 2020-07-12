@@ -4,52 +4,55 @@
 #
 #    pip-compile --output-file=home/venv/requirements.txt home/venv/requirements.in
 #
-awscli==1.17.9
-boto3==1.11.9             # via cloudtoken-plugin.saml
-botocore==1.14.9          # via awscli, boto3, ec2instanceconnectcli, s3transfer
-certifi==2019.11.28       # via requests
-cffi==1.13.2              # via cryptography
+awscli==1.18.97           # via -r home/venv/requirements.in
+boto3==1.14.20            # via cloudtoken-plugin.saml
+botocore==1.17.20         # via awscli, boto3, ec2instanceconnectcli, s3transfer
+certifi==2020.6.20        # via requests
+cffi==1.14.0              # via cryptography
 chardet==3.0.4            # via requests
-click==7.0                # via flask, pip-tools
-cloudtoken-plugin.awscli-exporter==0.1.255
-cloudtoken-plugin.centrify==0.1.255
-cloudtoken-plugin.json-exporter==0.1.255
+click==7.1.2              # via flask, pip-tools
+cloudtoken-plugin.awscli-exporter==0.1.255  # via -r home/venv/requirements.in
+cloudtoken-plugin.centrify==0.1.255  # via -r home/venv/requirements.in
+cloudtoken-plugin.json-exporter==0.1.255  # via -r home/venv/requirements.in, cloudtoken
 cloudtoken-plugin.saml==0.1.255  # via cloudtoken
-cloudtoken-plugin.shell-exporter==0.1.255
-cloudtoken==0.1.255
-colorama==0.4.1           # via awscli
+cloudtoken-plugin.shell-exporter==0.1.255  # via -r home/venv/requirements.in, cloudtoken
+cloudtoken==0.1.255       # via -r home/venv/requirements.in, cloudtoken-plugin.awscli-exporter, cloudtoken-plugin.centrify, cloudtoken-plugin.json-exporter, cloudtoken-plugin.saml, cloudtoken-plugin.shell-exporter
+colorama==0.4.3           # via awscli
 configparser==5.0.0       # via cloudtoken-plugin.awscli-exporter
-cryptography==2.8         # via ec2instanceconnectcli, secretstorage
+cryptography==2.9.2       # via ec2instanceconnectcli, secretstorage
 cssselect==1.1.0          # via pyquery
 docutils==0.15.2          # via awscli, botocore
-dotfiles==0.6.4
-ec2instanceconnectcli==1.0.0
-flask==1.1.1              # via cloudtoken
-idna==2.8                 # via requests
-importlib-metadata==1.5.0  # via keyring
+dotfiles==0.6.4           # via -r home/venv/requirements.in
+ec2instanceconnectcli==1.0.0  # via -r home/venv/requirements.in
+flask==1.1.2              # via cloudtoken
+idna==2.10                # via requests
+importlib-metadata==1.7.0  # via keyring
 itsdangerous==1.1.0       # via flask
-jeepney==0.4.2            # via keyring, secretstorage
-jinja2==2.11.0            # via flask
-jmespath==0.9.4           # via boto3, botocore
-keyring==21.1.0           # via cloudtoken
+jeepney==0.4.3            # via keyring, secretstorage
+jinja2==2.11.2            # via flask
+jmespath==0.10.0          # via boto3, botocore
+keyring==21.2.1           # via cloudtoken
 keyrings.alt==3.4.0       # via cloudtoken
-lxml==4.5.0               # via cloudtoken-plugin.centrify, pyquery
+lxml==4.5.2               # via cloudtoken-plugin.centrify, pyquery
 markupsafe==1.1.1         # via jinja2
-pathspec==0.7.0           # via yamllint
-pip-tools==4.4.0
-pssh==2.3.1
+pathspec==0.8.0           # via yamllint
+pip-tools==5.2.1          # via -r home/venv/requirements.in
+pssh==2.3.1               # via -r home/venv/requirements.in
 pyasn1==0.4.8             # via rsa
-pycparser==2.19           # via cffi
+pycparser==2.20           # via cffi
 pyquery==1.4.1            # via cloudtoken-plugin.centrify
 python-dateutil==2.8.1    # via botocore
-pyyaml==5.2               # via awscli, cloudtoken, yamllint
-requests==2.22.0          # via cloudtoken, cloudtoken-plugin.centrify
-rsa==3.4.2                # via awscli
-s3transfer==0.3.2         # via awscli, boto3
+pyyaml==5.3.1             # via awscli, cloudtoken, yamllint
+requests==2.24.0          # via cloudtoken, cloudtoken-plugin.centrify
+rsa==4.5                  # via awscli
+s3transfer==0.3.3         # via awscli, boto3
 schedule==0.6.0           # via cloudtoken
 secretstorage==3.1.2      # via keyring
-six==1.14.0               # via cryptography, pip-tools, python-dateutil
-urllib3==1.25.8           # via botocore, requests
-werkzeug==0.16.1          # via flask
-yamllint==1.20.0
-zipp==2.1.0               # via importlib-metadata
+six==1.15.0               # via cryptography, pip-tools, python-dateutil
+urllib3==1.25.9           # via botocore, requests
+werkzeug==1.0.1           # via flask
+yamllint==1.23.0          # via -r home/venv/requirements.in
+zipp==3.1.0               # via importlib-metadata
+
+# The following packages are considered to be unsafe in a requirements file:
+# pip
