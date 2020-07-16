@@ -83,6 +83,7 @@ src/completion/fluxctl.bash
 src/completion/gh.bash
 src/completion/golang.bash
 src/completion/helm.bash
+src/completion/kind.bash
 src/completion/kubectl.bash
 src/completion/minikube.bash
 src/completion/nvm.bash
