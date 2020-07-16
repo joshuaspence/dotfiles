@@ -1,3 +1,4 @@
 {
+    "driver": "docker",
     "kubernetes-version": "v1.18.3"
 }
