@@ -219,6 +219,7 @@ https://github.com/jay0lee/GAM
 - `pollidev`
 
 # Krew
+- https://cert-manager.io/docs/usage/kubectl-plugin/
 - `ctx`
 - `doctor`
 - `ingress-nginx`
