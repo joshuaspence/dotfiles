@@ -11,7 +11,7 @@
   summary = "Service Layer Authentication"
   version = "0.0-637-gcb4a976"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
@@ -19,7 +19,7 @@
   summary = "Statlas auth and upload cli"
   version = "build-180-7321528"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
@@ -27,7 +27,7 @@
   summary = "Micros plugin for atlas-cli"
   version = "178-48e018b"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/micros"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -67,5 +67,37 @@
   summary = "Nebulae"
   version = "20200825-112137-c5656c92"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/nebulae"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/nebulae"
+  channel = "stable"
+
+[[plugin]]
+  name = "poco"
+  summary = "Poco plugin for atlas-cli"
+  version = "build-491-a1b3c94"
+  sha256 = ""
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/poco"
+  channel = "stable"
+
+[[plugin]]
+  name = "spin"
+  summary = "Plugin for Spinnaker"
+  version = "0.6.0-788f898-118"
+  sha256 = ""
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/spin"
+  channel = "stable"
+
+[[plugin]]
+  name = "secrets"
+  summary = "Plugin for Vault secrets management"
+  version = "0.5.0-16-g975e531"
+  sha256 = ""
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/secrets"
+  channel = "stable"
+
+[[plugin]]
+  name = "packages"
+  summary = "Provides a set of tools for working with packages.a.c"
+  version = "1.2.7"
+  sha256 = ""
+  exec = "~/.local/share/atlassian/atlas/plugin/packages"
   channel = "stable"
