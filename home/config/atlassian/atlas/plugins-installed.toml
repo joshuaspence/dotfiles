@@ -1,33 +1,33 @@
 [[plugin]]
   name = "shipyard"
   summary = "Manage artifacts stored in Shipyard"
-  version = "v2.8.0-3-g2a58223"
+  version = "v2.8.0-5-g171ea4c"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
   name = "slauth"
   summary = "Service Layer Authentication"
-  version = "0.0-637-gcb4a976"
+  version = "0.0-648-g466e74f"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
   name = "statlas"
   summary = "Statlas auth and upload cli"
-  version = "build-180-7321528"
+  version = "build-205-74d2619"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
   name = "micros"
   summary = "Micros plugin for atlas-cli"
-  version = "178-48e018b"
+  version = "203-af05907"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
+  exec = "~/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -49,33 +49,33 @@
 [[plugin]]
   name = "asap"
   summary = "ASAP Key management, ASAP requests, and token generation & validation"
-  version = "build-268-b71d0a0"
+  version = "build-299-5666c48"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/asap"
+  exec = "~/.local/share/atlassian/atlas/plugin/asap"
   channel = "stable"
 
 [[plugin]]
   name = "share"
   summary = "Plugin to share secrets with other atlassians"
-  version = "83-1021655"
+  version = "119-6925116"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/share"
+  exec = "~/.local/share/atlassian/atlas/plugin/share"
   channel = "stable"
 
 [[plugin]]
   name = "nebulae"
   summary = "Nebulae"
-  version = "20200825-112137-c5656c92"
+  version = "20200915-001657-1378d448"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/nebulae"
+  exec = "~/.local/share/atlassian/atlas/plugin/nebulae"
   channel = "stable"
 
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "build-491-a1b3c94"
+  version = "build-496-d66802e"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/poco"
+  exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
 
 [[plugin]]
@@ -99,5 +99,5 @@
   summary = "Provides a set of tools for working with packages.a.c"
   version = "1.2.7"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/packages"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/packages"
   channel = "stable"
