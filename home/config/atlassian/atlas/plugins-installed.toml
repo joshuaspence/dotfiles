@@ -3,7 +3,7 @@
   summary = "Manage artifacts stored in Shipyard"
   version = "v2.8.0-5-g171ea4c"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
@@ -11,13 +11,13 @@
   summary = "Service Layer Authentication"
   version = "0.0-648-g466e74f"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
   name = "statlas"
   summary = "Statlas auth and upload cli"
-  version = "build-205-74d2619"
+  version = "build-210-23aefaf"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
@@ -27,7 +27,7 @@
   summary = "Micros plugin for atlas-cli"
   version = "203-af05907"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/micros"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -51,7 +51,7 @@
   summary = "ASAP Key management, ASAP requests, and token generation & validation"
   version = "build-299-5666c48"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/asap"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/asap"
   channel = "stable"
 
 [[plugin]]
@@ -59,7 +59,7 @@
   summary = "Plugin to share secrets with other atlassians"
   version = "119-6925116"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/share"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/share"
   channel = "stable"
 
 [[plugin]]
@@ -67,13 +67,13 @@
   summary = "Nebulae"
   version = "20200915-001657-1378d448"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/nebulae"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/nebulae"
   channel = "stable"
 
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "build-496-d66802e"
+  version = "build-502-dd80cb9"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
