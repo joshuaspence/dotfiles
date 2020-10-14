@@ -19,7 +19,7 @@
   summary = "Statlas auth and upload cli"
   version = "build-210-23aefaf"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
@@ -75,7 +75,7 @@
   summary = "Poco plugin for atlas-cli"
   version = "build-502-dd80cb9"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/poco"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
 
 [[plugin]]
@@ -100,4 +100,12 @@
   version = "1.2.7"
   sha256 = ""
   exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/packages"
+  channel = "stable"
+
+[[plugin]]
+  name = "atlasdev"
+  summary = "Plugin for atlas-cli developers"
+  version = "0.0-648-g466e74f"
+  sha256 = ""
+  exec = "~/.local/share/atlassian/atlas/plugin/atlasdev"
   channel = "stable"
