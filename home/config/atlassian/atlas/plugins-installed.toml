@@ -3,7 +3,7 @@
   summary = "Manage artifacts stored in Shipyard"
   version = "v2.8.0-10-g56f8c73"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
@@ -19,7 +19,7 @@
   summary = "Statlas auth and upload cli"
   version = "build-226-3985918"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
@@ -27,7 +27,7 @@
   summary = "Micros plugin for atlas-cli"
   version = "205-4fcbbbf"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/micros"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -51,7 +51,7 @@
   summary = "ASAP Key management, ASAP requests, and token generation & validation"
   version = "build-323-bd4a3d6"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/asap"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/asap"
   channel = "stable"
 
 [[plugin]]
@@ -73,7 +73,7 @@
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "build-530-71d38c2"
+  version = "build-531-809be43"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
@@ -83,7 +83,7 @@
   summary = "Plugin for Spinnaker"
   version = "0.6.1-37a3803-alpha"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/spin"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/spin"
   channel = "stable"
 
 [[plugin]]
