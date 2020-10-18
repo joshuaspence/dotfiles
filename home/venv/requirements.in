@@ -6,6 +6,7 @@ cloudtoken-plugin.json-exporter
 cloudtoken-plugin.shell-exporter
 dotfiles
 ec2instanceconnectcli
+gphotos-sync
 pip-tools
 pssh
 yamllint
