@@ -9,17 +9,17 @@
 [[plugin]]
   name = "slauth"
   summary = "Service Layer Authentication"
-  version = "0.0-648-g466e74f"
+  version = "0.0-655-g2727330"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
   name = "statlas"
   summary = "Statlas auth and upload cli"
-  version = "build-226-3985918"
+  version = "build-230-bb51c13"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
@@ -65,15 +65,15 @@
 [[plugin]]
   name = "nebulae"
   summary = "Nebulae"
-  version = "20200915-001657-1378d448"
+  version = "20201019-001703-1aec5116"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/nebulae"
+  exec = "~/.local/share/atlassian/atlas/plugin/nebulae"
   channel = "stable"
 
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "build-531-809be43"
+  version = "build-536-aef7dee"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
@@ -81,9 +81,9 @@
 [[plugin]]
   name = "spin"
   summary = "Plugin for Spinnaker"
-  version = "0.6.1-37a3803-alpha"
+  version = "0.6.1-e32ff60-119"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/spin"
+  exec = "~/.local/share/atlassian/atlas/plugin/spin"
   channel = "stable"
 
 [[plugin]]
@@ -105,7 +105,7 @@
 [[plugin]]
   name = "atlasdev"
   summary = "Plugin for atlas-cli developers"
-  version = "0.0-648-g466e74f"
+  version = "0.0-655-g2727330"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/atlasdev"
+  exec = "~/.local/share/atlassian/atlas/plugin/atlasdev"
   channel = "stable"
