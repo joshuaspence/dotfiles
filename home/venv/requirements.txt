@@ -6,31 +6,31 @@
 #
 appdirs==1.4.4            # via -r home/venv/requirements.in, gphotos-sync
 attrs==20.2.0             # via gphotos-sync
-awscli==1.18.126          # via -r home/venv/requirements.in
-boto3==1.14.49            # via cloudtoken-plugin.saml
-botocore==1.17.49         # via awscli, boto3, ec2instanceconnectcli, s3transfer
+awscli==1.18.164          # via -r home/venv/requirements.in
+boto3==1.16.4             # via cloudtoken-plugin.saml
+botocore==1.19.4          # via awscli, boto3, ec2instanceconnectcli, s3transfer
 cachecontrol==0.12.6      # via -r home/venv/requirements.in
 certifi==2020.6.20        # via -r home/venv/requirements.in, requests
-cffi==1.14.2              # via cryptography
+cffi==1.14.3              # via cryptography
 chardet==3.0.4            # via -r home/venv/requirements.in, requests
 click==7.1.2              # via flask, pip-tools
-cloudtoken-plugin.awscli-exporter==0.1.255  # via -r home/venv/requirements.in
-cloudtoken-plugin.centrify==0.1.255  # via -r home/venv/requirements.in
-cloudtoken-plugin.json-exporter==0.1.255  # via -r home/venv/requirements.in, cloudtoken
-cloudtoken-plugin.saml==0.1.255  # via cloudtoken
-cloudtoken-plugin.shell-exporter==0.1.255  # via -r home/venv/requirements.in, cloudtoken
-cloudtoken==0.1.255       # via -r home/venv/requirements.in, cloudtoken-plugin.awscli-exporter, cloudtoken-plugin.centrify, cloudtoken-plugin.json-exporter, cloudtoken-plugin.saml, cloudtoken-plugin.shell-exporter
+cloudtoken-plugin.awscli-exporter==0.1.685  # via -r home/venv/requirements.in
+cloudtoken-plugin.centrify==0.1.685  # via -r home/venv/requirements.in
+cloudtoken-plugin.json-exporter==0.1.685  # via -r home/venv/requirements.in, cloudtoken
+cloudtoken-plugin.saml==0.1.685  # via cloudtoken
+cloudtoken-plugin.shell-exporter==0.1.685  # via -r home/venv/requirements.in, cloudtoken
+cloudtoken==0.1.685       # via -r home/venv/requirements.in, cloudtoken-plugin.awscli-exporter, cloudtoken-plugin.centrify, cloudtoken-plugin.json-exporter, cloudtoken-plugin.saml, cloudtoken-plugin.shell-exporter
 colorama==0.4.3           # via -r home/venv/requirements.in, awscli
-configparser==5.0.0       # via cloudtoken-plugin.awscli-exporter
+configparser==5.0.1       # via cloudtoken-plugin.awscli-exporter
 contextlib2==0.6.0.post1  # via -r home/venv/requirements.in
-cryptography==3.1         # via ec2instanceconnectcli, secretstorage
+cryptography==3.2         # via ec2instanceconnectcli, secretstorage
 cssselect==1.1.0          # via pyquery
 distlib==0.3.1            # via -r home/venv/requirements.in
 distro==1.5.0             # via -r home/venv/requirements.in
-docutils==0.15.2          # via awscli, botocore
+docutils==0.15.2          # via awscli
 dotfiles==0.6.4           # via -r home/venv/requirements.in
-ec2instanceconnectcli==1.0.1  # via -r home/venv/requirements.in
-exif==1.0.1               # via gphotos-sync
+ec2instanceconnectcli==1.0.2  # via -r home/venv/requirements.in
+exif==1.0.2               # via gphotos-sync
 flask==1.1.2              # via cloudtoken
 gphotos-sync==2.14.2      # via -r home/venv/requirements.in
 html5lib==1.1             # via -r home/venv/requirements.in
@@ -40,21 +40,21 @@ itsdangerous==1.1.0       # via flask
 jeepney==0.4.3            # via keyring, secretstorage
 jinja2==2.11.2            # via flask
 jmespath==0.10.0          # via boto3, botocore
-keyring==21.3.1           # via cloudtoken
-keyrings.alt==3.4.0       # via cloudtoken
+keyring==21.4.0           # via cloudtoken
+keyrings.alt==4.0.0       # via cloudtoken
 lockfile==0.12.2          # via -r home/venv/requirements.in
-lxml==4.5.2               # via cloudtoken-plugin.centrify, pyquery
+lxml==4.6.1               # via cloudtoken-plugin.centrify, pyquery
 markupsafe==1.1.1         # via jinja2
 msgpack==1.0.0            # via -r home/venv/requirements.in, cachecontrol
 oauthlib==3.1.0           # via requests-oauthlib
 packaging==20.4           # via -r home/venv/requirements.in
 pathspec==0.8.0           # via yamllint
-pep517==0.8.2             # via -r home/venv/requirements.in
+pep517==0.9.1             # via -r home/venv/requirements.in
 pip-tools==5.3.1          # via -r home/venv/requirements.in
 plum-py==0.3.1            # via exif
 progress==1.5             # via -r home/venv/requirements.in
 pssh==2.3.1               # via -r home/venv/requirements.in
-psutil==5.7.2             # via gphotos-sync
+psutil==5.7.3             # via gphotos-sync
 pyasn1==0.4.8             # via rsa
 pycparser==2.20           # via cffi
 pyparsing==2.4.7          # via -r home/venv/requirements.in, packaging
@@ -71,11 +71,11 @@ schedule==0.6.0           # via cloudtoken
 secretstorage==3.1.2      # via keyring
 six==1.15.0               # via -r home/venv/requirements.in, cryptography, html5lib, packaging, pip-tools, python-dateutil, retrying
 toml==0.10.1              # via pep517
-urllib3==1.25.10          # via -r home/venv/requirements.in, botocore, requests
+urllib3==1.25.11          # via -r home/venv/requirements.in, botocore, requests
 webencodings==0.5.1       # via -r home/venv/requirements.in, html5lib
 werkzeug==1.0.1           # via flask
 wheel==0.35.1             # via -r home/venv/requirements.in
-yamllint==1.24.2          # via -r home/venv/requirements.in
+yamllint==1.25.0          # via -r home/venv/requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
