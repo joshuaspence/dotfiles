@@ -28,7 +28,7 @@ rwildcard = $(wildcard $1$2) $(foreach dir,$(wildcard $1*),$(call rwildcard,$(di
 # Define a target to install a Python package.
 # Should be used in conjunction with `eval`.
 define virtualenv_target
-.INTERMEDIATE: $(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD))
+.SECONDARY: $(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD))
 $(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD)): | $$(VIRTUALENV)
 	$(VIRTUALENV)/bin/pip install --constraint home/venv/requirements.txt --quiet $(1)
 endef
@@ -233,7 +233,7 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 	git submodule --quiet update --init --recursive -- $(dir $@)
 	@touch $@
 
-.INTERMEDIATE: $(VIRTUALENV)
+.SECONDARY: $(VIRTUALENV)
 $(VIRTUALENV):
 	python3 -m virtualenv --python=python3 --quiet $@
 
