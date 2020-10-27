@@ -7,6 +7,7 @@ cloudtoken-plugin.shell-exporter
 dotfiles
 ec2instanceconnectcli
 gphotos-sync
+homeassistant-cli
 pip-tools
 pssh
 yamllint
