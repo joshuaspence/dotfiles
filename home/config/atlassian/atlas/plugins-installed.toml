@@ -1,9 +1,9 @@
 [[plugin]]
   name = "shipyard"
   summary = "Manage artifacts stored in Shipyard"
-  version = "v2.8.0-10-g56f8c73"
+  version = "v2.8.0-14-g7f30232"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
@@ -11,13 +11,13 @@
   summary = "Service Layer Authentication"
   version = "0.0-655-g2727330"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
   name = "statlas"
   summary = "Statlas auth and upload cli"
-  version = "build-230-bb51c13"
+  version = "build-233-66824c3"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
@@ -67,13 +67,13 @@
   summary = "Nebulae"
   version = "20201019-001703-1aec5116"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/nebulae"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/nebulae"
   channel = "stable"
 
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "build-536-aef7dee"
+  version = "build-541-b9c5004"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
@@ -81,7 +81,7 @@
 [[plugin]]
   name = "spin"
   summary = "Plugin for Spinnaker"
-  version = "0.6.1-e32ff60-119"
+  version = "0.6.1-cd99d34-121"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/spin"
   channel = "stable"
@@ -107,5 +107,5 @@
   summary = "Plugin for atlas-cli developers"
   version = "0.0-655-g2727330"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/atlasdev"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/atlasdev"
   channel = "stable"
