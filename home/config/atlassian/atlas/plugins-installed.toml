@@ -1,7 +1,7 @@
 [[plugin]]
   name = "shipyard"
   summary = "Manage artifacts stored in Shipyard"
-  version = "v2.8.0-14-g7f30232"
+  version = "v2.8.0-20-g9196cd8"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
@@ -9,15 +9,15 @@
 [[plugin]]
   name = "slauth"
   summary = "Service Layer Authentication"
-  version = "0.0-655-g2727330"
+  version = "0.0-662-g9a65cbe"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
   name = "statlas"
   summary = "Statlas auth and upload cli"
-  version = "build-233-66824c3"
+  version = "build-235-d6918ca"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
@@ -25,9 +25,9 @@
 [[plugin]]
   name = "micros"
   summary = "Micros plugin for atlas-cli"
-  version = "205-4fcbbbf"
+  version = "217-9511926"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
+  exec = "~/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -57,9 +57,9 @@
 [[plugin]]
   name = "share"
   summary = "Plugin to share secrets with other atlassians"
-  version = "119-6925116"
+  version = "138-c394b59"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/share"
+  exec = "~/.local/share/atlassian/atlas/plugin/share"
   channel = "stable"
 
 [[plugin]]
@@ -73,7 +73,7 @@
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "build-541-b9c5004"
+  version = "build-548-dc02bea"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
@@ -81,7 +81,7 @@
 [[plugin]]
   name = "spin"
   summary = "Plugin for Spinnaker"
-  version = "0.6.1-cd99d34-121"
+  version = "0.7.1-11d922b-127"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/spin"
   channel = "stable"
@@ -105,7 +105,7 @@
 [[plugin]]
   name = "atlasdev"
   summary = "Plugin for atlas-cli developers"
-  version = "0.0-655-g2727330"
+  version = "0.0-662-g9a65cbe"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/atlasdev"
+  exec = "~/.local/share/atlassian/atlas/plugin/atlasdev"
   channel = "stable"
