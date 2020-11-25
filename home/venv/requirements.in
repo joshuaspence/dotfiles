@@ -1,4 +1,5 @@
 awscli
+catt
 cloudtoken
 cloudtoken-plugin.awscli-exporter
 cloudtoken-plugin.centrify
