@@ -235,7 +235,7 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 
 .SECONDARY: $(VIRTUALENV)
 $(VIRTUALENV):
-	python3 -m virtualenv --python=python3 --quiet $@
+	python3 -m venv $@
 
 $(eval $(call virtualenv_target,dotfiles,dotfiles))
 $(eval $(call virtualenv_target,flake8,flake8))
