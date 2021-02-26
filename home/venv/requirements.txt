@@ -4,86 +4,232 @@
 #
 #    pip-compile --output-file=home/venv/requirements.txt home/venv/requirements.in
 #
-aiohttp==3.7.3            # via homeassistant-cli
-appdirs==1.4.4            # via gphotos-sync
-async-timeout==3.0.1      # via aiohttp
-attrs==20.3.0             # via aiohttp, gphotos-sync
-awscli==1.18.197          # via -r home/venv/requirements.in
-boto3==1.16.37            # via cloudtoken-plugin.saml
-botocore==1.19.37         # via awscli, boto3, ec2instanceconnectcli, s3transfer
-casttube==0.2.1           # via pychromecast
-catt==0.12.0              # via -r home/venv/requirements.in
-certifi==2020.12.5        # via requests
-cffi==1.14.4              # via cryptography
-chardet==3.0.4            # via aiohttp, requests
-click-log==0.3.2          # via homeassistant-cli
-click==7.1.2              # via catt, click-log, flask, homeassistant-cli, pip-tools
-cloudtoken-plugin.awscli-exporter==0.1.764  # via -r home/venv/requirements.in
-cloudtoken-plugin.centrify==0.1.764  # via -r home/venv/requirements.in
-cloudtoken-plugin.json-exporter==0.1.764  # via -r home/venv/requirements.in, cloudtoken
-cloudtoken-plugin.saml==0.1.764  # via cloudtoken
-cloudtoken-plugin.shell-exporter==0.1.764  # via -r home/venv/requirements.in, cloudtoken
-cloudtoken==0.1.764       # via -r home/venv/requirements.in, cloudtoken-plugin.awscli-exporter, cloudtoken-plugin.centrify, cloudtoken-plugin.json-exporter, cloudtoken-plugin.saml, cloudtoken-plugin.shell-exporter
-colorama==0.4.3           # via awscli
-configparser==5.0.1       # via cloudtoken-plugin.awscli-exporter
-cryptography==3.3.1       # via ec2instanceconnectcli, secretstorage
-cssselect==1.1.0          # via pyquery
-dateparser==0.7.6         # via homeassistant-cli
-decorator==4.4.2          # via jsonpath-rw
-docutils==0.15.2          # via awscli
-dotfiles==0.6.4           # via -r home/venv/requirements.in
-ec2instanceconnectcli==1.0.2  # via -r home/venv/requirements.in
-exif==1.0.4               # via gphotos-sync
-flask==1.1.2              # via cloudtoken
-gphotos-sync==2.14.2      # via -r home/venv/requirements.in
-homeassistant-cli==0.9.1  # via -r home/venv/requirements.in
-idna==2.10                # via requests, yarl
-ifaddr==0.1.7             # via catt, zeroconf
-itsdangerous==1.1.0       # via flask
-jeepney==0.6.0            # via keyring, secretstorage
-jinja2==2.11.2            # via flask, homeassistant-cli
-jmespath==0.10.0          # via boto3, botocore
-jsonpath-rw==1.4.0        # via homeassistant-cli
-keyring==21.5.0           # via cloudtoken
-keyrings.alt==4.0.2       # via cloudtoken
-lxml==4.6.2               # via cloudtoken-plugin.centrify, pyquery
-markupsafe==1.1.1         # via jinja2
-multidict==5.1.0          # via aiohttp, yarl
-netdisco==2.8.2           # via homeassistant-cli
-oauthlib==3.1.0           # via requests-oauthlib
-pathspec==0.8.1           # via yamllint
-pip-tools==5.4.0          # via -r home/venv/requirements.in
-plum-py==0.3.1            # via exif
-ply==3.11                 # via jsonpath-rw
-protobuf==3.14.0          # via pychromecast
-pssh==2.3.1               # via -r home/venv/requirements.in
-psutil==5.7.3             # via gphotos-sync
-pyasn1==0.4.8             # via rsa
-pychromecast==7.5.1       # via catt
-pycparser==2.20           # via cffi
-pyquery==1.4.3            # via cloudtoken-plugin.centrify
-python-dateutil==2.8.1    # via botocore, dateparser
-pytz==2020.4              # via dateparser, tzlocal
-pyyaml==5.3.1             # via awscli, cloudtoken, gphotos-sync, yamllint
-regex==2020.11.13         # via dateparser, homeassistant-cli
-requests-oauthlib==1.3.0  # via gphotos-sync
-requests==2.25.0          # via casttube, catt, cloudtoken, cloudtoken-plugin.centrify, homeassistant-cli, netdisco, pychromecast, requests-oauthlib
-rsa==4.5                  # via awscli
-ruamel.yaml.clib==0.2.2   # via ruamel.yaml
-ruamel.yaml==0.16.12      # via homeassistant-cli
-s3transfer==0.3.3         # via awscli, boto3
-schedule==0.6.0           # via cloudtoken
-secretstorage==3.3.0      # via keyring
-six==1.15.0               # via cryptography, jsonpath-rw, pip-tools, protobuf, python-dateutil
-tabulate==0.8.7           # via homeassistant-cli
-typing-extensions==3.7.4.3  # via aiohttp
-tzlocal==2.1              # via dateparser
-urllib3==1.26.2           # via botocore, requests
-werkzeug==1.0.1           # via flask
-yamllint==1.25.0          # via -r home/venv/requirements.in
-yarl==1.6.3               # via aiohttp
-youtube-dl==2020.12.14    # via catt
-zeroconf==0.28.7          # via netdisco, pychromecast
+aiohttp==3.7.4
+    # via homeassistant-cli
+appdirs==1.4.4
+    # via gphotos-sync
+async-timeout==3.0.1
+    # via aiohttp
+attrs==20.3.0
+    # via
+    #   aiohttp
+    #   gphotos-sync
+awscli==1.18.197
+    # via -r requirements.in
+boto3==1.16.37
+    # via cloudtoken-plugin.saml
+botocore==1.19.37
+    # via
+    #   awscli
+    #   boto3
+    #   ec2instanceconnectcli
+    #   s3transfer
+casttube==0.2.1
+    # via pychromecast
+catt==0.12.0
+    # via -r requirements.in
+certifi==2020.12.5
+    # via requests
+cffi==1.14.4
+    # via cryptography
+chardet==3.0.4
+    # via
+    #   aiohttp
+    #   requests
+click-log==0.3.2
+    # via homeassistant-cli
+click==7.1.2
+    # via
+    #   catt
+    #   click-log
+    #   flask
+    #   homeassistant-cli
+    #   pip-tools
+cloudtoken-plugin.awscli-exporter==0.1.764
+    # via -r requirements.in
+cloudtoken-plugin.centrify==0.1.764
+    # via -r requirements.in
+cloudtoken-plugin.json-exporter==0.1.764
+    # via
+    #   -r requirements.in
+    #   cloudtoken
+cloudtoken-plugin.saml==0.1.764
+    # via cloudtoken
+cloudtoken-plugin.shell-exporter==0.1.764
+    # via
+    #   -r requirements.in
+    #   cloudtoken
+cloudtoken==0.1.764
+    # via
+    #   -r requirements.in
+    #   cloudtoken-plugin.awscli-exporter
+    #   cloudtoken-plugin.centrify
+    #   cloudtoken-plugin.json-exporter
+    #   cloudtoken-plugin.saml
+    #   cloudtoken-plugin.shell-exporter
+colorama==0.4.3
+    # via awscli
+configparser==5.0.1
+    # via cloudtoken-plugin.awscli-exporter
+cryptography==3.3.1
+    # via
+    #   ec2instanceconnectcli
+    #   secretstorage
+cssselect==1.1.0
+    # via pyquery
+dateparser==0.7.6
+    # via homeassistant-cli
+decorator==4.4.2
+    # via jsonpath-rw
+docutils==0.15.2
+    # via awscli
+dotfiles==0.6.4
+    # via -r requirements.in
+ec2instanceconnectcli==1.0.2
+    # via -r requirements.in
+exif==1.0.4
+    # via gphotos-sync
+flask==1.1.2
+    # via cloudtoken
+gphotos-sync==2.14.2
+    # via -r requirements.in
+homeassistant-cli==0.9.1
+    # via -r requirements.in
+idna==2.10
+    # via
+    #   requests
+    #   yarl
+ifaddr==0.1.7
+    # via
+    #   catt
+    #   zeroconf
+itsdangerous==1.1.0
+    # via flask
+jeepney==0.6.0
+    # via
+    #   keyring
+    #   secretstorage
+jinja2==2.11.2
+    # via
+    #   flask
+    #   homeassistant-cli
+jmespath==0.10.0
+    # via
+    #   boto3
+    #   botocore
+jsonpath-rw==1.4.0
+    # via homeassistant-cli
+keyring==21.5.0
+    # via cloudtoken
+keyrings.alt==4.0.2
+    # via cloudtoken
+lxml==4.6.2
+    # via
+    #   cloudtoken-plugin.centrify
+    #   pyquery
+markupsafe==1.1.1
+    # via jinja2
+multidict==5.1.0
+    # via
+    #   aiohttp
+    #   yarl
+netdisco==2.8.2
+    # via homeassistant-cli
+oauthlib==3.1.0
+    # via requests-oauthlib
+pathspec==0.8.1
+    # via yamllint
+pip-tools==5.4.0
+    # via -r requirements.in
+plum-py==0.3.1
+    # via exif
+ply==3.11
+    # via jsonpath-rw
+protobuf==3.14.0
+    # via pychromecast
+pssh==2.3.1
+    # via -r requirements.in
+psutil==5.7.3
+    # via gphotos-sync
+pyasn1==0.4.8
+    # via rsa
+pychromecast==7.5.1
+    # via catt
+pycparser==2.20
+    # via cffi
+pyquery==1.4.3
+    # via cloudtoken-plugin.centrify
+python-dateutil==2.8.1
+    # via
+    #   botocore
+    #   dateparser
+pytz==2020.4
+    # via
+    #   dateparser
+    #   tzlocal
+pyyaml==5.3.1
+    # via
+    #   awscli
+    #   cloudtoken
+    #   gphotos-sync
+    #   yamllint
+regex==2020.11.13
+    # via
+    #   dateparser
+    #   homeassistant-cli
+requests-oauthlib==1.3.0
+    # via gphotos-sync
+requests==2.25.0
+    # via
+    #   casttube
+    #   catt
+    #   cloudtoken
+    #   cloudtoken-plugin.centrify
+    #   homeassistant-cli
+    #   netdisco
+    #   pychromecast
+    #   requests-oauthlib
+rsa==4.5
+    # via awscli
+ruamel.yaml==0.16.12
+    # via homeassistant-cli
+s3transfer==0.3.3
+    # via
+    #   awscli
+    #   boto3
+schedule==0.6.0
+    # via cloudtoken
+secretstorage==3.3.0
+    # via keyring
+six==1.15.0
+    # via
+    #   cryptography
+    #   jsonpath-rw
+    #   pip-tools
+    #   protobuf
+    #   python-dateutil
+tabulate==0.8.7
+    # via homeassistant-cli
+typing-extensions==3.7.4.3
+    # via aiohttp
+tzlocal==2.1
+    # via dateparser
+urllib3==1.26.2
+    # via
+    #   botocore
+    #   requests
+werkzeug==1.0.1
+    # via flask
+yamllint==1.25.0
+    # via -r requirements.in
+yarl==1.6.3
+    # via aiohttp
+youtube-dl==2020.12.14
+    # via catt
+zeroconf==0.28.7
+    # via
+    #   netdisco
+    #   pychromecast
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
