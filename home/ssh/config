@@ -21,6 +21,10 @@ Host homeassistant.local
   IdentityFile ~/.ssh/keys/rpi.key
   User root
 
+Host ubnt.local USG-Pro-4
+  IdentityFile ~/.ssh/keys/ubnt.key
+  User josh
+
 Host *
   AddKeysToAgent yes
   Compression yes
