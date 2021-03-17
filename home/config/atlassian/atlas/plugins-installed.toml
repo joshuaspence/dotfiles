@@ -3,7 +3,7 @@
   summary = "Manage artifacts stored in Shipyard"
   version = "v2.8.0-29-gf958272"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
@@ -11,7 +11,7 @@
   summary = "Service Layer Authentication"
   version = "1.0.7"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
@@ -19,13 +19,13 @@
   summary = "Statlas auth and upload cli"
   version = "1.1.3"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/statlas"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/statlas"
   channel = "stable"
 
 [[plugin]]
   name = "micros"
   summary = "Micros plugin for atlas-cli"
-  version = "266-8c669b7"
+  version = "272-cc6265b"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
@@ -35,7 +35,7 @@
   summary = "A simple and quick way to thank your fellow Atlassians from the command line."
   version = "3.3.5"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/kudos"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/kudos"
   channel = "stable"
 
 [[plugin]]
@@ -51,7 +51,7 @@
   summary = "ASAP Key management, ASAP requests, and token generation & validation"
   version = "1.1.1"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/asap"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/asap"
   channel = "stable"
 
 [[plugin]]
@@ -59,13 +59,13 @@
   summary = "Plugin to share secrets with other atlassians"
   version = "1.1.2"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/share"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/share"
   channel = "stable"
 
 [[plugin]]
   name = "nebulae"
   summary = "Nebulae"
-  version = "20210204-082659-37e3898c4"
+  version = "20210312-001657-2381fdf2a"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/nebulae"
   channel = "stable"
@@ -73,7 +73,7 @@
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "1.1.13"
+  version = "1.1.14"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
@@ -81,7 +81,7 @@
 [[plugin]]
   name = "spin"
   summary = "Plugin for Spinnaker"
-  version = "0.8.190-430ff6c"
+  version = "0.8.199-7469739"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/spin"
   channel = "stable"
@@ -91,7 +91,7 @@
   summary = "Plugin for Vault secrets management"
   version = "0.5.0-25-gd1c0868"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/secrets"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/secrets"
   channel = "stable"
 
 [[plugin]]
@@ -99,13 +99,13 @@
   summary = "Provides a set of tools for working with packages.a.c"
   version = "1.4.7"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/packages"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/packages"
   channel = "stable"
 
 [[plugin]]
   name = "atlasdev"
   summary = "Plugin for atlas-cli developers"
-  version = "0.0-723-g56720ab"
+  version = "0.0-725-ge2b2207"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/atlasdev"
   channel = "stable"
