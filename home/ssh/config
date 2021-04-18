@@ -25,6 +25,13 @@ Host ubnt.local USG-Pro-4
   IdentityFile ~/.ssh/keys/ubnt.key
   User josh
 
+Host kube*.local
+  IdentityFile ~/.ssh/keys/rpi.key
+	SetEnv LC_CTYPE= LANG= LANGUAGE=
+	StrictHostKeyChecking no
+	User pi
+	UserKnownHostsFile /dev/null
+
 Host *
   AddKeysToAgent yes
   Compression yes
