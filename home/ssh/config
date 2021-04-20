@@ -27,7 +27,6 @@ Host ubnt.local USG-Pro-4
 
 Host kube*.local
   IdentityFile ~/.ssh/keys/rpi.key
-	SetEnv LC_CTYPE= LANG= LANGUAGE=
 	StrictHostKeyChecking no
 	User pi
 	UserKnownHostsFile /dev/null
