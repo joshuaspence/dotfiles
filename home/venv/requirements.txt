@@ -16,12 +16,9 @@ attrs==20.3.0
     #   gphotos-sync
 awscli==1.19.47
     # via -r home/venv/requirements.in
-boto3==1.17.47
-    # via cloudtoken-plugin.saml
 botocore==1.20.47
     # via
     #   awscli
-    #   boto3
     #   ec2instanceconnectcli
     #   s3transfer
 casttube==0.2.1
@@ -42,41 +39,12 @@ click==7.1.2
     # via
     #   catt
     #   click-log
-    #   flask
     #   homeassistant-cli
     #   pip-tools
-cloudtoken-plugin.awscli-exporter==0.1.764
-    # via -r home/venv/requirements.in
-cloudtoken-plugin.centrify==0.1.764
-    # via -r home/venv/requirements.in
-cloudtoken-plugin.json-exporter==0.1.764
-    # via
-    #   -r home/venv/requirements.in
-    #   cloudtoken
-cloudtoken-plugin.saml==0.1.764
-    # via cloudtoken
-cloudtoken-plugin.shell-exporter==0.1.764
-    # via
-    #   -r home/venv/requirements.in
-    #   cloudtoken
-cloudtoken==0.1.764
-    # via
-    #   -r home/venv/requirements.in
-    #   cloudtoken-plugin.awscli-exporter
-    #   cloudtoken-plugin.centrify
-    #   cloudtoken-plugin.json-exporter
-    #   cloudtoken-plugin.saml
-    #   cloudtoken-plugin.shell-exporter
 colorama==0.4.3
     # via awscli
-configparser==5.0.2
-    # via cloudtoken-plugin.awscli-exporter
 cryptography==3.4.7
-    # via
-    #   ec2instanceconnectcli
-    #   secretstorage
-cssselect==1.1.0
-    # via pyquery
+    # via ec2instanceconnectcli
 dateparser==0.7.6
     # via homeassistant-cli
 decorator==5.0.5
@@ -89,8 +57,6 @@ ec2instanceconnectcli==1.0.2
     # via -r home/venv/requirements.in
 exif==1.2.1
     # via gphotos-sync
-flask==1.1.2
-    # via cloudtoken
 gphotos-sync==2.14.2
     # via -r home/venv/requirements.in
 homeassistant-cli==0.9.3
@@ -103,32 +69,12 @@ ifaddr==0.1.7
     # via
     #   catt
     #   zeroconf
-importlib-metadata==3.10.0
-    # via keyring
-itsdangerous==1.1.0
-    # via flask
-jeepney==0.6.0
-    # via
-    #   keyring
-    #   secretstorage
 jinja2==2.11.3
-    # via
-    #   flask
-    #   homeassistant-cli
+    # via homeassistant-cli
 jmespath==0.10.0
-    # via
-    #   boto3
-    #   botocore
+    # via botocore
 jsonpath-ng==1.5.2
     # via homeassistant-cli
-keyring==23.0.1
-    # via cloudtoken
-keyrings.alt==4.0.2
-    # via cloudtoken
-lxml==4.6.3
-    # via
-    #   cloudtoken-plugin.centrify
-    #   pyquery
 markupsafe==1.1.1
     # via jinja2
 multidict==5.1.0
@@ -161,8 +107,6 @@ pychromecast==9.1.2
     # via catt
 pycparser==2.20
     # via cffi
-pyquery==1.4.3
-    # via cloudtoken-plugin.centrify
 python-dateutil==2.8.1
     # via
     #   botocore
@@ -174,7 +118,6 @@ pytz==2021.1
 pyyaml==5.4.1
     # via
     #   awscli
-    #   cloudtoken
     #   gphotos-sync
     #   yamllint
 regex==2021.4.4
@@ -187,8 +130,6 @@ requests==2.25.1
     # via
     #   casttube
     #   catt
-    #   cloudtoken
-    #   cloudtoken-plugin.centrify
     #   homeassistant-cli
     #   netdisco
     #   requests-oauthlib
@@ -199,13 +140,7 @@ ruamel.yaml.clib==0.2.2
 ruamel.yaml==0.16.13
     # via homeassistant-cli
 s3transfer==0.3.6
-    # via
-    #   awscli
-    #   boto3
-schedule==1.0.0
-    # via cloudtoken
-secretstorage==3.3.1
-    # via keyring
+    # via awscli
 six==1.15.0
     # via
     #   jsonpath-ng
@@ -223,8 +158,6 @@ urllib3==1.26.4
     # via
     #   botocore
     #   requests
-werkzeug==1.0.1
-    # via flask
 yamllint==1.26.1
     # via -r home/venv/requirements.in
 yarl==1.6.3
@@ -235,8 +168,6 @@ zeroconf==0.29.0
     # via
     #   netdisco
     #   pychromecast
-zipp==3.4.1
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

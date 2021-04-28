@@ -1,20 +1,21 @@
 ---
 defaults:
-  centrify:
+  idaptive:
     appkey: 'aa23927a-08ea-4530-8fc3-2bd0b311f4ab'
     auth_preferences:
       - 'Password'
       - 'MFA (US-East-1)'
+    mfa_method: 'passcode'
     tenant_id: 'AAS0641'
     vanity_id: 'atlassian'
-  mfa-method: 'passcode'
-  system-username: 'jspence2'
+  saml:
+    saml_response_plugin: 'idaptive'
+  system_username: 'jspence2'
 plugins:
   auth:
-    - 'centrify'
+    - 'idaptive'
     - 'saml'
   post_auth:
+    - 'url_generator'
     - 'export_credentials_awscli'
-    - 'export_credentials_json'
-    - 'export_credentials_shell'
-  pre_auth: null
+  pre_auth: []
