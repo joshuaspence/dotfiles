@@ -14,13 +14,8 @@ attrs==20.3.0
     # via
     #   aiohttp
     #   gphotos-sync
-awscli==1.19.47
-    # via -r home/venv/requirements.in
 botocore==1.20.47
-    # via
-    #   awscli
-    #   ec2instanceconnectcli
-    #   s3transfer
+    # via ec2instanceconnectcli
 casttube==0.2.1
     # via pychromecast
 catt==0.12.1
@@ -41,16 +36,12 @@ click==7.1.2
     #   click-log
     #   homeassistant-cli
     #   pip-tools
-colorama==0.4.3
-    # via awscli
 cryptography==3.4.7
     # via ec2instanceconnectcli
 dateparser==0.7.6
     # via homeassistant-cli
 decorator==5.0.5
     # via jsonpath-ng
-docutils==0.15.2
-    # via awscli
 dotfiles==0.6.4
     # via -r home/venv/requirements.in
 ec2instanceconnectcli==1.0.2
@@ -101,8 +92,6 @@ pssh==2.3.1
     # via -r home/venv/requirements.in
 psutil==5.8.0
     # via gphotos-sync
-pyasn1==0.4.8
-    # via rsa
 pychromecast==9.1.2
     # via catt
 pycparser==2.20
@@ -117,7 +106,6 @@ pytz==2021.1
     #   tzlocal
 pyyaml==5.4.1
     # via
-    #   awscli
     #   gphotos-sync
     #   yamllint
 regex==2021.4.4
@@ -133,14 +121,10 @@ requests==2.25.1
     #   homeassistant-cli
     #   netdisco
     #   requests-oauthlib
-rsa==4.7.2
-    # via awscli
 ruamel.yaml.clib==0.2.2
     # via ruamel.yaml
 ruamel.yaml==0.16.13
     # via homeassistant-cli
-s3transfer==0.3.6
-    # via awscli
 six==1.15.0
     # via
     #   jsonpath-ng
