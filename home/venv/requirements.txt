@@ -14,6 +14,8 @@ attrs==20.3.0
     # via
     #   aiohttp
     #   gphotos-sync
+bitstring==3.1.7
+    # via esptool
 botocore==1.20.47
     # via ec2instanceconnectcli
 casttube==0.2.1
@@ -37,7 +39,9 @@ click==7.1.2
     #   homeassistant-cli
     #   pip-tools
 cryptography==3.4.7
-    # via ec2instanceconnectcli
+    # via
+    #   ec2instanceconnectcli
+    #   esptool
 dateparser==0.7.6
     # via homeassistant-cli
 decorator==5.0.5
@@ -45,6 +49,10 @@ decorator==5.0.5
 dotfiles==0.6.4
     # via -r home/venv/requirements.in
 ec2instanceconnectcli==1.0.2
+    # via -r home/venv/requirements.in
+ecdsa==0.16.1
+    # via esptool
+esptool==3.0
     # via -r home/venv/requirements.in
 exif==1.2.1
     # via gphotos-sync
@@ -96,6 +104,8 @@ pychromecast==9.1.2
     # via catt
 pycparser==2.20
     # via cffi
+pyserial==3.5
+    # via esptool
 python-dateutil==2.8.1
     # via
     #   botocore
@@ -108,6 +118,8 @@ pyyaml==5.4.1
     # via
     #   gphotos-sync
     #   yamllint
+reedsolo==1.5.4
+    # via esptool
 regex==2021.4.4
     # via
     #   dateparser
@@ -127,6 +139,7 @@ ruamel.yaml==0.16.13
     # via homeassistant-cli
 six==1.15.0
     # via
+    #   ecdsa
     #   jsonpath-ng
     #   protobuf
     #   python-dateutil

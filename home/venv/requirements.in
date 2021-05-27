@@ -1,6 +1,7 @@
 catt
 dotfiles
 ec2instanceconnectcli
+esptool
 gphotos-sync
 homeassistant-cli
 pip-tools
