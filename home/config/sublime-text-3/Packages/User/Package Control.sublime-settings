@@ -2,8 +2,6 @@
 	"bootstrapped": true,
 	"in_process_packages":
 	[
-		"GitGutter",
-		"Pretty JSON",
 	],
 	"installed_packages":
 	[
@@ -19,6 +17,6 @@
 		"Puppet",
 		"SSH Config",
 		"Terraform",
-		"VimL"
+		"VimL",
 	],
 }
