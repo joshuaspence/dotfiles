@@ -7,7 +7,9 @@
 aiohttp==3.7.4.post0
     # via homeassistant-cli
 appdirs==1.4.4
-    # via gphotos-sync
+    # via
+    #   gphotos-sync
+    #   virtualenv
 async-timeout==3.0.1
     # via aiohttp
 attrs==20.3.0
@@ -26,6 +28,8 @@ certifi==2020.12.5
     # via requests
 cffi==1.14.5
     # via cryptography
+cfgv==3.3.0
+    # via pre-commit
 chardet==4.0.0
     # via
     #   aiohttp
@@ -46,6 +50,8 @@ dateparser==0.7.6
     # via homeassistant-cli
 decorator==5.0.5
     # via jsonpath-ng
+distlib==0.3.2
+    # via virtualenv
 dotfiles==0.6.4
     # via -r home/venv/requirements.in
 ec2instanceconnectcli==1.0.2
@@ -56,10 +62,14 @@ esptool==3.0
     # via -r home/venv/requirements.in
 exif==1.2.1
     # via gphotos-sync
+filelock==3.0.12
+    # via virtualenv
 gphotos-sync==2.14.2
     # via -r home/venv/requirements.in
 homeassistant-cli==0.9.3
     # via -r home/venv/requirements.in
+identify==2.2.10
+    # via pre-commit
 idna==2.10
     # via
     #   requests
@@ -82,6 +92,8 @@ multidict==5.1.0
     #   yarl
 netdisco==2.8.2
     # via homeassistant-cli
+nodeenv==1.6.0
+    # via pre-commit
 oauthlib==3.1.0
     # via requests-oauthlib
 pathspec==0.8.1
@@ -94,6 +106,8 @@ plum-py==0.3.1
     # via exif
 ply==3.11
     # via jsonpath-ng
+pre-commit==2.13.0
+    # via -r home/venv/requirements.in
 protobuf==3.15.7
     # via pychromecast
 pssh==2.3.1
@@ -117,6 +131,7 @@ pytz==2021.1
 pyyaml==5.4.1
     # via
     #   gphotos-sync
+    #   pre-commit
     #   yamllint
 reedsolo==1.5.4
     # via esptool
@@ -143,10 +158,13 @@ six==1.15.0
     #   jsonpath-ng
     #   protobuf
     #   python-dateutil
+    #   virtualenv
 tabulate==0.8.9
     # via homeassistant-cli
 toml==0.10.2
-    # via pep517
+    # via
+    #   pep517
+    #   pre-commit
 typing-extensions==3.7.4.3
     # via aiohttp
 tzlocal==2.1
@@ -155,6 +173,8 @@ urllib3==1.26.4
     # via
     #   botocore
     #   requests
+virtualenv==20.4.7
+    # via pre-commit
 yamllint==1.26.1
     # via -r home/venv/requirements.in
 yarl==1.6.3
