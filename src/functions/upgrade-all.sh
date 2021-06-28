@@ -8,8 +8,8 @@ function upgrade-all() {
   sudo snap refresh
 
   # Firmware
-  #fwupdmgr refresh
-  #fwupdmgr update
+  fwupdmgr refresh --force
+  fwupdmgr update
 
   # Atlas CLI
   atlas upgrade
