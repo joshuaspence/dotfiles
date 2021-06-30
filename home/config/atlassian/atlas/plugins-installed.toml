@@ -3,7 +3,7 @@
   summary = "Manage artifacts stored in Shipyard"
   version = "v2.8.0-42-g6b8de41"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/shipyard"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/shipyard"
   channel = "stable"
 
 [[plugin]]
@@ -11,7 +11,7 @@
   summary = "Service Layer Authentication"
   version = "1.0.11"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/slauth"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/slauth"
   channel = "stable"
 
 [[plugin]]
@@ -25,7 +25,7 @@
 [[plugin]]
   name = "micros"
   summary = "Micros plugin for atlas-cli"
-  version = "302-8a426ef"
+  version = "309-a6d82e0"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
@@ -51,7 +51,7 @@
   summary = "ASAP Key management, ASAP requests, and token generation & validation"
   version = "1.1.6"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/asap"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/asap"
   channel = "stable"
 
 [[plugin]]
@@ -73,7 +73,7 @@
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "1.1.22"
+  version = "1.1.23"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
@@ -81,7 +81,7 @@
 [[plugin]]
   name = "spin"
   summary = "Plugin for Spinnaker"
-  version = "0.8.220-9640d9e"
+  version = "0.8.245-e64f097"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/spin"
   channel = "stable"
@@ -89,7 +89,7 @@
 [[plugin]]
   name = "secrets"
   summary = "Plugin for Vault secrets management"
-  version = "0.5.0-45-gdd55934"
+  version = "0.5.0-47-g3ebf6ab"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/secrets"
   channel = "stable"
@@ -97,15 +97,15 @@
 [[plugin]]
   name = "packages"
   summary = "Provides a set of tools for working with packages.a.c"
-  version = "1.6.4"
+  version = "1.6.12"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/packages"
+  exec = "~/.local/share/atlassian/atlas/plugin/packages"
   channel = "stable"
 
 [[plugin]]
   name = "atlasdev"
   summary = "Plugin for atlas-cli developers"
-  version = "0.0-769-gf54d9ae"
+  version = "0.0-771-g1a6673a"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/atlasdev"
   channel = "stable"
@@ -115,7 +115,7 @@
   summary = "Generic composable operations plugin (see go/atlops for more)"
   version = "1.0.24"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/atlops"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/atlops"
   channel = "stable"
 
 [[plugin]]
@@ -129,7 +129,7 @@
 [[plugin]]
   name = "cprs"
   summary = "Command line interface for the Command Peer Review System."
-  version = "1.0.24-stable"
+  version = "1.0.27-stable"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/cprs"
   channel = "stable"
@@ -137,23 +137,23 @@
 [[plugin]]
   name = "dac"
   summary = "Atlas CLI DAC plugin"
-  version = "17686-cd333f7e464e0546f0d17726c665abafd4909fa0"
+  version = "18657-42d28d31f179ab1adfe79b5396ae4d4328d48884"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/dac"
+  exec = "~/.local/share/atlassian/atlas/plugin/dac"
   channel = "stable"
 
 [[plugin]]
   name = "perfhammer"
   summary = "The official PerfHammer cli client."
-  version = "1.6.1"
+  version = "1.6.2"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/perfhammer"
+  exec = "~/.local/share/atlassian/atlas/plugin/perfhammer"
   channel = "stable"
 
 [[plugin]]
   name = "sonar"
   summary = "Atlassian-configured Sonar scans"
-  version = "0.1.275"
+  version = "0.1.290"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/sonar"
   channel = "stable"
