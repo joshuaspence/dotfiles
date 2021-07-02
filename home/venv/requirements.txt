@@ -16,6 +16,9 @@ attrs==20.3.0
     # via
     #   aiohttp
     #   gphotos-sync
+    #   jsonschema
+bcrypt==3.2.0
+    # via paramiko
 bitstring==3.1.7
     # via esptool
 botocore==1.20.47
@@ -27,7 +30,10 @@ catt==0.12.1
 certifi==2020.12.5
     # via requests
 cffi==1.14.5
-    # via cryptography
+    # via
+    #   bcrypt
+    #   cryptography
+    #   pynacl
 cfgv==3.3.0
     # via pre-commit
 chardet==4.0.0
@@ -46,12 +52,23 @@ cryptography==3.4.7
     # via
     #   ec2instanceconnectcli
     #   esptool
+    #   paramiko
 dateparser==0.7.6
     # via homeassistant-cli
 decorator==5.0.5
     # via jsonpath-ng
 distlib==0.3.2
     # via virtualenv
+distro==1.5.0
+    # via docker-compose
+docker-compose==1.29.2
+    # via -r home/venv/requirements.in
+docker[ssh]==5.0.0
+    # via docker-compose
+dockerpty==0.4.1
+    # via docker-compose
+docopt==0.6.2
+    # via docker-compose
 dotfiles==0.6.4
     # via -r home/venv/requirements.in
 ec2instanceconnectcli==1.0.2
@@ -84,6 +101,8 @@ jmespath==0.10.0
     # via botocore
 jsonpath-ng==1.5.2
     # via homeassistant-cli
+jsonschema==3.2.0
+    # via docker-compose
 markupsafe==1.1.1
     # via jinja2
 multidict==5.1.0
@@ -96,6 +115,8 @@ nodeenv==1.6.0
     # via pre-commit
 oauthlib==3.1.0
     # via requests-oauthlib
+paramiko==2.7.2
+    # via docker
 pathspec==0.8.1
     # via yamllint
 pep517==0.10.0
@@ -118,18 +139,25 @@ pychromecast==9.1.2
     # via catt
 pycparser==2.20
     # via cffi
+pynacl==1.4.0
+    # via paramiko
+pyrsistent==0.18.0
+    # via jsonschema
 pyserial==3.5
     # via esptool
 python-dateutil==2.8.1
     # via
     #   botocore
     #   dateparser
+python-dotenv==0.18.0
+    # via docker-compose
 pytz==2021.1
     # via
     #   dateparser
     #   tzlocal
 pyyaml==5.4.1
     # via
+    #   docker-compose
     #   gphotos-sync
     #   pre-commit
     #   yamllint
@@ -145,6 +173,8 @@ requests==2.25.1
     # via
     #   casttube
     #   catt
+    #   docker
+    #   docker-compose
     #   homeassistant-cli
     #   netdisco
     #   requests-oauthlib
@@ -154,13 +184,20 @@ ruamel.yaml==0.16.13
     # via homeassistant-cli
 six==1.15.0
     # via
+    #   bcrypt
+    #   dockerpty
     #   ecdsa
     #   jsonpath-ng
+    #   jsonschema
     #   protobuf
+    #   pynacl
     #   python-dateutil
     #   virtualenv
+    #   websocket-client
 tabulate==0.8.9
     # via homeassistant-cli
+texttable==1.6.3
+    # via docker-compose
 toml==0.10.2
     # via
     #   pep517
@@ -175,6 +212,10 @@ urllib3==1.26.4
     #   requests
 virtualenv==20.4.7
     # via pre-commit
+websocket-client==0.59.0
+    # via
+    #   docker
+    #   docker-compose
 yamllint==1.26.1
     # via -r home/venv/requirements.in
 yarl==1.6.3
