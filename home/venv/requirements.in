@@ -5,6 +5,7 @@ ec2instanceconnectcli
 esptool
 gphotos-sync
 homeassistant-cli
+httpie
 pip-tools
 pre-commit
 pssh
