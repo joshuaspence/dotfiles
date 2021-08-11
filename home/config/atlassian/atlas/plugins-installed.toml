@@ -25,9 +25,9 @@
 [[plugin]]
   name = "micros"
   summary = "Micros plugin for atlas-cli"
-  version = "53-bae44a0"
+  version = "74-e5997aa"
   sha256 = ""
-  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/micros"
+  exec = "~/.local/share/atlassian/atlas/plugin/micros"
   channel = "stable"
 
 [[plugin]]
@@ -73,7 +73,7 @@
 [[plugin]]
   name = "poco"
   summary = "Poco plugin for atlas-cli"
-  version = "1.1.26"
+  version = "1.1.28"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/poco"
   channel = "stable"
@@ -81,7 +81,7 @@
 [[plugin]]
   name = "spin"
   summary = "Plugin for Spinnaker"
-  version = "0.8.265-d78c1af"
+  version = "0.8.270-3f9dedd"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/spin"
   channel = "stable"
@@ -91,13 +91,13 @@
   summary = "Plugin for Vault secrets management"
   version = "0.5.0-54-g089258b"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/secrets"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/secrets"
   channel = "stable"
 
 [[plugin]]
   name = "packages"
   summary = "Provides a set of tools for working with packages.a.c"
-  version = "1.6.19"
+  version = "1.6.20"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/packages"
   channel = "stable"
@@ -105,7 +105,7 @@
 [[plugin]]
   name = "atlasdev"
   summary = "Plugin for atlas-cli developers"
-  version = "0.0-773-g5eba73e"
+  version = "0.0-775-g3347f87"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/atlasdev"
   channel = "stable"
@@ -123,7 +123,7 @@
   summary = "brahmos cli plugin"
   version = "14-df3258c"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/chaos"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/chaos"
   channel = "stable"
 
 [[plugin]]
@@ -131,7 +131,7 @@
   summary = "Command line interface for the Command Peer Review System."
   version = "1.0.28-stable"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/cprs"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/cprs"
   channel = "stable"
 
 [[plugin]]
@@ -139,7 +139,7 @@
   summary = "Atlas CLI DAC plugin"
   version = "19397-734243dcd3262dcc0d19a6aa39f446d79cac976a"
   sha256 = ""
-  exec = "~/.local/share/atlassian/atlas/plugin/dac"
+  exec = "/home/jspence2/.local/share/atlassian/atlas/plugin/dac"
   channel = "stable"
 
 [[plugin]]
@@ -153,7 +153,7 @@
 [[plugin]]
   name = "sonar"
   summary = "Atlassian-configured Sonar scans"
-  version = "0.1.307"
+  version = "0.1.316"
   sha256 = ""
   exec = "~/.local/share/atlassian/atlas/plugin/sonar"
   channel = "stable"
