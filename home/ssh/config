@@ -21,7 +21,7 @@ Host homeassistant.local
   IdentityFile ~/.ssh/keys/rpi.key
   User root
 
-Host 192.168.1.1 ubnt.local USG-Pro-4
+Host 192.168.1.1 Gateway.local
   IdentityFile ~/.ssh/keys/ubnt.key
   User josh
 
