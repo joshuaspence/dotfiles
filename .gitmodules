@@ -22,3 +22,6 @@ url = https://github.com/ztombol/bats-support.git
 path = tools/compiler
 url = https://git.code.sf.net/p/loader/code
 branch = compilers
+[submodule "src/modules/unifi-backup-decrypt"]
+	path = src/modules/unifi-backup-decrypt
+	url = https://github.com/zhangyoufu/unifi-backup-decrypt.git
