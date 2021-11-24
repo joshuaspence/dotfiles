@@ -17,7 +17,7 @@ Host bitbucket.org stash.atlassian.com
 Host github.com
   IdentityFile ~/.ssh/keys/github.key
 
-Host homeassistant.local
+Host homeassistant.spence.network homeassistant.local
   IdentityFile ~/.ssh/keys/rpi.key
   User root
 
