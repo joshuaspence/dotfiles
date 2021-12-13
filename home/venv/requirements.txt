@@ -19,8 +19,9 @@ attrs==21.2.0
     #   jsonschema
 backports.entry-points-selectable==1.1.1
     # via virtualenv
-backports.zoneinfo==0.2.1
+backports.zoneinfo==0.2.1 ; python_version < "3.9"
     # via
+    #   -r home/venv/requirements.in
     #   pytz-deprecation-shim
     #   tzlocal
 bcrypt==3.2.0

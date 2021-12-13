@@ -8,3 +8,6 @@ pip-tools
 pre-commit
 pssh
 yamllint
+
+# See pganssle/zoneinfo#111.
+backports.zoneinfo ; python_version < '3.9'
