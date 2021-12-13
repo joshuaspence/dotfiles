@@ -201,6 +201,7 @@ update-submodules:
 update-virtualenv:
 	@touch home/venv/requirements.in
 	@$(MAKE) home/venv/requirements.txt UPGRADE=1
+	@$(MAKE) virtualenv
 
 .PHONY: upgrade
 upgrade: upgrade-pip
