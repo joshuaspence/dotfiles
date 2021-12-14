@@ -1,3 +1,12 @@
 [user]
-  name = Josh Spence
-  email = jspence2@atlassian.com
+name = Josh Spence
+email = jspence2@atlassian.com
+
+[url "git@bitbucket.org:"]
+insteadOf = https://bitbucket.org/
+
+[url "ssh://git@stash.atlassian.com:7997/"]
+insteadOf = https://stash.atlassian.com/scm/
+
+[url "ssh://git@bitbucket-mirror-au.internal.atlassian.com:7999/stash/"]
+insteadOf = ssh://git@stash.atlassian.com:7997/
