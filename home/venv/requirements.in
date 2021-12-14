@@ -11,3 +11,6 @@ yamllint
 
 # See pganssle/zoneinfo#111.
 backports.zoneinfo ; python_version < '3.9'
+
+# See psf/requests#5871.
+requests[use_chardet_on_py3]

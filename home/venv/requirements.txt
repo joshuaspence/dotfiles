@@ -37,6 +37,8 @@ cffi==1.15.0
     #   pynacl
 cfgv==3.3.1
     # via pre-commit
+chardet==4.0.0
+    # via requests
 charset-normalizer==2.0.9
     # via
     #   aiohttp
@@ -169,8 +171,9 @@ regex==2021.11.10
     # via
     #   dateparser
     #   homeassistant-cli
-requests[socks]==2.26.0
+requests[socks,use_chardet_on_py3]==2.26.0
     # via
+    #   -r home/venv/requirements.in
     #   docker
     #   docker-compose
     #   homeassistant-cli
