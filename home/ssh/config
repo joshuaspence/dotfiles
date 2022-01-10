@@ -1,16 +1,6 @@
 IgnoreUnknown Include
 Include conf.d/*.conf
 
-Host jump.*
-  ForwardAgent yes
-
-  # Multiplex SSH connections, but only for jump hosts (for now) since I have
-  # had issues with multiplexed connections in the past (although I never took
-  # the time to properly investigate).
-  ControlMaster auto
-  ControlPath ~/.ssh/connections/%h_%p_%r
-  ControlPersist 1h
-
 Host bitbucket.org stash.atlassian.com
   IdentityFile ~/.ssh/keys/bitbucket.key
 
@@ -21,7 +11,7 @@ Host homeassistant.spence.network homeassistant.local
   IdentityFile ~/.ssh/keys/rpi.key
   User root
 
-Host 192.168.1.1 Gateway.local
+Host 192.168.1.1 gateway.spence.network gateway.local *AccessPoint.spence.network *Switch.spence.network
   IdentityFile ~/.ssh/keys/ubnt.key
   User josh
 
