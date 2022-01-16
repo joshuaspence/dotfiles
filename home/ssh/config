@@ -11,13 +11,8 @@ Host homeassistant homeassistant.spence.network
   IdentityFile ~/.ssh/keys/rpi.key
   User root
 
-Host gateway Gateway.spence.network *AccessPoint.spence.network *Switch.spence.network
+Host UniFi-Controller.spence.network Gateway.spence.network *AccessPoint.spence.network *Switch.spence.network
   IdentityFile ~/.ssh/keys/ubnt.key
-  User josh
-
-Host controller UniFi-Controller.spence.network
-  PasswordAuthentication yes
-  PubkeyAuthentication no
   User ubnt
 
 Host kube*.spence.network
