@@ -28,6 +28,8 @@ bcrypt==3.2.0
     # via paramiko
 bitstring==3.1.9
     # via esptool
+cc2538-bsl @ git+https://github.com/JelmerT/cc2538-bsl
+    # via -r home/venv/requirements.in
 certifi==2021.10.8
     # via requests
 cffi==1.15.0
@@ -101,6 +103,8 @@ idna==3.3
     #   yarl
 ifaddr==0.1.7
     # via zeroconf
+intelhex==2.3.0
+    # via -r home/venv/requirements.in
 jinja2==3.0.3
     # via homeassistant-cli
 jsonpath-ng==1.5.3
@@ -148,7 +152,9 @@ pynacl==1.4.0
 pyrsistent==0.18.0
     # via jsonschema
 pyserial==3.5
-    # via esptool
+    # via
+    #   cc2538-bsl
+    #   esptool
 pysocks==1.7.1
     # via requests
 python-dateutil==2.8.2
@@ -223,7 +229,9 @@ websocket-client==0.59.0
     #   docker
     #   docker-compose
 wheel==0.37.0
-    # via pip-tools
+    # via
+    #   cc2538-bsl
+    #   pip-tools
 yamllint==1.26.3
     # via -r home/venv/requirements.in
 yarl==1.7.2

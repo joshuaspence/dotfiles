@@ -1,3 +1,4 @@
+git+https://github.com/JelmerT/cc2538-bsl
 docker-compose
 dotfiles
 esptool
@@ -14,3 +15,6 @@ backports.zoneinfo ; python_version < '3.9'
 
 # See psf/requests#5871.
 requests[use_chardet_on_py3]
+
+# Needed by `cc2538-bsl`.
+intelhex
