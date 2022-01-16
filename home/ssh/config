@@ -1,21 +1,26 @@
 IgnoreUnknown Include
 Include conf.d/*.conf
 
-Host bitbucket.org stash.atlassian.com
+Host bitbucket.org stash.atlassian.com production-mirror-farm-*.bserv.internal.atlassian.com bitbucket-mirror-*.internal.atlassian.com
   IdentityFile ~/.ssh/keys/bitbucket.key
 
 Host github.com
   IdentityFile ~/.ssh/keys/github.key
 
-Host homeassistant.spence.network homeassistant.local
+Host homeassistant homeassistant.spence.network
   IdentityFile ~/.ssh/keys/rpi.key
   User root
 
-Host 192.168.1.1 gateway.spence.network gateway.local *AccessPoint.spence.network *Switch.spence.network
+Host gateway Gateway.spence.network *AccessPoint.spence.network *Switch.spence.network
   IdentityFile ~/.ssh/keys/ubnt.key
   User josh
 
-Host kube*.local
+Host controller UniFi-Controller.spence.network
+  PasswordAuthentication yes
+  PubkeyAuthentication no
+  User ubnt
+
+Host kube*.spence.network
   IdentityFile ~/.ssh/keys/rpi.key
 	StrictHostKeyChecking no
 	User pi
