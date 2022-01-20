@@ -1,3 +1,4 @@
+set expandtab
 set lazyredraw
 set nowrap
 set scrolloff=2
