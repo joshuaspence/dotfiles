@@ -10,11 +10,8 @@ pre-commit
 pssh
 yamllint
 
-# See pganssle/zoneinfo#111.
-backports.zoneinfo ; python_version < '3.9'
-
-# See psf/requests#5871.
-requests[use_chardet_on_py3]
+# See jazzband/pip-tools#1558.
+pip >=21.3, <22.0
 
 # Needed by `cc2538-bsl`.
 intelhex

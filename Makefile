@@ -252,4 +252,4 @@ home/.gitignore: $(SHELL_TARGETS)
 	$(file >$@) $(foreach TARGET,$^,$(file >>$@,/$(notdir $(TARGET))))
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
-	$(VIRTUALENV)/bin/pip-compile $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null
+	$(VIRTUALENV)/bin/pip-compile --no-emit-index-url $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null
