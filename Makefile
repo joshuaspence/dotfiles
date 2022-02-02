@@ -212,7 +212,7 @@ upgrade-pip:
 
 .PHONY: virtualenv
 virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
-	$(VIRTUALENV)/bin/pip-sync --quiet $<
+	$(VIRTUALENV)/bin/pip-sync --quiet --pip-args '--disable-pip-version-check' $<
 
 .PHONY: vundle
 vundle: home/vimrc
