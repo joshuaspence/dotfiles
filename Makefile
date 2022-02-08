@@ -62,7 +62,6 @@ lint: \
 	lint-flake8 \
 	lint-jsonlint \
 	lint-pylint \
-	lint-rubocop \
 	lint-shellcheck \
 	lint-yamllint
 
