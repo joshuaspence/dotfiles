@@ -86,12 +86,8 @@ lint-pylint: home/pythonrc
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
-lint-shellcheck: $(call rwildcard,src,*.*sh) $(call rwildcard,test,*.*sh) $(call rwildcard,test,*.bats) home/bash_logout home/bash_profile home/hushlogin home/rvmrc
+lint-shellcheck: $(call rwildcard,src,*.*sh) $(call rwildcard,test,*.*sh) $(call rwildcard,test,*.bats) home/bash_logout home/bash_profile home/hushlogin
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091 --shell=bash $(filter-out src/modules/%,$^)
-
-.PHONY: lint-rubocop
-lint-rubocop: home/irbrc
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) lendinghome/rubocop --config .rubocop.yml $^
 
 # TODO: This should be run from a Docker container.
 .PHONY: lint-yamllint
@@ -108,9 +104,7 @@ test: \
 	test-bootstrap \
 	test-curl \
 	test-dotfiles \
-	test-gem \
 	test-git \
-	test-irb \
 	test-psql \
 	test-python \
 	test-ssh \
@@ -138,17 +132,9 @@ test-curl: home/curlrc
 test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 	$(VIRTUALENV)/bin/dotfiles --repo $(<D) --config $< --list >/dev/null
 
-.PHONY: test-gem
-test-gem: home/gemrc
-	$(DOCKER_RUN) --volume $(abspath $<):/etc/gemrc:ro instructure/rvm bash -c -l '$(call check_stderr_empty,gem --version)'
-
 .PHONY: test-git
 test-git: home/gitconfig
 	$(DOCKER_RUN) --volume $(abspath $<):/gitconfig:ro alpine/git config --file /gitconfig --list >/dev/null
-
-.PHONY: test-irb
-test-irb: home/irbrc
-	$(DOCKER_RUN) --volume $(abspath $<):/irbrc:ro instructure/rvm bash -c -l 'ruby -r irb /irbrc'
 
 # TODO
 .PHONY: test-psql

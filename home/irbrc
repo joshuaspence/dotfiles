@@ -1,9 +1,0 @@
-# Use the `.irbrc` file bundled with RVM.
-require File.join(ENV['rvm_path'], 'scripts', 'irbrc')
-
-IRB.conf[:SAVE_HISTORY] = 1048576
-
-# Reload this `.irbrc`.
-def IRB.reload
-  load __FILE__
-end
