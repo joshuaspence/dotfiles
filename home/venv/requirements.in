@@ -13,8 +13,5 @@ yamllint
 # See pganssle/zoneinfo#111.
 backports.zoneinfo ; python_version < '3.9'
 
-# See jazzband/pip-tools#1558.
-pip >=21.3, <22.0
-
 # Needed by `cc2538-bsl`.
 intelhex

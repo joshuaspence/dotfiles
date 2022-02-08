@@ -91,7 +91,7 @@ homeassistant-cli==0.9.4
     # via -r home/venv/requirements.in
 httpie==3.0.2
     # via -r home/venv/requirements.in
-identify==2.4.7
+identify==2.4.8
     # via pre-commit
 idna==3.3
     # via
@@ -126,11 +126,11 @@ pathspec==0.9.0
     # via yamllint
 pep517==0.12.0
     # via pip-tools
-pip-tools==6.4.0
+pip-tools==6.5.1
     # via -r home/venv/requirements.in
 platformdirs==2.4.1
     # via virtualenv
-plum-py==0.7.2
+plum-py==0.7.3
     # via exif
 ply==3.11
     # via jsonpath-ng
@@ -207,7 +207,7 @@ texttable==1.6.4
     # via docker-compose
 toml==0.10.2
     # via pre-commit
-tomli==2.0.0
+tomli==2.0.1
     # via pep517
 tzdata==2021.5
     # via pytz-deprecation-shim
@@ -215,7 +215,7 @@ tzlocal==4.1
     # via dateparser
 urllib3==1.26.8
     # via requests
-virtualenv==20.13.0
+virtualenv==20.13.1
     # via pre-commit
 websocket-client==0.59.0
     # via
