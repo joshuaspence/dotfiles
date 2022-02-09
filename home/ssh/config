@@ -11,7 +11,7 @@ Host homeassistant homeassistant.spence.network
   IdentityFile ~/.ssh/keys/rpi.key
   User root
 
-Host UniFi-Controller.spence.network Gateway.spence.network *AccessPoint.spence.network *Switch.spence.network
+Host UniFi-Controller.spence.network Gateway.spence.network
   IdentityFile ~/.ssh/keys/ubnt.key
   User ubnt
 
