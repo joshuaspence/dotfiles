@@ -6,7 +6,6 @@ homeassistant-cli
 httpie
 pip-tools
 pre-commit
-pssh
 yamllint
 
 # See pganssle/zoneinfo#111.

@@ -114,8 +114,6 @@ ply==3.11
     # via jsonpath-ng
 pre-commit==2.17.0
     # via -r home/venv/requirements.in
-pssh==2.3.1
-    # via -r home/venv/requirements.in
 psutil==5.9.0
     # via gphotos-sync
 pycparser==2.21
