@@ -4,7 +4,7 @@
 #
 #    pip-compile --no-emit-index-url --output-file=home/venv/requirements.txt home/venv/requirements.in
 #
-aioesphomeapi==10.6.0
+aioesphomeapi==10.8.2
     # via esphome
 aiofiles==0.8.0
     # via platformio
@@ -78,9 +78,9 @@ dotfiles==0.6.4
     # via -r home/venv/requirements.in
 ecdsa==0.17.0
     # via esptool
-esphome==2022.1.4
+esphome @ git+https://github.com/esphome/esphome@dev
     # via -r home/venv/requirements.in
-esphome-dashboard==20220116.0
+esphome-dashboard==20220209.0
     # via esphome
 esptool==3.2
     # via
@@ -148,7 +148,7 @@ pip-tools==6.5.1
     # via -r home/venv/requirements.in
 platformdirs==2.4.1
     # via virtualenv
-platformio==5.2.4
+platformio==5.2.5
     # via esphome
 plum-py==0.7.3
     # via exif
@@ -208,7 +208,7 @@ ruamel-yaml==0.17.20
     # via homeassistant-cli
 ruamel-yaml-clib==0.2.6
     # via ruamel-yaml
-semantic-version==2.8.5
+semantic-version==2.9.0
     # via platformio
 six==1.16.0
     # via
@@ -218,7 +218,7 @@ six==1.16.0
     #   virtualenv
 sniffio==1.2.0
     # via anyio
-starlette==0.17.1
+starlette==0.18.0
     # via platformio
 tabulate==0.8.9
     # via
@@ -230,6 +230,8 @@ tomli==2.0.1
     # via pep517
 tornado==6.1
     # via esphome
+typing-extensions==4.0.1
+    # via starlette
 tzdata==2021.5
     # via
     #   esphome
@@ -240,7 +242,7 @@ tzlocal==4.1
     #   esphome
 urllib3==1.26.8
     # via requests
-uvicorn==0.16.0
+uvicorn==0.17.4
     # via platformio
 virtualenv==20.13.1
     # via pre-commit
@@ -256,7 +258,7 @@ yamllint==1.26.3
     # via -r home/venv/requirements.in
 yarl==1.7.2
     # via aiohttp
-zeroconf==0.37.0
+zeroconf==0.38.3
     # via
     #   aioesphomeapi
     #   esphome
