@@ -1,5 +1,4 @@
 git+https://github.com/JelmerT/cc2538-bsl
-docker-compose
 dotfiles
 esptool
 gphotos-sync
