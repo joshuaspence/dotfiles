@@ -1,6 +1,5 @@
 include environment/virtualenv.sh
 
-# TODO: Uncomment this after https://github.com/home-assistant-ecosystem/home-assistant-cli/issues/367.
-#if command -v hass-cli &>/dev/null; then
-#  source <(hass-cli completion bash)
-#fi
+if command -v hass-cli &>/dev/null; then
+  source <(_HASS_CLI_COMPLETE=bash_source hass-cli completion bash)
+fi
