@@ -110,7 +110,7 @@ insteadof = github:
 
 [user]
 name = Joshua Spence
-email = josh@joshuaspence.com
+email = josh@spence.com.au
 
 [includeIf "gitdir:~/workspace/atlassian*/"]
 path = ~/.gitconfig-atlassian
