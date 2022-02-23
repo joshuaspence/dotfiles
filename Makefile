@@ -75,8 +75,8 @@ lint-flake8: home/pythonrc
 # https://www.cmcrossroads.com/article/gnu-make-meets-file-names-spaces-them.
 # TODO: Is `%q` a valid conversion specification for `printf`?
 .PHONY: lint-jsonlint
-lint-jsonlint: $(call rwildcard,,*.json) $(call rwildcard,,*.sublime-project)
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^ $(shell find . \( -name '*.sublime-keymap' \) -printf '%P\0' | xargs --null printf '%q ')
+lint-jsonlint: $(call rwildcard,,*.json)
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^
 
 # TODO: Why do we need `--ignore=pylint`?
 .PHONY: lint-pylint
@@ -107,7 +107,6 @@ test: \
 	test-psql \
 	test-python \
 	test-ssh \
-	test-sublime-text \
 	test-unit \
 	test-vim \
 	test-virtualenv \
@@ -147,11 +146,6 @@ test-python: home/pythonrc
 .PHONY: test-ssh
 test-ssh: home/ssh/config
 	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/ssh-config:ro chamunks/alpine-openssh -F /ssh-config -G -T localhost >/dev/null
-
-# TODO: Implement this.
-.PHONY: test-sublime-text
-test-sublime-text:
-	true
 
 .PHONY: test-unit
 test-unit:
