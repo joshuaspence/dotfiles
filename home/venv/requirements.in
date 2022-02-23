@@ -1,6 +1,6 @@
 git+https://github.com/JelmerT/cc2538-bsl
 dotfiles
-git+https://github.com/esphome/esphome@dev
+esphome
 esptool
 gphotos-sync
 homeassistant-cli
