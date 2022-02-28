@@ -1,3 +1,4 @@
+# shellcheck disable=SC2034
 BATS_LIB_PATH="$(readlink -f "$(dirname "${1}")/../tools")"
 
 bats_load_library bats-assert
