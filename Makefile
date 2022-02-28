@@ -148,7 +148,7 @@ test-ssh: home/ssh/config
 	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/ssh-config:ro chamunks/alpine-openssh -F /ssh-config -G -T localhost >/dev/null
 
 .PHONY: test-unit
-test-unit:
+test-unit: $(wildcard tools/bats-*/.git)
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) bats/bats --recursive test/
 
 .PHONY: test-vim
