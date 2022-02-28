@@ -149,6 +149,9 @@ test-ssh: home/ssh/config
 
 .PHONY: test-unit
 test-unit: $(wildcard tools/bats-*/.git)
+	ls -al tools/
+	ls -al tools/bats-assert/
+	git status
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) bats/bats --recursive test/
 
 .PHONY: test-vim
