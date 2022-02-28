@@ -1,7 +1,7 @@
 load ../helper
 
 function setup() {
-  load src/functions/open.sh
+  load ../../src/functions/open.sh
 }
 
 function teardown() {

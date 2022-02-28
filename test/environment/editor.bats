@@ -12,27 +12,27 @@ function teardown() {
   DISPLAY=:0
   mock_commands subl
 
-  load src/environment/editor.sh
+  load ../../src/environment/editor.sh
   assert_equal "${EDITOR}" 'subl --new-window --wait'
 }
 
 @test "\$EDITOR=vim when \$DISPLAY is not set" {
   mock_commands subl vim
 
-  load src/environment/editor.sh
+  load ../../src/environment/editor.sh
   assert_equal "${EDITOR}" vim
 }
 
 @test "\$EDITOR=vim" {
   mock_commands vim
 
-  load src/environment/editor.sh
+  load ../../src/environment/editor.sh
   assert_equal "${EDITOR}" vim
 }
 
 @test "\$EDITOR=" {
   mock_commands
 
-  load src/environment/editor.sh
+  load ../../src/environment/editor.sh
   assert_equal "${EDITOR}" ''
 }

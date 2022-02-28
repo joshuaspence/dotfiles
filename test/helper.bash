@@ -1,6 +1,8 @@
-load 'tools/bats-assert/load.bash'
-load 'tools/bats-support/load.bash'
-load 'tools/bats-mock/stub.bash'
+BATS_LIB_PATH="$(readlink -f "$(dirname "${1}")/../tools")"
+
+bats_load_library bats-assert
+bats_load_library bats-support
+bats_load_library bats-mock/stub.bash
 
 function mock_commands() {
   # shellcheck disable=SC1091
