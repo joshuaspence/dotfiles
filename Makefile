@@ -199,7 +199,6 @@ vundle: home/vimrc
 	  -u NONE \
 	  -c 'source home/vimrc' \
 	  -c PluginInstall -c PluginUpdate -c PluginClean! \
-	  -c 'silent !~/.vim/bundle/YouCompleteMe/install.py --clang-completer --go-completer' \
 	  -c qall
 
 #===============================================================================
