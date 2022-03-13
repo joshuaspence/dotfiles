@@ -78,7 +78,7 @@ dotfiles==0.6.4
     # via -r home/venv/requirements.in
 ecdsa==0.17.0
     # via esptool
-esphome==2022.2.4
+esphome==2022.2.6
     # via -r home/venv/requirements.in
 esphome-dashboard==20220209.0
     # via esphome
@@ -102,7 +102,7 @@ h11==0.13.0
     #   wsproto
 homeassistant-cli==0.9.4
     # via -r home/venv/requirements.in
-httpie==3.0.2
+httpie==3.1.0
     # via -r home/venv/requirements.in
 identify==2.4.11
     # via pre-commit
@@ -123,7 +123,7 @@ kconfiglib==13.7.1
     # via esphome
 markupsafe==2.1.0
     # via jinja2
-marshmallow==3.14.1
+marshmallow==3.15.0
     # via platformio
 multidict==6.0.2
     # via
@@ -138,6 +138,8 @@ noiseprotocol==0.3.1
     # via aioesphomeapi
 oauthlib==3.2.0
     # via requests-oauthlib
+packaging==21.3
+    # via marshmallow
 paho-mqtt==1.6.1
     # via esphome
 pathspec==0.9.0
@@ -150,7 +152,7 @@ platformdirs==2.5.1
     # via virtualenv
 platformio==5.2.5
     # via esphome
-plum-py==0.7.3
+plum-py==0.7.5
     # via exif
 ply==3.11
     # via jsonpath-ng
@@ -166,6 +168,8 @@ pyelftools==0.28
     # via platformio
 pygments==2.11.2
     # via httpie
+pyparsing==3.0.7
+    # via packaging
 pyserial==3.5
     # via
     #   cc2538-bsl
@@ -188,7 +192,7 @@ pyyaml==6.0
     #   yamllint
 reedsolo==1.5.4
     # via esptool
-regex==2022.1.18
+regex==2022.3.2
     # via
     #   dateparser
     #   homeassistant-cli
@@ -242,9 +246,9 @@ tzlocal==4.1
     #   esphome
 urllib3==1.26.8
     # via requests
-uvicorn==0.17.5
+uvicorn==0.17.6
     # via platformio
-virtualenv==20.13.1
+virtualenv==20.13.3
     # via pre-commit
 voluptuous==0.12.2
     # via esphome
