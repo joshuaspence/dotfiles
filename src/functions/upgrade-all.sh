@@ -20,7 +20,7 @@ function upgrade-atlassian-tools() {
 
 function upgrade-cloudtoken() {
   atlas statlas get --namespace cloudtoken --subdirectory cloudtoken-linux-amd64-latest.zip --output /tmp/cloudtoken.zip
-  unzip -d ~/bin -o /tmp/cloudtoken.zip
+  unzip -d ~/bin -o -q /tmp/cloudtoken.zip
   rm /tmp/cloudtoken.zip
   echo "Cloudtoken upgraded to version $(cloudtoken --version)"
 }
@@ -33,5 +33,5 @@ function upgrade-sourcegraph-cli() {
   gh --repo "${github_repo}" release download "${latest_release}" --dir /tmp --pattern "${pattern}"
   tar --extract --file "/tmp/${pattern}" --directory ~/bin
   rm "/tmp/${pattern}"
-  src version
+  src version --client-only
 }
