@@ -13,14 +13,9 @@ function upgrade-all() {
 }
 
 function upgrade-atlassian-tools() {
-  upgrade-atlas-cli; atlas upgrade
+  atlas upgrade
   upgrade-cloudtoken
   upgrade-sourcegraph-cli
-}
-
-function upgrade-atlas-cli() {
-  atlas statlas get --namespace atlas-cli --subdirectory linux/atlas-latest-linux-amd64.tar.gz | tar --extract --gzip --directory ~/bin atlas
-  echo "Atlas CLI upgraded to version $(atlas version)"
 }
 
 function upgrade-cloudtoken() {
