@@ -1,5 +1,14 @@
 function atlas-favorite-services() {
-  atlas-manager-service-graphql 'query=query { favorites { services { id } } }' | jq --raw-output '.data.favorites.services[].id'
+  read -r -d '' query <<-'EOT'
+    query {
+      favorites {
+        services {
+          id
+        }
+      }
+    }
+EOT
+  atlas-manager-service-graphql "query=${query}" | jq --raw-output '.data.favorites.services[].id'
 }
 
 function atlas-manager-service-graphql() {
@@ -8,6 +17,28 @@ function atlas-manager-service-graphql() {
 
 function atlas-service-descriptor() {
   atlas micros service show --output yaml --service "$1" | env "MICROS_ENV=$2" yq '.stacks[strenv(MICROS_ENV)][0].originalSd'
+}
+
+function atlas-service-domains() {
+  read -r -d '' query <<-'EOT'
+    query service($id: ID!) {
+      service(id: $id) {
+        id
+        currentUserPermission
+        attributes {
+          dnsNamesAttribute {
+            etag
+            value {
+              source
+              type
+              value
+            }
+          }
+        }
+      }
+    }
+EOT
+  atlas-manager-service-graphql "query=${query}" "variables[id]=$1" | jq --raw-output '.data.service.attributes.dnsNamesAttribute.value[].value'
 }
 
 function atlas-service-proxy-config() {
