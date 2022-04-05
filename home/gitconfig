@@ -106,7 +106,10 @@ showStash = true
 showUntrackedFiles = all
 
 [url "git@github.com:"]
-insteadof = github:
+insteadOf = github:
+
+[url "git@bitbucket.org:"]
+insteadOf = https://bitbucket.org/
 
 [user]
 name = Joshua Spence
