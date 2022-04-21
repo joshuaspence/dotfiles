@@ -48,8 +48,9 @@ charset-normalizer==2.0.12
     #   aiohttp
     #   httpie
     #   requests
-click==8.1.2
+click==8.0.3
     # via
+    #   -r home/venv/requirements.in
     #   click-log
     #   esphome
     #   homeassistant-cli
@@ -78,11 +79,11 @@ dotfiles==0.6.4
     # via -r home/venv/requirements.in
 ecdsa==0.17.0
     # via esptool
-esphome==2022.4.0
+esphome==2022.3.2
     # via -r home/venv/requirements.in
 esphome-dashboard==20220309.0
     # via esphome
-esptool==3.3
+esptool==3.2
     # via
     #   -r home/venv/requirements.in
     #   esphome
@@ -240,7 +241,7 @@ tzdata==2022.1
     # via
     #   esphome
     #   pytz-deprecation-shim
-tzlocal==4.2
+tzlocal==4.1
     # via
     #   dateparser
     #   esphome
@@ -250,7 +251,7 @@ uvicorn==0.17.6
     # via platformio
 virtualenv==20.14.1
     # via pre-commit
-voluptuous==0.13.1
+voluptuous==0.12.2
     # via esphome
 wheel==0.37.1
     # via
@@ -262,7 +263,7 @@ yamllint==1.26.3
     # via -r home/venv/requirements.in
 yarl==1.7.2
     # via aiohttp
-zeroconf==0.38.4
+zeroconf==0.38.3
     # via
     #   aioesphomeapi
     #   esphome

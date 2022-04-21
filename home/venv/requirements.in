@@ -14,3 +14,7 @@ backports.zoneinfo ; python_version < '3.9'
 
 # Needed by `cc2538-bsl`.
 intelhex
+
+# See home-assistant-ecosystem/home-assistant-cli#382.
+click < 8.1
+esphome < 2022.4.0
