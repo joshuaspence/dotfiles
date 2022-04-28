@@ -116,7 +116,7 @@ test: \
 test-bootstrap:
 	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu bash -e -c '\
 		apt-get update --quiet --quiet; \
-		apt-get install --no-install-recommends --quiet --quiet --yes ca-certificates gawk git make python virtualenv >/dev/null; \
+		apt-get install --no-install-recommends --quiet --quiet --yes ca-certificates gawk git make python3 >/dev/null; \
 		\
 		git clone --quiet /dotfiles ~/dotfiles; \
 		make --directory ~/dotfiles submodules; \
