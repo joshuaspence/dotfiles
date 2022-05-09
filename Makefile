@@ -170,7 +170,11 @@ test-wget: home/wgetrc
 	$(DOCKER_RUN) --volume $(abspath $<):/wgetrc:ro inutano/wget wget --config /wgetrc --version >/dev/null
 
 .PHONY: update
-update: update-submodules update-virtualenv
+update: update-bingo update-submodules update-virtualenv
+
+.PHONY: update-bingo
+update-bingo:
+	echo $(patsubst %.mod,%,$(notdir $(wildcard home/bingo/*.mod))) | xargs --max-args=1 bingo get -moddir home/bingo -u
 
 .PHONY: update-submodules
 update-submodules:
