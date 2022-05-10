@@ -9,7 +9,7 @@ Host github.com
 
 Host homeassistant homeassistant.spence.network
   IdentityFile ~/.ssh/keys/rpi.key
-  User root
+  User hassio
 
 Host UniFi-Controller.spence.network Gateway.spence.network
   IdentityFile ~/.ssh/keys/ubnt.key
