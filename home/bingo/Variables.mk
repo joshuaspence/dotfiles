@@ -41,6 +41,12 @@ $(JIRA): $(BINGO_DIR)/jira.mod
 	@echo "(re)installing $(GOBIN)/jira-v1.0.28"
 	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=jira.mod -o=$(GOBIN)/jira-v1.0.28 "github.com/go-jira/jira/cmd/jira"
 
+SKOPEO := $(GOBIN)/skopeo-v1.8.0
+$(SKOPEO): $(BINGO_DIR)/skopeo.mod
+	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
+	@echo "(re)installing $(GOBIN)/skopeo-v1.8.0"
+	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=skopeo.mod -o=$(GOBIN)/skopeo-v1.8.0 "github.com/containers/skopeo/cmd/skopeo"
+
 TFLINT := $(GOBIN)/tflint-v0.36.2
 $(TFLINT): $(BINGO_DIR)/tflint.mod
 	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
