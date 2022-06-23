@@ -35,6 +35,12 @@ $(GOLANGCI_LINT): $(BINGO_DIR)/golangci-lint.mod
 	@echo "(re)installing $(GOBIN)/golangci-lint-v1.46.2"
 	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=golangci-lint.mod -o=$(GOBIN)/golangci-lint-v1.46.2 "github.com/golangci/golangci-lint/cmd/golangci-lint"
 
+HUB_TOOL := $(GOBIN)/hub-tool-v0.4.4
+$(HUB_TOOL): $(BINGO_DIR)/hub-tool.mod
+	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
+	@echo "(re)installing $(GOBIN)/hub-tool-v0.4.4"
+	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=hub-tool.mod -o=$(GOBIN)/hub-tool-v0.4.4 "github.com/docker/hub-tool"
+
 JIRA := $(GOBIN)/jira-v1.0.28
 $(JIRA): $(BINGO_DIR)/jira.mod
 	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
