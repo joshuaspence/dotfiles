@@ -37,6 +37,8 @@ github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZm
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
 github.com/docker/compose-switch v1.0.4 h1:qOgWtjKaS/C7Uwd9xdVCfuy5p5s/iLdZ0XZCNglP8I8=
 github.com/docker/compose-switch v1.0.4/go.mod h1:uyPj8S3oH1O9rSZ5QVozw28OIjdNIflSSYElC2P0plQ=
+github.com/docker/compose-switch v1.0.5 h1:ed43xBqqL3Q/zDl+kca/xo7q/plpnlpkgjhTTNV3/jw=
+github.com/docker/compose-switch v1.0.5/go.mod h1:uyPj8S3oH1O9rSZ5QVozw28OIjdNIflSSYElC2P0plQ=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
