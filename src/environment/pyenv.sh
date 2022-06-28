@@ -6,4 +6,8 @@ if test -d "${HOME}/.pyenv"; then
   if test -d "$(pyenv root)/plugins/pyenv-virtualenv"; then
     source <(pyenv virtualenv-init -)
   fi
+
+  if test -d "$(pyenv root)/plugins/pyenv-autoenv"; then
+    source <(pyenv autoenv init)
+  fi
 fi
