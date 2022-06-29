@@ -1,9 +1,3 @@
-# TODO: This isn't working (`deactivate` function not defined).
-if ! test -v VIRTUAL_ENV && test -f "${HOME}/.venv/bin/activate"; then
-  # Don't include virtualenv name in prompt
-  # (see https://github.com/pypa/virtualenv/issues/5).
-  #
-  # shellcheck disable=SC2034
-  VIRTUAL_ENV_DISABLE_PROMPT=1
-  source "${HOME}/.venv/bin/activate"
+if test -d "${HOME}/.venv"; then
+  export PATH="${HOME}/.venv/bin:${PATH}"
 fi
