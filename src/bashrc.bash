@@ -7,4 +7,3 @@ fi
 includex -regex 'config/.+\.\(sh\|bash\)$'
 includex -regex 'completion/.+\.\(sh\|bash\)$'
 includex -regex 'functions/.+\.\(sh\|bash\)$'
-includex -regex 'setup/.+\.\(sh\|bash\)$'
