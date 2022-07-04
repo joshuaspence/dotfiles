@@ -43,6 +43,11 @@ all: submodules compile install
 .PHONY: compile
 compile: $(SHELL_TARGETS)
 
+.PHONY: dconf
+dconf: home/dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
+	cat $< | dconf load /
+	$(VIRTUALENV)/bin/gnome-extensions-cli install noannoyance@daase.net
+
 # TODO: Improve this.
 .PHONY: diff
 diff:

@@ -2,6 +2,7 @@ git+https://github.com/JelmerT/cc2538-bsl
 dotfiles
 esphome
 esptool
+gnome-extensions-cli
 gphotos-sync
 homeassistant-cli
 httpie
@@ -14,6 +15,9 @@ backports.zoneinfo ; python_version < '3.9'
 
 # Needed by `cc2538-bsl`.
 intelhex
+
+# Needed by `gnome-extensions-cli`.
+pygobject
 
 # See home-assistant-ecosystem/home-assistant-cli#382.
 click < 8.1
