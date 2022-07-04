@@ -170,7 +170,11 @@ test-wget: home/wgetrc
 	$(DOCKER_RUN) --volume $(abspath $<):/wgetrc:ro inutano/wget wget --config /wgetrc --version >/dev/null
 
 .PHONY: update
-update: update-bingo update-submodules update-virtualenv
+update: update-asdf update-bingo update-submodules update-virtualenv
+
+.PHONY: update-asdf
+update-asdf:
+	asdf update
 
 .PHONY: update-bingo
 update-bingo:
@@ -185,16 +189,6 @@ update-virtualenv:
 	@touch home/venv/requirements.in
 	@$(MAKE) home/venv/requirements.txt UPGRADE=1
 	@$(MAKE) virtualenv
-
-.PHONY: upgrade
-upgrade: upgrade-asdf upgrade-pip
-
-.PHONY: upgrade-asdf
-upgrade-asdf:
-	asdf update
-
-.PHONY: upgrade-pip
-upgrade-pip:
 	pip install --upgrade pip
 
 .PHONY: virtualenv
@@ -238,4 +232,4 @@ home/.gitignore: $(SHELL_TARGETS)
 	$(file >$@) $(foreach TARGET,$^,$(file >>$@,/$(notdir $(TARGET))))
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
-	$(VIRTUALENV)/bin/pip-compile --no-emit-index-url $(if $(UPGRADE),--upgrade) --output-file $@ $< >/dev/null
+	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
