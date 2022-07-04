@@ -15,6 +15,10 @@ Host unifi gateway protect unifi.spence.network gateway.spence.network protect.s
   IdentityFile ~/.ssh/keys/ubnt.key
   User ubnt
 
+Host gateway gateway.spence.network
+  HostKeyAlgorithms +ssh-rsa
+  PubkeyAcceptedKeyTypes +ssh-rsa
+
 Host kube*.spence.network
   IdentityFile ~/.ssh/keys/rpi.key
 	StrictHostKeyChecking no
