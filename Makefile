@@ -187,7 +187,11 @@ update-virtualenv:
 	@$(MAKE) virtualenv
 
 .PHONY: upgrade
-upgrade: upgrade-pip
+upgrade: upgrade-asdf upgrade-pip
+
+.PHONY: upgrade-asdf
+upgrade-asdf:
+	asdf update
 
 .PHONY: upgrade-pip
 upgrade-pip:
