@@ -11,6 +11,8 @@ packages = [
     'config/atlassian',
     'config/atlassian/atlas',
     'config/cloudtoken',
+    'config/Code',
+    'config/Code/User',
     'jira.d',
     'minikube',
     'ssh',
