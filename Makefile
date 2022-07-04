@@ -175,6 +175,7 @@ update: update-asdf update-bingo update-submodules update-virtualenv
 .PHONY: update-asdf
 update-asdf:
 	asdf update
+	asdf plugin-update --all
 
 .PHONY: update-bingo
 update-bingo:
