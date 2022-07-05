@@ -40,11 +40,15 @@ endef
 .PHONY: all
 all: submodules compile install
 
+.PHONY: apt
+apt: aptfile
+	sudo tools/bash-aptfile/bin/aptfile $<
+
 .PHONY: compile
 compile: $(SHELL_TARGETS)
 
 .PHONY: dconf
-dconf: home/dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
+dconf: dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 	cat $< | dconf load /
 	$(VIRTUALENV)/bin/gnome-extensions-cli install noannoyance@daase.net
 
@@ -54,7 +58,7 @@ diff:
 	$(foreach SHELL_TARGET,$(SHELL_TARGETS),bash -x -c 'diff --unified $(SHELL_TARGET) <(gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --extended src/$(notdir $(SHELL_TARGET)).*sh 2>/dev/null)'; echo; )
 
 .PHONY: install
-install: dotfiles virtualenv vundle
+install: apt dotfiles virtualenv vundle
 
 .PHONY: dotfiles
 dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles

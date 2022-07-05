@@ -1,0 +1,39 @@
+#!/usr/bin/env aptfile
+
+CODENAME=$(lsb_release --codename --short)
+
+repository_file "dell" "http://dell.archive.canonical.com somerville"
+repository_file "docker" "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu ${CODENAME} stable"
+repository_file "dropbox" "deb [arch=i386,amd64 signed-by=/usr/share/keyrings/dropbox.gpg] https://linux.dropbox.com/ubuntu disco main"
+repository_file "github-cli" "deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
+repository_file "google-chrome" "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main"
+repository_file "hashicorp" "deb [arch=amd64 signed-by=/usr/share/keyrings/terraform-archive-keyring.gpg] https://apt.releases.hashicorp.com ${CODENAME} main"
+repository_file "slack" "deb https://packagecloud.io/slacktechnologies/slack/debian/ jessie main"
+repository_file "speedtest-cli" "deb [signed-by=/usr/share/keyrings/ookla_speedtest-cli-archive-keyring.gpg] https://packagecloud.io/ookla/speedtest-cli/ubuntu/ focal main"
+repository_file "vscode" "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main"
+
+update
+
+package "apt-file"
+package "chrome-gnome-shell"
+package "code"
+package "dconf-editor"
+packagelist "docker-ce" "docker-ce-cli"
+package "dropbox"
+package "fzf"
+package "gh"
+packagelist "git" "git-crypt" "git-lfs"
+package "google-chrome-stable"
+package "htop" "iftop" "powerstat"
+package "jq"
+package "moreutils"
+packagelist "nmap" "traceroute"
+packagelist "packer" "terraform"
+package "parallel"
+package "retry"
+package "speedtest"
+package "synaptic"
+package "terminator"
+package "tree"
+package "vim"
+package "xclip"
