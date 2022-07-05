@@ -6,10 +6,6 @@ url = https://github.com/VundleVim/Vundle.vim.git
 path = src/modules/go-pkg-complete
 url = https://github.com/skelterjohn/go-pkg-complete.git
 
-[submodule "src/modules/unifi-backup-decrypt"]
-path = src/modules/unifi-backup-decrypt
-url = https://github.com/zhangyoufu/unifi-backup-decrypt.git
-
 [submodule "tools/bats-assert"]
 path = tools/bats-assert
 url = https://github.com/ztombol/bats-assert.git
