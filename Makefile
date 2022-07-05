@@ -125,10 +125,9 @@ test: \
 test-bootstrap:
 	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu bash -e -c '\
 		apt-get update --quiet --quiet; \
-		apt-get install --no-install-recommends --quiet --quiet --yes ca-certificates gawk git make python3 >/dev/null; \
-		\
+		apt-get install --no-install-recommends --quiet --quiet --yes ca-certificates curl debian-archive-keyring gawk git gpg lsb-release make software-properties-common sudo >/dev/null; \
 		git clone --quiet /dotfiles ~/dotfiles; \
-		make --directory ~/dotfiles submodules; \
+		make --directory ~/dotfiles; \
 	'
 
 .PHONY: test-curl
@@ -174,7 +173,7 @@ test-vim: home/vimrc home/vim home/vim/bundle $(wildcard home/vim/**/*)
 test-virtualenv: home/venv/requirements.txt
 	$(DOCKER_RUN) --volume $(abspath $<):/requirements.txt:ro python:3 bash -e -c '\
 		apt-get update --quiet --quiet; \
-		apt-get install --no-install-recommends --quiet --quiet --yes libgirepository1.0-dev; \
+		apt-get install --no-install-recommends --quiet --quiet --yes libcairo2-dev libgirepository1.0-dev; \
 		\
 		pip install --requirement /requirements.txt --quiet --disable-pip-version-check; \
 	'
