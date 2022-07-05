@@ -38,6 +38,7 @@ update
 
 packagelist "apt-file" "synaptic"
 package "awscli"
+package "bat"
 package "build-essential"
 package "code"
 packagelist "curl" "wget"
