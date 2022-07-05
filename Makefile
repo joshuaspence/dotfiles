@@ -168,7 +168,12 @@ test-vim: home/vimrc home/vim home/vim/bundle $(wildcard home/vim/**/*)
 
 .PHONY: test-virtualenv
 test-virtualenv: home/venv/requirements.txt
-	$(DOCKER_RUN) --volume $(abspath $<):/requirements.txt:ro python:3 pip install --requirement /requirements.txt --quiet --disable-pip-version-check
+	$(DOCKER_RUN) --volume $(abspath $<):/requirements.txt:ro python:3 bash -e -c '\
+		apt-get update --quiet --quiet; \
+		apt-get install --no-install-recommends --quiet --quiet --yes libgirepository1.0-dev; \
+		\
+		pip install --requirement /requirements.txt --quiet --disable-pip-version-check; \
+	'
 
 .PHONY: test-wget
 test-wget: home/wgetrc
