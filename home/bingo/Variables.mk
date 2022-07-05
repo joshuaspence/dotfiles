@@ -65,3 +65,9 @@ $(TFLINT): $(BINGO_DIR)/tflint.mod
 	@echo "(re)installing $(GOBIN)/tflint-v0.38.1"
 	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=tflint.mod -o=$(GOBIN)/tflint-v0.38.1 "github.com/terraform-linters/tflint"
 
+YQ := $(GOBIN)/yq-v4.25.3
+$(YQ): $(BINGO_DIR)/yq.mod
+	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
+	@echo "(re)installing $(GOBIN)/yq-v4.25.3"
+	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=yq.mod -o=$(GOBIN)/yq-v4.25.3 "github.com/mikefarah/yq/v4"
+

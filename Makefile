@@ -44,6 +44,10 @@ all: submodules compile install
 apt: aptfile
 	sudo tools/bash-aptfile/bin/aptfile $<
 
+.PHONY: bingo
+bingo:
+	bingo get -moddir home/bingo
+
 .PHONY: compile
 compile: $(SHELL_TARGETS)
 
