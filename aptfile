@@ -5,34 +5,39 @@ export DEBIAN_FRONTEND=noninteractive
 CODENAME=$(lsb_release --codename --short)
 KEYRINGS="/etc/apt/keyrings"
 
+function apt_repository() {
+  local name="$1"
+  local apt_repo="$2"
+  local architecture="$3"
+  local components="$4"
+  local gpg_key="$5"
+
+  local apt_opts=()
+  test -n "${architecture}" && apt_opts+=("arch=${architecture}")
+  apt_opts+=("signed-by=/etc/apt/keyrings/${name}.gpg")
+
+  # Install GPG key.
+  if ! test -f "/etc/apt/keyrings/${name}.gpg"; then
+    curl --fail --location --show-error --silent "${gpg_key}" | gpg --dearmor --output "/etc/apt/keyrings/${name}.gpg"
+  fi
+  
+  # Create apt repository.
+  repository_file "${name}" "deb [${apt_opts[*]}] ${apt_repo} ${components}"
+}
+
 function repository_key() {
   local keyring="${KEYRINGS}/${1}.gpg"
   test -f "${keyring}" || curl --fail --location --show-error --silent "${2}" | gpg --dearmor --output "${keyring}"
 }
 
-repository_key "docker" "https://download.docker.com/linux/ubuntu/gpg"
-repository_file "docker" "deb [arch=amd64 signed-by=${KEYRINGS}/docker.gpg] https://download.docker.com/linux/ubuntu ${CODENAME} stable"
-
-repository_key "dropbox" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
-repository_file "dropbox" "deb [arch=i386,amd64 signed-by=${KEYRINGS}/dropbox.gpg] https://linux.dropbox.com/ubuntu disco main"
-
-repository_key "github-cli" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
-repository_file "github-cli" "deb [arch=amd64 signed-by=${KEYRINGS}/github-cli.gpg] https://cli.github.com/packages stable main"
-
-repository_key "google-chrome" "https://dl.google.com/linux/linux_signing_key.pub"
-repository_file "google-chrome" "deb [arch=amd64 signed-by=${KEYRINGS}/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
-
-repository_key "hashicorp" "https://apt.releases.hashicorp.com/gpg"
-repository_file "hashicorp" "deb [arch=amd64 signed-by=${KEYRINGS}/hashicorp.gpg] https://apt.releases.hashicorp.com ${CODENAME} main"
-
-repository_key "slack" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
-repository_file "slack" "deb [signed-by=${KEYRINGS}/slack.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main"
-
-repository_key "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
-repository_file "speedtest-cli" "deb [signed-by=${KEYRINGS}/speedtest-cli.gpg] https://packagecloud.io/ookla/speedtest-cli/ubuntu/ focal main"
-
-repository_key "microsoft" "https://packages.microsoft.com/keys/microsoft.asc"
-repository_file "vscode" "deb [arch=amd64,arm64,armhf signed-by=${KEYRINGS}/microsoft.gpg] https://packages.microsoft.com/repos/code stable main"
+apt_repository "docker" "https://download.docker.com/linux/ubuntu" "amd64" "${CODENAME} stable" "https://download.docker.com/linux/ubuntu/gpg"
+apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "i386,amd64" "disco main" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
+apt_repository "github-cli" "https://cli.github.com/packages" "amd64" "stable main" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+apt_repository "google-chrome" "http://dl.google.com/linux/chrome/deb/" "amd64" "stable main" "https://dl.google.com/linux/linux_signing_key.pub"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "amd64" "${CODENAME} main" "https://apt.releases.hashicorp.com/gpg"
+apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "" "jessie main" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
+apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "" "focal main" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
+apt_repository "vscode" "https://packages.microsoft.com/repos/code" "amd64,arm64,armhf" "stable main" "https://packages.microsoft.com/keys/microsoft.asc"
 
 update
 
