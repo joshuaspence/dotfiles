@@ -18,7 +18,7 @@ function atlas-manager-service-graphql() {
 function atlas-service-descriptor() {
   atlas micros service show --output yaml --service "$1" | \
     env "MICROS_ENV=$2" "MICROS_DEPLOYMENT_ID=$3" \
-    yq '.stacks | map_values(map({"key": .deploymentId, "value": .originalSd}) | from_entries) | ([strenv(MICROS_ENV), strenv(MICROS_DEPLOYMENT_ID)] | map(select(. != "")) | .[]) as $item ireduce(.; .[$item])'
+    yq $'.stacks | map_values(map({"key": .deploymentId, "value": .originalSd}) | from_entries) | ([strenv(MICROS_ENV), strenv(MICROS_DEPLOYMENT_ID)] | map(select(. != "")) | .[]) as $item ireduce(.; .[$item])'
 }
 
 function atlas-service-domains() {
