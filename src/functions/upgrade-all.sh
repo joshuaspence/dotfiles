@@ -4,6 +4,9 @@ function upgrade-all() {
     sudo apt-get "${COMMAND}"
   done
 
+  # Flatpak
+  flatpak update
+
   # Snap
   sudo snap refresh
 
