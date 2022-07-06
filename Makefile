@@ -58,7 +58,7 @@ dconf: dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 
 .PHONY: deps
 deps:
-	sudo apt-get -install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring gawk git gpg lsb-release make software-properties-common sudo wget
+	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
 
 # TODO: Improve this.
 .PHONY: diff
