@@ -70,7 +70,7 @@ package "less"
 packagelist "libcairo2-dev" "libgirepository1.0-dev" "python3-gi" # for `pygobject`
 package "moreutils"
 packagelist "bind9-dnsutils" "netcat-openbsd" "netstat-nat" "whois"
-packagelist "network-manager-l2tp" "network-manager-openconnect" "network-manager-openconnect-gnome"
+packagelist "network-manager-l2tp" "network-manager-openconnect"
 packagelist "nmap" "traceroute"
 packagelist "packer" "terraform"
 packagelist "parallel" "retry"
