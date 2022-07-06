@@ -1,9 +1,9 @@
 #!/usr/bin/env aptfile
 
-export DEBIAN_FRONTEND=noninteractive
-
 CODENAME=$(lsb_release --codename --short)
-KEYRINGS="/etc/apt/keyrings"
+DEBIAN_FRONTEND=noninteractive
+
+export DEBIAN_FRONTEND
 
 function apt_repository() {
   local name="$1"
@@ -20,14 +20,28 @@ function apt_repository() {
   if ! test -f "/etc/apt/keyrings/${name}.gpg"; then
     curl --fail --location --show-error --silent "${gpg_key}" | gpg --dearmor --output "/etc/apt/keyrings/${name}.gpg"
   fi
-  
+
   # Create apt repository.
   repository_file "${name}" "deb [${apt_opts[*]}] ${apt_repo} ${components}"
 }
 
-function repository_key() {
-  local keyring="${KEYRINGS}/${1}.gpg"
-  test -f "${keyring}" || curl --fail --location --show-error --silent "${2}" | gpg --dearmor --output "${keyring}"
+function deb_repo() {
+  local name="$1"
+  local url="$2"
+
+  local apt_conf="/etc/apt/apt.conf.d/50${name}.conf"
+  local apt_repo="/var/lib/apt/repos/${name}"
+
+  if ! test -f "${apt_conf}"; then
+    mkdir --parents "${apt_repo}"
+    cat << EOF > "${apt_conf}"
+APT::Update::Pre-Invoke { "wget --quiet --timestamping --directory-prefix ${apt_repo} ${url}"; };
+APT::Update::Pre-Invoke { "apt-ftparchive packages ${apt_repo} > ${apt_repo}/Packages"; };
+APT::Update::Pre-Invoke { "apt-ftparchive release ${apt_repo} > ${apt_repo}/Release"; };
+EOF
+  fi
+
+  repository_file "${name}" "deb [trusted=yes lang=none] file:${apt_repo} ./"
 }
 
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "" "bullseye main" "https://azlux.fr/repo.gpg"
@@ -38,6 +52,7 @@ apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "amd64" "${CODEN
 apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "" "jessie main" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
 apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "" "focal main" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "amd64,arm64,armhf" "stable main" "https://packages.microsoft.com/keys/microsoft.asc"
+deb_repo "zoom" "https://zoom.us/client/latest/zoom_amd64.deb"
 
 update
 
@@ -86,4 +101,5 @@ package "terminator"
 package "tree"
 package "vim"
 package "xclip"
+package_from_url "zoom" "https://zoom.us/client/latest/zoom_amd64.deb"
 package "zoxide"
