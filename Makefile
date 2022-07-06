@@ -38,7 +38,7 @@ endef
 #===============================================================================
 
 .PHONY: all
-all: submodules compile install
+all: deps submodules compile install
 
 .PHONY: apt
 apt: aptfile
@@ -55,6 +55,10 @@ compile: $(SHELL_TARGETS)
 dconf: dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 	cat $< | dconf load /
 	$(VIRTUALENV)/bin/gnome-extensions-cli install noannoyance@daase.net
+
+.PHONY: deps
+deps:
+	sudo apt-get -install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring gawk git gpg lsb-release make software-properties-common sudo wget
 
 # TODO: Improve this.
 .PHONY: diff
@@ -129,7 +133,7 @@ test: \
 test-bootstrap:
 	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu bash -e -c '\
 		apt-get update --quiet --quiet; \
-		apt-get install --no-install-recommends --quiet --quiet --yes ca-certificates curl debian-archive-keyring gawk git gpg lsb-release make software-properties-common sudo >/dev/null; \
+		apt-get install --no-install-recommends --quiet --quiet --yes git make >/dev/null; \
 		git clone --quiet /dotfiles ~/dotfiles; \
 		make --directory ~/dotfiles; \
 	'
