@@ -2,6 +2,10 @@
 path = home/vim/bundle/Vundle.vim
 url = https://github.com/VundleVim/Vundle.vim.git
 
+[submodule "src/modules/bat-extras"]
+path = src/modules/bat-extras
+url = https://github.com/eth-p/bat-extras.git
+
 [submodule "src/modules/go-pkg-complete"]
 path = src/modules/go-pkg-complete
 url = https://github.com/skelterjohn/go-pkg-complete.git
