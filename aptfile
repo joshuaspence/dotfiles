@@ -30,6 +30,7 @@ function repository_key() {
   test -f "${keyring}" || curl --fail --location --show-error --silent "${2}" | gpg --dearmor --output "${keyring}"
 }
 
+apt_repository "azlux" "http://packages.azlux.fr/debian/" "" "bullseye main" "https://azlux.fr/repo.gpg"
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "amd64" "${CODENAME} stable" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "i386,amd64" "disco main" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
 apt_repository "github-cli" "https://cli.github.com/packages" "amd64" "stable main" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
@@ -57,6 +58,7 @@ packagelist "git" "git-crypt" "git-lfs"
 package_from_url "google-chrome-stable" "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
 package "gpg"
 packagelist "htop" "iftop" "powerstat"
+packagelist "iputils-ping" "gping"
 package "jq"
 package "less"
 packagelist "libcairo2-dev" "libgirepository1.0-dev" "python3-gi" # for `pygobject`
