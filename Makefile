@@ -252,7 +252,7 @@ $(eval $(call virtualenv_target,yamllint,yamllint))
 
 .SECONDEXPANSION:
 $(SHELL_TARGETS): src/$$(@F).*sh $(call rwildcard,src,*.*sh) $(filter src/%,$(SUBMODULES)) | tools/compiler
-	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended $<
+	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended -O $<
 
 home/.gitignore: $(SHELL_TARGETS)
 	$(file >$@) $(foreach TARGET,$^,$(file >>$@,/$(notdir $(TARGET))))
