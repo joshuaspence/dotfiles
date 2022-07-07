@@ -32,19 +32,24 @@ function deb_repo() {
 
   local apt_conf="/etc/apt/apt.conf.d/50${name}.conf"
   local apt_repo="/var/lib/apt/repos/${name}"
+  local gpg_cmd="true"
 
-  if ! test -f "/etc/apt/keyrings/${name}.gpg"; then
-    curl --fail --location --show-error --silent "${gpg_key}" | gpg --dearmor --output "/etc/apt/keyrings/${name}.gpg"
-    gpg --import "/etc/apt/keyrings/${name}.gpg"
+  if test -n "${gpg_key}"; then
+    if ! test -f "/etc/apt/keyrings/${name}.gpg"; then
+      curl --fail --location --show-error --silent "${gpg_key}" | gpg --dearmor --output "/etc/apt/keyrings/${name}.gpg"
+      gpg --import "/etc/apt/keyrings/${name}.gpg"
+    fi
+
+    gpg_cmd = "dpkg-sig --verify ${apt_repo}/*.deb"
   fi
 
   if ! test -f "${apt_conf}"; then
     mkdir --parents "${apt_repo}"
     cat << EOF > "${apt_conf}"
 APT::Update::Pre-Invoke { "wget --quiet --timestamping --directory-prefix ${apt_repo} ${url}"; };
-APT::Update::Pre-Invoke { "dpkg-sig --verify ${apt_repo}/*.deb"; };
-APT::Update::Pre-Invoke { "apt-ftparchive packages ${apt_repo} > ${apt_repo}/Packages"; };
-APT::Update::Pre-Invoke { "apt-ftparchive release ${apt_repo} > ${apt_repo}/Release"; };
+APT::Update::Pre-Invoke { "${gpg_cmd}"; };
+APT::Update::Pre-Invoke { "cd ${apt_repo} && apt-ftparchive packages . > Packages"; };
+APT::Update::Pre-Invoke { "cd ${apt_repo} && apt-ftparchive release . > Release"; };
 EOF
   fi
 
@@ -57,6 +62,7 @@ apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "i386,amd64" "disco 
 apt_repository "github-cli" "https://cli.github.com/packages" "amd64" "stable main" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
 apt_repository "kubernetes" "https://apt.kubernetes.io" "" "kubernetes-xenial main" "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "amd64" "${CODENAME} main" "https://apt.releases.hashicorp.com/gpg"
+deb_repo "minikube" "https://github.com/kubernetes/minikube/releases/download/v1.26.0/minikube_1.26.0-0_amd64.deb" ""
 apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "" "jessie main" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
 apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "" "focal main" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "amd64,arm64,armhf" "stable main" "https://packages.microsoft.com/keys/microsoft.asc"
@@ -90,7 +96,7 @@ package "gpg"
 packagelist "htop" "iftop" "powerstat"
 packagelist "iputils-ping" "gping"
 package "jq"
-package "kubectl"
+packagelist "kubectl" "minikube"
 package "less"
 packagelist "libcairo2-dev" "libgirepository1.0-dev" "python3-gi" # for `pygobject`
 package "moreutils"
