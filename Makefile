@@ -38,7 +38,7 @@ endef
 #===============================================================================
 
 .PHONY: all
-all: deps submodules compile install
+all: submodules compile install
 
 .PHONY: apt
 apt: aptfile
