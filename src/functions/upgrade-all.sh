@@ -7,6 +7,9 @@ function upgrade-all() {
   # Flatpak
   flatpak update
 
+  # Gnome Extensions
+  gnome-extensions-cli update
+
   # Snap
   sudo snap refresh
 
