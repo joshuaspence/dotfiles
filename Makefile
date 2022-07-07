@@ -126,7 +126,7 @@ test-bootstrap:
 		apt-get update --quiet --quiet; \
 		apt-get install --no-install-recommends --quiet --quiet --yes git make >/dev/null; \
 		git clone --quiet /dotfiles ~/dotfiles; \
-		make --directory ~/dotfiles; \
+		make --directory ~/dotfiles deps all; \
 	'
 
 .PHONY: test-curl
