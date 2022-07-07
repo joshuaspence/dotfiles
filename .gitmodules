@@ -18,11 +18,6 @@ url = https://github.com/jasonkarns/bats-mock
 path = tools/bats-support
 url = https://github.com/ztombol/bats-support.git
 
-[submodule "tools/compiler"]
-path = tools/compiler
-url = https://git.code.sf.net/p/loader/code
-branch = compilers
-
 [submodule "tools/bash-aptfile"]
 path = tools/bash-aptfile
 url = https://github.com/seatgeek/bash-aptfile.git

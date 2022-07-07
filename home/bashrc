@@ -1,0 +1,11 @@
+# If not running interactively, don't do anything.
+# See https://unix.stackexchange.com/a/257613.
+if [[ $- != *i* ]]; then
+  return
+fi
+
+source ~/dotfiles/src/functions/include.sh
+
+_dotfiles_include src/config
+_dotfiles_include src/completion
+_dotfiles_include src/functions

@@ -8,7 +8,6 @@ VIRTUALENV  = $(HOME)/.venv
 #===============================================================================
 # Target Definitions
 #===============================================================================
-SHELL_TARGETS = $(addprefix home/,$(basename $(notdir $(wildcard src/*.*sh))))
 SUBMODULES    = $(shell git config --file .gitmodules --get-regexp '^submodule\..*\.path$$' | awk '{ print $$2 }')
 
 #===============================================================================
@@ -38,7 +37,7 @@ endef
 #===============================================================================
 
 .PHONY: all
-all: submodules compile install
+all: submodules install
 
 .PHONY: apt
 apt: aptfile
@@ -48,9 +47,6 @@ apt: aptfile
 bingo:
 	bingo get -moddir home/bingo
 
-.PHONY: compile
-compile: $(SHELL_TARGETS)
-
 .PHONY: dconf
 dconf: dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 	cat $< | dconf load /
@@ -59,11 +55,6 @@ dconf: dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 .PHONY: deps
 deps:
 	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
-
-# TODO: Improve this.
-.PHONY: diff
-diff:
-	$(foreach SHELL_TARGET,$(SHELL_TARGETS),bash -x -c 'diff --unified $(SHELL_TARGET) <(gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --extended src/$(notdir $(SHELL_TARGET)).*sh 2>/dev/null)'; echo; )
 
 .PHONY: install
 install: apt dotfiles virtualenv vundle
@@ -249,13 +240,6 @@ $(eval $(call virtualenv_target,flake8,flake8))
 $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
 $(eval $(call virtualenv_target,pylint,pylint))
 $(eval $(call virtualenv_target,yamllint,yamllint))
-
-.SECONDEXPANSION:
-$(SHELL_TARGETS): src/$$(@F).*sh $(call rwildcard,src,*.*sh) $(filter src/%,$(SUBMODULES)) | tools/compiler
-	gawk --file=tools/compiler/compiler.gawk -- --addpath src --no-info --output $@ --extended -O $<
-
-home/.gitignore: $(SHELL_TARGETS)
-	$(file >$@) $(foreach TARGET,$^,$(file >>$@,/$(notdir $(TARGET))))
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
