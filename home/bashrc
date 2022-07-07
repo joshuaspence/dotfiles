@@ -4,8 +4,16 @@ if [[ $- != *i* ]]; then
   return
 fi
 
-source ~/dotfiles/src/functions/include.sh
+shopt -s extglob
 
-_dotfiles_include src/config
-_dotfiles_include src/completion
-_dotfiles_include src/functions
+function _include() {
+  for FILE in ~/dotfiles/"$1"/**.@(bash|sh); do
+    source "${FILE}"
+  done
+}
+
+_include src/config
+_include src/completion
+_include src/functions
+
+unset _include

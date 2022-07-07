@@ -1,7 +1,5 @@
-if test -n "${BASH_VERSION}" && test -f "${HOME}/.bashrc"; then
-  . "${HOME}/.bashrc"
+if test -n "${BASH}" && test -f ~/.bashrc; then
+  . ~/.bashrc
 fi
 
-source ~/dotfiles/src/functions/include.sh
-
-_dotfiles_include src/environment
+. ~/dotfiles/src/environment/*.sh
