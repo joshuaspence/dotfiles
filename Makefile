@@ -93,7 +93,7 @@ lint-flake8: home/pythonrc
 # TODO: Is `%q` a valid conversion specification for `printf`?
 .PHONY: lint-jsonlint
 lint-jsonlint: $(call rwildcard,,*.json)
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $^
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $(filter-out home/config/Code/User/%,$^)
 
 # TODO: Why do we need `--ignore=pylint`?
 .PHONY: lint-pylint
@@ -217,6 +217,10 @@ update-virtualenv:
 virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
 	$(VIRTUALENV)/bin/pip-sync --quiet --pip-args '--disable-pip-version-check' $<
 
+.PHONY: vscode
+vscode: home/vscode/extensions.txt
+	cat $< | xargs --max-args=1 code --force --install-extension
+
 .PHONY: vundle
 vundle: home/vimrc
 	vim \
@@ -255,3 +259,6 @@ home/.gitignore: $(SHELL_TARGETS)
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
+
+home/vscode/extensions.txt:
+	code --list-extensions > $@
