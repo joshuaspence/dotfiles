@@ -122,7 +122,7 @@ test: \
 
 .PHONY: test-bootstrap
 test-bootstrap:
-	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu bash -e -c '\
+	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu:jammy bash -e -c '\
 		apt-get update --quiet --quiet; \
 		apt-get install --no-install-recommends --quiet --quiet --yes git make sudo >/dev/null; \
 		git clone --quiet /dotfiles ~/dotfiles; \
