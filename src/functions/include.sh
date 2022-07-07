@@ -1,6 +1,6 @@
 # TODO: Use globs in bash.
 function _dotfiles_include() {
-  for FILE in $(find ~/dotfiles/"$1" -regex ".*\.\($0\|sh\)$"); do
+  while IFS= read -r -d '' FILE; do
     . "${FILE}"
-  done
+  done < <(find ~/dotfiles/"$1" -regex ".*\.\($0\|sh\)$")
 }
