@@ -1,7 +1,9 @@
 #!/usr/bin/env aptfile
 
-CODENAME=$(lsb_release --codename --short)
 DEBIAN_FRONTEND=noninteractive
+DISTRO=$(lsb_release --id --short)
+DISTRO_CODENAME=$(lsb_release --codename --short)
+DISTRO_RELEASE=$(lsb_release --release --short)
 
 export DEBIAN_FRONTEND
 
@@ -57,11 +59,12 @@ EOF
 }
 
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "" "bullseye main" "https://azlux.fr/repo.gpg"
-apt_repository "docker" "https://download.docker.com/linux/ubuntu" "amd64" "${CODENAME} stable" "https://download.docker.com/linux/ubuntu/gpg"
+apt_repository "docker" "https://download.docker.com/linux/ubuntu" "amd64" "${DISTRO_CODENAME} stable" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "i386,amd64" "disco main" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
 apt_repository "github-cli" "https://cli.github.com/packages" "amd64" "stable main" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
 apt_repository "kubernetes" "https://apt.kubernetes.io" "" "kubernetes-xenial main" "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "amd64" "${CODENAME} main" "https://apt.releases.hashicorp.com/gpg"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "amd64" "${DISTRO_CODENAME} main" "https://apt.releases.hashicorp.com/gpg"
+apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/" "" "/" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/Release.key"
 deb_repo "minikube" "https://github.com/kubernetes/minikube/releases/download/v1.26.0/minikube_1.26.0-0_amd64.deb" ""
 apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "" "jessie main" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
 apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "" "focal main" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
@@ -106,6 +109,7 @@ packagelist "network-manager-l2tp" "network-manager-openconnect"
 packagelist "nmap" "traceroute"
 packagelist "packer" "terraform"
 packagelist "parallel" "retry"
+packagelist "podman" "skopeo"
 packagelist "python3" "python3-dev" "python3-venv"
 package "qemu-user-static"
 package "ripgrep"
