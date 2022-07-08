@@ -1,7 +1,5 @@
 #!/usr/bin/env aptfile
 
-alias curl="curl --fail --location --no-progress-meter"
-
 readonly DEBIAN_FRONTEND="noninteractive"
 readonly DISTRO="$(lsb_release --id --short)"
 readonly DISTRO_CODENAME="$(lsb_release --codename --short)"
@@ -46,11 +44,11 @@ function apt_keyring() {
     return
   fi
 
-  (curl "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") > "${TMP_APTFILE_LOGFILE}" 2>&1
+  (curl --fail --location "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") > "${TMP_APTFILE_LOGFILE}" 2>&1
   [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
 
   if [[ -n $gpg_import ]]; then
-    gpg --import "${keyring}" >> "${TMP_APTFILE_LOGFILE}" 2>&1
+    gpg --import "${apt_keyring}" >> "${TMP_APTFILE_LOGFILE}" 2>&1
     [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
   fi
 
