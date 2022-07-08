@@ -115,7 +115,6 @@ test: \
 	test-curl \
 	test-dotfiles \
 	test-git \
-	test-psql \
 	test-python \
 	test-ssh \
 	test-unit \
@@ -143,11 +142,6 @@ test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
 .PHONY: test-git
 test-git: home/gitconfig
 	$(DOCKER_RUN) --volume $(abspath $<):/gitconfig:ro alpine/git config --file /gitconfig --list >/dev/null
-
-# TODO
-.PHONY: test-psql
-test-psql: home/psqlrc
-	true
 
 .PHONY: test-python
 test-python: home/pythonrc
