@@ -46,7 +46,7 @@ function apt_keyring() {
     return
   fi
 
-  (curl "${gpg_key}" | gpg --dearmor --output "${keyring}") > "${TMP_APTFILE_LOGFILE}" 2>&1
+  (curl "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") > "${TMP_APTFILE_LOGFILE}" 2>&1
   [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
 
   if [[ -n $gpg_import ]]; then
