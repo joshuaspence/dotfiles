@@ -15,7 +15,6 @@ packages = [
     'config/Code/User',
     'config/dconf',
     'jira.d',
-    'minikube',
     'ssh',
     'venv',
     'vim',
