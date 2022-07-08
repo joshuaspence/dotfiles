@@ -1,8 +1,7 @@
 [dotfiles]
 repository = ~/dotfiles/home
 ignore = [
-    '.editorconfig',
-    '.gitignore',
+    'extensions.txt',
     'requirements.in',
   ]
 externals = {}
