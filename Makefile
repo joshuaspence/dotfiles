@@ -51,7 +51,7 @@ bingo:
 brew: home/Brewfile.lock.json
 
 .PHONY: dconf
-dconf: dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
+dconf: home/config/dconf/dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 	cat $< | dconf load /
 	$(VIRTUALENV)/bin/gnome-extensions-cli install noannoyance@daase.net
 
