@@ -92,7 +92,7 @@ apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRO_COD
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "disco main" "i386,amd64" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
 apt_repository "github-cli" "https://cli.github.com/packages" "stable main" "amd64" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
 apt_repository "kubernetes" "https://apt.kubernetes.io" "kubernetes-xenial main" "" "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRO_CODENAME} main" "amd64""https://apt.releases.hashicorp.com/gpg"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRO_CODENAME} main" "amd64" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/" "/" "" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/Release.key"
 deb_repo "minikube" "https://github.com/kubernetes/minikube/releases/download/v1.26.0/minikube_1.26.0-0_amd64.deb" ""
 apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "jessie main" "" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
