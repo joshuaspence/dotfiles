@@ -1,51 +1,80 @@
 #!/usr/bin/env aptfile
 
-DEBIAN_FRONTEND=noninteractive
-DISTRO=$(lsb_release --id --short)
-DISTRO_CODENAME=$(lsb_release --codename --short)
-DISTRO_RELEASE=$(lsb_release --release --short)
+alias curl="curl --fail --location --no-progress-meter"
+
+readonly DEBIAN_FRONTEND="noninteractive"
+readonly DISTRO="$(lsb_release --id --short)"
+readonly DISTRO_CODENAME="$(lsb_release --codename --short)"
+readonly DISTRO_RELEASE="$(lsb_release --release --short)"
 
 export DEBIAN_FRONTEND
 
 function apt_repository() {
-  local name="$1"
-  local apt_repo="$2"
-  local architecture="$3"
-  local components="$4"
-  local gpg_key="$5"
+  local -r name="$1"
+  local -r apt_repo="$2"
+  local -r components="$3"
+  local -r architecture="$4"
+  local -r gpg_key="$5"
 
+  [[ -z $name ]] && log_fail "Please specify a repository name"
+  [[ -z $apt_repo ]] && log_fail "Please specify a repository source URL"
+  [[ -z $components ]] && log_fail "Please specify repository components"
+  
   local apt_opts=()
-  test -n "${architecture}" && apt_opts+=("arch=${architecture}")
-  apt_opts+=("signed-by=/etc/apt/keyrings/${name}.gpg")
+  [[ -n $architecture ]] && apt_opts+=("arch=${architecture}")
 
-  # Install GPG key.
-  if ! test -f "/etc/apt/keyrings/${name}.gpg"; then
-    curl --fail --location --show-error --silent "${gpg_key}" | gpg --dearmor --output "/etc/apt/keyrings/${name}.gpg"
+  if [[ -n $gpg_key ]]; then
+    apt_keyring "${name}" "${gpg_key}"
+    apt_opts+=("signed-by=/etc/apt/keyrings/${name}.gpg")
   fi
 
-  # Create apt repository.
   repository_file "${name}" "deb [${apt_opts[*]}] ${apt_repo} ${components}"
 }
 
-function deb_repo() {
-  local name="$1"
-  local url="$2"
-  local gpg_key="$3"
+function apt_keyring() {
+  local -r name="$1"
+  local -r gpg_key="$2"
+  local -r gpg_import="${3}"
 
-  local apt_conf="/etc/apt/apt.conf.d/50${name}.conf"
-  local apt_repo="/var/lib/apt/repos/${name}"
-  local gpg_cmd="true"
+  [[ -z $name ]] && log_fail "Please specify a keyring name"
+  [[ -z $gpg_key ]] && log_fail "Please specify a GPG key"
 
-  if test -n "${gpg_key}"; then
-    if ! test -f "/etc/apt/keyrings/${name}.gpg"; then
-      curl --fail --location --show-error --silent "${gpg_key}" | gpg --dearmor --output "/etc/apt/keyrings/${name}.gpg"
-      gpg --import "/etc/apt/keyrings/${name}.gpg"
-    fi
+  local -r apt_keyring="/etc/apt/keyrings/${name}.gpg"
 
-    gpg_cmd = "dpkg-sig --verify ${apt_repo}/*.deb"
+  if [[ -f $apt_keyring ]]; then
+    log_info "${APTFILE_CYAN}[OK]${APTFILE_COLOR_OFF} keyring ${name}"
+    return
   fi
 
-  if ! test -f "${apt_conf}"; then
+  (curl "${gpg_key}" | gpg --dearmor --output "${keyring}") > "${TMP_APTFILE_LOGFILE}" 2>&1
+  [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
+
+  if [[ -n $gpg_import ]]; then
+    gpg --import "${keyring}" >> "${TMP_APTFILE_LOGFILE}" 2>&1
+    [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
+  fi
+
+  log_info "${APTFILE_GREEN}[NEW]${APTFILE_COLOR_OFF} keyring ${name}"
+}
+
+function deb_repo() {
+  local -r name="$1"
+  local -r deb_url="$2"
+  local -r gpg_key="$3"
+
+  [[ -z $name ]] && log_fail "Please specify a repository name"
+  [[ -z $deb_url ]] && log_fail "Please specify a DEB URL"
+  
+  local -r apt_conf="/etc/apt/apt.conf.d/50${name}.conf"
+  local -r apt_repo="/var/lib/apt/repos/${name}"
+  local gpg_cmd="true"
+
+  if [[ -n $gpg_key ]]; then
+    apt_keyring "${name}" "${gpg_key}" "true"
+    gpg_cmd="dpkg-sig --verify ${apt_repo}/*.deb"
+  fi
+
+  if [[ ! -f $apt_conf ]]; then
     mkdir --parents "${apt_repo}"
     cat << EOF > "${apt_conf}"
 APT::Update::Pre-Invoke { "wget --quiet --timestamping --directory-prefix ${apt_repo} ${url}"; };
@@ -58,17 +87,17 @@ EOF
   repository_file "${name}" "deb [trusted=yes lang=none] file:${apt_repo} ./"
 }
 
-apt_repository "azlux" "http://packages.azlux.fr/debian/" "" "bullseye main" "https://azlux.fr/repo.gpg"
-apt_repository "docker" "https://download.docker.com/linux/ubuntu" "amd64" "${DISTRO_CODENAME} stable" "https://download.docker.com/linux/ubuntu/gpg"
-apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "i386,amd64" "disco main" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
-apt_repository "github-cli" "https://cli.github.com/packages" "amd64" "stable main" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
-apt_repository "kubernetes" "https://apt.kubernetes.io" "" "kubernetes-xenial main" "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "amd64" "${DISTRO_CODENAME} main" "https://apt.releases.hashicorp.com/gpg"
-apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/" "" "/" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/Release.key"
+apt_repository "azlux" "http://packages.azlux.fr/debian/" "bullseye main" "" "https://azlux.fr/repo.gpg"
+apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRO_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
+apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "disco main" "i386,amd64" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
+apt_repository "github-cli" "https://cli.github.com/packages" "stable main" "amd64" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+apt_repository "kubernetes" "https://apt.kubernetes.io" "kubernetes-xenial main" "" "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRO_CODENAME} main" "amd64""https://apt.releases.hashicorp.com/gpg"
+apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/" "/" "" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/Release.key"
 deb_repo "minikube" "https://github.com/kubernetes/minikube/releases/download/v1.26.0/minikube_1.26.0-0_amd64.deb" ""
-apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "" "jessie main" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
-apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "" "focal main" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
-apt_repository "vscode" "https://packages.microsoft.com/repos/code" "amd64,arm64,armhf" "stable main" "https://packages.microsoft.com/keys/microsoft.asc"
+apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "jessie main" "" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
+apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "focal main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
+apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
 deb_repo "zoom" "https://zoom.us/client/latest/zoom_amd64.deb" "https://zoom.us/linux/download/pubkey"
 
 update
