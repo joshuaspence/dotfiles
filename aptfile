@@ -77,7 +77,7 @@ function deb_repo() {
   if [[ ! -f $apt_conf ]]; then
     mkdir --parents "${apt_repo}"
     cat << EOF > "${apt_conf}"
-APT::Update::Pre-Invoke { "wget --quiet --timestamping --directory-prefix ${apt_repo} ${url}"; };
+APT::Update::Pre-Invoke { "wget --quiet --timestamping --directory-prefix ${apt_repo} ${deb_url}"; };
 APT::Update::Pre-Invoke { "${gpg_cmd}"; };
 APT::Update::Pre-Invoke { "cd ${apt_repo} && apt-ftparchive packages . > Packages"; };
 APT::Update::Pre-Invoke { "cd ${apt_repo} && apt-ftparchive release . > Release"; };
