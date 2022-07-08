@@ -47,12 +47,6 @@ $(HUB_TOOL): $(BINGO_DIR)/hub-tool.mod
 	@echo "(re)installing $(GOBIN)/hub-tool-v0.4.4"
 	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=hub-tool.mod -o=$(GOBIN)/hub-tool-v0.4.4 "github.com/docker/hub-tool"
 
-JIRA := $(GOBIN)/jira-v1.0.28
-$(JIRA): $(BINGO_DIR)/jira.mod
-	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
-	@echo "(re)installing $(GOBIN)/jira-v1.0.28"
-	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=jira.mod -o=$(GOBIN)/jira-v1.0.28 "github.com/go-jira/jira/cmd/jira"
-
 SKOPEO := $(GOBIN)/skopeo-v1.8.0
 $(SKOPEO): $(BINGO_DIR)/skopeo.mod
 	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.

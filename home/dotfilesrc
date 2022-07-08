@@ -14,7 +14,6 @@ packages = [
     'config/Code',
     'config/Code/User',
     'config/dconf',
-    'jira.d',
     'ssh',
     'venv',
     'vim',

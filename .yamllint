@@ -1,9 +1,6 @@
 ---
 extends: 'default'
 
-ignore: |
-  home/jira.d/config.yml
-
 rules:
   braces:
     max-spaces-inside: 1
