@@ -1,6 +1,5 @@
 git+https://github.com/JelmerT/cc2538-bsl
-dotfiles
-esphome
+dotfile
 esptool
 gnome-extensions-cli
 gphotos-sync

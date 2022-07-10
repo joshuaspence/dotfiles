@@ -29,7 +29,7 @@ rwildcard = $(wildcard $1$2) $(foreach dir,$(wildcard $1*),$(call rwildcard,$(di
 define virtualenv_target
 .SECONDARY: $(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD))
 $(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD)): | $$(VIRTUALENV)
-	$(VIRTUALENV)/bin/pip install --constraint home/venv/requirements.txt --quiet $(1)
+	$(VIRTUALENV)/bin/pip install --constraint src/venv/requirements.txt --quiet $(1)
 endef
 
 #===============================================================================
@@ -44,24 +44,25 @@ apt: aptfile
 	sudo tools/bash-aptfile/bin/aptfile $<
 
 .PHONY: bingo
-bingo:
-	bingo get -moddir home/bingo
+bingo: src/bingo
+	bingo get -moddir $<
 
 .PHONY: dconf
-dconf: home/config/dconf/dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
+dconf: src/dconf/dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 	cat $< | dconf load /
 	$(VIRTUALENV)/bin/gnome-extensions-cli install noannoyance@daase.net
 
 .PHONY: deps
 deps:
 	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
+	sh -c "$$(curl --fail --location --no-progress-bar https://chezmoi.io/get)"
 
 .PHONY: install
 install: apt dotfiles virtualenv vundle
 
 .PHONY: dotfiles
-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
-	$(VIRTUALENV)/bin/dotfiles --force --repo $(<D) --config $< --sync
+dotfiles:
+	PATH=bin:$$PATH chezmoi apply --config home/dot_config/chezmoi/chezmoi.yaml --source home/
 
 # TODO: Run all `lint-*` targets automatically.
 # See https://stackoverflow.com/a/26339924/1369417.
@@ -74,7 +75,7 @@ lint: \
 	lint-yamllint
 
 .PHONY: lint-flake8
-lint-flake8: home/pythonrc
+lint-flake8: home/dot_pythonrc
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) pipelinecomponents/flake8 flake8 $^
 
 # TODO: We should list all of the files to be linted as dependencies of
@@ -84,16 +85,16 @@ lint-flake8: home/pythonrc
 # TODO: Is `%q` a valid conversion specification for `printf`?
 .PHONY: lint-jsonlint
 lint-jsonlint: $(call rwildcard,,*.json)
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $(filter-out home/config/Code/User/%,$^)
+	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $(filter-out home/dot_config/Code/User/%,$^)
 
 # TODO: Why do we need `--ignore=pylint`?
 .PHONY: lint-pylint
-lint-pylint: home/pythonrc
+lint-pylint: home/dot_pythonrc
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) cytopia/pylint pylint --ignore=pylint $^
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
-lint-shellcheck: $(call rwildcard,src,*.*sh) $(call rwildcard,test,*.*sh) $(call rwildcard,test,*.bats) home/bash_logout home/bash_profile home/hushlogin
+lint-shellcheck: $(call rwildcard,src,*.*sh) $(call rwildcard,test,*.*sh) $(call rwildcard,test,*.bats) home/dot_bash_logout home/dot_bash_profile home/dot_hushlogin
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091 --shell=bash $(filter-out src/modules/%,$^)
 
 # TODO: This should be run from a Docker container.
@@ -110,7 +111,6 @@ submodules: $(SUBMODULES)
 test: \
 	test-bootstrap \
 	test-curl \
-	test-dotfiles \
 	test-git \
 	test-python \
 	test-ssh \
@@ -129,23 +129,19 @@ test-bootstrap:
 	'
 
 .PHONY: test-curl
-test-curl: home/curlrc
+test-curl: home/dot_curlrc
 	$(call check_stdout_empty,curl --config $< --version)
 
-.PHONY: test-dotfiles
-test-dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
-	$(VIRTUALENV)/bin/dotfiles --repo $(<D) --config $< --list >/dev/null
-
 .PHONY: test-git
-test-git: home/gitconfig
+test-git: home/dot_gitconfig
 	$(DOCKER_RUN) --volume $(abspath $<):/gitconfig:ro alpine/git config --file /gitconfig --list >/dev/null
 
 .PHONY: test-python
-test-python: home/pythonrc
+test-python: home/dot_pythonrc
 	$(DOCKER_RUN) --volume $(abspath $<):/pythonrc:ro python python /pythonrc
 
 .PHONY: test-ssh
-test-ssh: home/ssh/config
+test-ssh: home/dot_ssh/config
 	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/ssh-config:ro chamunks/alpine-openssh -F /ssh-config -G -T localhost >/dev/null
 
 .PHONY: test-unit
@@ -153,17 +149,17 @@ test-unit: $(wildcard tools/bats-*/.git)
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) bats/bats --recursive test/
 
 .PHONY: test-vim
-test-vim: home/vimrc home/vim home/vim/bundle $(wildcard home/vim/**/*)
+test-vim: home/dot_vimrc home/dot_vim home/dot_vim/bundle $(wildcard home/dot_vim/**/*)
 	$(DOCKER_RUN) \
 		--tty \
-		$(foreach PATH,$< $(sort $(filter-out $(word 3,$^),$(shell find $(word 2,$^) $(word 3,$^) -mindepth 1 -maxdepth 1 -type d))),--volume $(abspath $(PATH)):$(patsubst home/vim%,/root/.vim%,$(PATH)):ro) \
+		$(foreach PATH,$< $(sort $(filter-out $(word 3,$^),$(shell find $(word 2,$^) $(word 3,$^) -mindepth 1 -maxdepth 1 -type d))),--volume $(abspath $(PATH)):$(patsubst home/dot_vim%,/root/.vim%,$(PATH)):ro) \
 		--volume $(abspath .git/modules):/.git/modules:ro \
 		thinca/vim \
 		-u NONE \
 		-c 'try | source ~/.vimrc | catch | silent execute "!echo" shellescape(v:exception) | cquit | endtry | quit'
 
 .PHONY: test-virtualenv
-test-virtualenv: home/venv/requirements.txt
+test-virtualenv: src/venv/requirements.txt
 	$(DOCKER_RUN) --volume $(abspath $<):/requirements.txt:ro python:3 bash -e -c '\
 		apt-get update --quiet --quiet; \
 		apt-get install --no-install-recommends --quiet --quiet --yes libcairo2-dev libgirepository1.0-dev; \
@@ -172,7 +168,7 @@ test-virtualenv: home/venv/requirements.txt
 	'
 
 .PHONY: test-wget
-test-wget: home/wgetrc
+test-wget: home/dot_wgetrc
 	$(DOCKER_RUN) --volume $(abspath $<):/wgetrc:ro inutano/wget wget --config /wgetrc --version >/dev/null
 
 .PHONY: update
@@ -184,8 +180,8 @@ update-asdf:
 	asdf plugin-update --all
 
 .PHONY: update-bingo
-update-bingo:
-	echo $(patsubst %.mod,%,$(notdir $(wildcard home/bingo/*.mod))) | xargs --max-args=1 bingo get -moddir home/bingo -u
+update-bingo: src/bingo
+	echo $(patsubst %.mod,%,$(notdir $(wildcard $</*.mod))) | xargs --max-args=1 bingo get -moddir $< -u
 
 .PHONY: update-submodules
 update-submodules:
@@ -193,24 +189,24 @@ update-submodules:
 
 .PHONY: update-virtualenv
 update-virtualenv:
-	@touch home/venv/requirements.in
-	@$(MAKE) home/venv/requirements.txt UPGRADE=1
+	@touch src/venv/requirements.in
+	@$(MAKE) src/venv/requirements.txt UPGRADE=1
 	@$(MAKE) virtualenv
 	pip install --upgrade pip
 
 .PHONY: virtualenv
-virtualenv: home/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
+virtualenv: src/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
 	$(VIRTUALENV)/bin/pip-sync --quiet --pip-args '--disable-pip-version-check' $<
 
 .PHONY: vscode
-vscode: home/vscode/extensions.txt
+vscode: src/vscode/extensions.txt
 	cat $< | xargs --max-args=1 code --force --install-extension
 
 .PHONY: vundle
-vundle: home/vimrc
+vundle: home/dot_vimrc
 	vim \
 	  -u NONE \
-	  -c 'source home/vimrc' \
+	  -c 'source home/dot_vimrc' \
 	  -c PluginInstall -c PluginUpdate -c PluginClean! \
 	  -c qall
 
@@ -229,14 +225,13 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 $(VIRTUALENV):
 	python3 -m venv $@
 
-$(eval $(call virtualenv_target,dotfiles,dotfiles))
 $(eval $(call virtualenv_target,flake8,flake8))
 $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
 $(eval $(call virtualenv_target,pylint,pylint))
 $(eval $(call virtualenv_target,yamllint,yamllint))
 
-home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
+src/venv/requirements.txt: src/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
 
-home/vscode/extensions.txt:
+src/vscode/extensions.txt:
 	code --list-extensions > $@
