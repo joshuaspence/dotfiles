@@ -10,6 +10,9 @@ function upgrade-all() {
   # Gnome Extensions
   gnome-extensions-cli update
 
+  # Homebrew
+  brew upgrade
+
   # Snap
   sudo snap refresh
 

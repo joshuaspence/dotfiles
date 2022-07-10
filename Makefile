@@ -47,9 +47,6 @@ apt: aptfile
 bingo:
 	bingo get -moddir home/bingo
 
-.PHONY: brew
-brew: home/Brewfile.lock.json
-
 .PHONY: dconf
 dconf: home/config/dconf/dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 	cat $< | dconf load /
@@ -60,7 +57,7 @@ deps:
 	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
 
 .PHONY: install
-install: apt brew dotfiles virtualenv vundle
+install: apt dotfiles virtualenv vundle
 
 .PHONY: dotfiles
 dotfiles: home/dotfilesrc | $(VIRTUALENV)/bin/dotfiles
@@ -237,9 +234,6 @@ $(eval $(call virtualenv_target,flake8,flake8))
 $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
 $(eval $(call virtualenv_target,pylint,pylint))
 $(eval $(call virtualenv_target,yamllint,yamllint))
-
-home/Brewfile.lock.json: home/Brewfile
-	brew bundle --file=$<
 
 home/venv/requirements.txt: home/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
