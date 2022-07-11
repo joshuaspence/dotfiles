@@ -57,7 +57,7 @@ dotfiles:
 submodules: $(SUBMODULES)
 
 .PHONY: test
-test: \
+test:
 	docker run --rm --volume $(CURDIR):/dotfiles:ro ubuntu:jammy bash -e -c '\
 		apt-get update --quiet --quiet; \
 		apt-get install --no-install-recommends --quiet --quiet --yes git make sudo >/dev/null; \
