@@ -5,5 +5,5 @@ if command -v batcat &>/dev/null; then
   alias batman="${HOME}/dotfiles/tools/bat-extras/src/batman.sh"
   alias cat='batcat --paging=never'
 
-  source <("${HOME}/dotfiles/src/modules/bat-extras/src/batpipe.sh")
+  source <("${HOME}/dotfiles/tools/bat-extras/src/batpipe.sh")
 fi
