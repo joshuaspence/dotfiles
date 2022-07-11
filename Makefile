@@ -75,7 +75,7 @@ update-asdf:
 
 .PHONY: update-bingo
 update-bingo: src/bingo
-	echo $(patsubst %.mod,%,$(notdir $(wildcard $</*.mod))) | xargs --max-args=1 bingo get -moddir $< -u
+	echo $(patsubst %.mod,%,$(notdir $(wildcard $</*.mod))) | tr ' ' '\n' | xargs --replace={} bingo get -moddir $< {}@latest
 
 .PHONY: update-submodules
 update-submodules:
