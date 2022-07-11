@@ -60,7 +60,7 @@ function deb_repo() {
   local -r deb_url="$2"
   local -r gpg_key="$3"
 
-  [[ -z $name ]] && log_fail "Please specify a repository name"
+[[ -z $name ]] && log_fail "Please specify a repository name"
   [[ -z $deb_url ]] && log_fail "Please specify a DEB URL"
 
   local -r apt_conf="/etc/apt/apt.conf.d/50${name}.conf"
