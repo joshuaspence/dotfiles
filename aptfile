@@ -17,7 +17,7 @@ function apt_repository() {
   [[ -z $name ]] && log_fail "Please specify a repository name"
   [[ -z $apt_repo ]] && log_fail "Please specify a repository source URL"
   [[ -z $components ]] && log_fail "Please specify repository components"
-  
+
   local apt_opts=()
   [[ -n $architecture ]] && apt_opts+=("arch=${architecture}")
 
@@ -44,7 +44,7 @@ function apt_keyring() {
     return
   fi
 
-  (curl --fail --location "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") > "${TMP_APTFILE_LOGFILE}" 2>&1
+  (wget --quiet --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") > "${TMP_APTFILE_LOGFILE}" 2>&1
   [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
 
   if [[ -n $gpg_import ]]; then
@@ -62,7 +62,7 @@ function deb_repo() {
 
   [[ -z $name ]] && log_fail "Please specify a repository name"
   [[ -z $deb_url ]] && log_fail "Please specify a DEB URL"
-  
+
   local -r apt_conf="/etc/apt/apt.conf.d/50${name}.conf"
   local -r apt_repo="/var/lib/apt/repos/${name}"
   local gpg_cmd="true"
