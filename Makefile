@@ -1,7 +1,6 @@
 #===============================================================================
 # Macros
 #===============================================================================
-DOCKER_RUN  = docker run --rm
 MAKE       += --no-print-directory
 VIRTUALENV  = $(HOME)/.venv
 
@@ -13,16 +12,6 @@ SUBMODULES    = $(shell git config --file .gitmodules --get-regexp '^submodule\.
 #===============================================================================
 # Functions
 #===============================================================================
-
-# Check that a command produces no output to standard error.
-# See https://stackoverflow.com/a/25496589.
-define check_stderr_empty
-! $(1) 2>&1 >/dev/null | grep ^
-endef
-
-# The `wildcard` function doesn't recurse into subdirectories.
-# See https://stackoverflow.com/a/12959764/1369417.
-rwildcard = $(wildcard $1$2) $(foreach dir,$(wildcard $1*),$(call rwildcard,$(dir)/,$2))
 
 # Define a target to install a Python package.
 # Should be used in conjunction with `eval`.
@@ -69,7 +58,7 @@ submodules: $(SUBMODULES)
 
 .PHONY: test
 test: \
-	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu:jammy bash -e -c '\
+	docker run --rm --volume $(CURDIR):/dotfiles:ro ubuntu:jammy bash -e -c '\
 		apt-get update --quiet --quiet; \
 		apt-get install --no-install-recommends --quiet --quiet --yes git make sudo >/dev/null; \
 		git clone --quiet /dotfiles ~/dotfiles; \
