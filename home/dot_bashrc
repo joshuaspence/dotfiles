@@ -7,7 +7,7 @@ fi
 shopt -s extglob
 
 function _include() {
-  for FILE in ~/dotfiles/"$1"/**.@(bash|sh); do
+  for FILE in ~/.local/share/chezmoi/"$1"/**.@(bash|sh); do
     source "${FILE}"
   done
 }
