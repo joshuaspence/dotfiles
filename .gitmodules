@@ -6,18 +6,6 @@ url = https://github.com/VundleVim/Vundle.vim.git
 path = src/modules/bat-extras
 url = https://github.com/eth-p/bat-extras.git
 
-[submodule "tools/bats-assert"]
-path = tools/bats-assert
-url = https://github.com/ztombol/bats-assert.git
-
-[submodule "tools/bats-mock"]
-path = tools/bats-mock
-url = https://github.com/jasonkarns/bats-mock
-
-[submodule "tools/bats-support"]
-path = tools/bats-support
-url = https://github.com/ztombol/bats-support.git
-
 [submodule "tools/bash-aptfile"]
 path = tools/bash-aptfile
 url = https://github.com/seatgeek/bash-aptfile.git

@@ -94,7 +94,7 @@ lint-pylint: home/dot_pythonrc
 
 # TODO: Split these into `--shell=sh` and `--shell=bash`.
 .PHONY: lint-shellcheck
-lint-shellcheck: $(call rwildcard,src,*.*sh) $(call rwildcard,test,*.*sh) $(call rwildcard,test,*.bats) home/dot_bash_logout home/dot_bash_profile home/dot_hushlogin
+lint-shellcheck: $(call rwildcard,src,*.*sh) home/dot_bash_logout home/dot_bash_profile home/dot_hushlogin
 	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091 --shell=bash $(filter-out src/modules/%,$^)
 
 # TODO: This should be run from a Docker container.
@@ -105,71 +105,14 @@ lint-yamllint: $(call rwildcard,,*.yaml) $(call rwildcard,,*.yml) $(call rwildca
 .PHONY: submodules
 submodules: $(SUBMODULES)
 
-# TODO: Run all `test-*` targets automatically.
-# See https://stackoverflow.com/a/26339924/1369417.
 .PHONY: test
 test: \
-	test-bootstrap \
-	test-curl \
-	test-git \
-	test-python \
-	test-ssh \
-	test-unit \
-	test-vim \
-	test-virtualenv \
-	test-wget
-
-.PHONY: test-bootstrap
-test-bootstrap:
 	$(DOCKER_RUN) --volume $(CURDIR):/dotfiles:ro ubuntu:jammy bash -e -c '\
 		apt-get update --quiet --quiet; \
 		apt-get install --no-install-recommends --quiet --quiet --yes git make sudo >/dev/null; \
 		git clone --quiet /dotfiles ~/dotfiles; \
 		make --directory ~/dotfiles deps all; \
 	'
-
-.PHONY: test-curl
-test-curl: home/dot_curlrc
-	$(call check_stdout_empty,curl --config $< --version)
-
-.PHONY: test-git
-test-git: home/dot_gitconfig
-	$(DOCKER_RUN) --volume $(abspath $<):/gitconfig:ro alpine/git config --file /gitconfig --list >/dev/null
-
-.PHONY: test-python
-test-python: home/dot_pythonrc
-	$(DOCKER_RUN) --volume $(abspath $<):/pythonrc:ro python python /pythonrc
-
-.PHONY: test-ssh
-test-ssh: home/dot_ssh/config
-	$(DOCKER_RUN) --entrypoint /usr/bin/ssh --volume $(abspath $<):/ssh-config:ro chamunks/alpine-openssh -F /ssh-config -G -T localhost >/dev/null
-
-.PHONY: test-unit
-test-unit: $(wildcard tools/bats-*/.git)
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) bats/bats --recursive test/
-
-.PHONY: test-vim
-test-vim: home/dot_vimrc home/dot_vim home/dot_vim/bundle $(wildcard home/dot_vim/**/*)
-	$(DOCKER_RUN) \
-		--tty \
-		$(foreach PATH,$< $(sort $(filter-out $(word 3,$^),$(shell find $(word 2,$^) $(word 3,$^) -mindepth 1 -maxdepth 1 -type d))),--volume $(abspath $(PATH)):$(patsubst home/dot_vim%,/root/.vim%,$(PATH)):ro) \
-		--volume $(abspath .git/modules):/.git/modules:ro \
-		thinca/vim \
-		-u NONE \
-		-c 'try | source ~/.vimrc | catch | silent execute "!echo" shellescape(v:exception) | cquit | endtry | quit'
-
-.PHONY: test-virtualenv
-test-virtualenv: src/venv/requirements.txt
-	$(DOCKER_RUN) --volume $(abspath $<):/requirements.txt:ro python:3 bash -e -c '\
-		apt-get update --quiet --quiet; \
-		apt-get install --no-install-recommends --quiet --quiet --yes libcairo2-dev libgirepository1.0-dev; \
-		\
-		pip install --requirement /requirements.txt --quiet --disable-pip-version-check; \
-	'
-
-.PHONY: test-wget
-test-wget: home/dot_wgetrc
-	$(DOCKER_RUN) --volume $(abspath $<):/wgetrc:ro inutano/wget wget --config /wgetrc --version >/dev/null
 
 .PHONY: update
 update: update-asdf update-bingo update-submodules update-virtualenv
