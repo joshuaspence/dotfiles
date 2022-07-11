@@ -35,7 +35,6 @@ if sys.version_info.major < 3:
 
 # Enable command history.
 try:
-  # pylint: disable=ungrouped-imports
   import readline
 except ImportError:
   sys.stderr.write('Module readline not available. Command-line history is disabled.\n')

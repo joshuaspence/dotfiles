@@ -64,44 +64,6 @@ install: apt dotfiles virtualenv vundle
 dotfiles:
 	PATH=bin:$$PATH chezmoi apply --config home/dot_config/chezmoi/chezmoi.yaml --source home/
 
-# TODO: Run all `lint-*` targets automatically.
-# See https://stackoverflow.com/a/26339924/1369417.
-.PHONY: lint
-lint: \
-	lint-flake8 \
-	lint-jsonlint \
-	lint-pylint \
-	lint-shellcheck \
-	lint-yamllint
-
-.PHONY: lint-flake8
-lint-flake8: home/dot_pythonrc
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) pipelinecomponents/flake8 flake8 $^
-
-# TODO: We should list all of the files to be linted as dependencies of
-# the `lint-jsonlint` target, but `make` doesn't properly handle filenames
-# containing spaces. See
-# https://www.cmcrossroads.com/article/gnu-make-meets-file-names-spaces-them.
-# TODO: Is `%q` a valid conversion specification for `printf`?
-.PHONY: lint-jsonlint
-lint-jsonlint: $(call rwildcard,,*.json)
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) tuananhpham/jsonlint jsonlint $(filter-out home/dot_config/Code/User/%,$^)
-
-# TODO: Why do we need `--ignore=pylint`?
-.PHONY: lint-pylint
-lint-pylint: home/dot_pythonrc
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR) --workdir $(CURDIR) cytopia/pylint pylint --ignore=pylint $^
-
-# TODO: Split these into `--shell=sh` and `--shell=bash`.
-.PHONY: lint-shellcheck
-lint-shellcheck: $(call rwildcard,src,*.*sh) home/dot_bash_logout home/dot_bash_profile home/dot_hushlogin
-	$(DOCKER_RUN) --volume $(CURDIR):$(CURDIR):ro --workdir $(CURDIR) koalaman/shellcheck --exclude=SC1090,SC1091 --shell=bash $(filter-out src/modules/%,$^)
-
-# TODO: This should be run from a Docker container.
-.PHONY: lint-yamllint
-lint-yamllint: $(call rwildcard,,*.yaml) $(call rwildcard,,*.yml) $(call rwildcard,,.*.yaml) $(call rwildcard,,.*.yml) .yamllint | $(VIRTUALENV)/bin/yamllint
-	$(VIRTUALENV)/bin/yamllint --strict $(filter-out tools/bats-%,$^)
-
 .PHONY: submodules
 submodules: $(SUBMODULES)
 
@@ -168,10 +130,7 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 $(VIRTUALENV):
 	python3 -m venv $@
 
-$(eval $(call virtualenv_target,flake8,flake8))
 $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
-$(eval $(call virtualenv_target,pylint,pylint))
-$(eval $(call virtualenv_target,yamllint,yamllint))
 
 src/venv/requirements.txt: src/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
