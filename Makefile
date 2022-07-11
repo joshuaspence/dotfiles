@@ -55,7 +55,7 @@ dconf: src/dconf/dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 .PHONY: deps
 deps:
 	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
-	sh -c "$$(curl --fail --location --no-progress-bar https://chezmoi.io/get)"
+	curl --fail --location --no-progress-bar https://chezmoi.io/get | sh -s
 
 .PHONY: install
 install: apt dotfiles virtualenv vundle
