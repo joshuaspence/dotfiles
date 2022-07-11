@@ -69,7 +69,7 @@ function deb_repo() {
 
   if [[ -n $gpg_key ]]; then
     apt_keyring "${name}" "${gpg_key}" "true"
-    gpg_cmd="dpkg-sig --verify ${apt_repo}/*.deb"
+    gpg_cmd="dpkg-sig --verify ${apt_repo}/*.deb >/dev/null"
   fi
 
   if [[ ! -f $apt_conf ]]; then
