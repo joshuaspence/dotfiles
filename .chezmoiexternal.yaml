@@ -1,4 +1,8 @@
 ---
+.asdf:
+  type: 'git-repo'
+  url: 'https://github.com/asdf-vm/asdf.git'
+
 .shell/modules/bat-extras:
   type: 'git-repo'
   url: 'https://github.com/eth-p/bat-extras.git'

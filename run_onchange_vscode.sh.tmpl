@@ -1,9 +1,11 @@
 #!/bin/bash
 
+# Configuration
+# .vscode/extensions.txt: {{ include "dot_vscode/extensions.txt" | sha256sum }}
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
-# .vscode/extensions.txt: {{ include "dot_vscode/extensions.txt" | sha256sum }}
 xargs --max-lines=1 code --force --install-extension < .vscode/extensions.txt
 code --list-extensions > .vscode/extensions.txt

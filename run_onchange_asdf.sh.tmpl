@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+source .shell/environment/asdf.sh
+
+function asdf_plugin() {
+  asdf plugin list | grep --quiet "^${1}$" && return
+  asdf plugin add "${1}"
+}
+
+# Install plugins.
+asdf_plugin golang
+asdf_plugin nodejs
+asdf_plugin python
+
+# Install tool versions.
+asdf install

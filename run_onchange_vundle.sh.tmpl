@@ -1,8 +1,10 @@
 #!/bin/bash
 
+# Configuration
+# .vimrc: {{ include "dot_vimrc" | sha256sum }}
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
-# ~/.vimrc: {{ include "dot_vimrc" | sha256sum }}
 vim -c PluginInstall -c PluginUpdate -c PluginClean! -c qall
