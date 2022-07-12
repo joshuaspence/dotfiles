@@ -49,6 +49,7 @@ test:
 		apt-get install --no-install-recommends --quiet --quiet --yes ca-certificates build-essential curl git make sudo; \
 		curl --fail --location --no-progress-meter chezmoi.io/get | sh -s -- -b /usr/local/bin; \
 		git clone --quiet /dotfiles ~/.local/share/chezmoi; \
+		chezmoi init; \
 		make --directory ~/.local/share/chezmoi deps all; \
 	'
 
