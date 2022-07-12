@@ -7,4 +7,4 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-vim -c PluginInstall -c PluginUpdate -c PluginClean! -c qall
+vim -u NONE -c 'source .vimrc' -c PluginInstall -c PluginUpdate -c PluginClean! -c qall
