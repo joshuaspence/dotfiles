@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# .local/share/gnome-shell/extensions.txt: {{ include "dot_local/share/gnome-shell/extensions.txt" | sha256sum }}
+xargs --max-lines=1 ~/.venv/bin/gnome-extensions-cli install < .local/share/gnome-shell/extensions.txt
