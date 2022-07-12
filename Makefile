@@ -28,10 +28,6 @@ endef
 .PHONY: all
 all: submodules install
 
-.PHONY: bingo
-bingo: src/bingo
-	bingo get -moddir $<
-
 .PHONY: deps
 deps:
 	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
