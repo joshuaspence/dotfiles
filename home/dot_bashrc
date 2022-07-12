@@ -7,13 +7,13 @@ fi
 shopt -s extglob
 
 function _include() {
-  for FILE in ~/.local/share/chezmoi/"$1"/**.@(bash|sh); do
+  for FILE in ~/.shell/"$1"/**.@(bash|sh); do
     source "${FILE}"
   done
 }
 
-_include src/config
-_include src/completion
-_include src/functions
+_include config
+_include completion
+_include functions
 
 unset _include

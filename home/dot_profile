@@ -2,6 +2,6 @@ if test -n "${BASH}" && test -f ~/.bashrc; then
   . ~/.bashrc
 fi
 
-for FILE in ~/.local/share/chezmoi/src/environment/*.sh; do
+for FILE in ~/.shell/environment/*.sh; do
   . "${FILE}"
 done
