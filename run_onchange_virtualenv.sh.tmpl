@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Configuration
+# .venv/requirements.txt: {{ include "dot_venv/requirements.txt" | sha256sum }}
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+source .shell/environment/virtualenv.sh
+
+test -d .venv/bin || python3 -m venv .venv
+command -v pip-sync &>/dev/null || pip install --constraint .venv/requirements.txt --quiet pip-tools
+pip-sync --quiet --pip-args '--disable-pip-version-check' .venv/requirements.txt

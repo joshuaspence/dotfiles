@@ -72,12 +72,6 @@ update-submodules:
 update-virtualenv:
 	@touch src/venv/requirements.in
 	@$(MAKE) src/venv/requirements.txt UPGRADE=1
-	@$(MAKE) virtualenv
-	pip install --upgrade pip
-
-.PHONY: virtualenv
-virtualenv: src/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
-	$(VIRTUALENV)/bin/pip-sync --quiet --pip-args '--disable-pip-version-check' $<
 
 #===============================================================================
 # Rules
@@ -90,11 +84,7 @@ $(addsuffix /.git,$(SUBMODULES)): .gitmodules
 	git submodule --quiet update --init --recursive -- $(dir $@)
 	@touch $@
 
-.SECONDARY: $(VIRTUALENV)
-$(VIRTUALENV):
-	python3 -m venv $@
-
-$(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
+$(eval $(call virtualenv_target,pip-tools,pip-compile))
 
 src/venv/requirements.txt: src/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
