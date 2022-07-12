@@ -83,10 +83,6 @@ update-virtualenv:
 virtualenv: src/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
 	$(VIRTUALENV)/bin/pip-sync --quiet --pip-args '--disable-pip-version-check' $<
 
-.PHONY: vscode
-vscode: src/vscode/extensions.txt
-	cat $< | xargs --max-args=1 code --force --install-extension
-
 #===============================================================================
 # Rules
 #===============================================================================
@@ -106,6 +102,3 @@ $(eval $(call virtualenv_target,pip-tools,pip-compile pip-sync))
 
 src/venv/requirements.txt: src/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
 	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
-
-src/vscode/extensions.txt:
-	code --list-extensions > $@
