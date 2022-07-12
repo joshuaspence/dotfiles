@@ -46,8 +46,8 @@ submodules: $(SUBMODULES)
 test:
 	docker run --rm --volume $(CURDIR):/dotfiles:ro ubuntu:jammy bash -e -c '\
 		apt-get update --quiet --quiet; \
-		apt-get install --no-install-recommends --quiet --quiet --yes git make sudo >/dev/null; \
-		curl --fail --location --no-progress-meter chezmoi.io/get | sh -s -b /usr/local/bin; \
+		apt-get install --no-install-recommends --quiet --quiet --yes ca-certificates build-essential curl git make sudo; \
+		curl --fail --location --no-progress-meter chezmoi.io/get | sh -s -- -b /usr/local/bin; \
 		git clone --quiet /dotfiles ~/.local/share/chezmoi; \
 		make --directory ~/.local/share/chezmoi deps all; \
 	'
