@@ -35,29 +35,11 @@ $(DOCKER_COMPOSE): $(BINGO_DIR)/docker-compose.mod
 	@echo "(re)installing $(GOBIN)/docker-compose-v1.0.5"
 	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=docker-compose.mod -o=$(GOBIN)/docker-compose-v1.0.5 "github.com/docker/compose-switch"
 
-GOLANGCI_LINT := $(GOBIN)/golangci-lint-v1.46.2
-$(GOLANGCI_LINT): $(BINGO_DIR)/golangci-lint.mod
-	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
-	@echo "(re)installing $(GOBIN)/golangci-lint-v1.46.2"
-	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=golangci-lint.mod -o=$(GOBIN)/golangci-lint-v1.46.2 "github.com/golangci/golangci-lint/cmd/golangci-lint"
-
 HUB_TOOL := $(GOBIN)/hub-tool-v0.4.4
 $(HUB_TOOL): $(BINGO_DIR)/hub-tool.mod
 	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
 	@echo "(re)installing $(GOBIN)/hub-tool-v0.4.4"
 	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=hub-tool.mod -o=$(GOBIN)/hub-tool-v0.4.4 "github.com/docker/hub-tool"
-
-SKOPEO := $(GOBIN)/skopeo-v1.8.0
-$(SKOPEO): $(BINGO_DIR)/skopeo.mod
-	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
-	@echo "(re)installing $(GOBIN)/skopeo-v1.8.0"
-	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=skopeo.mod -o=$(GOBIN)/skopeo-v1.8.0 "github.com/containers/skopeo/cmd/skopeo"
-
-TFLINT := $(GOBIN)/tflint-v0.38.1
-$(TFLINT): $(BINGO_DIR)/tflint.mod
-	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
-	@echo "(re)installing $(GOBIN)/tflint-v0.38.1"
-	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=tflint.mod -o=$(GOBIN)/tflint-v0.38.1 "github.com/terraform-linters/tflint"
 
 YQ := $(GOBIN)/yq-v4.25.3
 $(YQ): $(BINGO_DIR)/yq.mod
