@@ -86,6 +86,7 @@ EOF
 }
 
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "bullseye main" "" "https://azlux.fr/repo.gpg"
+deb_repo "chezmoi" "https://github.com/twpayne/chezmoi/releases/download/v2.18.1/chezmoi_2.18.1_linux_amd64.deb" ""
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRO_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "disco main" "i386,amd64" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
 apt_repository "github-cli" "https://cli.github.com/packages" "stable main" "amd64" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
@@ -106,6 +107,7 @@ package "bat"
 packagelist "binfmt-support" "qemu-user-static"
 package_from_url "bottom" "--location https://github.com/ClementTsang/bottom/releases/download/0.6.8/bottom_0.6.8_amd64.deb"
 package "build-essential"
+package "chezmoi"
 package "code"
 package "ctop"
 packagelist "curl" "wget"

@@ -44,14 +44,13 @@ dconf: src/dconf/dconf.ini | $(VIRTUALENV)/bin/gnome-extensions-cli
 .PHONY: deps
 deps:
 	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
-	curl --fail --location --no-progress-bar https://chezmoi.io/get | sh -s
 
 .PHONY: install
 install: apt dotfiles virtualenv vundle
 
 .PHONY: dotfiles
 dotfiles:
-	PATH=bin:$$PATH chezmoi apply
+	chezmoi apply
 
 .PHONY: submodules
 submodules: $(SUBMODULES)
@@ -61,6 +60,7 @@ test:
 	docker run --rm --volume $(CURDIR):/dotfiles:ro ubuntu:jammy bash -e -c '\
 		apt-get update --quiet --quiet; \
 		apt-get install --no-install-recommends --quiet --quiet --yes git make sudo >/dev/null; \
+		curl --fail --location --no-progress-meter chezmoi.io/get | sh -s -b /usr/local/bin; \
 		git clone --quiet /dotfiles ~/.local/share/chezmoi; \
 		make --directory ~/.local/share/chezmoi deps all; \
 	'
