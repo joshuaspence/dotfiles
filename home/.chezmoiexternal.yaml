@@ -1,0 +1,15 @@
+---
+.shell/modules/bat-extras:
+  type: 'git-repo'
+  url: 'https://github.com/eth-p/bat-extras.git'
+  refreshPeriod: '168h'
+
+.shell/modules/bash-aptfile:
+  type: 'git-repo'
+  url: 'https://github.com/seatgeek/bash-aptfile.git'
+  refreshPeriod: '168h'
+
+.vim/bundle/Vundle.vim:
+  type: 'git-repo'
+  url: 'https://github.com/VundleVim/Vundle.vim.git'
+  refreshPeriod: '168h'

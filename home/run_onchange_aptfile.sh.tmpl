@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# aptfile: {{ include "aptfile" | sha256sum }}
+sudo .shell/modules/bash-aptfile/bin/aptfile "$(chezmoi source-path)/aptfile"

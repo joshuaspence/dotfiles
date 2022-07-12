@@ -28,10 +28,6 @@ endef
 .PHONY: all
 all: submodules install
 
-.PHONY: apt
-apt: aptfile
-	sudo tools/bash-aptfile/bin/aptfile $<
-
 .PHONY: bingo
 bingo: src/bingo
 	bingo get -moddir $<
@@ -46,7 +42,7 @@ deps:
 	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
 
 .PHONY: install
-install: apt dotfiles virtualenv vundle
+install: dotfiles virtualenv
 
 .PHONY: dotfiles
 dotfiles:
@@ -95,14 +91,6 @@ virtualenv: src/venv/requirements.txt | $(VIRTUALENV)/bin/pip-sync
 .PHONY: vscode
 vscode: src/vscode/extensions.txt
 	cat $< | xargs --max-args=1 code --force --install-extension
-
-.PHONY: vundle
-vundle: home/dot_vimrc
-	vim \
-	  -u NONE \
-	  -c 'source home/dot_vimrc' \
-	  -c PluginInstall -c PluginUpdate -c PluginClean! \
-	  -c qall
 
 #===============================================================================
 # Rules
