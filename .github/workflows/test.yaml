@@ -1,12 +1,12 @@
 ---
-name: 'Lint'
+name: 'Test'
 on:
   pull_request: {}
   push: {}
   schedule:
     - cron: '0 0 * * 1'
 jobs:
-  test:
+  bootstrap:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v3'
