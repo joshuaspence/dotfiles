@@ -1,14 +1,11 @@
 #!/bin/bash
 
-# Configuration
-# .config/dconf/dconf.ini: {{ include "dot_config/dconf/dconf.ini" | sha256sum }}
-
 set -o errexit
 set -o nounset
 set -o pipefail
 
-if ! test -v DISPLAY; then
-  exit
-fi
-
+{{ if not .server -}}
+# Configuration
+# .config/dconf/dconf.ini: {{ include "dot_config/dconf/dconf.ini" | sha256sum }}
 dconf load / < .config/dconf/dconf.ini
+{{ end -}}
