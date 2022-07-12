@@ -88,7 +88,6 @@ EOF
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "bullseye main" "" "https://azlux.fr/repo.gpg"
 deb_repo "chezmoi" "https://github.com/twpayne/chezmoi/releases/download/v2.18.1/chezmoi_2.18.1_linux_amd64.deb" ""
 apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "focal main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
-apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
 
 update
 
@@ -100,8 +99,8 @@ package "flatpak"
 # Development
 packagelist "binfmt-support" "qemu-user-static"
 package "build-essential"
-package "code" "vim"
 packagelist "git" "git-crypt" "git-extras" "git-lfs"
+package "vim"
 
 # Networking
 packagelist "bind9-dnsutils" "netcat-openbsd" "netstat-nat" "whois"
@@ -143,7 +142,9 @@ apt_repository "github-cli" "https://cli.github.com/packages" "stable main" "amd
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRO_CODENAME} main" "amd64" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "kubernetes" "https://apt.kubernetes.io" "kubernetes-xenial main" "" "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
 deb_repo "minikube" "https://github.com/kubernetes/minikube/releases/download/v1.26.0/minikube_1.26.0-0_amd64.deb" ""
+apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
 
+package "code"
 packagelist "dconf-cli" "dconf-editor" "libglib2.0-bin"
 packagelist "docker-ce" "docker-ce-cli"
 package "dropbox"
