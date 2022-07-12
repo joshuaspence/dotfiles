@@ -2,24 +2,6 @@
 # Macros
 #===============================================================================
 MAKE       += --no-print-directory
-VIRTUALENV  = $(HOME)/.venv
-
-#===============================================================================
-# Target Definitions
-#===============================================================================
-SUBMODULES    = $(shell git config --file .gitmodules --get-regexp '^submodule\..*\.path$$' | awk '{ print $$2 }')
-
-#===============================================================================
-# Functions
-#===============================================================================
-
-# Define a target to install a Python package.
-# Should be used in conjunction with `eval`.
-define virtualenv_target
-.SECONDARY: $(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD))
-$(foreach CMD,$(2),$$(VIRTUALENV)/bin/$(CMD)): | $$(VIRTUALENV)
-	$(VIRTUALENV)/bin/pip install --constraint src/venv/requirements.txt --quiet $(1)
-endef
 
 #===============================================================================
 # Targets
@@ -33,7 +15,7 @@ deps:
 	sudo apt-get install --no-install-recommends --yes apt-utils ca-certificates curl debian-archive-keyring dpkg-sig gawk git gpg lsb-release make software-properties-common sudo wget
 
 .PHONY: install
-install: dotfiles virtualenv
+install: dotfiles
 
 .PHONY: dotfiles
 dotfiles:
@@ -71,21 +53,12 @@ update-submodules:
 
 .PHONY: update-virtualenv
 update-virtualenv:
-	@touch src/venv/requirements.in
-	@$(MAKE) src/venv/requirements.txt UPGRADE=1
+	@touch dot_venv/requirements.in
+	@$(MAKE) dot_venv/requirements.txt UPGRADE=1
 
 #===============================================================================
 # Rules
 #===============================================================================
 
-.SECONDEXPANSION:
- $(SUBMODULES): $$@/.git
-
-$(addsuffix /.git,$(SUBMODULES)): .gitmodules
-	git submodule --quiet update --init --recursive -- $(dir $@)
-	@touch $@
-
-$(eval $(call virtualenv_target,pip-tools,pip-compile))
-
-src/venv/requirements.txt: src/venv/requirements.in | $(VIRTUALENV)/bin/pip-compile
-	$(VIRTUALENV)/bin/pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
+src/venv/requirements.txt: dot_venv/requirements.in
+	pip-compile --annotation-style line $(if $(UPGRADE),--upgrade) --output-file $@ --strip-extras --no-emit-index-url $< >/dev/null
