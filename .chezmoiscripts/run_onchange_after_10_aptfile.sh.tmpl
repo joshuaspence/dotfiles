@@ -1,8 +1,10 @@
 #!/bin/bash
 
+# Configuration
+# .aptfile: {{ include "dot_aptfile.tmpl" | sha256sum }}
+
 set -o errexit
 set -o nounset
 set -o pipefail
 
-# aptfile: {{ include "aptfile" | sha256sum }}
-sudo .shell/modules/bash-aptfile/bin/aptfile "$(chezmoi source-path)/aptfile"
+sudo .shell/modules/bash-aptfile/bin/aptfile .aptfile

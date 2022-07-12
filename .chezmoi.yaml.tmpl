@@ -1,0 +1,11 @@
+{{- $server := true -}}
+{{- $work := false -}}
+
+{{- if eq .chezmoi.username "jspence2" -}}
+{{- $server = false -}}
+{{- $work = true -}}
+{{- end -}}
+---
+data:
+  server: {{ $server | toYaml }}
+  work: {{ $work | toYaml }}
