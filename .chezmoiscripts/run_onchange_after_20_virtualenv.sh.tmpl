@@ -7,7 +7,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+source .shell/environment/asdf.sh
 source .shell/environment/virtualenv.sh
+
+# See danhper/asdf-python#127.
+asdf exec python3 -m ensurepip
 
 test -d .venv/bin || python3 -m venv .venv
 command -v pip-sync &>/dev/null || pip install --constraint .venv/requirements.txt --quiet pip-tools
