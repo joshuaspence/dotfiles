@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-# .venv/requirements.txt: {{ include "dot_venv/requirements.txt" | sha256sum }}
+# .venv/requirements.in: {{ include "dot_venv/requirements.in" | sha256sum }}
 
 set -o errexit
 set -o nounset
@@ -15,4 +15,5 @@ asdf exec python3 -m ensurepip
 
 test -d .venv/bin || python3 -m venv .venv
 command -v pip-sync &>/dev/null || pip install --constraint .venv/requirements.txt --quiet pip-tools
+pip-compile --annotation-style line --upgrade --output-file .venv/requirements.txt --strip-extras --no-emit-index-url .venv/requirements.in
 pip-sync --quiet --pip-args '--disable-pip-version-check' .venv/requirements.txt

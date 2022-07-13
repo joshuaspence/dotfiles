@@ -4,6 +4,13 @@ function upgrade-all() {
     sudo apt-get "${COMMAND}"
   done
 
+  # ASDF
+  asdf update
+	asdf plugin-update --all
+
+  # Bingo
+  upgrade-bingo
+
   # Flatpak
   flatpak update
 
@@ -13,9 +20,21 @@ function upgrade-all() {
   # Snap
   sudo snap refresh
 
+  # Virtualenv
+  upgrade-virtualenv
+
   # Firmware
   fwupdmgr refresh --force
   fwupdmgr update
+}
+
+function upgrade-bingo() {
+  ls ~/.bingo/*.sum | xargs -I{} basename {} .sum | xargs -I{} bingo get {}@latest
+}
+
+function upgrade-virtualenv() {
+  pip-compile --annotation-style line --upgrade --output-file ~/.venv/requirements.txt --strip-extras --no-emit-index-url ~/.venv/requirements.in
+  pip-sync --quiet --pip-args '--disable-pip-version-check' ~/.venv/requirements.txt
 }
 
 function upgrade-atlassian-tools() {
