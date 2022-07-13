@@ -7,7 +7,5 @@ set -o pipefail
 source .shell/environment/asdf.sh
 source .shell/environment/golang.sh
 
-export PATH="$(asdf where golang)/go/bin:${PATH}"
-
 command -v bingo &>/dev/null || go install github.com/bwplotka/bingo@latest
 bingo get
