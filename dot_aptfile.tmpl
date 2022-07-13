@@ -1,11 +1,8 @@
 #!/usr/bin/env aptfile
 
-readonly DEBIAN_FRONTEND="noninteractive"
-readonly DISTRO="$(lsb_release --id --short)"
-readonly DISTRO_CODENAME="$(lsb_release --codename --short)"
-readonly DISTRO_RELEASE="$(lsb_release --release --short)"
+source /etc/lsb-release
 
-export DEBIAN_FRONTEND
+export DEBIAN_FRONTEND="noninteractive"
 
 function apt_repository() {
   local -r name="$1"
@@ -60,7 +57,7 @@ function deb_repo() {
   local -r deb_url="$2"
   local -r gpg_key="$3"
 
-[[ -z $name ]] && log_fail "Please specify a repository name"
+  [[ -z $name ]] && log_fail "Please specify a repository name"
   [[ -z $deb_url ]] && log_fail "Please specify a DEB URL"
 
   local -r apt_conf="/etc/apt/apt.conf.d/50${name}.conf"
@@ -85,13 +82,16 @@ EOF
   repository_file "${name}" "deb [trusted=yes lang=none] file:${apt_repo} ./"
 }
 
+# Dependencies used within `aptfile`.
+packagelist "apt-utils" "dpkg-sig" "gpg" "wget"
+
+# Repositories.
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "bullseye main" "" "https://azlux.fr/repo.gpg"
 deb_repo "chezmoi" "https://github.com/twpayne/chezmoi/releases/download/v2.18.1/chezmoi_2.18.1_linux_amd64.deb" ""
 apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "focal main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
-
 update
 
-packagelist "apt-file" "apt-utils" "dpkg-sig" "synaptic"
+packagelist "apt-file" "synaptic"
 package "chezmoi"
 packagelist "curl" "wget"
 package "flatpak"
@@ -141,11 +141,11 @@ packagelist "libcairo2-dev" "libgirepository1.0-dev" "python3-gi" # for `pygobje
 flatpak remote-add --if-not-exists "flathub" "https://flathub.org/repo/flathub.flatpakrepo"
 
 {{ if not .server }}
-apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/" "/" "" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRO}_${DISTRO_RELEASE}/Release.key"
-apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRO_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
+apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRIB_ID}_${DISTRIB_RELEASE}/" "/" "" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRIB_ID}_${DISTRIB_RELEASE}/Release.key"
+apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRIB_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "disco main" "i386,amd64" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
 apt_repository "github-cli" "https://cli.github.com/packages" "stable main" "amd64" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
-apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRO_CODENAME} main" "amd64" "https://apt.releases.hashicorp.com/gpg"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRIB_CODENAME} main" "amd64" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "kubernetes" "https://apt.kubernetes.io" "kubernetes-xenial main" "" "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
 deb_repo "minikube" "https://github.com/kubernetes/minikube/releases/download/v1.26.0/minikube_1.26.0-0_amd64.deb" ""
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"

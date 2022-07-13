@@ -7,5 +7,6 @@ set -o pipefail
 {{ if eq .chezmoi.osRelease.idLike "debian" -}}
 # Configuration
 # .aptfile: {{ include "dot_aptfile.tmpl" | sha256sum }}
-sudo .shell/modules/bash-aptfile/bin/aptfile .aptfile
+{{ if not (eq .chezmoi.username "root") -}}sudo {{ end -}}
+.shell/modules/bash-aptfile/bin/aptfile .aptfile
 {{ end -}}

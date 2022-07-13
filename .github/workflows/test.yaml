@@ -2,7 +2,9 @@
 name: 'Test'
 on:
   pull_request: {}
-  push: {}
+  push:
+    branches:
+      - 'master'
   schedule:
     - cron: '0 0 * * 1'
 jobs:
@@ -10,6 +12,4 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v3'
-        with:
-          submodules: true
-      - run: 'make test'
+      - run: 'curl --fail --location --no-progress-meter https://chezmoi.io/get | sh -s -- -b /usr/local/bin -- init --apply .'
