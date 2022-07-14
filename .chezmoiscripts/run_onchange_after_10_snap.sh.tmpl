@@ -4,11 +4,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+{{ $username := .chezmoi.username -}}
 {{
   $snaps := list
     "yq"
 -}}
 
 {{ range $snaps -}}
+{{ if ne $username "root" -}}sudo {{ end -}}
 snap install {{ . }}
 {{ end -}}
