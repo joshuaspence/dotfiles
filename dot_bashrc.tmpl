@@ -1,0 +1,11 @@
+# If not running interactively, don't do anything.
+# See https://unix.stackexchange.com/a/257613.
+if [[ $- != *i* ]]; then
+  return
+fi
+
+{{ $home := print .chezmoi.homeDir "/" -}}
+{{ range glob (joinPath .chezmoi.sourceDir "dot_shell/{config,completion,functions}/*.{bash,sh}") -}}
+# {{ replace $home "" . }}
+{{ include . }}
+{{ end -}}

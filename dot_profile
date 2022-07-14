@@ -1,7 +1,0 @@
-if test -n "${BASH}" && test -f ~/.bashrc; then
-  . ~/.bashrc
-fi
-
-for FILE in ~/.shell/environment/*.sh; do
-  . "${FILE}"
-done

@@ -1,0 +1,9 @@
+if test -n "${BASH}" && test -f ~/.bashrc; then
+  . ~/.bashrc
+fi
+
+{{ $home := print .chezmoi.homeDir "/" -}}
+{{ range glob (joinPath .chezmoi.sourceDir "dot_shell/environment/*.sh") -}}
+# {{ replace $home "" . }}
+{{ include . }}
+{{ end -}}

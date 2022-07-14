@@ -6,7 +6,7 @@ function upgrade-all() {
 
   # ASDF
   asdf update
-	asdf plugin-update --all
+  asdf plugin-update --all
 
   # Bingo
   upgrade-bingo
