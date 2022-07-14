@@ -5,7 +5,7 @@ if [[ $- != *i* ]]; then
 fi
 
 {{ $home := print .chezmoi.homeDir "/" -}}
-{{ range glob (joinPath .chezmoi.sourceDir "dot_shell/{config,completion,functions}/*.{bash,sh}") -}}
+{{ range glob (joinPath .chezmoi.sourceDir "shell/{config,completion,functions}/*.{bash,sh}") -}}
 # {{ replace $home "" . }}
 {{ include . }}
 {{ end -}}
