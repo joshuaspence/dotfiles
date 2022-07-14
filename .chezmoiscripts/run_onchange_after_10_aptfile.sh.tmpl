@@ -8,5 +8,5 @@ set -o pipefail
 # Configuration
 # .aptfile: {{ include "dot_aptfile.tmpl" | sha256sum }}
 {{ if ne .chezmoi.username "root" -}}sudo {{ end -}}
-.shell/modules/bash-aptfile/bin/aptfile .aptfile
+.local/bin/aptfile .aptfile
 {{ end -}}

@@ -19,10 +19,13 @@
     command: 'tar'
     args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', 'hub-tool/hub-tool']
 
-.shell/modules/bash-aptfile:
-  type: 'git-repo'
-  url: 'https://github.com/seatgeek/bash-aptfile.git'
-  refreshPeriod: '168h'
+.local/bin/aptfile:
+  type: 'file'
+  url: 'https://github.com/seatgeek/bash-aptfile/archive/refs/tags/1.2.0.tar.gz'
+  executable: true
+  filter:
+    command: 'tar'
+    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', '--wildcards', 'bash-aptfile-*/bin/aptfile']
 
 .shell/modules/bat-extras:
   type: 'git-repo'
