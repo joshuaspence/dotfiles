@@ -23,9 +23,3 @@ $(BINGO): $(BINGO_DIR)/bingo.mod
 	@echo "(re)installing $(GOBIN)/bingo-v0.6.0"
 	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=bingo.mod -o=$(GOBIN)/bingo-v0.6.0 "github.com/bwplotka/bingo"
 
-DOCKER_COMPOSE := $(GOBIN)/docker-compose-v1.0.5
-$(DOCKER_COMPOSE): $(BINGO_DIR)/docker-compose.mod
-	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
-	@echo "(re)installing $(GOBIN)/docker-compose-v1.0.5"
-	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=docker-compose.mod -o=$(GOBIN)/docker-compose-v1.0.5 "github.com/docker/compose-switch"
-
