@@ -123,7 +123,9 @@ package "bat"
 package_from_url "bottom" "--location https://github.com/ClementTsang/bottom/releases/download/0.6.8/bottom_0.6.8_amd64.deb"
 package "ctop" "htop" "iftop" "powerstat"
 package "duf"
+{{ if not (eq .chezmoi.osRelease.versionCodename "focal") -}}
 package "exa"
+{{ end -}}
 package "fd-find"
 package "fzf"
 package "gawk"
