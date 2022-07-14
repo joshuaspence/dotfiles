@@ -1,4 +1,7 @@
-# Get the public IP address of this machine.
-function whatismyip() {
-  dig +short myip.opendns.com @resolver1.opendns.com
+function whatismyipv4() {
+  dig -4 -t A myip.opendns.com @resolver1.opendns.com +short
+}
+
+function whatismyipv6() {
+  dig -6 -t AAAA myip.opendns.com @resolver1.opendns.com +short
 }
