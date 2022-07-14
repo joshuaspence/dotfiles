@@ -5,8 +5,15 @@ set -o nounset
 set -o pipefail
 
 {{ if not .server -}}
-# Configuration
-# .local/share/gnome-shell/extensions.txt: {{ include "dot_local/share/gnome-shell/extensions.txt" | sha256sum }}
+{{
+  $extensions := list
+    "noannoyance@daase.net"
+-}}
+
 source .shell/environment/virtualenv.sh
-xargs --max-lines=1 gnome-extensions-cli install < .local/share/gnome-shell/extensions.txt
+
+{{ range $extensions -}}
+gnome-extensions-cli install {{ . }}
+{{ end -}}
+
 {{ end -}}
