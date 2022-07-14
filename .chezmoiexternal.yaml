@@ -3,10 +3,21 @@
   type: 'git-repo'
   url: 'https://github.com/asdf-vm/asdf.git'
 
-.local/bin:
-  type: 'archive'
-  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "stuartleeks/devcontainer-cli").HTMLURL }}/devcontainer-cli_linux_amd64.tar.gz'
-  include: ['devcontainer']
+.local/bin/devcontainer:
+  type: 'file'
+  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "stuartleeks/devcontainer-cli").HTMLURL }}/devcontainer-cli_{{ .chezmoi.os }}_{{ .chezmoi.arch }}.tar.gz'
+  executable: true
+  filter:
+    command: 'tar'
+    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', 'devcontainer']
+
+.local/bin/hub-tool:
+  type: 'file'
+  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "docker/hub-tool").HTMLURL }}/hub-tool-{{ .chezmoi.os }}-{{ .chezmoi.arch }}.tar.gz'
+  executable: true
+  filter:
+    command: 'tar'
+    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', 'hub-tool/hub-tool']
 
 .shell/modules/bash-aptfile:
   type: 'git-repo'

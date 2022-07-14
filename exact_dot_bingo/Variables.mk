@@ -29,9 +29,3 @@ $(DOCKER_COMPOSE): $(BINGO_DIR)/docker-compose.mod
 	@echo "(re)installing $(GOBIN)/docker-compose-v1.0.5"
 	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=docker-compose.mod -o=$(GOBIN)/docker-compose-v1.0.5 "github.com/docker/compose-switch"
 
-HUB_TOOL := $(GOBIN)/hub-tool-v0.4.4
-$(HUB_TOOL): $(BINGO_DIR)/hub-tool.mod
-	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
-	@echo "(re)installing $(GOBIN)/hub-tool-v0.4.4"
-	@cd $(BINGO_DIR) && $(GO) build -mod=mod -modfile=hub-tool.mod -o=$(GOBIN)/hub-tool-v0.4.4 "github.com/docker/hub-tool"
-
