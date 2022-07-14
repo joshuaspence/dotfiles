@@ -133,7 +133,9 @@ package "gpg"
 package "jq"
 package "less" "moreutils"
 packagelist "parallel" "retry"
+{{ if not (eq .chezmoi.osRelease.versionCodename "focal") -}}
 package "ripgrep"
+{{ end -}}
 package "tree"
 package "zoxide"
 
