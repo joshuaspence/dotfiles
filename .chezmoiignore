@@ -7,6 +7,14 @@
 /.ssh/keys/
 /.ssh/known_hosts
 
+{{ if .server -}}
+# Desktop
+/.chezmoiscripts/99_dconf.sh
+/.chezmoiscripts/99_gnome-extensions.sh
+/.config/dconf/
+/.config/gtk-*/
+{{ end -}}
+
 {{ if not .server -}}
 # Dropbox
 /.dropbox/

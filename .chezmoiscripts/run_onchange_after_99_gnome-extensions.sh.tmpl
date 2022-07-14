@@ -4,7 +4,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ if not .server -}}
 {{
   $extensions := list
     "noannoyance@daase.net"
@@ -14,6 +13,4 @@ source .shell/environment/virtualenv.sh
 
 {{ range $extensions -}}
 gnome-extensions-cli install {{ . }}
-{{ end -}}
-
 {{ end -}}
