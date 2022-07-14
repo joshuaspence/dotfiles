@@ -137,7 +137,9 @@ packagelist "parallel" "retry"
 package "ripgrep"
 {{ end -}}
 package "tree"
+{{ if ne .chezmoi.osRelease.versionCodename "focal" -}}
 package "zoxide"
+{{ end -}}
 
 # Miscellaneous
 packagelist "libcairo2-dev" "libgirepository1.0-dev" "python3-gi" # for `pygobject`
