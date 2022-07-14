@@ -8,9 +8,6 @@ function upgrade-all() {
   asdf update
   asdf plugin-update --all
 
-  # Bingo
-  upgrade-bingo
-
   # Flatpak
   flatpak update
 
@@ -26,10 +23,6 @@ function upgrade-all() {
   # Firmware
   fwupdmgr refresh --force
   fwupdmgr update
-}
-
-function upgrade-bingo() {
-  ls ~/.bingo/*.sum | xargs -I{} basename {} .sum | xargs -I{} bingo get {}@latest
 }
 
 function upgrade-virtualenv() {
