@@ -1,7 +1,7 @@
-if command -v less &>/dev/null; then
-  if command -v lesspipe &>/dev/null; then
+if command -v less >/dev/null; then
+  if command -v lesspipe >/dev/null; then
     source <(lesspipe)
-  elif command -v lesspipe.sh &>/dev/null; then
+  elif command -v lesspipe.sh >/dev/null; then
     source <(lesspipe.sh)
   else
    unset LESSOPEN

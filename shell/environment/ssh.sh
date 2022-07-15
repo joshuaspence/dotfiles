@@ -2,6 +2,6 @@
 # TODO: The agent will terminate with the last Bash session, see
 # https://www.daveeddy.com/2017/10/18/persistent-sshagent-on-bash-on-ubuntu-on-windows/.
 # TODO: Test if `ssh-agent` is actually running with `ssh-add -l`.
-if command -v ssh-agent &>/dev/null && ! test -v SSH_AGENT_PID; then
+if command -v ssh-agent >/dev/null && ! test -v SSH_AGENT_PID; then
   source <(ssh-agent -s)
 fi

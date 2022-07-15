@@ -1,6 +1,6 @@
 # When leaving the console, clear the screen to increase privacy.
 if [[ $SHLVL -eq 1 ]]; then
-  if command -v clear_console &>/dev/null; then
+  if command -v clear_console >/dev/null; then
     clear_console --quiet
   fi
 fi

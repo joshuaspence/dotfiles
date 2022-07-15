@@ -1,7 +1,7 @@
-if command -v less &>/dev/null; then
+if command -v less >/dev/null; then
   export LESS='--ignore-case --RAW-CONTROL-CHARS --chop-long-lines --tabs=4'
   export PAGER='less'
-elif command -v more &>/dev/null; then
+elif command -v more >/dev/null; then
   export PAGER='more'
 else
   unset PAGER
