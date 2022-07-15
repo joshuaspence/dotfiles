@@ -1,16 +1,17 @@
 ---
-name: 'Test'
+name: 'Lint'
 on:
   pull_request: {}
   push:
     branches:
       - 'master'
-  schedule:
-    - cron: '0 0 * * 1'
 jobs:
-  bootstrap:
+  shellcheck:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v3'
       - run: 'curl --fail --location --no-progress-meter https://chezmoi.io/get | sh -s -- -b /usr/local/bin'
-      - run: 'chezmoi init --apply --verbose .'
+      - run: |-
+          mkdir .target
+          chezmoi archive --exclude externals --init --source . | tar --extract --file=- --directory=.target
+      - uses: 'ludeeus/action-shellcheck@1.1.0'
