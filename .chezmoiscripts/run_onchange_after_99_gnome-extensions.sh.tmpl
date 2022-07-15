@@ -9,7 +9,7 @@ set -o pipefail
     "noannoyance@daase.net"
 -}}
 
-source .shell/environment/virtualenv.sh
+{{ include "shell/environment/virtualenv.sh" -}}
 
 {{ range $extensions -}}
 gnome-extensions-cli install {{ . }}

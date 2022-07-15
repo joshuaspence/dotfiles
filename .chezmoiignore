@@ -25,7 +25,6 @@
 
 # Externals
 /.asdf/
-/.shell/modules/
 /.vim/bundle/
 
 # User

@@ -7,8 +7,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-source .shell/environment/asdf.sh
-source .shell/environment/virtualenv.sh
+{{ include "shell/environment/asdf.sh" -}}
+{{ include "shell/environment/virtualenv.sh" -}}
 
 # See danhper/asdf-python#127.
 asdf exec python3 -m ensurepip
