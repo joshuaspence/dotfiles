@@ -3,6 +3,32 @@
   type: 'git-repo'
   url: 'https://github.com/asdf-vm/asdf.git'
 
+.local/bin/aptfile:
+  type: 'file'
+  url: 'https://github.com/seatgeek/bash-aptfile/archive/refs/tags/1.2.0.tar.gz'
+  executable: true
+  filter:
+    command: 'tar'
+    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', '--wildcards', 'bash-aptfile-*/bin/aptfile']
+
+.local/bin/atlas:
+  type: 'file'
+  url: 'https://statlas.prod.atl-paas.net/atlas-cli/{{ .chezmoi.os }}/atlas-latest-{{ .chezmoi.os }}-{{ .chezmoi.arch }}.tar.gz'
+  executable: true
+  filter:
+    command: 'tar'
+    args: ['--extract', '--file=/dev/stdin', '--gzip', '--to-stdout', 'atlas']
+  refreshPeriod: '168h'
+
+.local/bin/cloudtoken:
+  type: 'file'
+  url: 'https://statlas.prod.atl-paas.net/cloudtoken/cloudtoken-{{ .chezmoi.os }}-{{ .chezmoi.arch }}-latest.zip'
+  executable: true
+  filter:
+    command: 'bsdtar'
+    args: ['--extract', '--file=-', '--to-stdout', 'cloudtoken']
+  refreshPeriod: '168h'
+
 .local/bin/devcontainer:
   type: 'file'
   url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "stuartleeks/devcontainer-cli").HTMLURL }}/devcontainer-cli_{{ .chezmoi.os }}_{{ .chezmoi.arch }}.tar.gz'
@@ -18,14 +44,6 @@
   filter:
     command: 'tar'
     args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', 'hub-tool/hub-tool']
-
-.local/bin/aptfile:
-  type: 'file'
-  url: 'https://github.com/seatgeek/bash-aptfile/archive/refs/tags/1.2.0.tar.gz'
-  executable: true
-  filter:
-    command: 'tar'
-    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', '--wildcards', 'bash-aptfile-*/bin/aptfile']
 
 .vim/bundle/Vundle.vim:
   type: 'git-repo'

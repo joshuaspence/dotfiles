@@ -36,3 +36,9 @@
 /Public/
 /Templates/
 /Videos/
+
+{{ if not .work -}}
+/.config/cloudtoken/
+/.local/bin/atlas
+/.local/bin/cloudtoken
+{{ end -}}
