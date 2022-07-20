@@ -15,8 +15,8 @@ Plugin 'sickill/vim-monokai'
 Plugin 'matze/vim-move'
 Plugin 'tpope/vim-sensible'
 
-" TODO: Automatically install plugins.
-" See https://github.com/VundleVim/Vundle.vim/issues/414.
-
 call vundle#end()
 filetype plugin indent on
+
+set clipboard^=unnamed,unnamedplus
+set smartindent
