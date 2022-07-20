@@ -42,3 +42,13 @@
 /.local/bin/atlas
 /.local/bin/cloudtoken
 {{ end -}}
+
+# Other
+/.bash_history
+/.cache/
+/.lesshst
+/.mypy_cache
+/.node_repl_history
+/.python_history
+/.viminfo
+/.wget-hsts
