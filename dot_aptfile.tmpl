@@ -181,3 +181,8 @@ package "awscli"
 package "slack-desktop"
 package "zoom"
 {{ end }}
+
+# Other
+{{ if not .server -}}
+package "sox"
+{{ end -}}
