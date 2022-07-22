@@ -1,9 +1,6 @@
-disable=SC1090
-disable=SC1091
+disable=SC1090,SC1091
 disable=SC2148
 
 # Temporary
-disable=SC2112
 disable=SC3001
-disable=SC3040
 disable=SC3046
