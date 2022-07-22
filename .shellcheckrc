@@ -1,5 +1,6 @@
 disable=SC1090
 disable=SC1091
+disable=SC2148
 
 # Temporary
 disable=SC2112
