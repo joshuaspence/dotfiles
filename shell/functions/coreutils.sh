@@ -3,7 +3,3 @@ alias df='df --human-readable'
 alias du='du --human-readable'
 alias ls='ls --color=auto --human-readable'
 alias mv='mv --interactive'
-
-if command -v dircolors >/dev/null; then
-  source <(dircolors)
-fi
