@@ -164,7 +164,9 @@ packagelist "docker-ce" "docker-ce-cli" "docker-compose-plugin"
 package "dropbox"
 package "gh"
 package "gimp"
+{{ if not .server -}}
 package_from_url "google-chrome-stable" "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+{{ end -}}
 packagelist "kubectl" "minikube"
 packagelist "network-manager-l2tp" "network-manager-openconnect"
 packagelist "packer" "terraform"
