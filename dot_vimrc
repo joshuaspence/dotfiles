@@ -1,22 +1,15 @@
 set nocompatible
 filetype off
 
-" Initialize Vundle.
-set runtimepath+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
+call plug#begin()
 
-" Let Vundle manage Vundle.
-Plugin 'VundleVim/Vundle.vim', {'pinned': 1}
+Plug 'vim-syntastic/syntastic'
+Plug 'myint/syntastic-extras'
+Plug 'sickill/vim-monokai'
+Plug 'matze/vim-move'
+Plug 'tpope/vim-sensible'
 
-" Plugins.
-Plugin 'vim-syntastic/syntastic'
-Plugin 'myint/syntastic-extras'
-Plugin 'sickill/vim-monokai'
-Plugin 'matze/vim-move'
-Plugin 'tpope/vim-sensible'
-
-call vundle#end()
-filetype plugin indent on
+call plug#end()
 
 set clipboard^=unnamed,unnamedplus
 set smartindent

@@ -54,6 +54,6 @@
 
 # Vim
 /.vim/backup/
-/.vim/bundle/
+/.vim/plugged/
 /.vim/swap/
 /.vim/undo/

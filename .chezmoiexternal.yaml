@@ -45,7 +45,9 @@
     command: 'tar'
     args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', 'hub-tool/hub-tool']
 
-.vim/bundle/Vundle.vim:
-  type: 'git-repo'
-  url: 'https://github.com/VundleVim/Vundle.vim.git'
-  refreshPeriod: '168h'
+.vim/autoload/plug.vim:
+  type: 'file'
+  url: '{{ (gitHubLatestRelease "junegunn/vim-plug").TarballURL }}'
+  filter:
+    command: 'tar'
+    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', '--wildcards', 'junegunn-vim-plug-*/plug.vim']
