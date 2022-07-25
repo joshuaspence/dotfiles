@@ -3,5 +3,5 @@
 # https://www.daveeddy.com/2017/10/18/persistent-sshagent-on-bash-on-ubuntu-on-windows/.
 # TODO: Test if `ssh-agent` is actually running with `ssh-add -l`.
 if command -v ssh-agent >/dev/null && ! test -v SSH_AGENT_PID; then
-  source <(ssh-agent -s)
+  echo "ssh-agent doesn't appear to be running"
 fi
