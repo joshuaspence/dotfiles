@@ -53,7 +53,6 @@
 /.wget-hsts
 
 # Vim
-/.vim/autoload/plug.vim
 /.vim/backup/
 /.vim/plugged/
 /.vim/swap/
