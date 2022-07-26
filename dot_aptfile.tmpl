@@ -41,11 +41,11 @@ function apt_keyring() {
     return
   fi
 
-  (wget --quiet --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") > "${TMP_APTFILE_LOGFILE}" 2>&1
+  (wget --quiet --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") >"${TMP_APTFILE_LOGFILE}" 2>&1
   [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
 
   if [[ -n $gpg_import ]]; then
-    gpg --import "${apt_keyring}" >> "${TMP_APTFILE_LOGFILE}" 2>&1
+    gpg --import "${apt_keyring}" >>"${TMP_APTFILE_LOGFILE}" 2>&1
     [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
   fi
 
@@ -71,7 +71,7 @@ function deb_repo() {
 
   if [[ ! -f $apt_conf ]]; then
     mkdir --parents "${apt_repo}"
-    cat << EOF > "${apt_conf}"
+    cat <<EOF >"${apt_conf}"
 APT::Update::Pre-Invoke { "wget --quiet --timestamping --directory-prefix ${apt_repo} ${deb_url}"; };
 APT::Update::Pre-Invoke { "${gpg_cmd}"; };
 APT::Update::Pre-Invoke { "cd ${apt_repo} && apt-ftparchive packages . > Packages"; };
@@ -141,14 +141,14 @@ package "ripgrep"
 package "tree"
 {{ if ne .chezmoi.osRelease.versionCodename "focal" -}}
 package "zoxide"
-{{ end -}}
+{{- end }}
 
 # Miscellaneous
 packagelist "libcairo2-dev" "libgirepository1.0-dev" "python3-gi" # for `pygobject`
 
 flatpak remote-add --if-not-exists "flathub" "https://flathub.org/repo/flathub.flatpakrepo"
 
-{{ if not .server }}
+{{ if not .server -}}
 apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRIB_ID}_${DISTRIB_RELEASE}/" "/" "" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRIB_ID}_${DISTRIB_RELEASE}/Release.key"
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRIB_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "disco main" "i386,amd64" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
@@ -174,16 +174,17 @@ packagelist "packer" "terraform"
 packagelist "podman" "fuse-overlayfs" "skopeo" "slirp4netns" "uidmap"
 package "terminator"
 package "xclip"
-{{ end }}
+{{- end }}
 
-{{ if .work }}
+{{ if .work -}}
+# Work
 apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "jessie main" "" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
 deb_repo "zoom" "https://zoom.us/client/latest/zoom_amd64.deb" "https://zoom.us/linux/download/pubkey"
 
 package "awscli"
 package "slack-desktop"
 package "zoom"
-{{ end }}
+{{- end }}
 
 # Other
 package "rename"
