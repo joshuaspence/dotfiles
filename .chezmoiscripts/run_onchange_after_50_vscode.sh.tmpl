@@ -16,9 +16,17 @@ set -o pipefail
     "ms-vscode-remote.remote-containers"
     "ms-vscode-remote.remote-ssh"
     "ms-vscode-remote.remote-ssh-edit"
-    "MS-vsliveshare.vsliveshare"
+    "ms-vsliveshare.vsliveshare"
+    "redhat.vscode-yaml"
     "VisualStudioExptTeam.vscodeintellicode"
 -}}
+{{ if .work -}}
+{{
+  $extensions = concat $extensions (list
+    "atlassian.atlascode"
+  )
+}}
+{{ end -}}
 
 {{ range $extensions -}}
 code --force --install-extension {{ . }}
