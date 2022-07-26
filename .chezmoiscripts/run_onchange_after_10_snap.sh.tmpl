@@ -1,9 +1,5 @@
 #!/bin/bash
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
 {{ $username := .chezmoi.username -}}
 {{
   $snaps := list

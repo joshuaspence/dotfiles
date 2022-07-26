@@ -3,8 +3,4 @@
 # Configuration
 # .vimrc: {{ include "dot_vimrc" | sha256sum }}
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
 vim -e -s -u NONE -S .vimrc -c PlugInstall -c PlugUpdate -c PlugClean! -c qall

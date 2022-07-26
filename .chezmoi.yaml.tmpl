@@ -9,3 +9,11 @@
 data:
   server: {{ $server | toYaml | trim }}
   work: {{ $work | toYaml | trim }}
+interpreters:
+  sh:
+    command: 'bash'
+    args:
+      - '-e'
+      - '-u'
+      - '-o'
+      - 'pipefail'

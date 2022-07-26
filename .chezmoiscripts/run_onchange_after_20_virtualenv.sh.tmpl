@@ -3,10 +3,6 @@
 # Configuration
 # .venv/requirements.in: {{ include "dot_venv/requirements.in" | sha256sum }}
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
 {{ include "shell/config/asdf.sh" -}}
 {{ include "shell/environment/virtualenv.sh" -}}
 

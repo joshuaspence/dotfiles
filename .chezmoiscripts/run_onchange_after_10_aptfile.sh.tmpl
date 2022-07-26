@@ -1,9 +1,5 @@
 #!/bin/bash
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
 {{ if eq .chezmoi.osRelease.idLike "debian" -}}
 # Configuration
 # .aptfile: {{ include "dot_aptfile.tmpl" | sha256sum }}
