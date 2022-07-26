@@ -4,8 +4,8 @@ if [[ $- != *i* ]]; then
   return
 fi
 
-{{ $home := print .chezmoi.homeDir "/" -}}
-{{ range glob (joinPath .chezmoi.sourceDir "shell/{config,completion,functions}/*.{bash,sh}") -}}
-# {{ replace $home "" . }}
-{{ include . }}
+{{- $home := print .chezmoi.homeDir "/" }}
+{{ range $file := glob (joinPath .chezmoi.sourceDir "shell/{config,completion,functions}/*.{bash,sh}") }}
+# {{ replace $home "" $file }}
+{{ include $file -}}
 {{ end -}}
