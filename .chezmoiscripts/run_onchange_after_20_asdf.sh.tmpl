@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ include "shell/environment/asdf.sh" -}}
+{{ include "shell/config/asdf.sh" -}}
 
 function asdf_plugin() {
   asdf plugin list | grep --quiet "^${1}$" && return
