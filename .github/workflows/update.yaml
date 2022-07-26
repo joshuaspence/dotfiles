@@ -1,0 +1,24 @@
+---
+name: 'Update'
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch: {}
+jobs:
+  asdf:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/checkout@v3'
+      - run: 'curl --fail --location --no-progress-meter https://chezmoi.io/get | sh -s -- -b /usr/local/bin'
+      - run: 'chezmoi init --apply --verbose .'
+
+      - run: 'asdf plugin list | xargs -I{} asdf install {} latest'
+      - run: 'asdf plugin list | xargs -I{} asdf global {} latest'
+
+      - run: 'chezmoi re-add'
+      - uses: 'peter-evans/create-pull-request@v4.0.4'
+        with:
+          commit-message: 'Update ASDF global tool versions'
+          branch: 'create-pull-request/asdf/tool-versions'
+          delete-branch: true
+          title: 'Update ASDF global tool versions'
