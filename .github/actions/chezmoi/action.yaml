@@ -1,0 +1,21 @@
+---
+name: 'Chezmoi'
+description: 'Install and execute Chezmoi.'
+runs:
+  using: 'composite'
+  steps:
+    - run: 'curl --fail --location --no-progress-meter https://chezmoi.io/get | sh -s -- -b "${GITHUB_ACTION_PATH}/bin"'
+      shell: 'bash'
+    - run: 'echo "${GITHUB_ACTION_PATH}/bin" >> $GITHUB_PATH'
+      shell: 'bash'
+
+    - run: 'mkdir --parents ~/.config/chezmoi'
+      shell: 'bash'
+    - run: 'yq --null-input ".sourceDir = strenv(GITHUB_WORKSPACE)" > ~/.config/chezmoi/chezmoi.yaml'
+      shell: 'bash'
+    - run: 'cat ~/.config/chezmoi/chezmoi.yaml'
+      shell: 'bash'
+
+    # --apply
+    - run: 'chezmoi init --debug --verbose'
+      shell: 'bash'
