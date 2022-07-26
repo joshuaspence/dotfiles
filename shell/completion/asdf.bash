@@ -1,3 +1,3 @@
-if test -d "${HOME}/.asdf"; then
-  source "${HOME}/.asdf/completions/asdf.bash"
+if test -d ~/.asdf; then
+  source ~/.asdf/completions/asdf.bash
 fi
