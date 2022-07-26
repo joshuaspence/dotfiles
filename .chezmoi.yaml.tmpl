@@ -7,5 +7,5 @@
 {{- end -}}
 ---
 data:
-  server: {{ $server | toYaml }}
-  work: {{ $work | toYaml }}
+  server: {{ $server | toYaml | trim }}
+  work: {{ $work | toYaml | trim }}
