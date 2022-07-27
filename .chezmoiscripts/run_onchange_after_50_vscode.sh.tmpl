@@ -8,8 +8,10 @@ set -o pipefail
 {{
   $extensions := list
     "eamodio.gitlens"
-    "golang.Go"
-    "HashiCorp.terraform"
+    "ESPHome.esphome-vscode"
+    "golang.go"
+    "hashicorp.terraform"
+    "keesschollaart.vscode-home-assistant"
     "mohsen1.prettify-json"
     "ms-azuretools.vscode-docker"
     "ms-python.python"
@@ -17,6 +19,7 @@ set -o pipefail
     "ms-vscode-remote.remote-ssh"
     "ms-vscode-remote.remote-ssh-edit"
     "ms-vsliveshare.vsliveshare"
+    "netcorext.uuid-generator"
     "redhat.vscode-yaml"
     "VisualStudioExptTeam.vscodeintellicode"
 -}}
@@ -28,8 +31,8 @@ set -o pipefail
 -}}
 {{ end -}}
 
-{{ range $extensions -}}
-code --force --install-extension {{ . }}
+{{ range $extension := $extensions | sortAlpha -}}
+code --force --install-extension {{ $extension }}
 {{ end -}}
 
 {{ end -}}
