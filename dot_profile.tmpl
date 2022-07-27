@@ -2,8 +2,8 @@ if test -n "${BASH_VERSION}" && test -f ~/.bashrc; then
   . ~/.bashrc
 fi
 
-{{- $home := print .chezmoi.homeDir "/" }}
+{{- $base := print .chezmoi.sourceDir "/" }}
 {{ range $file := glob (joinPath .chezmoi.sourceDir "shell/environment/*.sh") }}
-# {{ replace $home "" $file }}
+# source={{ replace $base "" $file }}
 {{ include $file -}}
 {{ end -}}
