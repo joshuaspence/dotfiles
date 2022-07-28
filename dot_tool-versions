@@ -1,4 +1,5 @@
 act 0.2.29
+actionlint 1.6.15
 golang 1.18.4
 hadolint 2.10.0
 nodejs 18.6.0
