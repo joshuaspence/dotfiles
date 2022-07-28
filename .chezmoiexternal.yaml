@@ -5,11 +5,11 @@
 
 .local/bin/aptfile:
   type: 'file'
-  url: 'https://github.com/seatgeek/bash-aptfile/archive/refs/tags/1.2.0.tar.gz'
+  url: '{{ (gitHubLatestRelease "seatgeek/bash-aptfile").TarballURL }}'
   executable: true
   filter:
     command: 'tar'
-    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', '--wildcards', 'bash-aptfile-*/bin/aptfile']
+    args: ['--extract', '--to-stdout', '--file=-', '--gzip', '--wildcards', '*/bin/aptfile']
 
 .local/bin/atlas:
   type: 'file'
@@ -17,8 +17,8 @@
   executable: true
   filter:
     command: 'tar'
-    args: ['--extract', '--file=/dev/stdin', '--gzip', '--to-stdout', 'atlas']
-  refreshPeriod: '168h'
+    args: ['--extract', '--to-stdout', '--file=-', '--gzip', 'atlas']
+  refreshPeriod: '24h'
 
 .local/bin/cloudtoken:
   type: 'file'
@@ -27,7 +27,7 @@
   filter:
     command: 'bsdtar'
     args: ['--extract', '--file=-', '--to-stdout', 'cloudtoken']
-  refreshPeriod: '168h'
+  refreshPeriod: '24h'
 
 .local/bin/devcontainer:
   type: 'file'
@@ -35,19 +35,11 @@
   executable: true
   filter:
     command: 'tar'
-    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', 'devcontainer']
-
-.local/bin/hub-tool:
-  type: 'file'
-  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "docker/hub-tool").HTMLURL }}/hub-tool-{{ .chezmoi.os }}-{{ .chezmoi.arch }}.tar.gz'
-  executable: true
-  filter:
-    command: 'tar'
-    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', 'hub-tool/hub-tool']
+    args: ['--extract', '--to-stdout', '--file=-', '--gzip', 'devcontainer']
 
 .vim/autoload/plug.vim:
   type: 'file'
   url: '{{ (gitHubLatestRelease "junegunn/vim-plug").TarballURL }}'
   filter:
     command: 'tar'
-    args: ['--extract', '--file', '/dev/stdin', '--gzip', '--to-stdout', '--wildcards', 'junegunn-vim-plug-*/plug.vim']
+    args: ['--extract', '--to-stdout', '--file=-', '--gzip', '--wildcards', '*/plug.vim']
