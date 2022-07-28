@@ -23,10 +23,6 @@
 /.dropbox-dist/
 {{ end -}}
 
-# Externals
-/.asdf/
-/.vim/bundle/
-
 # User
 /Desktop/
 /Documents/
