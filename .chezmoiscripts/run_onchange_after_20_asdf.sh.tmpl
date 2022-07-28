@@ -5,16 +5,24 @@ set -o nounset
 set -o pipefail
 
 # Configuration
-# .tool-versions: {{ include "dot_tool-versions" | sha256sum }}
+# ~/.asdf: {{ (gitHubLatestRelease "asdf-vm/asdf").Name }}
+# ~/.tool-versions: {{ include "dot_tool-versions" | sha256sum }}
+# Timestamp: {{ now | date "2006-01-02" }}
 
 {{ include "shell/config/asdf.sh" -}}
 
 function asdf_plugin() {
-  asdf plugin list | grep --quiet "^${1}$" && return
-  asdf plugin add "${1}"
+  if ! asdf plugin list | grep --quiet "^${1}$"; then
+    asdf plugin add "${1}"
+  else
+    asdf plugin update "${1}"
+  fi
 }
 
-# Install plugins.
+# Update asdf.
+asdf update
+
+# Install/update plugins.
 asdf_plugin act
 asdf_plugin golang
 asdf_plugin hadolint
