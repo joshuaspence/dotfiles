@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# Configuration
+# Timestamp: {{ now | date "2006-01-02" }}
+
+{{ include "shell/environment/path.sh" -}}
+
+{{
+  $plugins := list
+    "asap"
+    "micros"
+    "nebulae"
+    "packages"
+    "poco"
+    "slauth"
+    "spin"
+    "statlas"
+-}}
+
+{{ range $plugin := $plugins | sortAlpha -}}
+atlas plugin install --name {{ $plugin }}
+{{ end -}}
