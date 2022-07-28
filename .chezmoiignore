@@ -1,5 +1,4 @@
 # Local
-/Makefile
 /shell/
 /TODO
 
@@ -7,6 +6,7 @@
 /.gnupg/
 /.ssh/keys/
 /.ssh/known_hosts
+/.terraformrc
 
 {{ if .server -}}
 # Desktop
@@ -42,14 +42,27 @@
 # Other
 /.bash_history
 /.cache/
+/go/
 /.lesshst
 /.mypy_cache
 /.node_repl_history
+/snap/
+/.terraform.d/
+/.tox/
 /.viminfo
 /.wget-hsts
+/workspace/
 
 # Vim
 /.vim/backup/
 /.vim/plugged/
 /.vim/swap/
 /.vim/undo/
+
+# Virtualenv
+/.venv/bin/
+/.venv/include/
+/.venv/lib/
+/.venv/lib64/
+/.venv/pyvenv.cfg
+/.venv/share/
