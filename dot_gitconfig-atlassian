@@ -7,8 +7,3 @@ insteadOf = https://bitbucket.org/
 
 [url "git@bitbucket.org:atlassian/"]
 insteadOf = bbc://
-
-[url "ssh://git@bitbucket-mirror-au.internal.atlassian.com:7999/stash/"]
-insteadOf = bbs://
-insteadOf = https://stash.atlassian.com/scm/
-insteadOf = ssh://git@stash.atlassian.com:7997/
