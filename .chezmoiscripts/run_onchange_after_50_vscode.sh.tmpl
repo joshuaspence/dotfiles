@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ if not .server -}}
+{{ if not .headless -}}
 {{
   $extensions := list
     "eamodio.gitlens"

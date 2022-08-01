@@ -1,11 +1,21 @@
-{{- $server := true -}}
+{{- $ephemeral := false -}}
+{{- $headless := false -}}
+{{- $laptop := eq (output "hostnamectl" "chassis") "laptop" -}}
+{{- $personal := true -}}
 {{- $work := false -}}
 
+{{- if or (env "GITHUB_ACTIONS") (env "REMOTE_CONTAINERS_IPC") (eq .chezmoi.username "root" "ubuntu" "vscode") -}}
+{{-   $ephemeral = true -}}
+{{-   $headless = true -}}
+{{- end -}}
+
 {{- if eq .chezmoi.username "jspence2" -}}
-{{- $server = false -}}
-{{- $work = true -}}
+{{-   $work = true -}}
 {{- end -}}
 ---
 data:
-  server: {{ $server | toYaml | trim }}
+  ephemeral: {{ $ephemeral | toYaml | trim }}
+  headless: {{ $headless | toYaml | trim }}
+  laptop: {{ $laptop | toYaml | trim }}
+  personal: {{ $personal | toYaml | trim }}
   work: {{ $work | toYaml | trim }}

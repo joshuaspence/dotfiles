@@ -8,7 +8,7 @@
 /.ssh/known_hosts
 /.terraformrc
 
-{{ if .server -}}
+{{ if .headless -}}
 # Desktop
 /.chezmoiscripts/99_dconf.sh
 /.chezmoiscripts/99_gnome-extensions.sh
@@ -16,7 +16,7 @@
 /.config/gtk-*/
 {{ end -}}
 
-{{ if not .server -}}
+{{ if not .headless -}}
 # Dropbox
 /.dropbox/
 /Dropbox/

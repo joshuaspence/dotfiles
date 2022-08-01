@@ -149,7 +149,7 @@ packagelist "libcairo2-dev" "libgirepository1.0-dev" "python3-gi" # for `pygobje
 
 flatpak remote-add --if-not-exists "flathub" "https://flathub.org/repo/flathub.flatpakrepo"
 
-{{ if not .server -}}
+{{ if not .headless -}}
 apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRIB_ID}_${DISTRIB_RELEASE}/" "/" "" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRIB_ID}_${DISTRIB_RELEASE}/Release.key"
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRIB_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "disco main" "i386,amd64" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
@@ -165,7 +165,7 @@ packagelist "docker-ce" "docker-ce-cli" "docker-compose-plugin"
 package "dropbox"
 package "gh"
 package "gimp"
-{{ if not .server -}}
+{{ if not .headless -}}
 package_from_url "google-chrome-stable" "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
 {{ end -}}
 packagelist "kubectl" "minikube"
@@ -190,7 +190,7 @@ package "zoom"
 # Other
 package "ghostscript"
 package "rename"
-{{ if not .server -}}
+{{ if not .headless -}}
 package "sox"
 package "xdg-utils"
 {{ end -}}
