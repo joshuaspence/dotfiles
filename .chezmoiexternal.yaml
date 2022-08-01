@@ -37,6 +37,11 @@
     command: 'tar'
     args: ['--extract', '--to-stdout', '--file=-', '--gzip', 'devcontainer']
 
+.local/share/nautilus-python/extensions/code-nautilus.py:
+  type: 'file'
+  url: 'https://github.com/harry-cpp/code-nautilus/raw/master/code-nautilus.py'
+  refreshPeriod: '24h'
+
 .vim/autoload/plug.vim:
   type: 'file'
   url: '{{ (gitHubLatestRelease "junegunn/vim-plug").TarballURL }}'
