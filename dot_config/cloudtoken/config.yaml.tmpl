@@ -10,12 +10,14 @@ defaults:
     vanity_id: 'atlassian'
   saml:
     saml_response_plugin: 'idaptive'
-  system_username: 'jspence2'
+    session_duration: 36000
+  skip_update_check: false
+  system_username: '{{ .chezmoi.username }}'
 plugins:
+  pre_auth: []
   auth:
     - 'idaptive'
     - 'saml'
   post_auth:
     - 'url_generator'
     - 'export_credentials_awscli'
-  pre_auth: []
