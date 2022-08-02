@@ -1,4 +1,4 @@
-*.swp
+/TODO
 
 # asdf
 /.tool-versions
