@@ -1,6 +1,6 @@
 {{- $ephemeral := false -}}
 {{- $headless := false -}}
-{{- $laptop := eq (output "hostnamectl" "chassis") "laptop" -}}
+{{- $laptop := eq (output "hostnamectl" "chassis" "2>&1") "laptop" -}}
 {{- $personal := true -}}
 {{- $work := false -}}
 
