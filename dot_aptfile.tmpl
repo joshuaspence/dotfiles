@@ -179,10 +179,12 @@ package "xclip"
 
 {{ if .work -}}
 # Work
+apt_repository "cloudflare" "https://pkg.cloudflare.com" "focal main" "" "https://pkg.cloudflare.com/cloudflare-main.gpg"
 apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "jessie main" "" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
 deb_repo "zoom" "https://zoom.us/client/latest/zoom_amd64.deb" "https://zoom.us/linux/download/pubkey"
 
 package "awscli"
+package "cloudflared"
 package "slack-desktop"
 package "zoom"
 {{- end }}
