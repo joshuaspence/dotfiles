@@ -38,23 +38,28 @@
 /.config/cloudtoken/
 /.local/bin/atlas
 /.local/bin/cloudtoken
+/.zoom/
 {{ end -}}
 
 # Other
+/.asdf/*
 /.bash_history
 /.cache/
 /go/
 /.lesshst
+/.mozilla/
 /.mypy_cache
+/.nmcli-history
+/.node/
 /.node_repl_history
 /snap/
 /.terraform.d/
 /.tox/
-/.viminfo
 /.wget-hsts
 /workspace/
 
 # Vim
+/.viminfo
 /.vim/backup/
 /.vim/plugged/
 /.vim/swap/
@@ -66,4 +71,12 @@
 /.venv/lib/
 /.venv/lib64/
 /.venv/pyvenv.cfg
+/.venv/requirements.txt
 /.venv/share/
+
+# VSCode
+/.config/Code/*
+!/.config/Code/User
+/.config/Code/User/*
+!/.config/Code/User/settings.json
+/.vscode/
