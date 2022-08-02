@@ -1,6 +1,6 @@
 {{- $ephemeral := false -}}
 {{- $headless := false -}}
-{{- $laptop := eq (output "hostnamectl" "--json=short" | fromJson).Chassis "laptop" -}}
+{{- $laptop := false -}}
 {{- $personal := true -}}
 {{- $work := false -}}
 
@@ -11,6 +11,10 @@
 
 {{- if eq .chezmoi.username "jspence2" -}}
 {{-   $work = true -}}
+{{- end -}}
+
+{{- if not $ephemeral -}}
+{{-   $laptop = eq (output "hostnamectl" "chassis") "laptop" -}}
 {{- end -}}
 ---
 data:
