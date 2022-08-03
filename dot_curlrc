@@ -1,17 +1,5 @@
-# Request a compressed response.
 compressed
-
-# When using `-o`, create the local directory hierarchy if necessary.
 create-dirs
-
-# Fail silently (no output at all) on server errors.
-fail
-
-# Follow redirects.
+fail-with-body
 location
-
-# Automatically set the previous URL when following a `Location` header.
 referer = ";auto"
-
-# Show error messages when `curl` fails.
-show-error
