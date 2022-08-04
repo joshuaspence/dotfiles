@@ -1,7 +1,6 @@
 adjust_extension = on
 content_disposition = on
 continue = on
-hsts-file = ~/.cache/wget-hsts
 no_parent = on
 robots = off
 timeout = 60
