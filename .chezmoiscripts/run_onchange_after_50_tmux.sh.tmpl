@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Configuration
+# .tmux.conf: {{ include "dot_tmux.conf" | sha256sum }}
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+~/.tmux/plugins/tpm/bin/install_plugins
+~/.tmux/plugins/tpm/bin/update_plugins all

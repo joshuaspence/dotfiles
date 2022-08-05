@@ -47,6 +47,10 @@
   url: 'https://github.com/harry-cpp/code-nautilus/raw/master/code-nautilus.py'
   refreshPeriod: '24h'
 
+.tmux/plugins/tpm:
+  type: 'git-repo'
+  url: 'https://github.com/tmux-plugins/tpm.git'
+
 .vim/autoload/plug.vim:
   type: 'file'
   url: '{{ (gitHubLatestRelease "junegunn/vim-plug").TarballURL }}'
