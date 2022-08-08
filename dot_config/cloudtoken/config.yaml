@@ -12,7 +12,6 @@ defaults:
     saml_response_plugin: 'idaptive'
     session_duration: 36000
   skip_update_check: false
-  system_username: '{{ .chezmoi.username }}'
 plugins:
   pre_auth: []
   auth:
