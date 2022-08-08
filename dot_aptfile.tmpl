@@ -52,6 +52,21 @@ function apt_keyring() {
   log_info "${APTFILE_GREEN}[NEW]${APTFILE_COLOR_OFF} keyring ${name}"
 }
 
+function debconf() {
+  local -r package="$1"
+  local -r question="$2"
+  local -r type="$3"
+  local -r answer="$4"
+
+  if debconf-get-selections | grep --perl-regexp --quiet "^${package}\t${question}\t${type}\t${answer}$"; then
+    log_info "${APTFILE_CYAN}[OK]${APTFILE_COLOR_OFF} debconf ${package} ${question}"
+    return
+  fi
+
+  echo "${package} ${question} ${type} ${answer}" | debconf-set-selections
+  log_info "${APTFILE_GREEN}[NEW]${APTFILE_COLOR_OFF} debconf ${package} ${question}"
+}
+
 function deb_repo() {
   local -r name="$1"
   local -r deb_url="$2"
@@ -83,7 +98,7 @@ EOF
 }
 
 # Dependencies used within `aptfile`.
-packagelist "apt-utils" "dpkg-sig" "gpg" "wget"
+packagelist "apt-utils" "debconf-utils" "dpkg-sig" "gpg" "wget"
 
 # Repositories.
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "bullseye main" "" "https://azlux.fr/repo.gpg"
@@ -119,6 +134,7 @@ packagelist "nmap" "traceroute"
 package "speedtest"
 packagelist "rsync" "openssh-client"
 package "sss"
+debconf "wireshark-common" "wireshark-common/install-setuid" "boolean" "true"
 package "wireshark-qt"
 
 # Utils
