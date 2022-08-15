@@ -1,2 +1,2 @@
 GOPATH="${HOME}/go"
-GOPRIVATE='*.atlassian.com,bitbucket.org/atlassian,bitbucket.org/atlassianlabs'
+GOPROXY='https://packages.atlassian.com/go-proxy'
