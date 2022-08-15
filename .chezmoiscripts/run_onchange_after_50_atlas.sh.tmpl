@@ -4,9 +4,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# Configuration
-# Timestamp: {{ now | date "2006-01-02" }}
-
 {{ include "shell/environment/path.sh" -}}
 
 {{

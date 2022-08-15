@@ -7,7 +7,6 @@ set -o pipefail
 # Configuration
 # ~/.asdf: {{ (gitHubLatestRelease "asdf-vm/asdf").Name }}
 # ~/.tool-versions: {{ include "dot_tool-versions" | sha256sum }}
-# Timestamp: {{ now | date "2006-01-02" }}
 
 {{ include "shell/config/asdf.sh" -}}
 
