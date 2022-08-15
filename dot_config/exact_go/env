@@ -1,2 +1,1 @@
-GOPATH="${HOME}/go"
 GOPROXY='https://packages.atlassian.com/go-proxy'
