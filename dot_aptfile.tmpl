@@ -170,7 +170,6 @@ flatpak remote-add --if-not-exists "flathub" "https://flathub.org/repo/flathub.f
 apt_repository "libcontainers" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRIB_ID}_${DISTRIB_RELEASE}/" "/" "" "http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/x${DISTRIB_ID}_${DISTRIB_RELEASE}/Release.key"
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRIB_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "disco main" "i386,amd64" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
-apt_repository "github-cli" "https://cli.github.com/packages" "stable main" "amd64" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRIB_CODENAME} main" "amd64" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "kubernetes" "https://apt.kubernetes.io" "kubernetes-xenial main" "" "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
 deb_repo "minikube" "https://github.com/kubernetes/minikube/releases/download/v1.26.0/minikube_1.26.0-0_amd64.deb" ""
