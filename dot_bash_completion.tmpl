@@ -1,0 +1,7 @@
+echo ~/.bash_completion
+
+{{- $sourceDir := .chezmoi.sourceDir }}
+{{ range $file := glob (joinPath $sourceDir "shell/completion/*.{bash,sh}") }}
+# source={{ replace (print $sourceDir "/") "" $file }}
+{{ include $file -}}
+{{ end -}}
