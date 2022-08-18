@@ -1,3 +1,3 @@
-if command -v direnv >/dev/null; then
+if __command_exists direnv; then
   source <(direnv hook bash)
 fi

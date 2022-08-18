@@ -1,9 +1,9 @@
-if command -v less >/dev/null; then
-  if command -v lesspipe >/dev/null; then
+if __command_exists less; then
+  if __command_exists lesspipe; then
     source <(lesspipe)
   fi
 
   export PAGER='less'
-elif command -v more >/dev/null; then
+elif __command_exists more; then
   export PAGER='more'
 fi

@@ -1,5 +1,5 @@
-if command -v yq >/dev/null; then
-  if complete -p yq &>/dev/null; then
+if __command_exists yq; then
+  if __completion_exists yq; then
     echo "Readline completion has already been setup for \`yq\`". >&2
   fi
 

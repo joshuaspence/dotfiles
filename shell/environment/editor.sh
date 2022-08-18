@@ -1,4 +1,4 @@
-if command -v vim >/dev/null; then
+if __command_exists vim; then
   export EDITOR='vim'
 else
   unset EDITOR

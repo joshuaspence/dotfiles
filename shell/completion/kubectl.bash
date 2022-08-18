@@ -1,3 +1,3 @@
-if command -v kubectl >/dev/null; then
+if __command_exists kubectl; then
   source <(kubectl completion bash)
 fi

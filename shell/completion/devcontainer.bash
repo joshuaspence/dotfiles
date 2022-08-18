@@ -1,3 +1,3 @@
-if command -v devcontainer >/dev/null; then
+if __command_exists devcontainer; then
   source <(devcontainer completion bash)
 fi

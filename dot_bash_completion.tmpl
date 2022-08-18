@@ -1,4 +1,6 @@
-{{- $sourceDir := .chezmoi.sourceDir }}
+{{ include "shell/helpers.sh" }}
+
+{{- $sourceDir := .chezmoi.sourceDir -}}
 {{ range $file := glob (joinPath $sourceDir "shell/completion/*.{bash,sh}") }}
 # source={{ replace (print $sourceDir "/") "" $file }}
 {{ include $file -}}

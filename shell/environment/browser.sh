@@ -1,5 +1,5 @@
 if test -v DISPLAY; then
-  if command -v google-chrome >/dev/null; then
+  if __command_exists google-chrome; then
     export BROWSER='google-chrome'
   fi
 fi

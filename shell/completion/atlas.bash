@@ -1,3 +1,3 @@
-if command -v atlas >/dev/null; then
+if __command_exists atlas; then
   source <(atlas --completion-script-bash)
 fi

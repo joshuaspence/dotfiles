@@ -1,3 +1,3 @@
-if command -v zoxide >/dev/null; then
+if __command_exists zoxide; then
   source <(zoxide init bash)
 fi

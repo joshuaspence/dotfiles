@@ -1,3 +1,3 @@
-if command -v pip >/dev/null; then
+if __command_exists pip; then
   source <(pip completion --bash)
 fi

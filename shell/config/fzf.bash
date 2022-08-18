@@ -1,3 +1,3 @@
-if command -v fzf >/dev/null; then
+if __command_exists fzf; then
   source /usr/share/doc/fzf/examples/key-bindings.bash
 fi

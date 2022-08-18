@@ -1,3 +1,3 @@
-if command -v dircolors >/dev/null; then
+if __command_exists dircolors; then
   source <(dircolors)
 fi
