@@ -4,6 +4,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+{{ include "shell/environment/xdg.sh" -}}
+
 {{ if not .headless -}}
 {{
   $extensions := list
