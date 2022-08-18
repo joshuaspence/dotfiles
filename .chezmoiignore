@@ -59,11 +59,11 @@
 /workspace/
 
 # Vim
-/.viminfo
 /.vim/backup/
 /.vim/plugged/
 /.vim/swap/
 /.vim/undo/
+/.vim/viminfo
 
 # Virtualenv
 /.venv/bin/
