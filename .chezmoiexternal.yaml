@@ -42,11 +42,6 @@
   url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "docker/compose-switch").HTMLURL }}/docker-compose-{{ .chezmoi.os }}-{{ .chezmoi.arch }}'
   executable: true
 
-.local/share/nautilus-python/extensions/code-nautilus.py:
-  type: 'file'
-  url: 'https://github.com/harry-cpp/code-nautilus/raw/master/code-nautilus.py'
-  refreshPeriod: '24h'
-
 .tmux/plugins/tpm:
   type: 'git-repo'
   url: 'https://github.com/tmux-plugins/tpm.git'
