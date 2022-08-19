@@ -60,6 +60,7 @@
 
 # Vim
 /.vim/backup/
+/.vim/.netrwhist
 /.vim/plugged/
 /.vim/swap/
 /.vim/undo/
