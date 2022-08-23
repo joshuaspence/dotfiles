@@ -42,14 +42,6 @@
   url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "docker/compose-switch").HTMLURL }}/docker-compose-{{ .chezmoi.os }}-{{ .chezmoi.arch }}'
   executable: true
 
-.local/bin/htmlq:
-  type: 'file'
-  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "mgdm/htmlq").HTMLURL }}/htmlq-x86_64-{{ .chezmoi.os }}.tar.gz'
-  executable: true
-  filter:
-    command: 'tar'
-    args: ['--extract', '--to-stdout', '--file=-', '--gzip', 'htmlq']
-
 .tmux/plugins/tpm:
   type: 'git-repo'
   url: 'https://github.com/tmux-plugins/tpm.git'
