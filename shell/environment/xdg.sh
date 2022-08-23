@@ -11,3 +11,9 @@ export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
 export NODE_REPL_HISTORY="${XDG_DATA_HOME}/node_repl_history"
 export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
 export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
+
+# `less` gains full support for XDG base directories in version 600 (see gwsw/less#153).
+if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
+  export LESSKEY="${XDG_CONFIG_HOME}/lesskey"
+  export LESSHISTFILE="${XDG_DATA_HOME}/lesshst"
+fi

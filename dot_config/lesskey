@@ -1,3 +1,2 @@
 #env
 LESS = --ignore-case --RAW-CONTROL-CHARS --chop-long-lines
-LESSHISTFILE = -
