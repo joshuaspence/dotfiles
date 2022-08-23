@@ -21,4 +21,5 @@
   "markdown.experimental.editor.pasteLinks.enabled": true,
   "markdown.experimental.validate.enabled": true,
   "files.autoSaveDelay": 3000,
+  "terminal.integrated.enableMultiLinePasteWarning": false,
 }
