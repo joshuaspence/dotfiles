@@ -1,1 +1,1 @@
-GOPROXY='https://packages.atlassian.com/go-proxy'
+GOPROXY=https://packages.atlassian.com/go-proxy
