@@ -14,6 +14,6 @@ export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
 
 # `less` gains full support for XDG base directories in version 600 (see gwsw/less#153).
 if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
-  export LESSKEY="${XDG_CONFIG_HOME}/lesskey"
+  export LESSKEYIN="${XDG_CONFIG_HOME}/lesskey"
   export LESSHISTFILE="${XDG_DATA_HOME}/lesshst"
 fi
