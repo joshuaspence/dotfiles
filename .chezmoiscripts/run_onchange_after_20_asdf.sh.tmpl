@@ -6,7 +6,6 @@ set -o pipefail
 
 # Configuration
 # ~/.asdf: {{ (gitHubLatestRelease "asdf-vm/asdf").Name }}
-# ~/.tool-versions: {{ include "dot_tool-versions" | sha256sum }}
 
 {{ include "shell/environment/xdg.sh" -}}
 {{ include "shell/config/asdf.sh" -}}
@@ -17,6 +16,9 @@ function asdf_plugin() {
   else
     asdf plugin update "${1}"
   fi
+
+  asdf install "${1}" latest
+  asdf global "${1}" latest
 }
 
 # Update asdf.
