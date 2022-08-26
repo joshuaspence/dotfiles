@@ -1,28 +1,53 @@
 function upgrade-all() {
-  # Aptitude
-  for COMMAND in update upgrade dist-upgrade autoremove autoclean; do
-    sudo apt-get "${COMMAND}"
-  done
+  upgrade-apt
+  upgrade-asdf
+  upgrade-atlas
+  upgrade-cloudtoken
+  upgrade-gnome-extensions
+  upgrade-snap
+  upgrade-tpm
+  upgrade-vim-plugins
+  upgrade-virtualenv
+  upgrade-vscode-extensions
+  upgrade-firmware
+}
 
-  # ASDF
+function upgrade-apt() {
+  for COMMAND in update upgrade full-upgrade autoremove; do
+    sudo apt "${COMMAND}"
+  done
+}
+
+function upgrade-asdf() {
   asdf update
   asdf plugin-update --all
 
-  # Flatpak
-  flatpak update
+  asdf plugin list | xargs -I{} asdf install {} latest
+  asdf plugin list | xargs -I{} asdf global {} latest
+}
 
-  # Gnome Extensions
+function upgrade-atlas() {
+  atlas upgrade
+}
+
+function upgrade-cloudtoken() {
+  return
+}
+
+function upgrade-gnome-extensions() {
   gnome-extensions-cli update
+}
 
-  # Snap
+function upgrade-snap() {
   sudo snap refresh
+}
 
-  # Virtualenv
-  upgrade-virtualenv
+function upgrade-tpm() {
+  return
+}
 
-  # Firmware
-  fwupdmgr refresh --force
-  fwupdmgr update
+function upgrade-vim-plugins() {
+  return
 }
 
 function upgrade-virtualenv() {
@@ -30,14 +55,11 @@ function upgrade-virtualenv() {
   pip-sync --quiet --pip-args '--disable-pip-version-check' ~/.venv/requirements.txt
 }
 
-function upgrade-atlassian-tools() {
-  atlas upgrade
-  upgrade-cloudtoken
+function upgrade-vscode-extensions() {
+  return
 }
 
-function upgrade-cloudtoken() {
-  atlas statlas get --namespace cloudtoken --subdirectory cloudtoken-linux-amd64-latest.zip --output /tmp/cloudtoken.zip
-  unzip -d ~/bin -o -q /tmp/cloudtoken.zip
-  rm /tmp/cloudtoken.zip
-  echo "Cloudtoken upgraded to version $(cloudtoken --version)"
+function upgrade-firmware() {
+  fwupdmgr refresh --force
+  fwupdmgr update
 }
