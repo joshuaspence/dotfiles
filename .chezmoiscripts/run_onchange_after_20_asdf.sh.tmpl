@@ -8,6 +8,7 @@ set -o pipefail
 # ~/.asdf: {{ (gitHubLatestRelease "asdf-vm/asdf").Name }}
 # ~/.tool-versions: {{ include "dot_tool-versions" | sha256sum }}
 
+{{ include "shell/environment/xdg.sh" -}}
 {{ include "shell/config/asdf.sh" -}}
 
 function asdf_plugin() {
