@@ -1,4 +1,5 @@
 HISTCONTROL='ignoreboth'
+HISTFILE="${XDG_DATA_HOME:-${HOME}/.local/share}/bash/history"
 HISTFILESIZE=1048576
 HISTSIZE=1048576
 
@@ -12,3 +13,5 @@ PROMPT_COMMAND='history -w'
 shopt -s cmdhist
 shopt -s histappend
 shopt -s lithist
+
+mkdir --parents "$(dirname "${HISTFILE}")"
