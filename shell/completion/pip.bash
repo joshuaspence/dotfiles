@@ -1,3 +1,3 @@
-if __command_exists pip; then
+if command_exists pip; then
   source <(pip completion --bash)
 fi

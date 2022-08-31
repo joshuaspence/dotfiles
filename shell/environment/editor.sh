@@ -1,4 +1,4 @@
-if __command_exists vim; then
+if command_exists vim; then
   export EDITOR='vim'
 else
   unset EDITOR

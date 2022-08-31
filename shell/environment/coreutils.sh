@@ -1,3 +1,3 @@
-if __command_exists dircolors; then
+if command_exists dircolors; then
   source <(dircolors)
 fi
