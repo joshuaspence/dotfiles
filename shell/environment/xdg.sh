@@ -8,6 +8,7 @@
 }
 
 export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
+export MANOPT="--config-file=${XDG_CONFIG_HOME}/manpath"
 export NODE_REPL_HISTORY="${XDG_DATA_HOME}/node_repl_history"
 export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
 export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
