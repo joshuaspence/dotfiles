@@ -193,6 +193,10 @@ package "tmux"
 package "xclip"
 {{- end }}
 
+{{ if .personal -}}
+package "lastpass-cli"
+{{- end }}
+
 {{ if .work -}}
 # Work
 apt_repository "cloudflare" "https://pkg.cloudflare.com" "focal main" "" "https://pkg.cloudflare.com/cloudflare-main.gpg"
