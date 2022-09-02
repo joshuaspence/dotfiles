@@ -101,6 +101,7 @@ EOF
 packagelist "apt-utils" "debconf-utils" "dpkg-sig" "gpg" "jq" "wget"
 
 # Repositories.
+deb_repo "atuin" "https://github.com/ellie/atuin/releases/download/\$(curl --fail --location --show-error --silent https://api.github.com/repos/ellie/atuin/releases/latest | jq --raw-output .name)/atuin_\$(curl --fail --location --show-error --silent https://api.github.com/repos/ellie/atuin/releases/latest | jq --raw-output .name | cut --characters=2-)_amd64.deb" ""
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "bullseye main" "" "https://azlux.fr/repo.gpg"
 deb_repo "chezmoi" "https://github.com/twpayne/chezmoi/releases/download/\$(curl --fail --location --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .name)/chezmoi_\$(curl --fail --location --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .name | cut --characters=2-)_linux_amd64.deb" ""
 apt_repository "curl" "https://ppa.launchpadcontent.net/savoury1/curl34/ubuntu" "${DISTRIB_CODENAME} main" "" "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x374c7797fb006459"
@@ -109,6 +110,7 @@ apt_repository "yq" "https://ppa.launchpadcontent.net/rmescandon/yq/ubuntu" "${D
 update
 
 packagelist "apt-file" "synaptic"
+package "atuin"
 package "chezmoi"
 packagelist "curl" "wget"
 package "flatpak"
