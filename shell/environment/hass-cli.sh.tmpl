@@ -1,0 +1,6 @@
+{{ if .personal -}}
+if command_exists hass-cli; then
+  export HASS_SERVER='http://homeassistant.spence.network'
+  export HASS_TOKEN={{ (index (lastpassRaw "hass-cli") 0).note | squote }}
+fi
+{{ end -}}

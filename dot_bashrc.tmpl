@@ -5,7 +5,11 @@ if [[ $- != *i* ]]; then
 fi
 
 {{- $sourceDir := .chezmoi.sourceDir }}
-{{ range $file := glob (joinPath $sourceDir "shell/{config,functions}/*.{bash,sh}") }}
+{{ range $file := glob (joinPath $sourceDir "shell/{config,functions}/*.{bash,sh}{,.tmpl}") }}
 # source={{ replace (print $sourceDir "/") "" $file }}
+{{ if hasSuffix ".tmpl" $file -}}
+{{ includeTemplate $file $ -}}
+{{ else -}}
 {{ include $file -}}
+{{ end -}}
 {{ end -}}

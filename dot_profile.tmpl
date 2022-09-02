@@ -4,8 +4,13 @@ fi
 
 {{ include "shell/helpers.sh" }}
 
-{{- $base := print .chezmoi.sourceDir "/" -}}
-{{ range $file := glob (joinPath .chezmoi.sourceDir "shell/environment/*.sh") }}
-# source={{ replace $base "" $file }}
+{{- $sourceDir := .chezmoi.sourceDir }}
+{{ range $file := glob (joinPath $sourceDir "shell/environment/*.sh{,.tmpl}") }}
+# source={{ replace (print $sourceDir "/") "" $file }}
+{{ if hasSuffix ".tmpl" $file -}}
+{{ includeTemplate $file $ -}}
+{{ else -}}
 {{ include $file -}}
 {{ end -}}
+{{ end -}}
+
