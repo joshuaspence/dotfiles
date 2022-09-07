@@ -7,6 +7,7 @@
   XDG_RUNTIME_DIR="/run/user/$(id --user)"
 }
 
+export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
 export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
 export MANOPT="--config-file=${XDG_CONFIG_HOME}/manpath"
 export NODE_REPL_HISTORY="${XDG_DATA_HOME}/node_repl_history"
