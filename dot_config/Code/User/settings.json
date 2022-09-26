@@ -22,4 +22,5 @@
   "markdown.experimental.validate.enabled": true,
   "files.autoSaveDelay": 3000,
   "terminal.integrated.enableMultiLinePasteWarning": false,
+  "go.toolsManagement.autoUpdate": true,
 }
