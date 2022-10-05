@@ -1,8 +1,9 @@
 git+https://github.com/JelmerT/cc2538-bsl
+esphome
 esptool
 gnome-extensions-cli
 gphotos-sync
-homeassistant-cli
+homeassistant-cli @ git+https://github.com/home-assistant-ecosystem/home-assistant-cli@0.9.5
 httpie
 pip-tools
 pre-commit
@@ -16,7 +17,3 @@ intelhex
 
 # Needed by `gnome-extensions-cli`.
 pygobject
-
-# See home-assistant-ecosystem/home-assistant-cli#382.
-click < 8.1
-esphome < 2022.4.0
