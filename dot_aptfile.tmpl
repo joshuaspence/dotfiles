@@ -101,16 +101,14 @@ EOF
 packagelist "apt-utils" "debconf-utils" "dpkg-sig" "gpg" "jq" "wget"
 
 # Repositories.
-deb_repo "atuin" "https://github.com/ellie/atuin/releases/download/\$(curl --fail --location --show-error --silent https://api.github.com/repos/ellie/atuin/releases/latest | jq --raw-output .tag_name)/atuin_\$(curl --fail --location --show-error --silent https://api.github.com/repos/ellie/atuin/releases/latest | jq --raw-output .tag_name | cut --characters=2-)_amd64.deb" ""
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "bullseye main" "" "https://azlux.fr/repo.gpg"
-deb_repo "chezmoi" "https://github.com/twpayne/chezmoi/releases/download/\$(curl --fail --location --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .tag_name)/chezmoi_\$(curl --fail --location --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .tag_name | cut --characters=2-)_linux_amd64.deb" ""
+deb_repo "chezmoi" "https://github.com/twpayne/chezmoi/releases/download/\$(curl --fail --location --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .name)/chezmoi_\$(curl --fail --location --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .name | cut --characters=2-)_linux_amd64.deb" ""
 apt_repository "curl" "https://ppa.launchpadcontent.net/savoury1/curl34/ubuntu" "${DISTRIB_CODENAME} main" "" "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x374c7797fb006459"
 apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "focal main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
 apt_repository "yq" "https://ppa.launchpadcontent.net/rmescandon/yq/ubuntu" "${DISTRIB_CODENAME} main" "" "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x9a2d61f6bb03ced7522b8e7d6657dbe0cc86bb64"
 update
 
 packagelist "apt-file" "synaptic"
-package "atuin"
 package "chezmoi"
 packagelist "curl" "wget"
 package "flatpak"
@@ -204,7 +202,7 @@ package "lastpass-cli"
 # Work
 apt_repository "cloudflare" "https://pkg.cloudflare.com" "focal main" "" "https://pkg.cloudflare.com/cloudflare-main.gpg"
 apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "jessie main" "" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
-deb_repo "zoom" "https://zoom.us/client/latest/zoom_amd64.deb" "https://zoom.us/linux/download/pubkey?version=5-12-6"
+deb_repo "zoom" "https://zoom.us/client/latest/zoom_amd64.deb" "https://zoom.us/linux/download/pubkey"
 
 package "awscli"
 package "cloudflared"
