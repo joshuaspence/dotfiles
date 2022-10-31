@@ -3,13 +3,6 @@
   type: 'git-repo'
   url: 'https://github.com/asdf-vm/asdf.git'
 
-.bash-preexec.sh:
-  type: 'file'
-  url: '{{ (gitHubLatestRelease "rcaloras/bash-preexec").TarballURL }}'
-  filter:
-    command: 'tar'
-    args: ['--extract', '--to-stdout', '--file=-', '--gzip', '--wildcards', '*/bash-preexec.sh']
-
 .local/bin/aptfile:
   type: 'file'
   url: '{{ (gitHubLatestRelease "seatgeek/bash-aptfile").TarballURL }}'
