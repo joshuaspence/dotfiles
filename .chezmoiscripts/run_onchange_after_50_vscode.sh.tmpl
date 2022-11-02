@@ -9,6 +9,7 @@ set -o pipefail
 {{ if not .headless -}}
 {{
   $extensions := list
+    "atlassian.atlascode"
     "eamodio.gitlens"
     "ESPHome.esphome-vscode"
     "golang.go"
@@ -23,6 +24,7 @@ set -o pipefail
     "ms-vsliveshare.vsliveshare"
     "netcorext.uuid-generator"
     "redhat.vscode-yaml"
+    "timonwong.shellcheck"
     "VisualStudioExptTeam.vscodeintellicode"
 -}}
 {{ if .work -}}
