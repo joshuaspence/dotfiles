@@ -12,5 +12,5 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v3'
-      - run: 'curl --fail --location --no-progress-meter https://chezmoi.io/get | sh -s -- -b /usr/local/bin'
-      - run: 'chezmoi init --apply --verbose .'
+      - uses: './.github/actions/chezmoi'
+      - run: 'chezmoi apply --verbose'
