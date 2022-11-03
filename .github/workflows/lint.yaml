@@ -10,8 +10,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v3'
-      - run: 'curl --fail --location --no-progress-meter https://chezmoi.io/get | sh -s -- -b /usr/local/bin'
-      - run: |-
-          mkdir .target
-          chezmoi archive --exclude externals --init --source . | tar --extract --file=- --directory=.target
+      - run: 'curl --fail --location --no-progress-meter https://get.chezmoi.io | sh -s -- -b /usr/local/bin'
+      - run: 'mkdir .target'
+      - run: 'chezmoi init --apply --include templates --destination .target --verbose .'
       - uses: 'ludeeus/action-shellcheck@203a3fd018dfe73f8ae7e3aa8da2c149a5f41c33'
