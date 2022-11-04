@@ -1,10 +1,6 @@
 ---
 extends: 'default'
 
-ignore: |-
-  src/modules/
-  tools/
-
 rules:
   braces:
     max-spaces-inside: 1
@@ -18,7 +14,8 @@ rules:
     max: 1
   indentation:
     spaces: 2
-  key-ordering: {}
   line-length: 'disable'
   quoted-strings:
     quote-type: 'single'
+  truthy:
+    check-keys: false
