@@ -27,4 +27,5 @@
     "file:///home/jspence2/.local/share/Code/extensions/atlassian.atlascode-2.10.12/resources/schemas/pipelines-schema.json": "bitbucket-pipelines.yml"
   },
   "gitlens.currentLine.enabled": false,
+  "editor.codeLens": false,
 }
