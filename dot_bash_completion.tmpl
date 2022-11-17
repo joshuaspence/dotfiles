@@ -1,7 +1,7 @@
 {{ include "shell/helpers.sh" }}
 
 {{- $sourceDir := .chezmoi.sourceDir -}}
-{{ range $file := glob (joinPath $sourceDir "shell/completion/*.{bash,sh}{,.tmpl}") }}
+{{ range $file := glob (joinPath $sourceDir "shell/completion/*.{bash,bash.tmpl,sh,sh.tmpl}") }}
 # source={{ replace (print $sourceDir "/") "" $file }}
 {{ if hasSuffix ".tmpl" $file -}}
 {{ includeTemplate $file $ -}}
