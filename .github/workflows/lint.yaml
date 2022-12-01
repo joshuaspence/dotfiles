@@ -14,7 +14,7 @@ jobs:
       - run: |-
           mkdir .target
           chezmoi archive --exclude externals | tar --extract --file=- --directory=.target
-      - uses: 'ludeeus/action-shellcheck@b2bbefc2e6b9dcbc6355b85e366c9e55bf8d57e1'
+      - uses: 'ludeeus/action-shellcheck@6d3f514f44620b9d4488e380339edc0d9bbe2fba'
 
   yamllint:
     runs-on: 'ubuntu-latest'
