@@ -1,3 +1,4 @@
+atlassian-bb-cli
 git+https://github.com/JelmerT/cc2538-bsl
 esphome
 esptool
