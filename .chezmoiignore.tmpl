@@ -33,12 +33,16 @@
 /Templates/
 /Videos/
 
+# Work
 {{ if not .work -}}
 /.chezmoiscripts/50_atlas.sh
 /.config/cloudtoken/
 /.local/bin/atlas
 /.local/bin/cloudtoken
 /.zoom/
+{{ else -}}
+/.config/cloudtoken/cookiejar
+/.config/cloudtoken/state.json
 {{ end -}}
 
 # Other
