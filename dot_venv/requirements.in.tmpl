@@ -1,7 +1,6 @@
 {{ if .work -}}
 atlassian-bb-cli
 {{ end -}}
-git+https://github.com/JelmerT/cc2538-bsl
 esphome
 esptool
 gnome-extensions-cli
@@ -14,9 +13,6 @@ yamllint
 
 # See pganssle/zoneinfo#111.
 backports.zoneinfo ; python_version < '3.9'
-
-# Needed by `cc2538-bsl`.
-intelhex
 
 # Needed by `gnome-extensions-cli`.
 pygobject
