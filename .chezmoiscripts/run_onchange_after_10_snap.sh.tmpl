@@ -4,7 +4,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ if lookPath "snap" -}}
 {{ $username := .chezmoi.username -}}
 {{
   $snaps := list
@@ -14,5 +13,4 @@ set -o pipefail
 {{ range $snaps -}}
 {{ if ne $username "root" -}}sudo {{ end -}}
 snap install {{ . }}
-{{ end -}}
 {{ end -}}
