@@ -34,11 +34,16 @@ function apt_keyring() {
   [[ -z $name ]] && log_fail "Please specify a keyring name"
   [[ -z $gpg_key ]] && log_fail "Please specify a GPG key"
 
-  local -r apt_keyring="/etc/apt/keyrings/${name}.gpg"
+  local -r apt_keyring_d="/etc/apt/keyrings"
+  local -r apt_keyring="${apt_keyring_d}/${name}.gpg"
 
   if [[ -f $apt_keyring ]]; then
     log_info "${APTFILE_CYAN}[OK]${APTFILE_COLOR_OFF} keyring ${name}"
     return
+  fi
+
+  if [[ ! -d $apt_keyring_d ]]; then
+    mkdir "${apt_keyring_d}"
   fi
 
   (wget --quiet --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") >"${TMP_APTFILE_LOGFILE}" 2>&1
