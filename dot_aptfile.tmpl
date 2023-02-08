@@ -4,6 +4,8 @@ source /etc/lsb-release
 
 export DEBIAN_FRONTEND="noninteractive"
 
+# TODO: Create `/etc/apt/auth.conf` file.
+
 function apt_repository() {
   local -r name="$1"
   local -r apt_repo="$2"
@@ -107,7 +109,7 @@ packagelist "apt-utils" "debconf-utils" "dpkg-sig" "gpg" "jq" "wget"
 
 # Repositories.
 apt_repository "azlux" "http://packages.azlux.fr/debian/" "bullseye main" "" "https://azlux.fr/repo.gpg"
-deb_repo "chezmoi" "https://github.com/twpayne/chezmoi/releases/download/\$(curl --fail --location --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .name)/chezmoi_\$(curl --fail --location --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .name | cut --characters=2-)_linux_amd64.deb" ""
+deb_repo "chezmoi" "https://github.com/twpayne/chezmoi/releases/download/\$(curl --fail --location --netrc-file /etc/apt/auth.conf --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .name)/chezmoi_\$(curl --fail --location --netrc-file /etc/apt/auth.conf --show-error --silent https://api.github.com/repos/twpayne/chezmoi/releases/latest | jq --raw-output .name | cut --characters=2-)_linux_amd64.deb" ""
 apt_repository "curl" "https://ppa.launchpadcontent.net/savoury1/curl34/ubuntu" "${DISTRIB_CODENAME} main" "" "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x374c7797fb006459"
 apt_repository "mainline" "https://ppa.launchpadcontent.net/cappelikan/ppa/ubuntu/" "${DISTRIB_CODENAME} main" "" "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3AE27527713D2479DCAFFD58A89D7C1B2F76304D"
 apt_repository "speedtest-cli" "https://packagecloud.io/ookla/speedtest-cli/ubuntu/" "focal main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
