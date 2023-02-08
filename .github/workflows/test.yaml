@@ -12,13 +12,5 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v3'
-      - uses: 'DamianReeves/write-file-action@v1.2'
-        with:
-          path: '/etc/apt/auth.conf.d/github.conf'
-          contents: |-
-            login api.github.com
-              password ${{secrets.GITHUB_TOKEN }}
-            # Not sure why this line is needed...
-          write-mode: 'preserve'
       - uses: './.github/actions/chezmoi'
       - run: 'chezmoi apply --verbose'
