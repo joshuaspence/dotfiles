@@ -29,13 +29,13 @@
     args: ['--extract', '--file=-', '--to-stdout', 'cloudtoken']
   refreshPeriod: '24h'
 
-.local/bin/devcontainer:
+.local/bin/devcontainerx:
   type: 'file'
   url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "stuartleeks/devcontainer-cli").HTMLURL }}/devcontainer-cli_{{ .chezmoi.os }}_{{ .chezmoi.arch }}.tar.gz'
   executable: true
   filter:
     command: 'tar'
-    args: ['--extract', '--to-stdout', '--file=-', '--gzip', 'devcontainer']
+    args: ['--extract', '--to-stdout', '--file=-', '--gzip', 'devcontainerx']
 
 .local/bin/docker-compose:
   type: 'file'
