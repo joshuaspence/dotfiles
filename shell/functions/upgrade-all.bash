@@ -10,6 +10,7 @@ function upgrade-all() {
   upgrade-virtualenv
   upgrade-vscode-extensions
   upgrade-firmware
+  upgrade-kernel
 }
 
 function upgrade-apt() {
@@ -62,4 +63,9 @@ function upgrade-vscode-extensions() {
 function upgrade-firmware() {
   fwupdmgr refresh --force
   fwupdmgr update
+}
+
+function upgrade-kernel() {
+  mainline --install-latest
+  #mainline --uninstall-old
 }
