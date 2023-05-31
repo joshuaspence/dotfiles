@@ -23,9 +23,6 @@
   "files.autoSaveDelay": 3000,
   "terminal.integrated.enableMultiLinePasteWarning": false,
   "go.toolsManagement.autoUpdate": true,
-  "yaml.schemas": {
-    "file://{{ glob (print .chezmoi.homeDir "/.local/share/Code/extensions/atlassian.atlascode-*") | mustFirst }}/resources/schemas/pipelines-schema.json": "bitbucket-pipelines.yml"
-  },
   "gitlens.currentLine.enabled": false,
-  "editor.codeLens": false,
+  "editor.codeLens": false
 }
