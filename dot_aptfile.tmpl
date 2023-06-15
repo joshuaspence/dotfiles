@@ -200,6 +200,9 @@ packagelist "packer" "terraform" "vagrant"
 packagelist "podman" "fuse-overlayfs" "skopeo" "slirp4netns" "uidmap"
 package "tmux"
 package "xclip"
+
+apt_repository "ansible" "https://ppa.launchpadcontent.net/ansible/ansible/ubuntu/" "${DISTRIB_CODENAME} main" "" "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x6125e2a8c77f2818fb7bd15b93c4a3fd7bb9c367"
+package "ansible"
 {{- end }}
 
 {{ if .personal -}}
