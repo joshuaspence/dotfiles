@@ -125,6 +125,8 @@ package "lastpass-cli"
 
 # Development
 packagelist "bash" "bash-completion"
+apt_repository "bazel" "https://storage.googleapis.com/bazel-apt" "stable jdk1.8" "amd64" "https://bazel.build/bazel-release.pub.gpg"
+package "bazel"
 packagelist "binfmt-support" "qemu-user-static"
 package "build-essential"
 packagelist "git" "git-crypt" "git-extras" "git-lfs"
