@@ -3,6 +3,7 @@ ansible-lint
 {{ if .work -}}
 atlassian-bb-cli
 {{ end -}}
+git+https://github.com/JelmerT/cc2538-bsl
 esphome
 esptool
 gnome-extensions-cli
@@ -19,3 +20,6 @@ backports.zoneinfo ; python_version < '3.9'
 
 # Needed by `gnome-extensions-cli`.
 pygobject
+
+# Needed by `cc2538-bsl`.
+intelhex
