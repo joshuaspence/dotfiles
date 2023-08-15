@@ -52,7 +52,7 @@ function upgrade-vim-plugins() {
 }
 
 function upgrade-virtualenv() {
-  pip-compile --annotation-style line --upgrade --output-file ~/.venv/requirements.txt --allow-unsafe --strip-extras --resolver backtracking --no-emit-index-url ~/.venv/requirements.in
+  pip-compile --annotation-style line --upgrade --output-file ~/.venv/requirements.txt --allow-unsafe --strip-extras --no-emit-index-url ~/.venv/requirements.in
   pip-sync --quiet --pip-args '--disable-pip-version-check' ~/.venv/requirements.txt
 }
 
