@@ -12,30 +12,22 @@
     args: ['--extract', '--to-stdout', '--file=-', '--gzip', '--wildcards', '*/bin/aptfile']
 
 .local/bin/atlas:
-  type: 'file'
+  type: 'archive-file'
   url: 'https://statlas.prod.atl-paas.net/atlas-cli/{{ .chezmoi.os }}/atlas-latest-{{ .chezmoi.os }}-{{ .chezmoi.arch }}.tar.gz'
-  executable: true
-  filter:
-    command: 'tar'
-    args: ['--extract', '--to-stdout', '--file=-', '--gzip', 'atlas']
+  path: 'atlas'
   refreshPeriod: '24h'
 
 .local/bin/cloudtoken:
-  type: 'file'
+  type: 'archive-file'
   url: 'https://statlas.prod.atl-paas.net/cloudtoken/cloudtoken-{{ .chezmoi.os }}-{{ .chezmoi.arch }}-latest.zip'
+  path: 'cloudtoken'
   executable: true
-  filter:
-    command: 'bsdtar'
-    args: ['--extract', '--file=-', '--to-stdout', 'cloudtoken']
   refreshPeriod: '24h'
 
 .local/bin/devcontainerx:
-  type: 'file'
+  type: 'archive-file'
   url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "stuartleeks/devcontainer-cli").HTMLURL }}/devcontainer-cli_{{ .chezmoi.os }}_{{ .chezmoi.arch }}.tar.gz'
-  executable: true
-  filter:
-    command: 'tar'
-    args: ['--extract', '--to-stdout', '--file=-', '--gzip', 'devcontainerx']
+  path: 'devcontainerx'
 
 .local/bin/docker-compose:
   type: 'file'
