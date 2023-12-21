@@ -1,9 +1,0 @@
-[user]
-name = Josh Spence
-email = jspence2@atlassian.com
-
-[url "git@bitbucket.org:"]
-insteadOf = https://bitbucket.org/
-
-[url "git@bitbucket.org:atlassian/"]
-insteadOf = bbc://

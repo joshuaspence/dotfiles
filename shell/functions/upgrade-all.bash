@@ -1,8 +1,6 @@
 function upgrade-all() {
   upgrade-apt
   upgrade-asdf
-  upgrade-atlas
-  upgrade-cloudtoken
   upgrade-gnome-extensions
   upgrade-snap
   upgrade-tpm
@@ -25,14 +23,6 @@ function upgrade-asdf() {
 
   asdf plugin list | xargs -I{} asdf install {} latest
   asdf plugin list | xargs -I{} asdf global {} latest
-}
-
-function upgrade-atlas() {
-  atlas upgrade
-}
-
-function upgrade-cloudtoken() {
-  return
 }
 
 function upgrade-gnome-extensions() {

@@ -207,19 +207,6 @@ package "xclip"
 package "lastpass-cli"
 {{- end }}
 
-{{ if .work -}}
-# Work
-apt_repository "cloudflare" "https://pkg.cloudflare.com/cloudflared" "jammy main" "amd64" "https://pkg.cloudflare.com/cloudflare-main.gpg"
-apt_repository "slack" "https://packagecloud.io/slacktechnologies/slack/debian/" "jessie main" "" "https://packagecloud.io/slacktechnologies/slack/gpgkey"
-deb_repo "zoom" "https://zoom.us/client/latest/zoom_amd64.deb" "https://zoom.us/linux/download/pubkey?version=5-12-6"
-
-package "awscli"
-package "cloudflared"
-package "slack-desktop"
-package "yubikey-manager" "yubikey-manager-qt"
-package "zoom"
-{{- end }}
-
 # Other
 package "cmatrix"
 package "ghostscript"

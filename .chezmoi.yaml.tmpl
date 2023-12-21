@@ -9,10 +9,6 @@
 {{-   $headless = true -}}
 {{- end -}}
 
-{{- if eq .chezmoi.username "jspence2" -}}
-{{-   $work = true -}}
-{{- end -}}
-
 {{- if not $ephemeral -}}
 {{-   $laptop = eq (output "hostnamectl" "chassis") "laptop" -}}
 {{- end -}}

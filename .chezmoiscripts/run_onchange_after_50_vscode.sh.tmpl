@@ -29,13 +29,6 @@ set -o pipefail
     "timonwong.shellcheck"
     "VisualStudioExptTeam.vscodeintellicode"
 -}}
-{{ if .work -}}
-{{
-  $extensions = concat $extensions (list
-    "atlassian.atlascode"
-  )
--}}
-{{ end -}}
 
 {{ range $extension := $extensions | sortAlpha -}}
 code --force --install-extension {{ $extension }}

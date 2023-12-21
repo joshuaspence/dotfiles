@@ -117,9 +117,6 @@ insteadOf = https://bitbucket.org/
 name = Joshua Spence
 email = josh@spence.com.au
 
-[includeIf "gitdir:~/workspace/atlassian*/"]
-path = ~/.gitconfig-atlassian
-
 [credential "https://github.com"]
 helper =
 helper = !/usr/bin/gh auth git-credential
