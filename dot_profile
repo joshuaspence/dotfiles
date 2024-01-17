@@ -1,0 +1,28 @@
+if test -n "${BASH_VERSION}" && test -f ~/.bashrc; then
+  . ~/.bashrc
+fi
+
+export EDITOR='vim'
+export PAGER='less'
+
+PATH="${HOME}/.local/bin:${PATH}"
+
+{
+  XDG_CACHE_HOME="${HOME}/.cache"
+  XDG_CONFIG_HOME="${HOME}/.config"
+  XDG_DATA_HOME="${HOME}/.local/share"
+  XDG_STATE_HOME="${HOME}/.local/state"
+  XDG_RUNTIME_DIR="/run/user/$(id --user)"
+}
+
+# See aws/aws-sdk#30.
+export AWS_CONFIG_FILE="${XDG_CONFIG_HOME}/aws/config"
+export AWS_SHARED_CREDENTIALS_FILE="${XDG_CONFIG_HOME}/aws/credentials"
+
+# `less` gains full support for XDG base directories in version 600 (see gwsw/less#153).
+if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
+  export LESSKEYIN="${XDG_CONFIG_HOME}/lesskey"
+  export LESSHISTFILE="${XDG_DATA_HOME}/lesshst"
+fi
+
+source <(lesspipe)

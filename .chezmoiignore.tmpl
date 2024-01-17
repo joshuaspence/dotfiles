@@ -1,0 +1,41 @@
+/.cache/
+/.config/chezmoi/
+/.config/dconf/
+/.config/evolution/
+/.config/goa-1.0/
+/.config/gtk-3.0/
+/.config/gtk-4.0/
+/.config/gnome-initial-setup-done
+/.config/gnome-session/
+/.config/ibus/
+/.config/mimeapps.list
+/.config/monitors.xml*
+/.config/nautilus/
+/.config/pulse/
+/.config/update-notifier/
+/.config/user-dirs.dirs
+/.config/user-dirs.locale
+/.local/share/
+/snap/
+
+# Private
+/.gnupg/
+/.ssh/keys/
+
+# User
+/Desktop/
+/Documents/
+/Downloads/
+/Music/
+/Pictures/
+/Public/
+/Templates/
+/Videos/
+
+# Vim
+/.viminfo
+
+{{ if .work -}}
+# Work
+/.GlobalProtect/
+{{ end -}}

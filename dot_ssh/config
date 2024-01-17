@@ -1,0 +1,5 @@
+Include conf.d/*.conf
+
+Host *
+  AddKeysToAgent yes
+  IdentityFile ~/.ssh/keys/%h.key
