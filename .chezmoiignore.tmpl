@@ -16,7 +16,10 @@
 /.config/user-dirs.dirs
 /.config/user-dirs.locale
 /.local/share/
+/.ssh/known_hosts{,.old}
 /snap/
+/.terraform.d/
+/workspace/
 
 # Private
 /.gnupg/
@@ -33,9 +36,15 @@
 /Videos/
 
 # Vim
-/.viminfo
+/.vim/backup/
+/.vim/.netrwhist
+/.vim/plugged/
+/.vim/swap/
+/.vim/undo/
+/.vim/viminfo
 
 {{ if .work -}}
 # Work
 /.GlobalProtect/
+/GP_HTML/
 {{ end -}}
