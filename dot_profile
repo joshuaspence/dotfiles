@@ -19,6 +19,11 @@ PATH="${HOME}/.local/bin:${PATH}"
 export AWS_CONFIG_FILE="${XDG_CONFIG_HOME}/aws/config"
 export AWS_SHARED_CREDENTIALS_FILE="${XDG_CONFIG_HOME}/aws/credentials"
 
+export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
+export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
+export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
+export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
+
 # `less` gains full support for XDG base directories in version 600 (see gwsw/less#153).
 if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
   export LESSKEYIN="${XDG_CONFIG_HOME}/lesskey"
