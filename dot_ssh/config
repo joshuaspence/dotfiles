@@ -3,3 +3,6 @@ Include conf.d/*.conf
 Host *
   AddKeysToAgent yes
   IdentityFile ~/.ssh/keys/%h.key
+
+Host github.com
+  IdentityFile ~/.ssh/keys/github.key
