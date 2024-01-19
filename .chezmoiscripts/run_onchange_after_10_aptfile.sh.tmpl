@@ -59,12 +59,14 @@ function apt_keyring() {
 packagelist "gpg" "wget"
 
 # Repositories.
+apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRIB_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRIB_CODENAME} main" "amd64" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
 update
 
 # Productivity
 package "code"
+packagelist "docker-ce" "docker-ce-cli"
 package "liquidprompt" 
 package "openssh-client"
 package "terraform"
