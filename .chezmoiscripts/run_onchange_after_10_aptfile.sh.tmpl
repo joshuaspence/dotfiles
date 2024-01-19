@@ -74,7 +74,9 @@ package "vim"
 package "xclip"
 
 # Networking
+{{ if .work -}}
 package "globalprotect" "resolvconf"
+{{- end }}
 package "nmap"
 package "traceroute"
 package "whois"
