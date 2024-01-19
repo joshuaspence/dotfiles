@@ -31,3 +31,5 @@ if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
 fi
 
 source <(lesspipe)
+
+umask 022
