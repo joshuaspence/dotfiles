@@ -1,9 +1,6 @@
-source /etc/lsb-release
-
 function apt_keyring() {
   local -r name="$1"
   local -r gpg_key="$2"
-  local -r gpg_import="${3}"
 
   [[ -z $name ]] && log_fail "Please specify a keyring name"
   [[ -z $gpg_key ]] && log_fail "Please specify a GPG key"
@@ -11,22 +8,17 @@ function apt_keyring() {
   local -r apt_keyring_d="/etc/apt/keyrings"
   local -r apt_keyring="${apt_keyring_d}/${name}.gpg"
 
+  if [[ ! -d $apt_keyring_d ]]; then
+    mkdir "${apt_keyring_d}"
+  fi
+
   if [[ -f $apt_keyring ]]; then
     log_info "${APTFILE_CYAN}[OK]${APTFILE_COLOR_OFF} keyring ${name}"
     return
   fi
 
-  if [[ ! -d $apt_keyring_d ]]; then
-    mkdir "${apt_keyring_d}"
-  fi
-
-  (wget --quiet --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}") >"${TMP_APTFILE_LOGFILE}" 2>&1
+  { wget --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}"; } >"${TMP_APTFILE_LOGFILE}" 2>&1
   [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
-
-  if [[ -n $gpg_import ]]; then
-    gpg --import "${apt_keyring}" >>"${TMP_APTFILE_LOGFILE}" 2>&1
-    [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
-  fi
 
   log_info "${APTFILE_GREEN}[NEW]${APTFILE_COLOR_OFF} keyring ${name}"
 }

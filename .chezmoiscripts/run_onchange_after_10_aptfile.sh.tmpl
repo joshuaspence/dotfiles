@@ -2,18 +2,15 @@
 
 source {{ joinPath .chezmoi.sourceDir "src/aptfile.bash" }}
 
-# Dependencies used within `aptfile`.
-packagelist "gpg" "wget"
-
-# Repositories.
-apt_repository "docker" "https://download.docker.com/linux/ubuntu" "${DISTRIB_CODENAME} stable" "amd64" "https://download.docker.com/linux/ubuntu/gpg"
-apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "${DISTRIB_CODENAME} main" "amd64" "https://apt.releases.hashicorp.com/gpg"
+# Repositories
+apt_repository "docker" "https://download.docker.com/linux/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable" "{{ .chezmoi.arch }}" "https://download.docker.com/linux/ubuntu/gpg"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
-update
 
-# Productivity
+# Development
 package "code"
 packagelist "docker-ce" "docker-ce-cli"
+package "git"
 package "liquidprompt" 
 package "openssh-client"
 package "terraform"
@@ -22,15 +19,17 @@ package "xclip"
 
 # Networking
 {{ if .work -}}
-package "globalprotect" "resolvconf"
+packagelist "globalprotect" "resolvconf"
 {{- end }}
 package "nmap"
 package "traceroute"
 package "whois"
 
 # Utility
+package "curl"
 package "htop"
 package "jq"
 package "parallel"
 package "rename"
 package "retry"
+package "wget"
