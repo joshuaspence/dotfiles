@@ -1,8 +1,6 @@
 ---
 .local/bin/aptfile:
-  type: 'file'
+  type: 'archive-file'
+  path: 'bin/aptfile'
+  stripComponents: 1
   url: '{{ (gitHubLatestRelease "seatgeek/bash-aptfile").TarballURL }}'
-  executable: true
-  filter:
-    command: 'tar'
-    args: ['--extract', '--to-stdout', '--file=-', '--gzip', '--wildcards', '*/bin/aptfile']
