@@ -4,3 +4,8 @@
   path: 'bin/aptfile'
   stripComponents: 1
   url: '{{ (gitHubLatestRelease "seatgeek/bash-aptfile").TarballURL }}'
+
+.local/bin/chezmoi:
+  type: 'archive-file'
+  path: 'chezmoi'
+  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "twpayne/chezmoi").HTMLURL }}/chezmoi_{{ (gitHubLatestRelease "twpayne/chezmoi").Name | trimPrefix "v" }}_{{ .chezmoi.os }}_{{ .chezmoi.arch }}.tar.gz'
