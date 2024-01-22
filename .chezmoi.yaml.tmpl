@@ -1,3 +1,11 @@
+{{ $personal := false -}}
+{{ $work := false -}}
+
+{{ if eq .chezmoi.username "jspence" -}}
+{{   $work = true -}}
+{{ end -}}
+
 ---
 data:
-  work: {{ promptBoolOnce . "work" "Is this a work machine" }}
+  personal: {{ $personal }}
+  work: {{ $work }}
