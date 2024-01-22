@@ -2,6 +2,10 @@ command_exists() {
   command -v "${1}" >/dev/null
 }
 
+if command_exists aws; then
+  complete -C /snap/aws-cli/current/bin/aws_completer aws
+fi
+
 if command_exists terraform; then
   complete -C terraform terraform
 fi
