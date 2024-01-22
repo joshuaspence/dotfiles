@@ -15,10 +15,6 @@ PATH="${HOME}/.local/bin:${PATH}"
   XDG_RUNTIME_DIR="/run/user/$(id --user)"
 }
 
-# See aws/aws-sdk#30.
-export AWS_CONFIG_FILE="${XDG_CONFIG_HOME}/aws/config"
-export AWS_SHARED_CREDENTIALS_FILE="${XDG_CONFIG_HOME}/aws/credentials"
-
 export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
 export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
 export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
