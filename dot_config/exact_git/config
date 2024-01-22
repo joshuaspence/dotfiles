@@ -1,3 +1,9 @@
 [user]
 name = Josh Spence
 email = jspence@anduril.com
+
+[url "ssh://git@ghe.anduril.au/"]
+insteadOf = https://ghe.anduril.au/
+
+[url "ssh://git@ghe.anduril.dev/"]
+insteadOf = https://ghe.anduril.dev/
