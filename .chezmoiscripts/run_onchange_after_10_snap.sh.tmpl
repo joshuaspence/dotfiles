@@ -4,8 +4,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+source {{ joinPath .chezmoi.sourceDir "src/snap.bash" }}
+
 {{ if lookPath "snap" -}}
-{{ $username := .chezmoi.username -}}
 {{
   $snaps := list
     "aws-cli"
@@ -14,7 +15,6 @@ set -o pipefail
 -}}
 
 {{ range $snaps -}}
-{{ if ne $username "root" -}}sudo {{ end -}}
-snap install {{ . }}
+install_snap {{ . }}
 {{ end -}}
 {{ end -}}
