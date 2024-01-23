@@ -1,3 +1,5 @@
+# shellcheck disable=SC2181
+
 function apt_keyring() {
   local -r name="$1"
   local -r gpg_key="$2"
