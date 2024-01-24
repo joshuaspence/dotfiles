@@ -20,6 +20,11 @@ package "terraform"
 package "vim"
 package "xclip"
 
+# Hardware
+{{ if and (eq (output "cat" "/sys/devices/virtual/dmi/id/sys_vendor" | trim) "Dell Inc.") (eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680") -}}
+packagelist "linux-modules-ipu6-generic-hwe-{{ .chezmoi.osRelease.versionID }}" "linux-modules-ivsc-generic-hwe-{{ .chezmoi.osRelease.versionID }}"
+{{- end }}
+
 # Networking
 {{ if .work -}}
 packagelist "globalprotect" "resolvconf"
