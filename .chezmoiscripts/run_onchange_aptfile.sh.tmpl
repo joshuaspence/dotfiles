@@ -5,6 +5,7 @@ source {{ joinPath .chezmoi.sourceDir "src/aptfile.bash" }}
 # Repositories
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable" "{{ .chezmoi.arch }}" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
+apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
 {{ if .work -}}
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v11" "" "https://apt.releases.teleport.dev/gpg"
 {{- end }}
@@ -14,6 +15,7 @@ apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main
 package "code"
 packagelist "docker-ce" "docker-ce-cli"
 package "git" "git-crypt"
+package "kubectl"
 package "liquidprompt" 
 package "openssh-client"
 package "terraform"
