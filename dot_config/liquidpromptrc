@@ -1,4 +1,4 @@
-source /usr/share/liquidprompt/debian.theme
+source ~/.local/share/liquidprompt/liquid.theme
 
 LP_MARK_PREFIX=$'\n'
 LP_ENABLE_BATT=0
@@ -24,6 +24,8 @@ LP_ENABLE_TITLE_COMMAND=1
 LP_ENABLE_VCS_ROOT=0
 LP_ENABLE_VIRTUALENV=1
 LP_HOSTNAME_ALWAYS=0
+LP_MARK_BRACKET_CLOSE=''
+LP_MARK_BRACKET_OPEN=''
 LP_PERCENTS_ALWAYS=1
 LP_TIME_ANALOG=0
 LP_USER_ALWAYS=0

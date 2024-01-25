@@ -9,3 +9,10 @@
   type: 'file'
   executable: true
   url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "twpayne/chezmoi").HTMLURL }}/chezmoi-{{ .chezmoi.os }}-{{ .chezmoi.arch }}'
+
+.local/share/liquidprompt:
+  type: 'git-repo'
+  refreshPeriod: '168h'
+  url: 'https://github.com/liquidprompt/liquidprompt.git'
+  clone:
+    args: ['--branch', 'stable']
