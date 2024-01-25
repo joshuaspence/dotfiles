@@ -40,6 +40,9 @@ HISTIGNORE='[bf]g:cd *:clear:exit:history:ls:pwd'
 # See https://unix.stackexchange.com/a/48113.
 PROMPT_COMMAND='history -w'
 
+# Ensure that `bash` can write to `$HISTFILE`.
+mkdir --parents "$(dirname "${BASH_STATE_HOME}")"
+
 shopt -s cmdhist
 shopt -s histappend
 shopt -s lithist
