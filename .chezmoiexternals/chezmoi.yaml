@@ -1,0 +1,5 @@
+---
+.local/bin/chezmoi:
+  type: 'file'
+  executable: true
+  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "twpayne/chezmoi").HTMLURL }}/chezmoi-{{ .chezmoi.os }}-{{ .chezmoi.arch }}'
