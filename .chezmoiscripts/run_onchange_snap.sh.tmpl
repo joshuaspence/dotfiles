@@ -7,16 +7,9 @@ set -o pipefail
 source {{ joinPath .chezmoi.sourceDir "src/snap.bash" }}
 
 {{ if lookPath "snap" -}}
-{{
-  $snaps := list
-    "aws-cli"
-    "httpie"
-    "shellcheck"
-    "slack"
-    "yq"
--}}
-
-{{ range $snaps -}}
-install_snap {{ . }}
-{{ end -}}
+install_snap "aws-cli"
+install_snap "httpie"
+install_snap "shellcheck"
+install_snap "slack"
+install_snap "yq"
 {{ end -}}
