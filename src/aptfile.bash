@@ -1,5 +1,3 @@
-# shellcheck disable=SC2181
-
 function apt_keyring() {
   local -r name="$1"
   local -r gpg_key="$2"
@@ -19,8 +17,9 @@ function apt_keyring() {
     return
   fi
 
-  { wget --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}"; } >"${TMP_APTFILE_LOGFILE}" 2>&1
-  [[ $? -eq 0 ]] || log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
+  if ! { wget --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}"; } >"${TMP_APTFILE_LOGFILE}" 2>&1; then
+    log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
+  fi
 
   log_info "${APTFILE_GREEN}[NEW]${APTFILE_COLOR_OFF} keyring ${name}"
 }
