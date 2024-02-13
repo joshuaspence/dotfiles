@@ -1,3 +1,15 @@
+function aptfile_fail() {
+  log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF}" "$@"
+}
+
+function aptfile_new() {
+  log_info "${APTFILE_GREEN}[NEW]${APTFILE_COLOR_OFF}" "$@"
+}
+
+function aptfile_ok() {
+  log_info "${APTFILE_CYAN}[OK]${APTFILE_COLOR_OFF}" "$@"
+}
+
 function apt_keyring() {
   local -r name="$1"
   local -r gpg_key="$2"
@@ -13,15 +25,15 @@ function apt_keyring() {
   fi
 
   if [[ -f $apt_keyring ]]; then
-    log_info "${APTFILE_CYAN}[OK]${APTFILE_COLOR_OFF} keyring ${name}"
+    aptfile_ok "keyring ${name}"
     return
   fi
 
   if ! { wget --output-document=- "${gpg_key}" | gpg --dearmor --output "${apt_keyring}"; } >"${TMP_APTFILE_LOGFILE}" 2>&1; then
-    log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF} keyring ${name}"
+    aptfile_fail "keyring ${name}"
   fi
 
-  log_info "${APTFILE_GREEN}[NEW]${APTFILE_COLOR_OFF} keyring ${name}"
+  aptfile_new "keyring ${name}"
 }
 
 function apt_repository() {
