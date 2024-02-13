@@ -1,4 +1,4 @@
-function install_snap() {
+function snap() {
   local -r name="$1"
-  snap list "${name}" &>/dev/null || sudo snap install "${name}"
+  command snap list "${name}" &>/dev/null || sudo command snap install "${name}"
 }
