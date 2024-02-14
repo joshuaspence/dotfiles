@@ -1,15 +1,11 @@
-source ~/.local/share/liquidprompt/liquid.theme
-
 LP_ENABLE_BATT=0
 LP_ENABLE_LOAD=0
 LP_ENABLE_TEMP=0
 LP_ENABLE_TERRAFORM=1
 LP_ENABLE_TITLE=1
+LP_ENABLE_TITLE_COMMAND=0
 LP_MARK_PREFIX=$'\n'
+LP_USER_ALWAYS=0
 
-#LP_MARK_BRACKET_CLOSE=''
-#LP_MARK_BRACKET_OPEN=''
-#LP_PS1_POSTFIX=''
-#LP_PS1_PREFIX=''
-
-#LP_PS1_FILE=/home/jspence/.config/liquidprompt.ps1
+source ~/.config/liquidprompt.theme
+lp_theme custom
