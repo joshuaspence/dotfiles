@@ -6,6 +6,10 @@
 {{ end -}}
 
 ---
+age:
+  identity: '~/.config/chezmoi/age.key'
+  recipient: 'age128dedd8uzyxfd3ehp2ghyu6htssk4guuwh883ccljzsac2s67afsxtaqwz'
 data:
   personal: {{ $personal }}
   work: {{ $work }}
+encryption: 'age'
