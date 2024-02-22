@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+{{ $latticectlVersion := output "gh" "release" "--repo=ghe.anduril.dev/anduril/latticectl" "view" "--json=name" "--template={{.name}}" -}}
+gh release --repo ghe.anduril.dev/anduril/latticectl download --output=- --pattern=latticectl_{{.chezmoi.os}}_x86_64.tar.gz {{ $latticectlVersion }} | tar --extract --file=- --gunzip --directory ~/.local/bin latticectl

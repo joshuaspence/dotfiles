@@ -11,6 +11,10 @@ if command_exists kubectl; then
   source <(kubectl completion bash)
 fi
 
+if command_exists latticectl; then
+  source <(latticectl --completion-script-bash)
+fi
+
 if command_exists terraform; then
   complete -C terraform terraform
 fi
