@@ -58,6 +58,9 @@ package "htop"
 package "jq"
 package "meld"
 package "parallel"
+{{ if .work -}}
+packagelist "remmina" "remmina-plugin-vnc"
+{{- end }}
 package "rename"
 package "retry"
 package "tree"
