@@ -1,0 +1,8 @@
+---
+.local/bin/circleci:
+  type: 'file'
+  executable: true
+  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "CircleCI-Public/circleci-cli").HTMLURL }}/circleci-cli_{{ replace "v" ""  (gitHubLatestRelease "CircleCI-Public/circleci-cli").Name }}_{{ .chezmoi.os }}_{{ .chezmoi.arch }}.tar.gz'
+  filter:
+    command: 'tar'
+    args: ['--extract', '--to-stdout', '--file=-', '--gzip', '--wildcards', '*/circleci']
