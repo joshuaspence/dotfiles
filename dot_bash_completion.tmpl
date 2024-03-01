@@ -15,9 +15,10 @@ if command_exists kubectl; then
   source <(kubectl completion bash)
 fi
 
-if command_exists latticectl; then
-  source <(latticectl --completion-script-bash)
-fi
+{{/* TODO: Do this at runtime instead. */ -}}
+{{ if lookPath "latticectl" -}}
+{{ output "latticectl" "--completion-script-bash" -}}
+{{ end -}}
 
 if command_exists terraform; then
   complete -C terraform terraform
