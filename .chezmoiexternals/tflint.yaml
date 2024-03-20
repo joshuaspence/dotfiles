@@ -1,0 +1,6 @@
+---
+.local/bin/tflint:
+  type: 'archive-file'
+  #executable: true
+  url: '{{ replace "/releases/tag/" "/releases/download/" (gitHubLatestRelease "terraform-linters/tflint").HTMLURL }}/tflint_{{ .chezmoi.os }}_{{ .chezmoi.arch }}.zip'
+  path: 'tflint'
