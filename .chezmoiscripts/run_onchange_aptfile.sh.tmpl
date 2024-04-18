@@ -8,6 +8,7 @@ apt_repository "1password" "https://downloads.1password.com/{{ .chezmoi.os }}/{{
 {{ end -}}
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable" "{{ .chezmoi.arch }}" "https://download.docker.com/linux/ubuntu/gpg"
 apt_repository "github_cli" "https://cli.github.com/packages" "stable main" "" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "https://baltocdn.com/helm/signing.asc"
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
 {{ if .work -}}
@@ -20,6 +21,7 @@ package "code"
 packagelist "docker-ce" "docker-ce-cli"
 package "gh"
 packagelist "git" "git-crypt"
+package "helm"
 package "kubectl"
 package "openssh-client"
 package "terraform"

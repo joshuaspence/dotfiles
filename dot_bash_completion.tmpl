@@ -11,6 +11,10 @@ if command_exists circleci; then
   source <(circleci completion bash)
 fi
 
+if command_exists helm; then
+  source <(helm completion bash)
+fi
+
 if command_exists kubectl; then
   source <(kubectl completion bash)
 fi
