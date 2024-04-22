@@ -4,4 +4,4 @@
   executable: true
   path: 'circleci'
   stripComponents: 1
-  url: '{{ (gitHubLatestRelease "CircleCI-Public/circleci-cli").HTMLURL | replace "/releases/tag/" "/releases/download/" }}/{{ printf "circleci-cli_%s_%s_%s.tar.gz" ((gitHubLatestRelease "CircleCI-Public/circleci-cli").Name | trimPrefix "v") .chezmoi.os .chezmoi.arch }}'
+  url: '{{ (gitHubLatestRelease "CircleCI-Public/circleci-cli").HTMLURL | replace "/releases/tag/" "/releases/download/" }}/circleci-cli_{{ (gitHubLatestRelease "CircleCI-Public/circleci-cli").TagName | trimPrefix "v" }}_{{ .chezmoi.os }}_{{ .chezmoi.arch }}.tar.gz'

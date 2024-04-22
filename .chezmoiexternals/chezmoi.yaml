@@ -2,4 +2,4 @@
 .local/bin/chezmoi:
   type: 'file'
   executable: true
-  url: '{{ (gitHubLatestRelease "twpayne/chezmoi").HTMLURL | replace "/releases/tag/" "/releases/download/" }}/{{ printf "chezmoi-%s-%s" .chezmoi.os .chezmoi.arch }}'
+  url: '{{ (gitHubLatestRelease "twpayne/chezmoi").HTMLURL | replace "/releases/tag/" "/releases/download/" }}/chezmoi-{{ .chezmoi.os }}-{{ .chezmoi.arch }}'
