@@ -7,6 +7,10 @@ if command_exists aws; then
   complete -C /snap/aws-cli/current/bin/aws_completer aws
 fi
 
+if command_exists chezmoi; then
+  source <(chezmoi completion bash)
+fi
+
 if command_exists circleci; then
   source <(circleci completion bash)
 fi
@@ -31,5 +35,3 @@ fi
 if command_exists tsh; then
   source <(tsh --completion-script-bash)
 fi
-
-{{ completion "bash" }}

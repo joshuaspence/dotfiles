@@ -1,4 +1,5 @@
 #!{{ if ne .chezmoi.username "root" -}} {{ lookPath "sudo" }} {{ end -}} .local/bin/aptfile
+# shellcheck shell=bash
 
 source {{ joinPath .chezmoi.sourceDir "src/aptfile.bash" }}
 
