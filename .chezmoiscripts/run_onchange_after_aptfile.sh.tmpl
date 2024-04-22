@@ -1,0 +1,77 @@
+#!{{ if ne .chezmoi.username "root" -}} {{ lookPath "sudo" }} {{ end -}} .local/bin/aptfile
+# shellcheck shell=bash
+
+source {{ joinPath .chezmoi.sourceDir "src/aptfile.bash" }}
+
+# Repositories
+{{ if .work -}}
+apt_repository "1password" "https://downloads.1password.com/{{ .chezmoi.os }}/{{ .chezmoi.osRelease.idLike }}/{{ .chezmoi.arch }}" "stable main" "{{ .chezmoi.arch }}" "https://downloads.1password.com/linux/keys/1password.asc"
+{{ end -}}
+apt_repository "docker" "https://download.docker.com/linux/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable" "{{ .chezmoi.arch }}" "https://download.docker.com/linux/ubuntu/gpg"
+apt_repository "github_cli" "https://cli.github.com/packages" "stable main" "" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "https://baltocdn.com/helm/signing.asc"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
+apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
+{{ if .work -}}
+apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v11" "" "https://apt.releases.teleport.dev/gpg"
+{{- end }}
+apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
+
+# Development
+package "code"
+packagelist "docker-ce" "docker-ce-cli"
+package "gh"
+packagelist "git" "git-crypt"
+package "helm"
+package "kubectl"
+package "openssh-client"
+package "terraform"
+package "vim"
+package "xclip"
+
+# Hardware
+{{ if and (eq (output "cat" "/sys/devices/virtual/dmi/id/sys_vendor" | trim) "Dell Inc.") (eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680") -}}
+# See https://wiki.ubuntu.com/IntelMIPICamera.
+packagelist "linux-modules-ipu6-generic-hwe-{{ .chezmoi.osRelease.versionID }}" "linux-modules-ivsc-generic-hwe-{{ .chezmoi.osRelease.versionID }}"
+package "v4l2-relayd"
+{{- end }}
+
+# Networking
+{{ if .work -}}
+packagelist "globalprotect" "resolvconf"
+{{- end }}
+package "nmap"
+package "tcpdump"
+{{ if .work -}}
+package "teleport"
+{{- end }}
+package "traceroute"
+package "whois"
+
+# Programming
+ppa "longsleep/golang-backports"
+package "golang-go"
+{{ if .work -}}
+package "nix-bin"
+{{- end }}
+packagelist "python3" "python3-virtualenv"
+
+# Utility
+{{ if .work -}}
+package "1password"
+{{- end }}
+package "curl"
+package_from_url "google-chrome-stable" "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+packagelist "gnome-shell-extensions" "gnome-tweaks"
+package "htop"
+package "jq"
+package "meld"
+package "parallel"
+{{ if .work -}}
+packagelist "remmina" "remmina-plugin-vnc"
+{{- end }}
+package "rename"
+package "retry"
+package "tree"
+package "wget"
+package "yubikey-manager"

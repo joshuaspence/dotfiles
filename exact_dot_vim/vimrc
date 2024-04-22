@@ -1,15 +1,15 @@
 set nocompatible
-filetype off
 
-call plug#begin()
+if has('syntax')
+  syntax on
+endif
 
-Plug 'vim-syntastic/syntastic'
-Plug 'myint/syntastic-extras'
-Plug 'sickill/vim-monokai'
-Plug 'matze/vim-move'
-Plug 'tpope/vim-sensible'
+set background=dark
+set ruler
 
-call plug#end()
+set backupdir=~/.vim/backup | call mkdir(&backupdir, 'p')
+set directory=~/.vim/swap   | call mkdir(&directory, 'p')
+set undodir=~/.vim/undo     | call mkdir(&undodir,   'p')
+set viewdir=~/.vim/view     | call mkdir(&viewdir,   'p')
 
-set clipboard^=unnamed,unnamedplus
-set smartindent
+if !has('nvim') | set viminfofile=~/.vim/viminfo | endif

@@ -1,0 +1,7 @@
+---
+.local/bin/circleci:
+  type: 'archive-file'
+  executable: true
+  path: 'circleci'
+  stripComponents: 1
+  url: '{{ (gitHubLatestRelease "CircleCI-Public/circleci-cli").HTMLURL | replace "/releases/tag/" "/releases/download/" }}/{{ printf "circleci-cli_%s_%s_%s.tar.gz" ((gitHubLatestRelease "CircleCI-Public/circleci-cli").Name | trimPrefix "v") .chezmoi.os .chezmoi.arch }}'

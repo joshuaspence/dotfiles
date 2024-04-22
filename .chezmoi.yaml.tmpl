@@ -1,21 +1,15 @@
-{{- $ephemeral := false -}}
-{{- $headless := false -}}
-{{- $laptop := false -}}
-{{- $personal := true -}}
-{{- $work := false -}}
+{{ $personal := false -}}
+{{ $work := false -}}
 
-{{- if or (env "GITHUB_ACTIONS") (env "REMOTE_CONTAINERS_IPC") (eq .chezmoi.username "root" "ubuntu" "vscode") -}}
-{{-   $ephemeral = true -}}
-{{-   $headless = true -}}
-{{- end -}}
+{{ if eq .chezmoi.username "jspence" -}}
+{{   $work = true -}}
+{{ end -}}
 
-{{- if not $ephemeral -}}
-{{-   $laptop = eq (output "hostnamectl" "chassis") "laptop" -}}
-{{- end -}}
 ---
+age:
+  identity: '~/.config/chezmoi/age.key'
+  recipient: 'age128dedd8uzyxfd3ehp2ghyu6htssk4guuwh883ccljzsac2s67afsxtaqwz'
 data:
-  ephemeral: {{ $ephemeral | toYaml | trim }}
-  headless: {{ $headless | toYaml | trim }}
-  laptop: {{ $laptop | toYaml | trim }}
-  personal: {{ $personal | toYaml | trim }}
-  work: {{ $work | toYaml | trim }}
+  personal: {{ $personal }}
+  work: {{ $work }}
+encryption: 'age'

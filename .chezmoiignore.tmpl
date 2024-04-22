@@ -1,27 +1,45 @@
-# Local
-/shell/
+{{ if .work -}}
+/.1password/agent.sock
+/.GlobalProtect/
+{{ end -}}
+/.aws/cli/cache/
+/.aws/sso/cache/
+/.cache/
+/.config/chezmoi/
+/.config/dconf/
+/.config/evolution/
+/.config/goa-1.0/
+/.config/gtk-3.0/
+/.config/gtk-4.0/
+/.config/gnome-initial-setup-done
+/.config/gnome-session/
+/.config/ibus/
+/.config/mimeapps.list
+/.config/monitors.xml*
+/.config/nautilus/
+/.config/pulse/
+/.config/update-notifier/
+/.config/user-dirs.dirs
+/.config/user-dirs.locale
+/go/
+/.local/share/
+/.ssh/known_hosts{,.old}
+/snap/
+/src/
+/.terraform.d/
 /TODO
+/workspace/
+
+# AWS
+/.aws/cli/
+/.aws/cli/cache/
+/.aws/credentials
+/.aws/sso/
+/.aws/sso/cache/
 
 # Private
 /.gnupg/
 /.ssh/keys/
-/.terraformrc
-
-{{ if .headless -}}
-# Desktop
-/.chezmoiscripts/99_dconf.sh
-/.chezmoiscripts/99_gnome-extensions.sh
-/.config/dconf/
-/.config/gtk-*/
-/.config/mimeapps.list
-{{ end -}}
-
-{{ if not .headless -}}
-# Dropbox
-/.dropbox/
-/Dropbox/
-/.dropbox-dist/
-{{ end -}}
 
 # User
 /Desktop/
@@ -33,48 +51,23 @@
 /Templates/
 /Videos/
 
-# Work
-{{ if not .work -}}
-/.zoom/
-{{ end -}}
-
-# Other
-/.asdf/*
-/.bash_history
-/.cache/
-/go/
-/.lesshst
-/.mozilla/
-/.mypy_cache
-/.nmcli-history
-/.node/
-/.node_repl_history
-/snap/
-/.ssh/known_hosts{,.old}
-/.terraform.d/
-/.tox/
-/.wget-hsts
-/workspace/
-
 # Vim
 /.vim/backup/
 /.vim/.netrwhist
 /.vim/plugged/
 /.vim/swap/
 /.vim/undo/
+/.vim/view/
 /.vim/viminfo
 
-# Virtualenv
-/.venv/bin/
-/.venv/include/
-/.venv/lib/
-/.venv/lib64/
-/.venv/pyvenv.cfg
-/.venv/requirements.txt
-/.venv/share/
-
-# VSCode
-/.config/Code/*
-!/.config/Code/User
-/.config/Code/User/*
-!/.config/Code/User/settings.json
+{{ if .work -}}
+# Work
+/.GlobalProtect/
+/GP_HTML/
+{{ else }}
+/.aws/config
+/.chezmoiscripts/anduril.sh
+/.ssh/conf.d/lattice.conf
+/.ssh/conf.d/teleport.conf
+/.ssh/conf.d/work.conf
+{{ end -}}

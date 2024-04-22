@@ -1,0 +1,13 @@
+function _lp_custom_theme_activate() {
+  _lp_default_theme_activate
+}
+
+function _lp_custom_theme_directory() {
+  _lp_default_theme_directory
+}
+
+function _lp_custom_theme_prompt() {
+  _lp_default_theme_prompt
+  _lp_formatted_title "${lp_path-}"
+}
+

@@ -1,0 +1,64 @@
+# If not running interactively, don't do anything.
+# See https://unix.stackexchange.com/a/257613.
+if [[ $- != *i* ]]; then
+  return
+fi
+
+clipboard() {
+  # If standard input is a pipe then forward the stream to the clipboard.
+  if ! test -t 0; then
+    xclip -in -selection clipboard </dev/stdin
+  fi
+
+  xclip -out -selection clipboard
+}
+
+whatismyipv4() {
+  dig -4 @resolver1.opendns.com myip.opendns.com A +short
+}
+
+whatismyipv6() {
+  dig -6 @resolver1.opendns.com myip.opendns.com AAAA +short
+}
+
+# Load completions provided by the `bash-completion` package.
+if test -f /usr/share/bash-completion/bash_completion; then
+  source /usr/share/bash-completion/bash_completion
+elif test -f /etc/bash_completion; then
+  source /etc/bash_completion
+fi
+
+HISTCONTROL='ignoreboth'
+HISTFILE="${XDG_DATA_HOME:-${HOME}/.local/share}/bash/history"
+HISTFILESIZE=1048576
+HISTSIZE=1048576
+
+# Exclude certain commands from the history file.
+HISTIGNORE='[bf]g:cd *:clear:exit:history:ls:pwd'
+
+# Whenever displaying the prompt, write the previous line to disk.
+# See https://unix.stackexchange.com/a/48113.
+PROMPT_COMMAND='history -w'
+
+# Ensure that `bash` can write to `$HISTFILE`.
+mkdir --parents "$(dirname "${BASH_STATE_HOME}")"
+
+shopt -s cmdhist
+shopt -s histappend
+shopt -s lithist
+
+source <(dircolors)
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias grep='grep --color=auto'
+alias ls='ls --color=auto'
+
+shopt -s cdspell
+shopt -s checkhash
+shopt -s dirspell
+shopt -s extglob
+shopt -s globstar
+shopt -s histreedit
+shopt -s histverify
+
+source "${HOME}/.local/share/liquidprompt/liquidprompt"

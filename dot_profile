@@ -1,0 +1,33 @@
+if test -n "${BASH_VERSION}" && test -f ~/.bashrc; then
+  . ~/.bashrc
+fi
+
+export EDITOR='vim'
+export PAGER='less'
+
+PATH="${HOME}/.local/bin:${PATH}"
+PATH="${HOME}/go/bin:${PATH}"
+
+# shellcheck disable=SC2034
+{
+  XDG_CACHE_HOME="${HOME}/.cache"
+  XDG_CONFIG_HOME="${HOME}/.config"
+  XDG_DATA_HOME="${HOME}/.local/share"
+  XDG_STATE_HOME="${HOME}/.local/state"
+  XDG_RUNTIME_DIR="/run/user/$(id --user)"
+}
+
+export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
+export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
+export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
+export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
+
+# `less` gains full support for XDG base directories in version 600 (see gwsw/less#153).
+if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
+  export LESSKEYIN="${XDG_CONFIG_HOME}/lesskey"
+  export LESSHISTFILE="${XDG_STATE_HOME}/lesshst"
+fi
+
+source <(lesspipe)
+
+umask 022
