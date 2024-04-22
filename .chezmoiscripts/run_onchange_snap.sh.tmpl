@@ -7,7 +7,7 @@ set -o pipefail
 source {{ joinPath .chezmoi.sourceDir "src/snap.bash" }}
 
 {{ if lookPath "snap" -}}
-snap "aws-cli"
+snap "aws-cli" --classic"
 snap "httpie"
 snap "shellcheck"
 snap "slack"
