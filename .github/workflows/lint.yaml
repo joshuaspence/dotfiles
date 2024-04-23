@@ -11,9 +11,8 @@ jobs:
     steps:
       - uses: 'actions/checkout@v4'
       - uses: './.github/actions/chezmoi'
-      - run: |-
-          mkdir .target
-          chezmoi archive --exclude externals | tar --extract --file=- --directory=.target
+      - run: 'mkdir .target'
+      - run: 'chezmoi archive --exclude externals | tar --extract --directory .target'
       - uses: 'ludeeus/action-shellcheck@2.0.0'
 
   yamllint:
