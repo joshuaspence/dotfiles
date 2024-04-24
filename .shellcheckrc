@@ -1,2 +1,5 @@
+enable=all
 disable=SC1090,SC1091
-disable=SC2148
+disable=SC2154
+disable=SC2250
+disable=SC2312
