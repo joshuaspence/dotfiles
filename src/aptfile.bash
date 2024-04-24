@@ -1,13 +1,13 @@
 function aptfile_fail() {
-  log_fail "${APTFILE_RED}[FAIL]${APTFILE_COLOR_OFF}" "$@"
+  log_fail "${APTFILE_RED-}[FAIL]${APTFILE_COLOR_OFF-}" "$@"
 }
 
 function aptfile_new() {
-  log_info "${APTFILE_GREEN}[NEW]${APTFILE_COLOR_OFF}" "$@"
+  log_info "${APTFILE_GREEN-}[NEW]${APTFILE_COLOR_OFF-}" "$@"
 }
 
 function aptfile_ok() {
-  log_info "${APTFILE_CYAN}[OK]${APTFILE_COLOR_OFF}" "$@"
+  log_info "${APTFILE_CYAN-}[OK]${APTFILE_COLOR_OFF-}" "$@"
 }
 
 function apt_keyring() {
@@ -29,7 +29,7 @@ function apt_keyring() {
     return
   fi
 
-  if ! { wget --output-document=- "${key_url}" | gpg --dearmor --output "${apt_keyring}"; } >"${TMP_APTFILE_LOGFILE}" 2>&1; then
+  if ! { wget --output-document=- "${key_url}" | gpg --dearmor --output "${apt_keyring}"; } >"${TMP_APTFILE_LOGFILE:-/dev/null}" 2>&1; then
     aptfile_fail "keyring ${name}"
   fi
 
