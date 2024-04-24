@@ -1,0 +1,6 @@
+---
+.local/bin/kubent:
+  type: 'archive-file'
+  executable: true
+  path: 'kubent'
+  url: '{{ (gitHubLatestRelease "doitintl/kube-no-trouble").HTMLURL | replace "/releases/tag/" "/releases/download/" }}/kubent-{{ (gitHubLatestRelease "doitintl/kube-no-trouble").TagName }}-{{ .chezmoi.os }}-{{ .chezmoi.arch }}.tar.gz'
