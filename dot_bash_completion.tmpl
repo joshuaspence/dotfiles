@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 
-command_exists() {
+function command_exists() {
   command -v "${1}" >/dev/null
 }
 
@@ -27,8 +27,11 @@ fi
 
 {{/* TODO: Do this at runtime instead. */ -}}
 {{ if lookPath "latticectl" -}}
-{{ output "latticectl" "--completion-script-bash" -}}
-{{ end -}}
+# shellcheck disable=all
+{
+  {{ output "latticectl" "--completion-script-bash" | replaceAllRegex "(^\\s+)|(\\s+$)" "" | indent 2 }}
+}
+{{- end }}
 
 if command_exists terraform; then
   complete -C terraform terraform
