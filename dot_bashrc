@@ -60,4 +60,4 @@ shopt -s globstar
 shopt -s histreedit
 shopt -s histverify
 
-source "${HOME}/.local/share/liquidprompt/liquidprompt"
+source ~/.local/share/liquidprompt/liquidprompt
