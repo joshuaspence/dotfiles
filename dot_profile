@@ -31,6 +31,6 @@ if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
   export LESSHISTFILE="${XDG_STATE_HOME}/lesshst"
 fi
 
-source <(lesspipe)
+eval "$(lesspipe)"
 
 umask 022
