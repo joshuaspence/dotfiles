@@ -4,12 +4,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ if env "CI" -}}
-# Temporarily disable
-# shellcheck disable=SC2317
-exit 0
-{{ end -}}
-
 {{
   $extensions := list
     "nightthemeswitcher@romainvigier.fr"

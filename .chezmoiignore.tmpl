@@ -72,3 +72,8 @@
 /.ssh/conf.d/teleport.conf
 /.ssh/conf.d/work.conf
 {{ end -}}
+
+# Temporary
+{{ if env "CI" -}}
+/.chezmoiscripts/gnome-extensions.sh
+{{ end -}}
