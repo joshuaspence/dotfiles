@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-dconf load / << 'EOF'
+dconf load / <<'EOF'
 [org/gnome/desktop/datetime]
 automatic-timezone = false
 
