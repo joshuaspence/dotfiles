@@ -1,0 +1,5 @@
+---
+.local/bin/shfmt:
+  type: 'file'
+  executable: true
+  url: '{{ (gitHubLatestRelease "mvdan/sh").HTMLURL | replace "/releases/tag/" "/releases/download/" }}/shfmt_{{ (gitHubLatestRelease "mvdan/sh").TagName }}_{{ .chezmoi.os }}_{{ .chezmoi.arch }}'

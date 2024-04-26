@@ -31,7 +31,8 @@ fi
 {
   {{ output "latticectl" "--completion-script-bash" | replaceAllRegex "(^\\s+)|(\\s+$)" "" | indent 2 }}
 }
-{{- end }}
+
+{{ end -}}
 
 if command_exists terraform; then
   complete -C terraform terraform
