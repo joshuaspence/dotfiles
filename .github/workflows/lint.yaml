@@ -16,7 +16,6 @@ jobs:
       - run: |
           mkdir .target
           chezmoi archive --exclude externals | tar --extract --directory .target
-
       - id: 'shellcheck'
         uses: 'ludeeus/action-shellcheck@2.0.0'
 
@@ -29,7 +28,6 @@ jobs:
       - run: |
           mkdir .target
           chezmoi archive --exclude externals | tar --extract --directory .target
-
       - uses: 'mfinelli/setup-shfmt@v3.0.1'
       - run: 'shfmt --diff --indent=2 ${{ needs.shellcheck.outputs.files }}'
 
