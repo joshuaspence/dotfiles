@@ -10,7 +10,28 @@ on:
 jobs:
   bootstrap:
     runs-on: 'ubuntu-latest'
+    container: 'ubuntu:${{ matrix.ubuntu_version }}'
+    continue-on-error: '${{ matrix.experimental || false }}'
+    env:
+      DEBIAN_FRONTEND: 'noninteractive'
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu_version:
+          - '22.04'
+        include:
+          - ubuntu_version: '24.04'
+            experimental: true
+          - ubuntu_version: 'latest'
+            experimental: true
+          - ubuntu_version: 'rolling'
+            experimental: true
     steps:
+      - name: 'Install depdendencies'
+        run: |
+          apt-get update
+          apt-get install --yes curl gpg git software-properties-common sudo wget
+
       - uses: 'actions/checkout@v4'
       - uses: './.github/actions/chezmoi'
       - run: 'chezmoi apply --verbose'

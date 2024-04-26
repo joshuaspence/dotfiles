@@ -1,3 +1,4 @@
+{{ $headless := false -}}
 {{ $personal := false -}}
 {{ $work := false -}}
 
@@ -5,11 +6,15 @@
 {{   $work = true -}}
 {{ end -}}
 
+{{ if env "GITHUB_ACTIONS" -}}
+{{   $headless = true -}}
+{{ end -}}
 ---
 age:
   identity: '~/.config/chezmoi/age.key'
   recipient: 'age128dedd8uzyxfd3ehp2ghyu6htssk4guuwh883ccljzsac2s67afsxtaqwz'
 data:
+  headless: {{ $headless }}
   personal: {{ $personal }}
   work: {{ $work }}
 encryption: 'age'

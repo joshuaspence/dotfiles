@@ -9,12 +9,9 @@
 /.config/dconf/
 /.config/evolution/
 /.config/goa-1.0/
-/.config/gtk-3.0/
-/.config/gtk-4.0/
 /.config/gnome-initial-setup-done
 /.config/gnome-session/
 /.config/ibus/
-/.config/mimeapps.list
 /.config/monitors.xml*
 /.config/nautilus/
 /.config/pulse/
@@ -36,6 +33,16 @@
 /.aws/credentials
 /.aws/sso/
 /.aws/sso/cache/
+
+{{ if .headless -}}
+# Desktop
+/.chezmoiscripts/dconf.sh
+/.chezmoiscripts/gnone-extensions.sh
+/.config/gtk-3.0/
+/.config/gtk-4.0/
+/.config/mimeapps.list
+
+{{ end -}}
 
 # Private
 /.gnupg/
