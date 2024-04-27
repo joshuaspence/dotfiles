@@ -1,0 +1,2 @@
+{{- $version := output "gh" "--repo=ghe.anduril.dev/anduril/latticectl" "release" "view" "--json=name" "--template={{ .name }}" -}}
+{{- output "sh" "-c" (printf "gh --repo=ghe.anduril.dev/anduril/latticectl release download --output=- --pattern=latticectl_%s_%s.tar.gz %s | tar --extract --to-stdout --gunzip latticectl" .chezmoi.os (.chezmoi.arch | replace "amd64" "x86_64") $version) -}}
