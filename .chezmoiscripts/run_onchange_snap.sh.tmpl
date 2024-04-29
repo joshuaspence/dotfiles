@@ -1,4 +1,4 @@
-#!/bin/bash
+#!{{ if ne .chezmoi.username "root" -}} {{ lookPath "sudo" }} {{ end -}} bash
 
 set -o errexit
 set -o nounset
