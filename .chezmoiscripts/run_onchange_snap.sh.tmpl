@@ -1,4 +1,5 @@
-#!/bin/bash
+#!{{ if ne .chezmoi.username "root" -}} {{ lookPath "sudo" }} {{ end -}} {{ lookPath "bash" }}
+# shellcheck shell=bash
 
 set -o errexit
 set -o nounset
