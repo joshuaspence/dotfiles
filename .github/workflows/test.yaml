@@ -19,12 +19,10 @@ jobs:
       matrix:
         ubuntu_version:
           - '22.04'
+          - '24.04'
+          - 'rolling'
         include:
-          - ubuntu_version: '24.04'
-            experimental: true
           - ubuntu_version: 'latest'
-            experimental: true
-          - ubuntu_version: 'rolling'
             experimental: true
     steps:
       - name: 'Install depdendencies'
