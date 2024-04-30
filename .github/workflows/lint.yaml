@@ -6,28 +6,47 @@ on:
     branches:
       - 'master'
 jobs:
+  render:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/checkout@v4'
+      - uses: './.github/actions/chezmoi'
+      - run: |
+          mkdir .home
+          chezmoi archive --exclude externals | tar --extract --directory .home
+      - uses: 'actions/upload-artifact@v4'
+        with:
+          name: 'home'
+          path: '.home'
+          if-no-files-found: 'error'
+
   shellcheck:
+    needs: 'render'
+    if: '${{ always() }}'
     runs-on: 'ubuntu-latest'
     outputs:
       files: '${{ steps.shellcheck.outputs.files }}'
     steps:
       - uses: 'actions/checkout@v4'
-      - uses: './.github/actions/chezmoi'
-      - run: |
-          mkdir .target
-          chezmoi archive --exclude externals | tar --extract --directory .target
+      - uses: 'actions/download-artifact@v4'
+        with:
+          name: 'home'
+          path: '.home'
       - id: 'shellcheck'
         uses: 'ludeeus/action-shellcheck@2.0.0'
 
   shfmt:
-    needs: 'shellcheck'
+    needs:
+      - 'render'
+      - 'shellcheck'
+    if: '${{ always() }}'
     runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v4'
-      - uses: './.github/actions/chezmoi'
-      - run: |
-          mkdir .target
-          chezmoi archive --exclude externals | tar --extract --directory .target
+      - uses: 'actions/download-artifact@v4'
+        with:
+          name: 'home'
+          path: '.home'
       - uses: 'mfinelli/setup-shfmt@v3.0.1'
       - run: 'shfmt --diff --indent=2 ${{ needs.shellcheck.outputs.files }}'
 
