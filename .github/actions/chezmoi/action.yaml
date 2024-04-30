@@ -5,14 +5,14 @@ runs:
   using: 'composite'
   steps:
     - name: 'Install Chezmoi'
-      shell: 'bash'
+      shell: 'sh'
       run: 'curl --fail --location --no-progress-meter https://get.chezmoi.io | sh -s -- -b ${{ github.action_path }}'
     - name: 'Add Chezmoi to $PATH'
-      shell: 'bash'
+      shell: 'sh'
       run: 'echo "${{ github.action_path }}" >> $GITHUB_PATH'
     - name: 'Display Chezmoi version'
-      shell: 'bash'
+      shell: 'sh'
       run: 'chezmoi --version'
 
-    - shell: 'bash'
+    - shell: 'sh'
       run: 'chezmoi init .'
