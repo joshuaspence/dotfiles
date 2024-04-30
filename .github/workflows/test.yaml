@@ -12,8 +12,6 @@ jobs:
     runs-on: 'ubuntu-latest'
     container: 'ubuntu:${{ matrix.ubuntu_version }}'
     continue-on-error: '${{ matrix.experimental || false }}'
-    env:
-      DEBIAN_FRONTEND: 'noninteractive'
     strategy:
       fail-fast: false
       matrix:
