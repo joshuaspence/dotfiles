@@ -6,7 +6,7 @@ set -o pipefail
 
 dconf load / <<'EOF'
 [org/gnome/desktop/datetime]
-automatic-timezone = false
+automatic-timezone = true
 
 [org/gnome/shell/extensions/dash-to-dock]
 dock-fixed = false
