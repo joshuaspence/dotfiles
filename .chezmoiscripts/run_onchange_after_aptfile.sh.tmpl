@@ -8,6 +8,9 @@ source {{ joinPath .chezmoi.sourceDir "src/aptfile.bash" }}
 apt_repository "1password" "https://downloads.1password.com/{{ .chezmoi.os }}/{{ .chezmoi.osRelease.idLike }}/{{ .chezmoi.arch }}" "stable main" "{{ .chezmoi.arch }}" "https://downloads.1password.com/linux/keys/1password.asc"
 {{ end -}}
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable" "{{ .chezmoi.arch }}" "https://download.docker.com/linux/ubuntu/gpg"
+{{ if .personal -}}
+apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
+{{ end -}}
 apt_repository "github_cli" "https://cli.github.com/packages" "stable main" "" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
 apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "https://baltocdn.com/helm/signing.asc"
 {{ if ne .chezmoi.osRelease.ubuntuCodename "noble" -}}
@@ -68,6 +71,9 @@ packagelist "python3" "python3-virtualenv"
 package "1password"
 {{- end }}
 package "curl"
+{{ if .personal -}}
+package "dropbox"
+{{ end -}}
 package_from_url "google-chrome-stable" "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
 packagelist "gnome-shell-extensions" "gnome-tweaks"
 package "htop"
