@@ -8,6 +8,10 @@ dconf load / <<'EOF'
 [org/gnome/desktop/datetime]
 automatic-timezone = false
 
+[org/gnome/shell/extensions/dash-to-dock]
+dock-fixed = false
+multi-monitor = true
+
 [org/gnome/shell/extensions/nightthemeswitcher/time]
 time-source = 'location'
 
