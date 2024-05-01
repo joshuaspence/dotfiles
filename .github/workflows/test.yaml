@@ -28,10 +28,8 @@ jobs:
       - name: 'Install depdendencies'
         run: |
           apt-get update
-          apt-get install --yes curl gpg git software-properties-common sudo wget
+          apt-get install --yes curl git gpg software-properties-common sudo wget
 
       - uses: 'actions/checkout@v4'
       - uses: './.github/actions/chezmoi'
       - run: 'chezmoi apply --verbose'
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'

@@ -14,5 +14,8 @@ runs:
       shell: 'sh'
       run: 'chezmoi --version'
 
+    - name: 'Set $CHEZMOI_GITHUB_ACCESS_TOKEN'
+      shell: 'sh'
+      run: 'echo "CHEZMOI_GITHUB_ACCESS_TOKEN=${{ github.token }}" >> $GITHUB_ENV'
     - shell: 'sh'
       run: 'chezmoi init .'
