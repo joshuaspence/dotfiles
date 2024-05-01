@@ -18,4 +18,4 @@ runs:
       shell: 'sh'
       run: 'echo "CHEZMOI_GITHUB_ACCESS_TOKEN=${{ github.token }}" >> $GITHUB_ENV'
     - shell: 'sh'
-      run: 'chezmoi init .'
+      run: 'chezmoi init --promptDefaults .'
