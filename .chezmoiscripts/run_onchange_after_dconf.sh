@@ -8,6 +8,9 @@ dconf load / <<'EOF'
 [org/gnome/desktop/datetime]
 automatic-timezone = true
 
+[org/gnome/shell]
+favorite-apps = ['google-chrome.desktop', 'slack_slack.desktop', 'code.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Nautilus.desktop', 'Zoom.desktop']
+
 [org/gnome/shell/extensions/dash-to-dock]
 dock-fixed = false
 multi-monitor = true
