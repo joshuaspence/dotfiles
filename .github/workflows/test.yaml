@@ -36,4 +36,4 @@ jobs:
         uses: './.github/actions/chezmoi'
 
       - name: 'Run Chezmoi'
-        run: 'chezmoi apply --verbose'
+        run: 'chezmoi apply --keep-going'

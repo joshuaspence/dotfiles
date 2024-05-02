@@ -6,4 +6,5 @@ data:
   headless: {{ env "GITHUB_ACTIONS" | empty | not }}
   personal: {{ promptBoolOnce . "personal" "Enable personal profile?" false }}
   work: {{ promptBoolOnce . "work" "Enable work profile?" false }}
+  test: {{ promptBoolOnce . "test" "test" }}
 encryption: 'age'
