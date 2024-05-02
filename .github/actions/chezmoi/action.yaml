@@ -17,5 +17,6 @@ runs:
     - name: 'Set $CHEZMOI_GITHUB_ACCESS_TOKEN'
       shell: 'sh'
       run: 'echo "CHEZMOI_GITHUB_ACCESS_TOKEN=${{ github.token }}" >> $GITHUB_ENV'
-    - shell: 'sh'
+    - name: 'Initialize Chezmoi'
+      shell: 'sh'
       run: 'chezmoi init --promptDefaults .'

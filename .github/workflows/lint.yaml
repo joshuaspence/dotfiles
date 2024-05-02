@@ -7,19 +7,22 @@ on:
       - 'master'
 jobs:
   render:
-    name: 'Render Chezmoi templates'
     runs-on: 'ubuntu-latest'
     steps:
-      - uses: 'actions/checkout@v4'
-      - uses: './.github/actions/chezmoi'
-      - run: |
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Setup Chezmoi'
+        uses: './.github/actions/chezmoi'
+
+      - name: 'Render Chezmoi templates'
+        run: |
           mkdir .home
           chezmoi archive --exclude externals | tar --extract --directory .home
-      - uses: 'actions/upload-artifact@v4'
+      - name: 'Upload rendered templates'
+        uses: 'actions/upload-artifact@v4'
         with:
           name: 'home'
           path: '.home'
-          if-no-files-found: 'error'
 
   shellcheck:
     needs: 'render'
@@ -28,12 +31,16 @@ jobs:
     outputs:
       files: '${{ steps.shellcheck.outputs.files }}'
     steps:
-      - uses: 'actions/checkout@v4'
-      - uses: 'actions/download-artifact@v4'
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Download rendered templates'
+        uses: 'actions/download-artifact@v4'
         with:
           name: 'home'
           path: '.home'
+
       - id: 'shellcheck'
+        name: 'Run ShellCheck'
         uses: 'ludeeus/action-shellcheck@2.0.0'
 
   shfmt:
@@ -43,16 +50,23 @@ jobs:
     if: '${{ always() }}'
     runs-on: 'ubuntu-latest'
     steps:
-      - uses: 'actions/checkout@v4'
-      - uses: 'actions/download-artifact@v4'
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Download rendered templates'
+        uses: 'actions/download-artifact@v4'
         with:
           name: 'home'
           path: '.home'
-      - uses: 'mfinelli/setup-shfmt@v3.0.1'
-      - run: 'shfmt --diff --indent=2 ${{ needs.shellcheck.outputs.files }}'
+
+      - name: 'Setup shfmt'
+        uses: 'mfinelli/setup-shfmt@v3.0.1'
+      - name: 'Run shfmt'
+        run: 'shfmt --diff --indent=2 ${{ needs.shellcheck.outputs.files }}'
 
   yamllint:
     runs-on: 'ubuntu-latest'
     steps:
-      - uses: 'actions/checkout@v4'
-      - uses: 'ibiqlik/action-yamllint@v3.1.1'
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Run yamllint'
+        uses: 'ibiqlik/action-yamllint@v3.1.1'

@@ -30,6 +30,10 @@ jobs:
           apt-get update
           apt-get install --yes curl git gpg software-properties-common sudo wget
 
-      - uses: 'actions/checkout@v4'
-      - uses: './.github/actions/chezmoi'
-      - run: 'chezmoi apply --verbose'
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Setup Chezmoi'
+        uses: './.github/actions/chezmoi'
+
+      - name: 'Run Chezmoi'
+        run: 'chezmoi apply --verbose'
