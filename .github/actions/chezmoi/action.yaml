@@ -10,9 +10,6 @@ runs:
     - name: 'Add Chezmoi to $PATH'
       shell: 'sh'
       run: 'echo "${{ github.action_path }}" >> $GITHUB_PATH'
-    - name: 'Display Chezmoi version'
-      shell: 'sh'
-      run: 'chezmoi --version'
 
     - name: 'Set $CHEZMOI_GITHUB_ACCESS_TOKEN'
       shell: 'sh'

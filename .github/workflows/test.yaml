@@ -17,6 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        personal:
+          - false
+          - true
         ubuntu_version:
           - '22.04'
           - '24.04'
@@ -32,8 +35,12 @@ jobs:
 
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
+      - run: |
+          mkdir --parents $HOME/.config/chezmoi
+          yq --null-input --prettyPrint '.data = ${{ toJSON(matrix) }}' > $HOME/.config/chezmoi/chezmoi.yaml
+      - run: 'chezmoi data'
+
       - name: 'Setup Chezmoi'
         uses: './.github/actions/chezmoi'
-
       - name: 'Run Chezmoi'
         run: 'chezmoi apply --keep-going'
