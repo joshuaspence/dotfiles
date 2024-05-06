@@ -34,6 +34,10 @@ fi
 
 {{ end -}}
 
+if command_exists pipx; then
+  source <(register-python-argcomplete3 pipx)
+fi
+
 if command_exists terraform; then
   complete -C terraform terraform
 fi
