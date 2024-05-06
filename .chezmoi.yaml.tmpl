@@ -5,6 +5,6 @@ age:
 data:
   headless: {{ env "GITHUB_ACTIONS" | empty | not }}
   laptop: {{ eq (output "hostnamectl" "chassis" | trim) "laptop" }}
-  personal: {{ promptBoolOnce . "personal" "Enable personal profile?" false }}
-  work: {{ promptBoolOnce . "work" "Enable work profile?" false }}
+  personal: {{ promptBoolOnce . "personal" "Enable personal profile" false }}
+  work: {{ promptBoolOnce . "work" "Enable work profile" false }}
 encryption: 'age'
