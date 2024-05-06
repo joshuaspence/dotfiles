@@ -13,6 +13,9 @@ jobs:
         uses: 'actions/checkout@v4'
       - name: 'Setup Chezmoi'
         uses: './.github/actions/chezmoi'
+      - name: 'Initialize Chezmoi'
+        shell: 'sh'
+        run: 'chezmoi init --promptDefaults .'
 
       - name: 'Render Chezmoi templates'
         run: |

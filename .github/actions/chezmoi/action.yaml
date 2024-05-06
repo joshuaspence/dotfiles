@@ -10,10 +10,6 @@ runs:
     - name: 'Add Chezmoi to $PATH'
       shell: 'sh'
       run: 'echo "${{ github.action_path }}" >> $GITHUB_PATH'
-
     - name: 'Set $CHEZMOI_GITHUB_ACCESS_TOKEN'
       shell: 'sh'
       run: 'echo "CHEZMOI_GITHUB_ACCESS_TOKEN=${{ github.token }}" >> $GITHUB_ENV'
-    - name: 'Initialize Chezmoi'
-      shell: 'sh'
-      run: 'chezmoi init --promptDefaults .'
