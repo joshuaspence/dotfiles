@@ -17,5 +17,6 @@ rules:
   line-length: 'disable'
   quoted-strings:
     quote-type: 'single'
+    ignore: '/.github/workflows/'
   truthy:
     check-keys: false

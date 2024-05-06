@@ -10,20 +10,27 @@ on:
 jobs:
   bootstrap:
     runs-on: 'ubuntu-latest'
+    continue-on-error: "${{ matrix.ubuntu_version == 'devel' }}"
     container: 'ubuntu:${{ matrix.ubuntu_version }}'
-    continue-on-error: '${{ matrix.experimental || false }}'
     env:
       DEBIAN_FRONTEND: 'noninteractive'
+
     strategy:
       fail-fast: false
       matrix:
+        personal:
+          - false
+          - true
+        work:
+          - false
+
         ubuntu_version:
           - '22.04'
           - '24.04'
+          - 'latest'
           - 'rolling'
-        include:
-          - ubuntu_version: 'latest'
-            experimental: true
+          - 'devel'
+
     steps:
       - name: 'Install depdendencies'
         run: |
@@ -34,9 +41,8 @@ jobs:
         uses: 'actions/checkout@v4'
       - name: 'Setup Chezmoi'
         uses: './.github/actions/chezmoi'
-      - name: 'Initialize Chezmoi'
-        shell: 'sh'
-        run: 'chezmoi init --promptDefaults .'
 
+      - name: 'Initialize Chezmoi'
+        run: 'chezmoi init --promptBool "Enable personal profile=${{ matrix.personal }},Enable work profile=${{ matrix.work }}" .'
       - name: 'Run Chezmoi'
         run: 'chezmoi apply --keep-going'
