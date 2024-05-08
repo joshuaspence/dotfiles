@@ -8,15 +8,23 @@ on:
 jobs:
   render:
     runs-on: 'ubuntu-latest'
+    strategy:
+      fail-fast: false
+      matrix:
+        personal:
+          - false
+          - true
+        work:
+          - false
+
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
       - name: 'Setup Chezmoi'
         uses: './.github/actions/chezmoi'
-      - name: 'Initialize Chezmoi'
-        shell: 'sh'
-        run: 'chezmoi init --promptDefaults .'
 
+      - name: 'Initialize Chezmoi'
+        run: 'chezmoi init --promptBool "Enable personal profile=${{ matrix.personal }},Enable work profile=${{ matrix.work }}" .'
       - name: 'Render Chezmoi templates'
         run: |
           mkdir .home
@@ -24,7 +32,7 @@ jobs:
       - name: 'Upload rendered templates'
         uses: 'actions/upload-artifact@v4'
         with:
-          name: 'home'
+          name: 'personal=${{ matrix.personal }},work=${{ matrix.work }}'
           path: '.home'
 
   shellcheck:
@@ -39,13 +47,13 @@ jobs:
       - name: 'Download rendered templates'
         uses: 'actions/download-artifact@v4'
         with:
-          name: 'home'
           path: '.home'
 
       - id: 'shellcheck'
         name: 'Run ShellCheck'
         uses: 'ludeeus/action-shellcheck@2.0.0'
 
+  # CHECKME
   shfmt:
     needs:
       - 'render'
@@ -58,7 +66,6 @@ jobs:
       - name: 'Download rendered templates'
         uses: 'actions/download-artifact@v4'
         with:
-          name: 'home'
           path: '.home'
 
       - name: 'Setup shfmt'
