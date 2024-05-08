@@ -82,5 +82,8 @@ packagelist "remmina" "remmina-plugin-vnc"
 package "rename"
 package "retry"
 package "tree"
+{{ if .personal -}}
+package "vlc"
+{{- end }}
 package "wget"
 package "yubikey-manager"
