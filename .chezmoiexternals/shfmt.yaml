@@ -2,4 +2,4 @@
 .local/bin/shfmt:
   type: 'file'
   executable: true
-  url: '{{ (gitHubLatestRelease "mvdan/sh").HTMLURL | replace "/releases/tag/" "/releases/download/" }}/shfmt_{{ (gitHubLatestRelease "mvdan/sh").TagName }}_{{ .chezmoi.os }}_{{ .chezmoi.arch }}'
+  url: '{{ gitHubLatestReleaseAssetURL "mvdan/sh" (print "shfmt_*_%s_%s" .chezmoi.os .chezmoi.arch) }}'
