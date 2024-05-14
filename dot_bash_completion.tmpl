@@ -25,14 +25,9 @@ if command_exists kubectl; then
   source <(kubectl completion bash)
 fi
 
-{{/* TODO: Do this at runtime instead. */ -}}
-{{ if lookPath "latticectl" -}}
-# shellcheck disable=all
-{
-  {{ output "latticectl" "--completion-script-bash" | replaceAllRegex "(^\\s+)|(\\s+$)" "" | indent 2 }}
-}
-
-{{ end -}}
+if command_exists latticectl; then
+  source <(LATTICECTL_IGNORE_KUBECONFIG=true latticectl --completion-script-bash)
+fi
 
 if command_exists pipx; then
   source <(register-python-argcomplete3 pipx)
