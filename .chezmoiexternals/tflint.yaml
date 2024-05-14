@@ -3,4 +3,4 @@
   type: 'archive-file'
   executable: true
   path: 'tflint'
-  url: '{{ gitHubLatestReleaseAssetURL "terraform-linters/tflint" (print "tflint_%s_%s.zip" .chezmoi.os .chezmoi.arch) }}'
+  url: '{{ gitHubLatestReleaseAssetURL "terraform-linters/tflint" (printf "tflint_%s_%s.zip" .chezmoi.os .chezmoi.arch) }}'

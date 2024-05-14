@@ -3,4 +3,4 @@
   type: 'archive-file'
   executable: true
   path: 'kubent'
-  url: '{{ gitHubLatestReleaseAssetURL "doitintl/kube-no-trouble" (print "kubent-*-%s-%s.tar.gz" .chezmoi.os .chezmoi.arch) }}'
+  url: '{{ gitHubLatestReleaseAssetURL "doitintl/kube-no-trouble" (printf "kubent-*-%s-%s.tar.gz" .chezmoi.os .chezmoi.arch) }}'

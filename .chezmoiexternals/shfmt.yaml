@@ -2,4 +2,4 @@
 .local/bin/shfmt:
   type: 'file'
   executable: true
-  url: '{{ gitHubLatestReleaseAssetURL "mvdan/sh" (print "shfmt_*_%s_%s" .chezmoi.os .chezmoi.arch) }}'
+  url: '{{ gitHubLatestReleaseAssetURL "mvdan/sh" (printf "shfmt_*_%s_%s" .chezmoi.os .chezmoi.arch) }}'

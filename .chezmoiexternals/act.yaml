@@ -3,4 +3,4 @@
   type: 'archive-file'
   executable: true
   path: 'act'
-  url: '{{ gitHubLatestReleaseAssetURL "nektos/act" (print "act_%s_%s.tar.gz" (.chezmoi.os | title) (.chezmoi.arch | replace "amd64" "x86_64")) }}'
+  url: '{{ gitHubLatestReleaseAssetURL "nektos/act" (printf "act_%s_%s.tar.gz" (.chezmoi.os | title) (.chezmoi.arch | replace "amd64" "x86_64")) }}'
