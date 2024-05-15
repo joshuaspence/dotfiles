@@ -13,11 +13,7 @@ apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "{{ .chezmoi.osRelea
 {{ end -}}
 apt_repository "github_cli" "https://cli.github.com/packages" "stable main" "" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
 apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "https://baltocdn.com/helm/signing.asc"
-{{ if ne .chezmoi.osRelease.ubuntuCodename "noble" -}}
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
-{{ else -}}
-apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "jammy main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
-{{ end -}}
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
 {{ if .work -}}
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v11" "" "https://apt.releases.teleport.dev/gpg"
