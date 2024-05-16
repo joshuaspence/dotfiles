@@ -1,9 +1,5 @@
 ---
-age:
-  identity: '~/.config/chezmoi/age.key'
-  recipient: 'age128dedd8uzyxfd3ehp2ghyu6htssk4guuwh883ccljzsac2s67afsxtaqwz'
 data:
   headless: {{ env "GITHUB_ACTIONS" | empty | not }}
   personal: {{ promptBoolOnce . "personal" "Enable personal profile" false }}
   work: {{ promptBoolOnce . "work" "Enable work profile" false }}
-encryption: 'age'

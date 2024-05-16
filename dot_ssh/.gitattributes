@@ -1,0 +1,3 @@
+/conf.d/lattice.conf diff=git-crypt filter=git-crypt
+/conf.d/teleport.conf diff=git-crypt filter=git-crypt
+/conf.d/work.conf diff=git-crypt filter=git-crypt
