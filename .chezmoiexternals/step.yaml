@@ -1,0 +1,7 @@
+---
+.local/bin/step:
+  type: 'archive-file'
+  executable: true
+  path: 'bin/step'
+  stripComponents: 1
+  url: '{{ gitHubLatestReleaseAssetURL "smallstep/cli" (printf "step_%s_*_%s.tar.gz" .chezmoi.os .chezmoi.arch) }}'
