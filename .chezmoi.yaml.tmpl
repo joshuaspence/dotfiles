@@ -3,3 +3,5 @@ data:
   headless: {{ env "GITHUB_ACTIONS" | empty | not }}
   personal: {{ promptBoolOnce . "personal" "Enable personal profile" false }}
   work: {{ promptBoolOnce . "work" "Enable work profile" false }}
+github:
+  refreshPeriod: '12h'
