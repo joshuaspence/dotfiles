@@ -24,7 +24,7 @@ jobs:
         uses: './.github/actions/chezmoi'
 
       - name: 'Initialize Chezmoi'
-        run: 'chezmoi init --promptBool "Enable personal profile=${{ matrix.personal }},Enable work profile=${{ matrix.work }}" .'
+        run: 'chezmoi init --guess-repo-url=false --promptBool "Enable personal profile=${{ matrix.personal }},Enable work profile=${{ matrix.work }}" .'
       - name: 'Render Chezmoi templates'
         run: |
           mkdir .home

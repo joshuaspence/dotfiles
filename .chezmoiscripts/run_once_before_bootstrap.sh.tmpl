@@ -1,0 +1,8 @@
+#!{{ if ne .chezmoi.username "root" -}} {{ lookPath "sudo" }} {{ end -}} {{ lookPath "bash" }}
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+apt-get update
+#apt-get install --no-install-recommends --yes curl git gpg software-properties-common sudo wget
