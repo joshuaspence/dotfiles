@@ -30,7 +30,11 @@ if command_exists latticectl; then
 fi
 
 if command_exists pipx; then
-  source <(register-python-argcomplete3 pipx)
+{{- if lookPath "register-python-argcomplete3" }}
+  source <(register-python-argcomplete pipx)
+{{- else }}
+  source <(register-python-argcomplete pipx)
+{{- end }}
 fi
 
 if command_exists step; then
