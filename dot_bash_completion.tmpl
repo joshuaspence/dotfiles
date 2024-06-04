@@ -29,6 +29,10 @@ if command_exists latticectl; then
   source <(LATTICECTL_IGNORE_KUBECONFIG=true latticectl --completion-script-bash)
 fi
 
+if command_exists op; then
+  source <(op completion bash)
+fi
+
 if command_exists pipx; then
 {{- if lookPath "register-python-argcomplete3" }}
   source <(register-python-argcomplete3 pipx)
