@@ -1,0 +1,15 @@
+---
+.local/share/bats-assert:
+  type: 'git-repo'
+  refreshPeriod: '168h'
+  url: 'https://github.com/ztombol/bats-assert.git'
+
+.local/share/bats-core:
+  type: 'git-repo'
+  refreshPeriod: '168h'
+  url: 'https://github.com/bats-core/bats-core.git'
+
+.local/share/bats-support:
+  type: 'git-repo'
+  refreshPeriod: '168h'
+  url: 'https://github.com/ztombol/bats-support.git'
