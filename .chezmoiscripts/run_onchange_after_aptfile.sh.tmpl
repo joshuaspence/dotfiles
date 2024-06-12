@@ -89,3 +89,9 @@ package "vlc"
 {{- end }}
 package "wget"
 package "yubikey-manager"
+
+{{ if .work -}}
+# Workaround for https://gitlab.gnome.org/GNOME/mutter/-/issues/3384
+ppa "vanvugt/mutter"
+packagelist "gir1.2-mutter-10=42.9-0ubuntu7vv1" "mutter-common=42.9-0ubuntu7vv1" "libmutter-10-0=42.9-0ubuntu7vv1"
+{{- end }}
