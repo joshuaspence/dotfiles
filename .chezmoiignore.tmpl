@@ -67,11 +67,7 @@
 /.vim/view/
 /.vim/viminfo
 
-{{ if .work -}}
-# Work
-/.GlobalProtect/
-/GP_HTML/
-{{ else }}
+{{ if not .work -}}
 /.aws/config
 /.chezmoiscripts/ip-route.sh
 /.local/bin/circleci

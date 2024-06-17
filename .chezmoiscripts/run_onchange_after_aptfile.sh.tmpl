@@ -43,9 +43,6 @@ package "v4l2-relayd"
 {{ end -}}
 
 # Networking
-{{ if .work -}}
-packagelist "globalprotect" "resolvconf"
-{{- end }}
 package "nmap"
 package "tcpdump"
 {{ if .work -}}
