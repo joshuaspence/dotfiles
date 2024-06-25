@@ -16,7 +16,7 @@ apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
 {{ if .work -}}
-apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v11" "" "https://apt.releases.teleport.dev/gpg"
+apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v13" "" "https://apt.releases.teleport.dev/gpg"
 {{- end }}
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
 
