@@ -1,0 +1,6 @@
+---
+.local/bin/terraform-docs:
+  type: 'archive-file'
+  executable: true
+  path: 'terraform-docs'
+  url: '{{ gitHubLatestReleaseAssetURL "terraform-docs/terraform-docs" (printf "terraform-docs-v*-%s-%s.tar.gz" .chezmoi.os .chezmoi.arch) }}'

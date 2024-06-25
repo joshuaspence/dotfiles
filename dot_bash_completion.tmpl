@@ -49,6 +49,10 @@ if command_exists terraform; then
   complete -C terraform terraform
 fi
 
+if command_exists terraform-docs; then
+  source <(terraform-docs completion bash)
+fi
+
 if command_exists tsh; then
   source <(tsh --completion-script-bash)
 fi
