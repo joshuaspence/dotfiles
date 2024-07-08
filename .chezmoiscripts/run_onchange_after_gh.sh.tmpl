@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+{{
+  $extensions := list
+    "github.com/github/gh-es"
+-}}
+
+{{ range $extensions -}}
+gh extension install {{ . }}
+{{ end -}}
