@@ -40,7 +40,7 @@ HISTIGNORE='[bf]g:cd *:clear:exit:history:ls:pwd'
 
 # Whenever displaying the prompt, write the previous line to disk.
 # See https://unix.stackexchange.com/a/48113.
-PROMPT_COMMAND='history -w'
+PROMPT_COMMAND='history -a'
 
 shopt -s cmdhist
 shopt -s histappend
