@@ -14,6 +14,7 @@ jobs:
     container: 'ubuntu:${{ matrix.ubuntu_version }}'
     env:
       DEBIAN_FRONTEND: 'noninteractive'
+      GH_TOKEN: '${{ github.token }}'
 
     strategy:
       fail-fast: false
