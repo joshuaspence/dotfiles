@@ -1,5 +1,4 @@
 {
-  "circleci.hostUrl": "https://cci.anduril.au",
   "editor.codeLens": false,
   "editor.tabSize": 2,
   "files.autoSave": "afterDelay",
