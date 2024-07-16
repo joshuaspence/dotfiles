@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 if command_exists dircolors; then
-  source <(dircolors)
+  eval "$(dircolors)"
 fi

@@ -6,7 +6,7 @@ fi
 
 {{ include "shell/helpers.sh" }}
 
-{{- $sourceDir := .chezmoi.sourceDir }}
+{{- $sourceDir := .chezmoi.sourceDir -}}
 {{ range $file := glob (joinPath $sourceDir "shell/environment/*.sh{,.tmpl}") }}
 # source={{ replace (print $sourceDir "/") "" $file }}
 {{ if hasSuffix ".tmpl" $file -}}

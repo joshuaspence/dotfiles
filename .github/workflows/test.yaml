@@ -30,7 +30,6 @@ jobs:
           - '24.04'
           - 'latest'
           - 'rolling'
-          - 'devel'
 
     steps:
       - name: 'Install depdendencies'

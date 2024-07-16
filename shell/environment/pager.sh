@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 if command_exists less; then
   if command_exists lesspipe; then
     eval "$(lesspipe)"
