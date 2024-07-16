@@ -9,6 +9,7 @@ on:
     - cron: '0 0 * * 1'
 jobs:
   bootstrap:
+    name: 'Bootstrap (Ubuntu ${{ matrix.ubuntu_version }}, personal=${{ matrix.personal }}, work=${{ matrix.work }})'
     runs-on: 'ubuntu-latest'
     continue-on-error: "${{ matrix.ubuntu_version == 'devel' }}"
     container: 'ubuntu:${{ matrix.ubuntu_version }}'
