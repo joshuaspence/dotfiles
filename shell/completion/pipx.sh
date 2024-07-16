@@ -1,7 +1,9 @@
+# shellcheck shell=sh
+
 if command_exists pipx; then
-{{- if lookPath "register-python-argcomplete3" }}
-  source <(register-python-argcomplete3 pipx)
-{{- else }}
-  source <(register-python-argcomplete pipx)
-{{- end }}
+  if command_exists register-python-argcomplete3; then
+    eval "$(register-python-argcomplete3 pipx)"
+  elif command_exists register-python-argcomplete; then
+    eval "$(register-python-argcomplete pipx)"
+  fi
 fi
