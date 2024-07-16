@@ -8,6 +8,19 @@ dconf load / <<'EOF'
 [org/gnome/desktop/datetime]
 automatic-timezone = true
 
+[org/gnome/meld]
+folder-status-filters = ['normal', 'normal', 'new', 'modified']
+highlight-syntax = true
+indent-width = 2
+
+[org/gnome/mutter]
+experimental-features = ['x11-randr-fractional-scaling']
+workspaces-only-on-primary = false
+
+[org/gnome/settings-daemon/plugins/media-keys]
+calculator = ['<Primary><Alt>c']
+home = ['<Primary><Alt>e']
+
 [org/gnome/settings-daemon/plugins/power]
 ambient-enabled = false
 
@@ -26,6 +39,8 @@ enabled = true
 
 [org/gnome/terminal/legacy]
 new-tab-position = true
+new-terminal-mode = 'window'
+theme-variant = 'system'
 
 [org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9]
 default-size-columns = 275
@@ -34,4 +49,10 @@ palette = ['rgb(46,52,54)', 'rgb(204,0,0)', 'rgb(78,154,6)', 'rgb(196,160,0)', '
 use-theme-colors = true
 use-theme-transparency = true
 visible-name = 'Default'
+
+[org/gtk/gtk4/settings/file-chooser]
+show-hidden = true
+
+[org/gtk/settings/file-chooser]
+show-hidden = true
 EOF
