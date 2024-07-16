@@ -1,15 +1,3 @@
-# shellcheck shell=sh
-
-if test -n "${BASH_VERSION}" && test -f ~/.bashrc; then
-  . ~/.bashrc
-fi
-
-export EDITOR='vim'
-export PAGER='less'
-
-PATH="${HOME}/.local/bin:${PATH}"
-PATH="${HOME}/go/bin:${PATH}"
-
 # shellcheck disable=SC2034
 {
   XDG_CACHE_HOME="${HOME}/.cache"
@@ -32,7 +20,3 @@ if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
 fi
 
 export BATS_LIB_PATH="${XDG_DATA_HOME}"
-
-eval "$(lesspipe)"
-
-umask 022

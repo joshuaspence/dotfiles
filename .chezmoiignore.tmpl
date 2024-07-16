@@ -20,6 +20,7 @@
 /.config/user-dirs.locale
 /go/
 /.local/share/
+/shell/
 /.ssh/known_hosts{,.old}
 /snap/
 /src/
@@ -66,6 +67,12 @@
 /.vim/undo/
 /.vim/view/
 /.vim/viminfo
+
+# VSCode
+/.config/Code/*
+!/.config/Code/User
+/.config/Code/User/*
+!/.config/Code/User/settings.json
 
 {{ if not .work -}}
 /.aws/config

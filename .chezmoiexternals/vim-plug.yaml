@@ -1,0 +1,6 @@
+---
+.vim/autoload/plug.vim:
+  type: 'archive-file'
+  path: 'plug.vim'
+  stripComponents: 1
+  url: '{{ (gitHubLatestRelease "junegunn/vim-plug").TarballURL }}'

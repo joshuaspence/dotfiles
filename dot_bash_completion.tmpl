@@ -1,62 +1,13 @@
 # shellcheck shell=bash
 
-function command_exists() {
-  command -v "${1}" >/dev/null
-}
+{{ include "shell/helpers.sh" }}
 
-# See aws/aws-cli#2928.
-if command_exists aws; then
-  complete -C /snap/aws-cli/current/bin/aws_completer aws
-fi
-
-if command_exists chezmoi; then
-  source <(chezmoi completion bash)
-fi
-
-if command_exists circleci; then
-  source <(circleci completion bash)
-fi
-
-if command_exists helm; then
-  source <(helm completion bash)
-fi
-
-if command_exists kubectl; then
-  source <(kubectl completion bash)
-fi
-
-if command_exists latticectl; then
-  source <(LATTICECTL_IGNORE_KUBECONFIG=true latticectl --completion-script-bash)
-fi
-
-if command_exists op; then
-  source <(op completion bash)
-fi
-
-if command_exists pipx; then
-{{- if lookPath "register-python-argcomplete3" }}
-  source <(register-python-argcomplete3 pipx)
-{{- else }}
-  source <(register-python-argcomplete pipx)
-{{- end }}
-fi
-
-if command_exists step; then
-  source <(step completion bash)
-fi
-
-if command_exists terraform; then
-  complete -C terraform terraform
-fi
-
-if command_exists terraform-docs; then
-  source <(terraform-docs completion bash)
-fi
-
-if command_exists tsh; then
-  source <(tsh --completion-script-bash)
-fi
-
-if command_exists yq; then
-  source <(yq shell-completion bash)
-fi
+{{- $sourceDir := .chezmoi.sourceDir -}}
+{{ range $file := glob (joinPath $sourceDir "shell/completion/*.{bash,bash.tmpl,sh,sh.tmpl}") }}
+# source={{ replace (print $sourceDir "/") "" $file }}
+{{ if hasSuffix ".tmpl" $file -}}
+{{ includeTemplate $file $ -}}
+{{ else -}}
+{{ include $file -}}
+{{ end -}}
+{{ end -}}

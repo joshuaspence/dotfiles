@@ -1,0 +1,17 @@
+# shellcheck shell=bash
+
+# If not running interactively, don't do anything.
+# See https://unix.stackexchange.com/a/257613.
+if [[ $- != *i* ]]; then
+  return
+fi
+
+{{- $sourceDir := .chezmoi.sourceDir }}
+{{ range $file := glob (joinPath $sourceDir "shell/{config,functions}/*.{bash,bash.tmpl,sh,sh.tmpl}") }}
+# source={{ replace (print $sourceDir "/") "" $file }}
+{{ if hasSuffix ".tmpl" $file -}}
+{{ includeTemplate $file $ -}}
+{{ else -}}
+{{ include $file -}}
+{{ end -}}
+{{ end -}}

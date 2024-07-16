@@ -2,7 +2,19 @@ Include conf.d/*.conf
 
 Host *
   AddKeysToAgent yes
+  Compression yes
+  ConnectTimeout 10
+  ExitOnForwardFailure yes
+  ForwardAgent no
+  ForwardX11 no
+  GSSAPIAuthentication no
+  HashKnownHosts no
   IdentityFile ~/.ssh/keys/%h.key
+  PasswordAuthentication yes
+  PubkeyAuthentication yes
+  ServerAliveCountMax 8
+  ServerAliveInterval 15
+  TCPKeepAlive yes
 
 Host github.com
   IdentityFile ~/.ssh/keys/github.key
