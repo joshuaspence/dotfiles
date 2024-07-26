@@ -15,7 +15,11 @@ apt_repository "github_cli" "https://cli.github.com/packages" "stable main" "" "
 apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "https://baltocdn.com/helm/signing.asc"
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
+{{ if ne .chezmoi.osRelease.ubuntuCodename "noble" -}}
 apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
+{{ else -}}
+apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "jammy main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
+{{ end -}}
 {{ if .work -}}
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v13" "" "https://apt.releases.teleport.dev/gpg"
 {{- end }}
