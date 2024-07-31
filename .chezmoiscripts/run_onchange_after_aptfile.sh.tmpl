@@ -63,9 +63,6 @@ package "whois"
 ppa "longsleep/golang-backports"
 {{- end }}
 package "golang-go"
-{{ if .work -}}
-package "nix-bin"
-{{- end }}
 packagelist "python3" "python3-argcomplete" "python3-virtualenv" "pipx"
 
 # Utility
