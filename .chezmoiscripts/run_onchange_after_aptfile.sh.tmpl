@@ -15,6 +15,9 @@ apt_repository "github_cli" "https://cli.github.com/packages" "stable main" "" "
 apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "https://baltocdn.com/helm/signing.asc"
 apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
+{{ if .work -}}
+apt_repository "microsoft" "https://packages.microsoft.com/{{ .chezmoi.osRelease.id }}/{{ .chezmoi.osRelease.versionID }}/prod" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "amd64,armhf,arm64" "https://packages.microsoft.com/keys/microsoft.asc"
+{{- end }}
 {{ if ne .chezmoi.osRelease.ubuntuCodename "noble" -}}
 apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
 {{ else -}}
@@ -32,6 +35,9 @@ package "gh"
 packagelist "git" "git-crypt" "git-lfs"
 package "helm"
 package "kubectl"
+{{ if .work -}}
+package "sqlcmd"
+{{- end }}
 package "openssh-client"
 packagelist "packer" "terraform"
 package "tmux"
