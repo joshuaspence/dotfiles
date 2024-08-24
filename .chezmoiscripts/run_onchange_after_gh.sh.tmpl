@@ -6,8 +6,14 @@ set -o pipefail
 
 {{
   $extensions := list
-    "github.com/github/gh-es"
 -}}
+{{ if .work -}}
+{{
+  $extensions = concat $extensions (list
+    "github.com/github/gh-es"
+  )
+-}}
+{{ end -}}
 
 {{ range $extensions -}}
 gh extension install {{ . }}
