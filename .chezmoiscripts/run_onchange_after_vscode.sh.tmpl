@@ -22,11 +22,13 @@ set -o pipefail
     "ZainChen.json"
 -}}
 {{ if .personal -}}
+{{
   $extensions = concat $extensions (list
     "ESPHome.esphome-vscode"
     "keesschollaart.vscode-home-assistant"
     "netcorext.uuid-generator"
   )
+-}}
 {{ end -}}
 {{ if .work -}}
 {{
