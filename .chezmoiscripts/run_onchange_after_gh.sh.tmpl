@@ -3,6 +3,7 @@
 set -o errexit
 set -o nounset
 set -o pipefail
+{{ if .work }}
 
 {{
   $extensions := list
@@ -17,4 +18,5 @@ set -o pipefail
 
 {{ range $extensions -}}
 gh extension install {{ . }}
+{{ end -}}
 {{ end -}}
