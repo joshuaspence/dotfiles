@@ -11,6 +11,8 @@
 
 export AWS_ECR_CACHE_DIR="${XDG_CACHE_HOME}/ecr"
 export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
+export KUBECACHEDIR="${XDG_CACHE_HOME}/kube"
+export KUBECONFIG="${XDG_CONFIG_HOME}/kube/config"
 export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
 export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
 export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
