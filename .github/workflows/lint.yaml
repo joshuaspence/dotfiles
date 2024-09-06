@@ -31,11 +31,12 @@ jobs:
           mkdir .home
           chezmoi archive --exclude externals | tar --extract --directory .home
       - name: 'Upload rendered templates'
-        uses: 'actions/upload-artifact@v4'
+        uses: 'actions/upload-artifact@v4.4.0'
         with:
           name: 'personal=${{ matrix.personal }},work=${{ matrix.work }}'
           path: '.home'
           if-no-files-found: 'error'
+          include-hidden-files: true
 
   shellcheck:
     name: 'ShellCheck'
@@ -48,7 +49,7 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
       - name: 'Download rendered templates'
-        uses: 'actions/download-artifact@v4'
+        uses: 'actions/download-artifact@v4.1.8'
         with:
           path: '.home'
 
@@ -66,7 +67,7 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
       - name: 'Download rendered templates'
-        uses: 'actions/download-artifact@v4'
+        uses: 'actions/download-artifact@v4.1.8'
         with:
           path: '.home'
 
