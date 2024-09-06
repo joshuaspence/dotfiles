@@ -1,0 +1,5 @@
+---
+.local/share/kubech:
+  type: 'git-repo'
+  refreshPeriod: '168h'
+  url: 'https://github.com/DevOpsHiveHQ/kubech.git'
