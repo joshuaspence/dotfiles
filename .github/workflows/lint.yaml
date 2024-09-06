@@ -35,6 +35,7 @@ jobs:
         with:
           name: 'personal=${{ matrix.personal }},work=${{ matrix.work }}'
           path: '.home'
+          if-no-files-found: 'error'
 
   shellcheck:
     name: 'ShellCheck'
