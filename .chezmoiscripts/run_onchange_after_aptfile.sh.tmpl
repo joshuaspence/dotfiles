@@ -17,7 +17,6 @@ apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osR
 {{ if .work -}}
 apt_repository "jfrog" "https://releases.jfrog.io/artifactory/jfrog-debs" "focal contrib" "" "https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key"
 {{- end }}
-
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
 {{ if ne .chezmoi.osRelease.ubuntuCodename "noble" -}}
 apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
