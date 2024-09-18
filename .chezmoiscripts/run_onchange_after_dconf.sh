@@ -25,6 +25,7 @@ home = ['<Primary><Alt>e']
 ambient-enabled = false
 
 [org/gnome/shell]
+enabled-extensions = ['tiling-assistant@leleat-on-github', 'tiling-assistant@ubuntu.com', 'ubuntu-dock@ubuntu.com', 'ubuntu-appindicators@ubuntu.com', 'system-monitor@gnome-shell-extensions.gcampax.github.com', 'auto-move-windows@gnome-shell-extensions.gcampax.github.com', 'nightthemeswitcher@romainvigier.fr']
 favorite-apps = ['google-chrome.desktop', 'slack_slack.desktop', 'code.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Nautilus.desktop', 'Zoom.desktop']
 
 [org/gnome/shell/extensions/dash-to-dock]
@@ -52,6 +53,7 @@ visible-name = 'Default'
 
 [org/gtk/gtk4/settings/file-chooser]
 show-hidden = true
+sort-directories-first = true
 
 [org/gtk/settings/file-chooser]
 show-hidden = true
