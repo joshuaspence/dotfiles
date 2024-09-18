@@ -45,8 +45,9 @@ package "linux-generic-hwe-{{ .chezmoi.osRelease.versionID }}"
 {{ if and (eq (output "cat" "/sys/devices/virtual/dmi/id/sys_vendor" | trim) "Dell Inc.") (eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680") -}}
 # Hardware
 # See https://wiki.ubuntu.com/IntelMIPICamera.
-packagelist "linux-modules-ipu6-generic-hwe-{{ .chezmoi.osRelease.versionID }}" "linux-modules-ivsc-generic-hwe-{{ .chezmoi.osRelease.versionID }}"
-package "v4l2-relayd"
+ppa "oem-solutions-group/intel-ipu6"
+packagelist "linux-oem-{{ .chezmoi.osRelease.versionID }}" "linux-modules-ipu6-oem-{{ .chezmoi.osRelease.versionID }}"
+packagelist "gstreamer1.0-icamera" "v4l-utils" "v4l2-relayd" "v4l2loopback-dkms"
 
 {{ end -}}
 
