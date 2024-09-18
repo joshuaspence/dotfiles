@@ -18,11 +18,7 @@ apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "
 apt_repository "jfrog" "https://releases.jfrog.io/artifactory/jfrog-debs" "focal contrib" "" "https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key"
 {{- end }}
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
-{{ if ne .chezmoi.osRelease.ubuntuCodename "noble" -}}
-apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
-{{ else -}}
 apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "jammy main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
-{{ end -}}
 {{ if .work -}}
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v13" "" "https://apt.releases.teleport.dev/gpg"
 {{- end }}
@@ -65,9 +61,6 @@ package "traceroute"
 package "whois"
 
 # Programming
-{{ if ne .chezmoi.osRelease.ubuntuCodename "noble" -}}
-ppa "longsleep/golang-backports"
-{{- end }}
 package "golang-go"
 packagelist "python3" "python3-argcomplete" "python3-virtualenv" "pipx"
 

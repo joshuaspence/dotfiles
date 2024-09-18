@@ -27,7 +27,6 @@ jobs:
           - false
 
         ubuntu_version:
-          - '22.04'
           - '24.04'
           - 'latest'
           - 'rolling'
