@@ -1,3 +1,3 @@
 if command_exists jfrog; then
-  source <(jfrog completion bash)
+  JFROG_CLI_AVOID_NEW_VERSION_WARNING=true source <(jfrog completion bash)
 fi
