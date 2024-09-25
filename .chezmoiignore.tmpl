@@ -20,7 +20,8 @@
 /.config/user-dirs.dirs
 /.config/user-dirs.locale
 /go/
-/.local/share/
+/.local/share/*
+!/.local/share/applications
 /shell/
 /.ssh/known_hosts{,.old}
 /snap/
@@ -84,6 +85,11 @@
 /.ssh/conf.d/lattice.conf
 /.ssh/conf.d/teleport.conf
 /.ssh/conf.d/work.conf
+{{ end -}}
+
+{{ if not .personal -}}
+/.local/bin/UltiMaker-Cura.AppImage
+/.local/share/applications/com.ultimaker.cura.desktop
 {{ end -}}
 
 # Temporary

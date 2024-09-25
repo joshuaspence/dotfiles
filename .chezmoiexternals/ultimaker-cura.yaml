@@ -1,0 +1,5 @@
+---
+.local/bin/UltiMaker-Cura.AppImage:
+  type: 'file'
+  executable: true
+  url: '{{ gitHubLatestReleaseAssetURL "Ultimaker/Cura" (printf "UltiMaker-Cura-*-%s-%s.AppImage" .chezmoi.os (.chezmoi.arch | replace "amd64" "X64")) }}'
