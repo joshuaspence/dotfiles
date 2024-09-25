@@ -32,10 +32,13 @@ packagelist "git" "git-crypt" "git-lfs"
 package "helm"
 {{ if .work -}}
 package "jfrog-cli-v2"
-{{- end}}
+{{- end }}
 package "kubectl"
 package "openssh-client"
 packagelist "packer" "terraform"
+{{ if .personal -}}
+package "rpi-imager"
+{{- end }}
 package "tmux"
 package "vim"
 package "xclip"
