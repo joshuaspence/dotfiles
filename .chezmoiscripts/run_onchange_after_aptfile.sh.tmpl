@@ -20,7 +20,7 @@ apt_repository "jfrog" "https://releases.jfrog.io/artifactory/jfrog-debs" "focal
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
 apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "jammy main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
 {{ if .work -}}
-apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v13" "" "https://apt.releases.teleport.dev/gpg"
+apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v14" "" "https://apt.releases.teleport.dev/gpg"
 {{- end }}
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
 
