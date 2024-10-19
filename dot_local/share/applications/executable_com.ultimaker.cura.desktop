@@ -1,11 +1,11 @@
-# NOTE: This is bundled in the appimage file and can be extracted with `UltiMaker-Cura.AppImage --appimage-extract com.ultimaker.cura.desktop`.
 [Desktop Entry]
-X-AppImage-Arch=x86_64
-X-AppImage-Name=UltiMaker Cura
-Name=UltiMaker Cura
-Exec=UltiMaker-Cura.AppImage
-Icon=cura-icon.png
 Type=Application
+Name=Ultimaker Cura
+GenericName=3D Printing Software
+Icon=ultimaker-cura.png
+TryExec=Ultimaker-Cura
+Exec=Ultimaker-Cura %F
 Terminal=false
-Categories=Utility;
-Comment=
+MimeType=model/stl;application/vnd.ms-3mfdocument;text/x-gcode
+Categories=Graphics
+Keywords=3D;Printing;Slicer

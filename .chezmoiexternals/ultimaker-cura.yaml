@@ -1,5 +1,11 @@
 ---
-.local/bin/UltiMaker-Cura.AppImage:
+.local/bin/Ultimaker-Cura:
   type: 'file'
   executable: true
   url: '{{ gitHubLatestReleaseAssetURL "Ultimaker/Cura" (printf "UltiMaker-Cura-*-%s-%s.AppImage" .chezmoi.os (.chezmoi.arch | replace "amd64" "X64")) }}'
+
+.local/share/icons/hicolor/256x256/apps/ultimaker-cura.png:
+  type: 'archive-file'
+  path: 'packaging/icons/cura-icon_256x256.png'
+  stripComponents: 1
+  url: '{{ (gitHubLatestRelease "Ultimaker/Cura").TarballURL }}'
