@@ -1,0 +1,7 @@
+---
+.local/bin/jira:
+  type: 'archive-file'
+  executable: true
+  path: 'bin/jira'
+  stripComponents: 1
+  url: '{{ gitHubLatestReleaseAssetURL "ankitpokhrel/jira-cli" (printf "jira_*_%s_%s.tar.gz" .chezmoi.os (.chezmoi.arch | replace "amd64" "x86_64")) }}'
