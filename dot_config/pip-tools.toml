@@ -1,0 +1,6 @@
+[tool.pip-tools.compile]
+allow-unsafe = true
+annotation-style = "line"
+emit-index-url = false
+strip-extras = true
+

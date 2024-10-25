@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Configuration
+# .config/pip-tools.toml: {{ include "dot_config/pip-tools.toml" | sha256sum }}
+# .venv/requirements.in: {{ include "dot_venv/requirements.in.tmpl" | sha256sum }}
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+test -d .venv/bin || python3 -m venv .venv
+command -v pip-sync &>/dev/null || pip install --constraint .venv/requirements.in --quiet pip-tools
+pip-compile --upgrade --output-file .venv/requirements.txt --config .config/pip-tools.toml .venv/requirements.in
+pip-sync --config .config/pip-tools.toml .venv/requirements.txt
