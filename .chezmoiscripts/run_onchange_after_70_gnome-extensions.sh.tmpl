@@ -4,6 +4,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+{{ include "shell/environment/path.sh" }}
+
 {{
   $extensions := list
     "nightthemeswitcher@romainvigier.fr"

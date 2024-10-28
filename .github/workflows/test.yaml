@@ -32,7 +32,7 @@ jobs:
           - 'rolling'
 
     steps:
-      - name: 'Install depdendencies'
+      - name: 'Install dependencies'
         run: |
           apt-get update
           apt-get install --yes curl git gpg software-properties-common sudo wget
