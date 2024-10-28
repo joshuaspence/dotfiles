@@ -4,13 +4,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ include "shell/environment/path.sh" }}
+{{ include "shell/environment/path.sh" -}}
 
 {{
   $extensions := list
     "nightthemeswitcher@romainvigier.fr"
 -}}
 
-{{ range $extensions -}}
+{{- range $extensions }}
 gnome-extensions-cli install {{ . }}
-{{ end -}}
+{{- end }}
