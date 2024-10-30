@@ -12,7 +12,7 @@ apt_repository "docker" "https://download.docker.com/linux/ubuntu" "{{ .chezmoi.
 apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
 {{ end -}}
 apt_repository "github_cli" "https://cli.github.com/packages" "stable main" "" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
-apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename | replace "oracular" "noble" }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "https://baltocdn.com/helm/signing.asc"
 {{ if .work -}}
 apt_repository "jfrog" "https://releases.jfrog.io/artifactory/jfrog-debs" "focal contrib" "" "https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key"
