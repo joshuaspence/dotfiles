@@ -1,6 +1,8 @@
 #!{{ if ne .chezmoi.username "root" -}} {{ lookPath "sudo" }} {{ end -}} .local/bin/aptfile
 # shellcheck shell=bash
 
+export APT_CONFIG=<(echo 'Dpkg::Use-Pty "0";')
+
 source {{ joinPath .chezmoi.sourceDir "src/aptfile.bash" }}
 
 # Repositories
