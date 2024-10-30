@@ -44,7 +44,9 @@ package "vim"
 package "xclip"
 
 # Hardware / Kernel
+{{ if semverCompare "<= 24.04" .chezmoi.osRelease.versionID -}}
 package "linux-generic-hwe-{{ .chezmoi.osRelease.versionID }}"
+{{ end -}}
 {{ if and (eq (output "cat" "/sys/devices/virtual/dmi/id/sys_vendor" | trim) "Dell Inc.") (eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680") -}}
 # Hardware
 # See https://wiki.ubuntu.com/IntelMIPICamera.
