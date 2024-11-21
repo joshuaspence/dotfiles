@@ -29,7 +29,7 @@ jobs:
       - name: 'Render Chezmoi templates'
         run: |
           mkdir .home
-          chezmoi archive --exclude externals | tar --extract --directory .home
+          chezmoi archive --exclude externals --format tar | tar --extract --directory .home
       - name: 'Upload rendered templates'
         uses: 'actions/upload-artifact@v4.4.3'
         with:
