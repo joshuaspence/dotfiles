@@ -60,6 +60,9 @@ packagelist "gstreamer1.0-icamera" "v4l-utils" "v4l2-relayd" "v4l2loopback-dkms"
 packagelist "libcairo2-dev" "libgirepository1.0-dev" # build dependencies for `pygobject`
 
 # Networking
+{{ if .personal -}}
+package "nfs-common"
+{{- end }}
 package "nmap"
 package "speedtest-cli"
 package "tcpdump"
