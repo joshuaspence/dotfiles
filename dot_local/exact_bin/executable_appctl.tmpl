@@ -1,0 +1,3 @@
+{{- /* TODO: Use a regular external after twpayne/chezmoi#3724 */ -}}
+{{- $version := output "gh" "--repo=ghe.anduril.dev/platform/appctl" "release" "view" "--json=name" "--template={{ .name }}" -}}
+{{- output "sh" "-c" (printf "gh --repo=ghe.anduril.dev/platform/appctl release download --output=- --pattern=%s %s | tar --extract --to-stdout --gunzip appctl" (printf "appctl_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) $version) -}}
