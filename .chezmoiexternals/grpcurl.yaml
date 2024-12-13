@@ -1,0 +1,6 @@
+---
+.local/bin/grpcurl:
+  type: 'archive-file'
+  executable: true
+  path: 'grpcurl'
+  url: '{{ gitHubLatestReleaseAssetURL "fullstorydev/grpcurl" (printf "grpcurl_*_%s_%s.tar.gz" .chezmoi.os (.chezmoi.arch | replace "amd64" "x86_64")) }}'
