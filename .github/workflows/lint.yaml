@@ -31,7 +31,7 @@ jobs:
           mkdir .home
           chezmoi archive --exclude externals --format tar | tar --extract --directory .home
       - name: 'Upload rendered templates'
-        uses: 'actions/upload-artifact@v4.4.3'
+        uses: 'actions/upload-artifact@v4.5.0'
         with:
           name: 'personal=${{ matrix.personal }},work=${{ matrix.work }}'
           path: '.home'
