@@ -14,17 +14,17 @@ function apt_keyring() {
   local -r name="$1"
   local -r key_url="$2"
 
-  [[ -z $name ]] && log_fail "Please specify a keyring name"
-  [[ -z $key_url ]] && log_fail "Please specify a key URL"
+  [[ -z ${name} ]] && log_fail "Please specify a keyring name"
+  [[ -z ${key_url} ]] && log_fail "Please specify a key URL"
 
   local -r apt_keyring_d="/etc/apt/keyrings"
   local -r apt_keyring="${apt_keyring_d}/${name}.gpg"
 
-  if [[ ! -d $apt_keyring_d ]]; then
+  if [[ ! -d ${apt_keyring_d} ]]; then
     mkdir "${apt_keyring_d}"
   fi
 
-  if [[ -f $apt_keyring ]]; then
+  if [[ -f ${apt_keyring} ]]; then
     aptfile_ok "keyring ${name}"
     return
   fi
@@ -43,14 +43,14 @@ function apt_repository() {
   local -r architecture="$4"
   local -r key_url="$5"
 
-  [[ -z $name ]] && log_fail "Please specify a repository name"
-  [[ -z $repo_url ]] && log_fail "Please specify a repository source URL"
-  [[ -z $components ]] && log_fail "Please specify repository components"
+  [[ -z ${name} ]] && log_fail "Please specify a repository name"
+  [[ -z ${repo_url} ]] && log_fail "Please specify a repository source URL"
+  [[ -z ${components} ]] && log_fail "Please specify repository components"
 
   local apt_opts=()
-  [[ -n $architecture ]] && apt_opts+=("arch=${architecture}")
+  [[ -n ${architecture} ]] && apt_opts+=("arch=${architecture}")
 
-  if [[ -n $key_url ]]; then
+  if [[ -n ${key_url} ]]; then
     apt_keyring "${name}" "${key_url}"
     apt_opts+=("signed-by=/etc/apt/keyrings/${name}.gpg")
   fi
