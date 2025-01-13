@@ -1,6 +1,11 @@
 ---
 name: 'Chezmoi'
 description: 'GitHub action for Chezmoi.'
+inputs:
+  install:
+    description: 'Whether to install Chezmoi.'
+    required: true
+    default: true
 runs:
   using: 'composite'
   steps:
@@ -8,8 +13,10 @@ runs:
       run: 'curl --fail --location --no-progress-meter https://get.chezmoi.io | sh -s -- -b ${{ github.action_path }}'
       shell: 'sh'
     - name: 'Add Chezmoi to $PATH'
+      if: '${{ inputs.install }}'
       run: 'echo "${{ github.action_path }}" >> $GITHUB_PATH'
       shell: 'sh'
     - name: 'Set $CHEZMOI_GITHUB_ACCESS_TOKEN'
+      if: '${{ inputs.install }}'
       run: 'echo "CHEZMOI_GITHUB_ACCESS_TOKEN=${{ github.token }}" >> $GITHUB_ENV'
       shell: 'sh'
