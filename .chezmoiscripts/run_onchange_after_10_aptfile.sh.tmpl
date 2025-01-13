@@ -18,6 +18,9 @@ apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "
 apt_repository "jfrog" "https://releases.jfrog.io/artifactory/jfrog-debs" "focal contrib" "" "https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key"
 {{- end }}
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key"
+{{ if .work -}}
+apt_repository "microsoft" "https://packages.microsoft.com/{{ .chezmoi.osRelease.id }}/{{ .chezmoi.osRelease.versionID }}/prod" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "amd64,armhf,arm64" "https://packages.microsoft.com/keys/microsoft.asc"
+{{- end }}
 apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "jammy main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
 {{ if .work -}}
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v14" "" "https://apt.releases.teleport.dev/gpg"
@@ -34,6 +37,9 @@ package "helm"
 package "jfrog-cli-v2"
 {{- end }}
 package "kubectl"
+{{ if .work -}}
+package "mssql-tools18"
+{{- end }}
 package "openssh-client"
 packagelist "packer" "terraform"
 {{ if .personal -}}

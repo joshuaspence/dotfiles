@@ -9,3 +9,7 @@ fi
 if command -v go >/dev/null; then
   PATH="$(go env GOPATH)/bin:${PATH}"
 fi
+
+if test -d /opt/mssql-tools18; then
+  PATH="${PATH}:/opt/mssql-tools18/bin"
+fi
