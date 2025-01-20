@@ -1,3 +1,6 @@
 {{- /* TODO: Use a regular external after twpayne/chezmoi#3724 */ -}}
-{{- $version := output "gh" "--repo=ghe.anduril.dev/anduril/latticectl" "release" "view" "--json=name" "--template={{ .name }}" -}}
-{{- output "sh" "-c" (printf "gh --repo=ghe.anduril.dev/anduril/latticectl release download --output=- --pattern=%s %s | tar --extract --to-stdout --gunzip latticectl" (printf "latticectl_%s_%s.tar.gz" .chezmoi.os (.chezmoi.arch | replace "amd64" "x86_64")) $version) -}}
+{{- $repo := "ghe.anduril.dev/anduril/latticectl" -}}
+{{- $version := output "gh" "release" (printf "--repo=%s" $repo) "view" "--json=name" "--template={{ .name }}" -}}
+{{- $archive := (printf "latticectl_%s_%s.tar.gz" .chezmoi.os (.chezmoi.arch | replace "amd64" "x86_64")) -}}
+{{- $file := "latticectl" -}}
+{{- output "sh" "-c" (printf "gh release --repo=%s download --output=- --pattern=%s %s | tar --extract --to-stdout --gunzip %s" $repo $archive $version $file) -}}

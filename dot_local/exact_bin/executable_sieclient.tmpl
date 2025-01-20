@@ -1,3 +1,6 @@
 {{- /* TODO: Use a regular external after twpayne/chezmoi#3724 */ -}}
-{{- $version := output "gh" "--repo=ghe.anduril.dev/anduril/sieclient" "release" "view" "--json=name" "--template={{ .name }}" -}}
-{{- output "sh" "-c" (printf "gh --repo=ghe.anduril.dev/anduril/sieclient release download --output=- --pattern=%s %s | tar --extract --to-stdout --gunzip sieclient" (printf "sieclient_%s_%s_%s.tar.gz" ($version | trimPrefix "v") .chezmoi.os .chezmoi.arch) $version) -}}
+{{- $repo := "ghe.anduril.dev/anduril/sieclient" -}}
+{{- $version := output "gh" "release" (printf "--repo=%s" $repo) "view" "--json=name" "--template={{ .name }}" -}}
+{{- $archive := (printf "sieclient_%s_%s_%s.tar.gz" ($version | trimPrefix "v") .chezmoi.os .chezmoi.arch) -}}
+{{- $file := "sieclient" -}}
+{{- output "sh" "-c" (printf "gh release --repo=%s download --output=- --pattern=%s %s | tar --extract --to-stdout --gunzip %s" $repo $archive $version $file) -}}
