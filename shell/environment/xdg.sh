@@ -15,13 +15,10 @@ export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
 export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
 export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
 
-# shellcheck disable=SC2034
-{
-  export KUBECACHEDIR="${XDG_CACHE_HOME}/kube"
-  export KUBECONFIG="${XDG_CONFIG_HOME}/kube/config"
-  KUBECONFIG_SRC_DIR="${XDG_CONFIG_HOME}/kube/config.src.d"
-  KUBECONFIG_DEST_DIR="${XDG_CONFIG_HOME}/kube/config.dest.d"
-}
+export KUBECACHEDIR="${XDG_CACHE_HOME}/kube"
+export KUBECONFIG="${XDG_CONFIG_HOME}/kube/config"
+export KUBECONFIG_SRC_DIR="${XDG_CONFIG_HOME}/kube/config.src.d"
+export KUBECONFIG_DEST_DIR="${XDG_CONFIG_HOME}/kube/config.dest.d"
 
 # `less` gains full support for XDG base directories in version 600 (see gwsw/less#153).
 if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
