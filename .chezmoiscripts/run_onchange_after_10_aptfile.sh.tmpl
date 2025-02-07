@@ -54,7 +54,7 @@ package "linux-generic-hwe-{{ .chezmoi.osRelease.versionID }}"
 # Hardware
 # See https://wiki.ubuntu.com/IntelMIPICamera.
 ppa "oem-solutions-group/intel-ipu6"
-packagelist "linux-oem-{{ .chezmoi.osRelease.versionID }}" "linux-modules-ipu6-oem-{{ .chezmoi.osRelease.versionID }}"
+packagelist "linux-modules-ipu6-{{ .chezmoi.osRelease.versionID }}"
 packagelist "gstreamer1.0-icamera" "v4l-utils" "v4l2-relayd" "v4l2loopback-dkms"
 
 {{ end -}}
