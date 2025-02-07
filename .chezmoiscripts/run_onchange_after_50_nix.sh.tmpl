@@ -1,0 +1,12 @@
+#!{{ if ne .chezmoi.username "root" -}} {{ lookPath "sudo" }} {{ end -}} {{ lookPath "bash" }}
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+{{ .chezmoi.homeDir }}/.local/bin/nix-installer install linux \
+  --no-confirm 
+
+#  --nix-package-url
+#  --extra-conf
+#  --force

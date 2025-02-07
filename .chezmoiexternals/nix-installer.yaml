@@ -1,0 +1,5 @@
+---
+.local/bin/nix-installer:
+  type: 'file'
+  executable: true
+  url: '{{ gitHubLatestReleaseAssetURL "DeterminateSystems/nix-installer" (printf "nix-installer-%s-%s" (.chezmoi.arch | replace "amd64" "x86_64") .chezmoi.os) }}'
