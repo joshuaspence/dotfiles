@@ -64,7 +64,7 @@ packagelist "libcairo2-dev" "libgirepository1.0-dev" # build dependencies for `p
 
 # Networking
 {{ if .personal -}}
-package "nfs-common"
+packagelist "nfs-common" "smbclient"
 {{- end }}
 package "nmap"
 package "speedtest-cli"
