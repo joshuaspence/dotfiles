@@ -23,7 +23,7 @@ apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" 
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v14" "" "https://apt.releases.teleport.dev/gpg"
 {{- end }}
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
-{{ if .work -}}
+{{- if .work }}
 apt_repository "zoom" "https://mirror.mwt.me/zoom/deb" "any main" "amd64" "https://mirror.mwt.me/zoom/gpgkey"
 {{- end }}
 
@@ -41,7 +41,7 @@ package "openssh-client"
 packagelist "packer" "terraform"
 {{ if .personal -}}
 package "rpi-imager"
-{{- end }}
+{{ end -}}
 package "tmux"
 package "vim"
 package "xclip"
@@ -65,7 +65,7 @@ packagelist "libcairo2-dev" "libgirepository1.0-dev" # build dependencies for `p
 # Networking
 {{ if .personal -}}
 packagelist "cifs-utils" "nfs-common" "smbclient"
-{{- end }}
+{{ end -}}
 package "nmap"
 package "speedtest-cli"
 package "tcpdump"
@@ -108,7 +108,7 @@ package "slack"
 package "tree"
 {{ if .personal -}}
 package "vlc"
-{{- end }}
+{{ end -}}
 package "wget"
 packagelist "yubikey-manager" "yubikey-manager-qt" "pamu2fcfg"
 {{ if .work -}}
