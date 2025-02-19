@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ include "shell/environment/path.sh" -}}
+{{ include "shell/environment/_path.sh" -}}
 
 {{
   $extensions := list
