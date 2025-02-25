@@ -1,3 +1,6 @@
-experimental-features = nix-command flakes repl-flake
+experimental-features = flakes nix-command
+flake-registry = https://ghe.anduril.dev/raw/anduril/registry/master/registry.json
 netrc-file = {{ .chezmoi.homeDir }}/.config/nix/netrc
+substituters = https://cache.nixos.org https://anduril-core-nix-cache.cachix.anduril.dev?priority=25 https://anduril-aus-core-nix-cache.cachix.anduril.au?priority=15
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= anduril-core-nix-cache.cachix.anduril.dev-1:0FYOuMqEzbSX2PmByfePpJAsSV6CW+1YWoq7b21NxHc= anduril-aus-core-nix-cache.cachix.anduril.au-1:0FYOuMqEzbSX2PmByfePpJAsSV6CW+1YWoq7b21NxHc=
 use-xdg-base-directories = true

@@ -4,4 +4,4 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ .chezmoi.homeDir }}/.local/bin/nix-installer install linux  --no-confirm 
+{{ .chezmoi.homeDir }}/.local/bin/nix-installer install linux  --no-confirm --extra-conf 'trusted-users = {{ .chezmoi.username }}'
