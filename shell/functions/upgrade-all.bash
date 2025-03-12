@@ -13,7 +13,7 @@ function upgrade-apt() {
 }
 
 function upgrade-gnome-extensions() {
-  gnome-extensions-cli update
+  gnome-extensions-cli update --user
 }
 
 function upgrade-snap() {

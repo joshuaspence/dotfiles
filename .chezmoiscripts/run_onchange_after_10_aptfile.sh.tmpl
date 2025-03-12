@@ -16,16 +16,16 @@ apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osR
 apt_repository "helm" "https://baltocdn.com/helm/stable/debian/" "all main" "" "https://baltocdn.com/helm/signing.asc"
 {{ if .work -}}
 apt_repository "jfrog" "https://releases.jfrog.io/artifactory/jfrog-debs" "focal contrib" "" "https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key"
-{{ end -}}
+{{- end }}
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.32/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key"
 apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "jammy main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
 {{ if .work -}}
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v14" "" "https://apt.releases.teleport.dev/gpg"
-{{ end -}}
+{{- end }}
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
 {{- if .work }}
 apt_repository "zoom" "https://mirror.mwt.me/zoom/deb" "any main" "amd64" "https://mirror.mwt.me/zoom/gpgkey"
-{{ end -}}
+{{- end }}
 
 # Development
 package "code"
