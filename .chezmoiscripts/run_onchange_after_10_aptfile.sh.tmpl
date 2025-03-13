@@ -22,6 +22,7 @@ apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" 
 {{ if .work -}}
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v14" "" "https://apt.releases.teleport.dev/gpg"
 {{- end }}
+apt_repository "virtualbox" "https://download.virtualbox.org/virtualbox/debian" "{{ .chezmoi.osRelease.ubuntuCodename }} contrib" "amd64" "https://www.virtualbox.org/download/oracle_vbox_2016.asc"
 apt_repository "vscode" "https://packages.microsoft.com/repos/code" "stable main" "amd64,arm64,armhf" "https://packages.microsoft.com/keys/microsoft.asc"
 {{- if .work }}
 apt_repository "zoom" "https://mirror.mwt.me/zoom/deb" "any main" "amd64" "https://mirror.mwt.me/zoom/gpgkey"
@@ -44,6 +45,7 @@ package "rpi-imager"
 {{ end -}}
 package "tmux"
 package "vim"
+package "virtualbox-7.1"
 package "xclip"
 
 # Hardware / Kernel
