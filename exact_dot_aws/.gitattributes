@@ -1,1 +1,1 @@
-/config diff=git-crypt filter=git-crypt
+/config.tmpl diff=git-crypt filter=git-crypt
