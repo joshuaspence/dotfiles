@@ -6,6 +6,7 @@ source {{ joinPath .chezmoi.sourceDir "src/aptfile.bash" }}
 # Repositories
 {{ if .work -}}
 apt_repository "1password" "https://downloads.1password.com/{{ .chezmoi.os }}/{{ .chezmoi.osRelease.idLike }}/{{ .chezmoi.arch }}" "stable main" "{{ .chezmoi.arch }}" "https://downloads.1password.com/linux/keys/1password.asc"
+apt_repository "cloudflare" "https://pkg.cloudflareclient.com" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "{{ .chezmoi.arch }}" "https://pkg.cloudflareclient.com/pubkey.gpg"
 {{ end -}}
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable" "{{ .chezmoi.arch }}" "https://download.docker.com/linux/ubuntu/gpg"
 {{ if .personal -}}
@@ -53,7 +54,7 @@ package "linux-generic-hwe-{{ .chezmoi.osRelease.versionID }}"
 {{ if and (eq (output "cat" "/sys/devices/virtual/dmi/id/sys_vendor" | trim) "Dell Inc.") (eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680") -}}
 # Hardware
 # See https://wiki.ubuntu.com/IntelMIPICamera.
-ppa "oem-solutions-group/intel-ipu6"
+package "oem-somerville-muk-meta"
 packagelist "linux-modules-ipu6-oem-{{ .chezmoi.osRelease.versionID }}"
 packagelist "gstreamer1.0-icamera" "v4l-utils" "v4l2-relayd" "v4l2loopback-dkms"
 
