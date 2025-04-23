@@ -1,20 +1,22 @@
 Include conf.d/*.conf
 
-Host *
+Match final Host *
   AddKeysToAgent yes
   Compression yes
-  ConnectTimeout 10
   ExitOnForwardFailure yes
   ForwardAgent no
   ForwardX11 no
-  GSSAPIAuthentication no
-  HashKnownHosts no
-  IdentityFile ~/.ssh/keys/%h.key
-  PasswordAuthentication yes
-  PubkeyAuthentication yes
+  IdentitiesOnly yes
+  #IdentityFile ~/.ssh/keys/%h.key
+  PasswordAuthentication no
   ServerAliveCountMax 8
   ServerAliveInterval 15
   TCPKeepAlive yes
+
+# Overwrite Debian defaults
+Host *
+  GSSAPIAuthentication no
+  HashKnownHosts no
 
 Host github.com
   IdentityFile ~/.ssh/keys/github.key
