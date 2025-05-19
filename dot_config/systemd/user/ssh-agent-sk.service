@@ -1,0 +1,10 @@
+[Unit]
+Description=Security Key SSH Agent
+
+[Service]
+Type=simple
+Environment=SSH_AUTH_SOCK=%t/ssh-agent-sk.sock
+ExecStart=ssh-agent -D -a $SSH_AUTH_SOCK
+
+[Install]
+WantedBy=default.target
