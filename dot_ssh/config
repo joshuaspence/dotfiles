@@ -1,12 +1,12 @@
 Include conf.d/*.conf
 
-Match final Host *
+Match Host *
   AddKeysToAgent yes
   Compression yes
   ExitOnForwardFailure yes
   ForwardAgent no
   ForwardX11 no
-  IdentitiesOnly yes
+  #IdentitiesOnly yes
   #IdentityFile ~/.ssh/keys/%h.key
   PasswordAuthentication no
   ServerAliveCountMax 8
