@@ -6,6 +6,6 @@ set -o pipefail
 
 export NIX_INSTALLER_EXTRA_CONF='trusted-users = {{ .chezmoi.username }}'
 export NIX_INSTALLER_NIX_PACKAGE_URL=https://releases.nixos.org/nix/nix-2.18.9/nix-2.18.9-x86_64-linux.tar.xz
-export NIX_INSTALLER_NO_CONFIRM=1
+export NIX_INSTALLER_NO_CONFIRM=true
 
 {{ .chezmoi.homeDir }}/.local/bin/nix-installer install linux
