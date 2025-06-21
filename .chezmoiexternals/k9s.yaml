@@ -1,0 +1,6 @@
+---
+.local/bin/k9s:
+  type: 'archive-file'
+  executable: true
+  path: 'k9s'
+  url: '{{ gitHubLatestReleaseAssetURL "derailed/k9s" (printf "k9s_%s_%s.tar.gz" (.chezmoi.os | title) .chezmoi.arch) }}'
