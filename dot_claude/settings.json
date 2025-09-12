@@ -16,7 +16,9 @@
     "OTEL_RESOURCE_ATTRIBUTES": "user_name=jspence"
   },
   "permissions": {
-    "allow": [],
+    "allow": [
+      "Read(~/workspace)"
+    ],
     "ask": [],
     "deny": [
       "Read(/.env)"
