@@ -1,0 +1,7 @@
+---
+{{ $bucket := "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases" -}}
+{{ $version := output "curl" (printf "%s/stable" $bucket) -}}
+.local/bin/claude:
+  type: 'file'
+  executable: true
+  url: '{{ printf "%s/%s/%s-%s/claude" $bucket $version .chezmoi.os (.chezmoi.arch | replace "amd64" "x64") }}'

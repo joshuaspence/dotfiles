@@ -1,0 +1,25 @@
+{
+  "awsAuthRefresh": "aws sso login --sso-session anduril-govcom",
+  "env": {
+    "ANTHROPIC_MODEL": "us.anthropic.claude-opus-4-1-20250805-v1:0",
+    "ANTHROPIC_SMALL_FAST_MODEL": "us.anthropic.claude-sonnet-4-20250514-v1:0",
+    "AWS_PROFILE": "anduril-aus-dev-tools-artifical-intelligence-govcom",
+    "AWS_REGION": "us-east-2",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "CLAUDE_CODE_USE_BEDROCK": "1",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://armory.anduril.dev",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORT_INTERVAL": "5000",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_METRIC_EXPORT_INTERVAL": "10000",
+    "OTEL_RESOURCE_ATTRIBUTES": "user_name=jspence"
+  },
+  "permissions": {
+    "allow": [],
+    "ask": [],
+    "deny": [
+      "Read(/.env)"
+    ]
+  }
+}
