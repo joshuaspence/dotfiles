@@ -5,15 +5,13 @@
     "ANTHROPIC_SMALL_FAST_MODEL": "us.anthropic.claude-sonnet-4-20250514-v1:0",
     "AWS_PROFILE": "anduril-aus-dev-tools-artifical-intelligence-govcom",
     "AWS_REGION": "us-east-2",
-    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "4096",
     "CLAUDE_CODE_USE_BEDROCK": "1",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://armory.anduril.dev",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
-    "OTEL_LOGS_EXPORTER": "otlp",
-    "OTEL_LOGS_EXPORT_INTERVAL": "5000",
-    "OTEL_METRICS_EXPORTER": "otlp",
-    "OTEL_METRIC_EXPORT_INTERVAL": "10000",
-    "OTEL_RESOURCE_ATTRIBUTES": "user_name=jspence"
+    "DISABLE_AUTOUPDATER": "1",
+    "DISABLE_BUG_COMMAND": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_TELEMETRY": "1",
+    "MAX_THINKING_TOKENS": "1024"
   },
   "permissions": {
     "allow": [
@@ -23,5 +21,6 @@
     "deny": [
       "Read(/.env)"
     ]
-  }
+  },
+  "statusLine": {}
 }
