@@ -22,6 +22,5 @@
       "Read(/.env)",
       "Read(/.env.*)"
     ]
-  },
-  "statusLine": {}
+  }
 }
