@@ -20,6 +20,7 @@ apt_repository "jfrog" "https://releases.jfrog.io/artifactory/jfrog-debs" "focal
 {{- end }}
 apt_repository "kubernetes" "https://pkgs.k8s.io/core:/stable:/v1.32/deb/" "/" "" "https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key"
 apt_repository "speedtest" "https://packagecloud.io/ookla/speedtest-cli/ubuntu" "jammy main" "" "https://packagecloud.io/ookla/speedtest-cli/gpgkey"
+apt_repository "task" "https://dl.cloudsmith.io/public/task/task/deb/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "" "https://dl.cloudsmith.io/public/task/task/gpg.046FD1186CA342F0.key"
 {{ if .work -}}
 apt_repository "teleport" "https://apt.releases.teleport.dev/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable/v14" "" "https://apt.releases.teleport.dev/gpg"
 {{- end }}
@@ -43,6 +44,7 @@ packagelist "packer" "terraform"
 {{ if .personal -}}
 package "rpi-imager"
 {{ end -}}
+package "task"
 package "tmux"
 package "vim"
 package "xclip"
