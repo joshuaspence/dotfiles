@@ -11,5 +11,8 @@ pipx
 pre-commit
 yamllint
 
+# Workaround for https://github.com/jazzband/pip-tools/issues/2252.
+pip < 25.3
+
 # Needed by `gnome-extensions-cli`.
 pygobject
