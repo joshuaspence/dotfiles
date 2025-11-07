@@ -10,10 +10,10 @@ apt_repository "cloudflare" "https://pkg.cloudflareclient.com" "{{ .chezmoi.osRe
 {{ end -}}
 apt_repository "docker" "https://download.docker.com/linux/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} stable" "{{ .chezmoi.arch }}" "https://download.docker.com/linux/ubuntu/gpg"
 {{ if .personal -}}
-apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename | replace "oracular" "noble" }} main" "" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
+apt_repository "dropbox" "https://linux.dropbox.com/ubuntu" "{{ .chezmoi.osRelease.ubuntuCodename }} main" "" "https://linux.dropbox.com/fedora/rpm-public-key.asc"
 {{ end -}}
 apt_repository "github_cli" "https://cli.github.com/packages" "stable main" "" "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
-apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename | replace "oracular" "noble" }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
+apt_repository "hashicorp" "https://apt.releases.hashicorp.com" "{{ .chezmoi.osRelease.ubuntuCodename | replace "questing" "plucky" }} main" "{{ .chezmoi.arch }}" "https://apt.releases.hashicorp.com/gpg"
 apt_repository "helm" "https://packages.buildkite.com/helm-linux/helm-debian/any/" "any main" "" "https://packages.buildkite.com/helm-linux/helm-debian/gpgkey"
 {{ if .work -}}
 apt_repository "jfrog" "https://releases.jfrog.io/artifactory/jfrog-debs" "focal contrib" "" "https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key"
