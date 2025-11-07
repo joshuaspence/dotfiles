@@ -11,6 +11,8 @@ set -o pipefail
     "nightthemeswitcher@romainvigier.fr"
 -}}
 
+{{ if not (env "CI") -}}
 {{- range $extensions }}
 gnome-extensions-cli install {{ . }}
+{{- end }}
 {{- end }}
