@@ -6,5 +6,6 @@ set -o pipefail
 
 export NIX_INSTALLER_EXTRA_CONF='trusted-users = {{ .chezmoi.username }}'
 export NIX_INSTALLER_NO_CONFIRM=true
+export NIX_INSTALLER_PREFER_UPSTREAM_NIX=true
 
 {{ .chezmoi.homeDir }}/.local/bin/nix-installer install linux
