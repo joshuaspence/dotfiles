@@ -119,7 +119,10 @@ helper = !/usr/bin/gh auth git-credential
 
 [user]
 name = Josh Spence
-email = jspence@anduril.com
+email = josh@spence.com.au
+
+[includeIf "hasconfig:remote.*.url:git@ghe.anduril.*/**/**"]
+path = ~/.config/git/work.config
 
 [url "ssh://git@ghe.anduril.au/"]
 insteadOf = https://ghe.anduril.au/
