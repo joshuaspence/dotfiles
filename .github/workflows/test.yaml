@@ -38,7 +38,7 @@ jobs:
           apt-get install --yes curl git gpg software-properties-common sudo wget
 
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@v6'
       - name: 'Setup Chezmoi'
         uses: './.github/actions/chezmoi'
 
