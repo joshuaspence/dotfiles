@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@v6'
       - name: 'Setup Chezmoi'
         uses: './.github/actions/chezmoi'
 
@@ -47,7 +47,7 @@ jobs:
       files: '${{ steps.shellcheck.outputs.files }}'
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@v6'
       - name: 'Download rendered templates'
         uses: 'actions/download-artifact@v4.2.1'
         with:
@@ -65,7 +65,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@v6'
       - name: 'Download rendered templates'
         uses: 'actions/download-artifact@v4.2.1'
         with:
@@ -80,6 +80,6 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@v6'
       - name: 'Run yamllint'
         uses: 'ibiqlik/action-yamllint@v3.1.1'
