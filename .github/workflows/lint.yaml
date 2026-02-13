@@ -72,7 +72,7 @@ jobs:
           path: '.home'
 
       - name: 'Setup shfmt'
-        uses: 'mfinelli/setup-shfmt@v3.0.2'
+        uses: 'mfinelli/setup-shfmt@v4.0.1'
       - name: 'Run shfmt'
         run: 'shfmt --diff --indent=2 ${{ needs.shellcheck.outputs.files }}'
 
