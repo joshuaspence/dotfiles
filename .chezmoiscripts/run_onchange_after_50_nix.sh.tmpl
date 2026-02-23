@@ -4,7 +4,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NIX_INSTALLER_EXTRA_CONF='trusted-users = {{ .chezmoi.username }}'
-export NIX_INSTALLER_NO_CONFIRM=true
-
-{{ .chezmoi.homeDir }}/.local/bin/nix-installer install linux
+{{ if eq (lookPath "determinate-nixd") "" -}}
+curl --fail --location --silent --show-error https://install.determinate.systems/nix | sh -s -- install \
+  --no-confirm \
+  --extra-conf 'trusted-users = {{ .chezmoi.username }}'
+{{ else -}}
+determinate-nixd upgrade --version {{ (gitHubLatestRelease "DeterminateSystems/nix-src").Name | trimPrefix "v" }}
+{{ end -}}
