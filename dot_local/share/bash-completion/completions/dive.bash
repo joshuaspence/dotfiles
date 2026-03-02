@@ -1,0 +1,1 @@
+source <(dive completion bash)

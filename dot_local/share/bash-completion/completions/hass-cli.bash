@@ -1,0 +1,1 @@
+source <(_HASS_CLI_COMPLETE=bash_source hass-cli completion)

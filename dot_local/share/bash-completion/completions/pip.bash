@@ -1,0 +1,1 @@
+source <(pip completion --bash)

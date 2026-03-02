@@ -1,0 +1,1 @@
+source <(circleci completion bash)
