@@ -1,0 +1,6 @@
+---
+.local/bin/bkt:
+  type: 'archive-file'
+  executable: true
+  path: 'bkt'
+  url: '{{ gitHubLatestReleaseAssetURL "dimo414/bkt" (printf "bkt.v%s.%s-unknown-%s-gnu.zip" ((gitHubLatestRelease "dimo414/bkt").TagName | toString) (.chezmoi.arch | replace "amd64" "x86_64") .chezmoi.os) }}'
