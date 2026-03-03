@@ -24,12 +24,18 @@
 !/.local/share/applications
 !/.local/share/bash-completion
 !/.local/share/bash-completion/completions
+{{ if not .personal -}}
+/.local/share/bash-completion/completions/hass-cli.bash
+{{ end -}}
 {{ if not .work -}}
-/.local/share/bash-completion/completions/1password.bash
+/.local/share/bash-completion/completions/1password-cli.bash
 /.local/share/bash-completion/completions/appctl.bash
-/.local/share/bash-completion/completions/circleci.bash
+/.local/share/bash-completion/completions/jira.bash
 /.local/share/bash-completion/completions/latticectl.bash
+/.local/share/bash-completion/completions/op.bash
 /.local/share/bash-completion/completions/sieclient.bash
+/.local/share/bash-completion/completions/teleport.bash
+/.local/share/bash-completion/completions/tsh.bash
 {{ end -}}
 /shell/
 /.ssh/known_hosts{,.old}
