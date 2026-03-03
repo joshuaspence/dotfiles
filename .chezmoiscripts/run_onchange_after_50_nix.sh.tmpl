@@ -9,5 +9,5 @@ curl --fail --location --silent --show-error https://install.determinate.systems
   --no-confirm \
   --extra-conf 'trusted-users = {{ .chezmoi.username }}'
 {{ else -}}
-determinate-nixd upgrade --version {{ (gitHubLatestRelease "DeterminateSystems/nix-src").Name | trimPrefix "v" }}
+determinate-nixd upgrade --version {{ (gitHubLatestRelease "DeterminateSystems/nix-src").Name }}
 {{ end -}}
