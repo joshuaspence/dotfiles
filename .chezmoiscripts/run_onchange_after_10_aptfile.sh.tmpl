@@ -30,6 +30,7 @@ apt_repository "zoom" "https://mirror.mwt.me/zoom/deb" "any main" "amd64" "https
 {{- end }}
 
 # Development
+packagelist "autoconf" "build-essential" "libtool" "pkg-config"
 package "code"
 packagelist "docker-ce" "docker-ce-cli" "golang-docker-credential-helpers"
 package "gh"
