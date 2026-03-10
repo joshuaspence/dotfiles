@@ -2,19 +2,17 @@
 statusHints = false
 
 [alias]
-aliases = !git config --get-regexp '^alias\\.' | colrm 1 6 | sed 's/[ ]/ = /'
-amend = commit --amend --no-edit
+aliases = "!git config --get-regexp '^alias\\.' | sed 's/^alias\\.//; s/ / = /' | sort"
+amend = commit --no-edit --amend
 branches = branch --all
-commit-all = !git add --all && git commit --all
+cleanup = !git remote prune origin && git gc --aggressive --auto
+empty-blob = hash-object -t blob /dev/null
 empty-tree = hash-object -t tree /dev/null
-pretty-log = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+initial-commit = rev-list --max-parents=0 HEAD
 remotes = remote --verbose
 reword = commit --amend
 root = rev-parse --show-toplevel
-squash = rebase --interactive --autosquash
 tags = tag --list
-unfuck = !git fsck && git remote prune origin && git gc --aggressive --auto
-unstage = reset HEAD
 untrack = rm --cache
 
 # List the files that have changed.
@@ -51,14 +49,16 @@ untracked = cyan
 
 [core]
 autocrlf = input
-editor = vim
 untrackedCache = true
 
+[credential "https://github.com"]
+helper =
+helper = !gh auth git-credential
+
 [diff]
-algorithm = patience
+algorithm = histogram
 noprefix = true
 renames = copy
-tool = meld
 
 [fetch]
 prune = true
@@ -79,12 +79,13 @@ autoCorrect = 10
 [log]
 date = local
 follow = true
-mailmap = true
 
 [merge]
-tool = meld
+guitool = meld
+tool = vimdiff
 
 [mergetool]
+guiDefault = auto
 keepBackup = false
 
 [pager]
@@ -110,22 +111,18 @@ showUntrackedFiles = all
 [url "git@github.com:"]
 insteadOf = github:
 
-[url "git@bitbucket.org:"]
-insteadOf = https://bitbucket.org/
-
-[credential "https://github.com"]
-helper =
-helper = !/usr/bin/gh auth git-credential
-
-[user]
-name = Josh Spence
-email = josh@spence.com.au
-
-[includeIf "hasconfig:remote.*.url:git@ghe.anduril.*/**/**"]
-path = ~/.config/git/work.config
-
 [url "ssh://git@ghe.anduril.au/"]
 insteadOf = https://ghe.anduril.au/
 
 [url "ssh://git@ghe.anduril.dev/"]
 insteadOf = https://ghe.anduril.dev/
+
+[user]
+name = Josh Spence
+email = josh@spence.com.au
+
+[includeIf "gitdir:~/workspace/ghe.anduril.*/"]
+path = work.config
+
+[includeIf "hasconfig:remote.*.url:git@ghe.anduril.*/**"]
+path = work.config
