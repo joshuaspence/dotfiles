@@ -77,6 +77,9 @@ pretty = fuller
 [help]
 autoCorrect = 10
 
+[init]
+defaultBranch = master
+
 [log]
 date = local
 follow = true
