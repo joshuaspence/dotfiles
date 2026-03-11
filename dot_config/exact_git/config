@@ -38,6 +38,9 @@ ignoreRevsFile = .git-blame-ignore-revs
 [branch]
 autoSetupRebase = always
 
+[checkout]
+workers = 0
+
 [clean]
 requireForce = false
 
