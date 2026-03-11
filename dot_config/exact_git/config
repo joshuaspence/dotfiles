@@ -32,6 +32,7 @@ workspace = "!find ~/workspace -type d -exec sh -c 'git -C {} rev-parse --git-di
 whitespace = fix
 
 [blame]
+coloring = highlightRecent
 date = human
 ignoreRevsFile = .git-blame-ignore-revs
 
