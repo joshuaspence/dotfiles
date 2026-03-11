@@ -48,6 +48,9 @@ requireForce = false
 [clone]
 filterSubmodules = true
 
+[color "blame"]
+highlightRecent = #ffff00,1 year ago,#ffcc00,3 month ago,#ff9900,1 month ago,#ff6600,1 week ago,#ff3300,1 day ago,#ff0000
+
 [color "diff"]
 meta = yellow bold
 
@@ -71,6 +74,8 @@ helper = !gh auth git-credential
 algorithm = histogram
 noprefix = true
 renames = copy
+submodule = diff
+suppressBlankEmpty = true
 
 [fetch]
 prune = true
