@@ -108,6 +108,9 @@ enabled = true
 showStash = true
 showUntrackedFiles = all
 
+[tag]
+sort = v:refname
+
 [url "git@github.com:"]
 insteadOf = github:
 
