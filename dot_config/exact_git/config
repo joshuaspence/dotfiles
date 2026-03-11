@@ -31,6 +31,10 @@ workspace = "!find ~/workspace -type d -exec sh -c 'git -C {} rev-parse --git-di
 [apply]
 whitespace = fix
 
+[blame]
+date = human
+ignoreRevsFile = .git-blame-ignore-revs
+
 [branch]
 autoSetupRebase = always
 
