@@ -67,7 +67,7 @@ commentChar = auto
 untrackedCache = true
 
 [credential]
-helper = cache
+helper = cache --timeout=3600
 
 [credential "https://github.com"]
 helper =
