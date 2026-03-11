@@ -49,6 +49,7 @@ untracked = cyan
 
 [core]
 autocrlf = input
+commentChar = auto
 untrackedCache = true
 
 [credential "https://github.com"]
