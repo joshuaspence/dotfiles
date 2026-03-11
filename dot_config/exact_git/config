@@ -72,12 +72,17 @@ helper = !gh auth git-credential
 
 [diff]
 algorithm = histogram
+colorMoved = default
 noprefix = true
 renames = copy
 submodule = diff
 suppressBlankEmpty = true
 
+[difftool]
+guiDefault = auto
+
 [fetch]
+parallel = 0
 prune = true
 pruneTags = true
 
@@ -89,6 +94,9 @@ smudge = git-lfs smudge -- %f
 
 [format]
 pretty = fuller
+
+[grep]
+lineNumber = true
 
 [help]
 autoCorrect = 10
@@ -106,6 +114,7 @@ tool = vimdiff
 
 [mergetool]
 guiDefault = auto
+hideResolved = true
 keepBackup = false
 
 [pager]
@@ -115,6 +124,7 @@ branch = false
 rebase = true
 
 [push]
+autoSetupRemote = true
 default = upstream
 
 [rebase]
@@ -127,6 +137,9 @@ enabled = true
 [status]
 showStash = true
 showUntrackedFiles = all
+
+[submodule]
+fetchJobs = 0
 
 [tag]
 sort = v:refname
@@ -141,8 +154,9 @@ insteadOf = https://ghe.anduril.au/
 insteadOf = https://ghe.anduril.dev/
 
 [user]
-name = Josh Spence
 email = josh@spence.com.au
+name = Josh Spence
+useConfigOnly = true
 
 [includeIf "gitdir:~/workspace/ghe.anduril.*/"]
 path = work.config
