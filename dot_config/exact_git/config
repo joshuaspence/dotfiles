@@ -13,7 +13,7 @@ remotes = remote --verbose
 reword = commit --amend
 root = rev-parse --show-toplevel
 tags = tag --list
-untrack = rm --cache
+untrack = rm --cached
 
 # List the files that have changed.
 changed = diff --name-only
@@ -142,7 +142,7 @@ showUntrackedFiles = all
 fetchJobs = 0
 
 [tag]
-sort = v:refname
+sort = version:refname
 
 [url "git@github.com:"]
 insteadOf = github:
