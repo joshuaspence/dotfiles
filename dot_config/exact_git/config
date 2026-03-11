@@ -44,6 +44,9 @@ workers = 0
 [clean]
 requireForce = false
 
+[clone]
+filterSubmodules = true
+
 [color "diff"]
 meta = yellow bold
 
