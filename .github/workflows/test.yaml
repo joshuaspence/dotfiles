@@ -29,7 +29,6 @@ jobs:
         ubuntu_version:
           - '24.04'
           - 'latest'
-          - 'rolling'
 
     steps:
       - name: 'Install dependencies'
