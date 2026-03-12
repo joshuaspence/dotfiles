@@ -10,6 +10,7 @@ HISTIGNORE='[bf]g:cd *:clear:exit:history:ls:pwd'
 # See https://unix.stackexchange.com/a/48113.
 PROMPT_COMMAND='history -a'
 
-shopt -s cmdhist
 shopt -s histappend
+shopt -s histreedit
+shopt -s histverify
 shopt -s lithist
