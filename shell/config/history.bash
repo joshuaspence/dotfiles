@@ -1,8 +1,8 @@
 HISTCONTROL='ignoreboth'
 HISTFILE="${XDG_DATA_HOME:-${HOME}/.local/share}/bash/history"
-HISTFILESIZE=1048576
+HISTFILESIZE=
 HISTIGNORE='[bf]g:cd *:clear:exit:history:ls:pwd'
-HISTSIZE=1048576
+HISTSIZE=
 
 # Whenever displaying the prompt, write the previous line to disk.
 # See https://unix.stackexchange.com/a/48113.
