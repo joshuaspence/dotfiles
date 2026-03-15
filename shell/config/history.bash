@@ -1,5 +1,5 @@
 HISTCONTROL='ignoreboth'
-HISTFILE="${XDG_DATA_HOME:-${HOME}/.local/share}/bash/history"
+HISTFILE="${XDG_STATE_HOME:-${HOME}/.local/state}/bash/history"
 HISTFILESIZE=
 HISTIGNORE='[bf]g:cd *:clear:exit:history:ls:pwd'
 HISTSIZE=
