@@ -21,7 +21,7 @@ function upgrade-snap() {
 }
 
 function upgrade-virtualenv() {
-  pip-compile --upgrade --output-file ~/.venv/requirements.txt --config ~/.config/pip-tools.toml ~/.venv/requirements.in
+  pip-compile --upgrade --config ~/.config/pip-tools.toml ~/.venv/requirements.in
   pip-sync --config ~/.config/pip-tools.toml ~/.venv/requirements.txt
 }
 
