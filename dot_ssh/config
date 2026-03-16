@@ -1,5 +1,9 @@
 Include conf.d/*.conf
 
+Match tagged ephemeral
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
 Match Host *
   AddKeysToAgent yes
   Compression yes
