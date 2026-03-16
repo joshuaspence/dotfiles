@@ -1,0 +1,16 @@
+_lp_custom_theme_activate() {
+  _lp_default_theme_activate
+}
+
+_lp_custom_theme_directory() {
+  _lp_default_theme_directory
+
+  # Hide the perm separator when there's no `user@host` prefix.
+  if [[ -z "${LP_USER}${LP_HOST}" ]]; then
+    unset LP_PERM
+  fi
+}
+
+_lp_custom_theme_prompt() {
+  _lp_default_theme_prompt
+}
