@@ -1,0 +1,12 @@
+_lp_minimal_theme_activate() {
+  _lp_default_theme_activate
+}
+
+_lp_minimal_theme_directory() {
+  _lp_default_theme_directory
+}
+
+function _lp_minimal_theme_prompt() {
+  _lp_default_theme_prompt_data
+  PS1="${LP_PS1_PREFIX:+\n}${LP_PS1_PREFIX}${LP_MARK_PREFIX}\$ ${LP_PS1_POSTFIX}"
+}
