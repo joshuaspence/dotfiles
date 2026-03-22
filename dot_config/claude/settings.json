@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "autoUpdatesChannel": "stable",
+  "awsAuthRefresh": "aws sso login --sso-session anduril-govcom",
+  "env": {
+    "AWS_PROFILE": "claude",
+    "AWS_REGION": "ap-southeast-2",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": true,
+    "CLAUDE_CODE_NEW_INIT": true,
+    "CLAUDE_CODE_USE_BEDROCK": true
+  },
+  "extraKnownMarketplaces": {
+    "anduril": {
+      "source": {
+        "source": "git",
+        "url": "https://ghe.anduril.dev/anduril/claude-clams.git"
+      }
+    }
+  },
+  "model": "opus",
+  "permissions": {
+    "allow": [
+      "Read(~/workspace)"
+    ],
+    "ask": [],
+    "deny": [
+      "Read(/.env)",
+      "Read(/.env.*)"
+    ],
+    "disableBypassPermissionsMode": "disable"
+  },
+  "sandbox": {
+    "enabled": true,
+    "excludedCommands": [],
+    "network": {
+      "allowUnixSockets": [
+        "/run/docker.sock",
+        "/run/user/1000/keyring/ssh"
+      ],
+      "allowedDomains": [
+        "api.github.com",
+        "docs.aws.amazon.com",
+        "docs.kernel.org",
+        "github.com",
+        "raw.githubusercontent.com",
+        "*.readthedocs.io",
+        "serverfault.com",
+        "stackoverflow.com",
+        "superuser.com"
+      ]
+    }
+  },
+  "skipWebFetchPreflight": true
+}
