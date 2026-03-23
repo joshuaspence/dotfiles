@@ -1,6 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "autoUpdatesChannel": "stable",
   "awsAuthRefresh": "aws sso login --sso-session anduril-govcom",
   "env": {
     "AWS_PROFILE": "claude",
@@ -9,6 +8,19 @@
     "CLAUDE_CODE_NEW_INIT": true,
     "CLAUDE_CODE_USE_BEDROCK": true
   },
+  "permissions": {
+    "allow": [
+      "Read(~/workspace)"
+    ],
+    "deny": [
+      "Read(/.env)",
+      "Read(/.env.*)"
+    ],
+    "ask": [],
+    "disableBypassPermissionsMode": "disable"
+  },
+  "model": "opus",
+{{- if .work }}
   "extraKnownMarketplaces": {
     "anduril": {
       "source": {
@@ -17,26 +29,11 @@
       }
     }
   },
-  "model": "opus",
-  "permissions": {
-    "allow": [
-      "Read(~/workspace)"
-    ],
-    "ask": [],
-    "deny": [
-      "Read(/.env)",
-      "Read(/.env.*)"
-    ],
-    "disableBypassPermissionsMode": "disable"
-  },
+  "skipWebFetchPreflight": true,
+{{- end }}
   "sandbox": {
     "enabled": true,
-    "excludedCommands": [],
     "network": {
-      "allowUnixSockets": [
-        "/run/docker.sock",
-        "/run/user/1000/keyring/ssh"
-      ],
       "allowedDomains": [
         "api.github.com",
         "docs.aws.amazon.com",
@@ -47,8 +44,13 @@
         "serverfault.com",
         "stackoverflow.com",
         "superuser.com"
+      ],
+      "allowUnixSockets": [
+        "/run/docker.sock",
+        "/run/user/1000/keyring/ssh"
       ]
-    }
+    },
+    "excludedCommands": []
   },
-  "skipWebFetchPreflight": true
+  "autoUpdatesChannel": "stable"
 }
