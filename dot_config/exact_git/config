@@ -34,7 +34,6 @@ whitespace = fix
 [blame]
 coloring = highlightRecent
 date = human
-ignoreRevsFile = .git-blame-ignore-revs
 
 [branch]
 autoSetupRebase = always
