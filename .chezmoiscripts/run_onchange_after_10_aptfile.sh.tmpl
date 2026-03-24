@@ -50,17 +50,22 @@ package "tmux"
 package "vim"
 package "xclip"
 
-# Hardware / Kernel
-{{ if le .chezmoi.osRelease.versionID "24.04" -}}
-package "linux-generic-hwe-{{ .chezmoi.osRelease.versionID }}"
-{{ end -}}
-{{ if and (eq (output "cat" "/sys/devices/virtual/dmi/id/sys_vendor" | trim) "Dell Inc.") (eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680") -}}
 # Hardware
-# See https://wiki.ubuntu.com/IntelMIPICamera.
+{{ if eq (output "cat" "/sys/devices/virtual/dmi/id/sys_vendor" | trim) "Dell Inc." -}}
+# OEM metapackages
+# See https://people.canonical.com/~oem-enablement/oem-meta-packages/datatables.html.
+{{ if eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680" -}}
 package "oem-somerville-muk-meta"
+
+{{ end -}}
+
+{{ if eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680" -}}
+# Fixes for IPU6 cameras. See https://wiki.ubuntu.com/IntelMIPICamera
+# and https://www.mathiashove.com/blog/2026/getting-ipu6-camera-working-on-ubuntu.
 packagelist "linux-modules-ipu6-oem-{{ .chezmoi.osRelease.versionID }}"
 packagelist "gstreamer1.0-icamera" "v4l-utils" "v4l2-relayd" "v4l2loopback-dkms"
 
+{{ end -}}
 {{ end -}}
 
 # Miscellaneous

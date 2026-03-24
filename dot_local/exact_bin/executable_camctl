@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# A temporary fix for IPU6 cameras not working. See https://www.mathiashove.com/blog/2026/getting-ipu6-camera-working-on-ubuntu.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+case "${1:-}" in
+  off)
+    sudo systemctl stop ipu6-camera.service
+    ;;
+
+  on)
+    sudo systemctl start ipu6-camera.service
+    ;;
+
+  *)
+    echo "Unrecognized command: ${1:-}" >&2
+    exit 1
+    ;;
+esac
