@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2155
 
 set -o errexit
 set -o nounset
@@ -17,9 +18,9 @@ readonly RED='\033[31m'
 readonly RESET='\033[0m'
 
 # Pick bar color based on context usage.
-if [[ $USED_PERCENTAGE -ge 90 ]]; then
+if [[ ${USED_PERCENTAGE} -ge 90 ]]; then
   BAR_COLOUR="${RED}"
-elif [[ $USED_PERCENTAGE -ge 70 ]]; then
+elif [[ ${USED_PERCENTAGE} -ge 70 ]]; then
   BAR_COLOUR="${YELLOW}"
 else
   BAR_COLOUR="${GREEN}"
