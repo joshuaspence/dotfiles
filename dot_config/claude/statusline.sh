@@ -26,7 +26,7 @@ else
   BAR_COLOUR="${GREEN}"
 fi
 
-readonly FILLED=$((USED_PERCENTAGE/ 10))
+readonly FILLED=$((USED_PERCENTAGE / 10))
 readonly EMPTY=$((10 - FILLED))
 printf -v FILL "%${FILLED}s"
 printf -v PAD "%${EMPTY}s"

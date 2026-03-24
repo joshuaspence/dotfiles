@@ -1,5 +1,5 @@
 function b64diff() {
-  if (( $# != 2 )); then
+  if (($# != 2)); then
     echo 'Usage: b64diff <base64_data> <base64_data>' >&2
     return 1
   fi
