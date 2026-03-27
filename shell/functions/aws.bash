@@ -6,7 +6,7 @@ function aws-sso-refresh-credentials() {
     SSO_SESSION_ID=$(echo -n "${SSO_SESSION}" | sha1sum | cut --delimiter=' ' --fields=1)
 
     if (($(date --date "$(jq --raw-output .expiresAt "${AWS_SSO_CACHE_DIR}/${SSO_SESSION_ID}.json" 2>/dev/null)" +%s) > $(date +%s))); then
-      # SSO credentials are still valid, refresh is not unnecessary.
+      # SSO credentials are still valid, refresh is not necessary.
       continue
     fi
 

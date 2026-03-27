@@ -4,5 +4,5 @@ function resize-pdf() {
     return 1
   fi
 
-  gs -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOutputFile="$2" "$1"
+  gs -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOutputFile="$2" "$1"
 }

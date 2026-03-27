@@ -19,7 +19,7 @@ export KUBECACHEDIR="${XDG_CACHE_HOME}/kube"
 export KUBECONFIG="${XDG_CONFIG_HOME}/kube/config"
 
 # `less` gains full support for XDG base directories in version 600 (see gwsw/less#153).
-if test "$(less --version | head -n1 | cut -d' ' -f2)" -le 600; then
+if test "$(less --version | head -n1 | cut -d' ' -f2)" -lt 600; then
   export LESSKEYIN="${XDG_CONFIG_HOME}/lesskey"
   export LESSHISTFILE="${XDG_STATE_HOME}/lesshst"
 fi
