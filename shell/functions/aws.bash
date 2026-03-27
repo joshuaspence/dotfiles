@@ -10,6 +10,7 @@ function aws-sso-refresh-credentials() {
       continue
     fi
 
+    echo "Refreshing credentials for SSO session: ${SSO_SESSION}"
     aws sso login --sso-session "${SSO_SESSION}"
   done
 }
