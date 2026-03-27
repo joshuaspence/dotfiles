@@ -1,8 +1,8 @@
 # shellcheck disable=SC2034
-GIT_COMPLETION_SHOW_ALL=1
-
-# shellcheck disable=SC2034
-GIT_COMPLETION_SHOW_ALL_COMMANDS=1
+{
+  GIT_COMPLETION_SHOW_ALL=1
+  GIT_COMPLETION_SHOW_ALL_COMMANDS=1
+}
 
 # Load completions provided by the `bash-completion` package.
 if test -f /usr/share/bash-completion/bash_completion; then
