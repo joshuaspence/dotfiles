@@ -8,10 +8,12 @@ set -o pipefail
 
 case "${1:-}" in
   off)
+  stop)
     sudo systemctl stop ipu6-camera.service
     ;;
 
   on)
+  start)
     sudo systemctl start ipu6-camera.service
     ;;
 
