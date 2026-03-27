@@ -1,0 +1,25 @@
+---
+# {{ $arch := .chezmoi.arch | replace "amd64" "x86_64" }}
+.local/bin/kubectx:
+  type: 'archive-file'
+  executable: true
+  path: 'kubectx'
+  url: '{{ gitHubLatestReleaseAssetURL "ahmetb/kubectx" (printf "kubectx_*_%s_%s.tar.gz" .chezmoi.os $arch) }}'
+
+.local/bin/kubens:
+  type: 'archive-file'
+  executable: true
+  path: 'kubens'
+  url: '{{ gitHubLatestReleaseAssetURL "ahmetb/kubectx" (printf "kubens_*_%s_%s.tar.gz" .chezmoi.os $arch) }}'
+
+.local/share/bash-completion/completions/kubectx:
+  type: 'archive-file'
+  path: 'completion/kubectx.bash'
+  stripComponents: 1
+  url: '{{ (gitHubLatestRelease "ahmetb/kubectx").TarballURL }}'
+
+.local/share/bash-completion/completions/kubens:
+  type: 'archive-file'
+  path: 'completion/kubens.bash'
+  stripComponents: 1
+  url: '{{ (gitHubLatestRelease "ahmetb/kubectx").TarballURL }}'
