@@ -1,0 +1,5 @@
+---
+.local/share/complete-alias:
+  type: 'git-repo'
+  refreshPeriod: '168h'
+  url: 'https://github.com/cykerway/complete-alias.git'

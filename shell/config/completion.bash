@@ -4,6 +4,8 @@
   GIT_COMPLETION_SHOW_ALL_COMMANDS=1
 }
 
+source ~/.local/share/complete-alias/complete_alias
+
 # Load completions provided by the `bash-completion` package.
 if test -f /usr/share/bash-completion/bash_completion; then
   source /usr/share/bash-completion/bash_completion
