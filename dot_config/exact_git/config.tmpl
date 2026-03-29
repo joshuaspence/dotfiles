@@ -6,6 +6,7 @@ aliases = "!git config --get-regexp '^alias\\.' | sed 's/^alias\\.//; s/ / = /' 
 amend = commit --no-edit --amend
 branches = branch --all
 cleanup = !git remote prune origin && git gc --aggressive --auto
+co = checkout
 empty-blob = hash-object -t blob /dev/null
 empty-tree = hash-object -t tree /dev/null
 initial-commit = rev-list --max-parents=0 HEAD
@@ -149,19 +150,25 @@ sort = version:refname
 [url "git@github.com:"]
 insteadOf = github:
 
+{{ if .work -}}
 [url "ssh://git@ghe.anduril.au/"]
 insteadOf = https://ghe.anduril.au/
 
 [url "ssh://git@ghe.anduril.dev/"]
 insteadOf = https://ghe.anduril.dev/
 
+{{ end -}}
+
 [user]
 email = josh@spence.com.au
 name = Josh Spence
 useConfigOnly = true
+
+{{- if .work }}
 
 [includeIf "gitdir:~/workspace/ghe.anduril.*/"]
 path = work.config
 
 [includeIf "hasconfig:remote.*.url:git@ghe.anduril.*/**"]
 path = work.config
+{{- end }}
