@@ -1,0 +1,5 @@
+---
+.local/bin/terragrunt:
+  type: 'file'
+  executable: true
+  url: '{{ gitHubLatestReleaseAssetURL "gruntwork-io/terragrunt" (printf "terragrunt_%s_%s" .chezmoi.os .chezmoi.arch) }}'
