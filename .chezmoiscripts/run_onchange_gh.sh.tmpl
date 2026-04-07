@@ -4,17 +4,20 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-{{
+{{-
   $extensions := list
 -}}
-{{ if .work -}}
-{{
+
+{{- if .work -}}
+{{-
   $extensions = concat $extensions (list
     "github.com/github/gh-es"
   )
 -}}
+{{- end -}}
 
-{{ range $extensions -}}
+{{- if $extensions }}
+{{ range $extensions }}
 gh extension install {{ . }}
 {{ end -}}
 {{ end -}}
