@@ -6,19 +6,21 @@ set -o pipefail
 
 {{
   $extensions := list
+    "anthropic.claude-code"
     "golang.go"
     "HashiCorp.HCL"
     "hashicorp.terraform"
+    "meezilla.json"
+    "mrmlnc.vscode-json5"
+    "ms-azuretools.vscode-containers"
     "ms-azuretools.vscode-docker"
     "ms-python.python"
     "ms-vscode-remote.remote-containers"
     "ms-vscode-remote.remote-ssh"
     "ms-vscode-remote.remote-ssh-edit"
-    "ms-vscode.makefile-tools"
     "ms-vscode.remote-explorer"
     "redhat.vscode-yaml"
     "timonwong.shellcheck"
-    "VisualStudioExptTeam.vscodeintellicode"
     "ZainChen.json"
 -}}
 {{ if .personal -}}
@@ -33,6 +35,7 @@ set -o pipefail
 {{ if .work -}}
 {{
   $extensions = concat $extensions (list
+    "bbenoist.nix"
   )
 -}}
 {{ end -}}

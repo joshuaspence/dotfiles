@@ -1,4 +1,5 @@
 {
+  "claudeCode.disableLoginPrompt": true,
   "editor.codeLens": false,
   "editor.tabSize": 2,
   "files.autoSave": "afterDelay",
