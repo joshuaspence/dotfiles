@@ -19,5 +19,5 @@ set -o pipefail
 {{- if $extensions }}
 {{ range $extensions }}
 gh extension install {{ . }}
-{{ end -}}
-{{ end -}}
+{{- end }}
+{{- end }}
