@@ -1,3 +1,3 @@
 # shellcheck shell=sh
 
-eval "$(jump shell)"
+eval "$(jump shell --bind=cd)"
