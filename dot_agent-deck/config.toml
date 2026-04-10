@@ -1,0 +1,42 @@
+default_tool = "claude"
+theme = "system"
+
+[claude]
+auto_mode = true
+
+[costs]
+currency = ""
+timezone = ""
+
+[docker]
+default_enabled = true
+
+[maintenance]
+enabled = false
+
+[mcp_pool]
+enabled = true
+pool_all = false
+
+[notifications]
+enabled = false
+max_shown = 0
+minimal = false
+show_all = false
+
+[shell]
+env_files = []
+init_script = "~/.agent-deck/init.sh"
+
+[system_stats]
+format = ""
+refresh_seconds = 0
+
+[updates]
+check_enabled = true
+notify_in_cli = true
+
+[worktree]
+auto_cleanup = false
+default_enabled = false
+default_location = ""

@@ -1,0 +1,5 @@
+---
+.local/bin/agent-deck:
+  type: 'archive-file'
+  path: 'agent-deck'
+  url: '{{ gitHubLatestReleaseAssetURL "asheshgoplani/agent-deck" (printf "agent-deck_*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) }}'
