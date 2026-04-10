@@ -12,7 +12,6 @@
 export AWS_ECR_CACHE_DIR="${XDG_CACHE_HOME}/ecr"
 export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
 export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
-export JUMP_HOME="${XDG_CONFIG_HOME}/jump"
 export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
 export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
 

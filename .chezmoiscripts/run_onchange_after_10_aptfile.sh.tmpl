@@ -102,7 +102,6 @@ package "fzf"
 package_from_url "google-chrome-stable" "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
 packagelist "gnome-shell-extensions" "gnome-tweaks"
 package "htop"
-package_from_url "jump" "{{ gitHubLatestReleaseAssetURL "gsamokovarov/jump" (printf "jump_*_%s.deb" .chezmoi.arch) }}"
 package "jq"
 package "meld"
 package "ncdu"
@@ -125,3 +124,4 @@ packagelist "yubikey-manager" "yubikey-manager-qt" "pamu2fcfg"
 {{ if .work -}}
 package "zoom"
 {{ end -}}
+package "zoxide"
