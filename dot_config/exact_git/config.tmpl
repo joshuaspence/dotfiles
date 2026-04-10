@@ -6,7 +6,6 @@ aliases = "!git config --get-regexp '^alias\\.' | sed 's/^alias\\.//; s/ / = /' 
 amend = commit --no-edit --amend
 branches = branch --all
 cleanup = !git remote prune origin && git gc --aggressive --auto
-co = checkout
 empty-blob = hash-object -t blob /dev/null
 empty-tree = hash-object -t tree /dev/null
 initial-commit = rev-list --max-parents=0 HEAD

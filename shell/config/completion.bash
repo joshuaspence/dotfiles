@@ -1,7 +1,7 @@
 # shellcheck disable=SC2034
 {
   GIT_COMPLETION_SHOW_ALL=1
-  GIT_COMPLETION_SHOW_ALL_COMMANDS=1
+  GIT_COMPLETION_SHOW_ALL_COMMANDS=0
 }
 
 source ~/.local/share/complete-alias/complete_alias
