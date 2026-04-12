@@ -33,8 +33,8 @@ jobs:
     steps:
       - name: 'Install dependencies'
         run: |
-          apt-get update
-          apt-get install --yes curl git gpg software-properties-common sudo wget
+          apt-get update --quiet
+          apt-get install --no-install-recommends --quiet --yes curl git gpg software-properties-common sudo wget
 
       - name: 'Checkout repository'
         uses: 'actions/checkout@v6'
