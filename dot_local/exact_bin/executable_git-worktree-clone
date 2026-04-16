@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+readonly SOURCE="${1}"
+
+HOST="${SOURCE}"
+HOST="${HOST%:*}"
+HOST="${HOST#*@}"
+
+REPO="${SOURCE}"
+REPO="${REPO#*:}"
+REPO="${REPO%.git}"
+
+readonly DESTINATION="${HOME}/workspace/${HOST}/${REPO}"
+
+git clone --bare "${SOURCE}" "${DESTINATION}/.git"
+git -C "${DESTINATION}" config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+git -C "${DESTINATION}" fetch origin
+
+local -r DEFAULT_BRANCH=$(git -C "${DESTINATION}" remote show origin | sed -n '/HEAD branch/s/.*: //p')
+git worktree add "${DEFAULT_BRANCH}"
