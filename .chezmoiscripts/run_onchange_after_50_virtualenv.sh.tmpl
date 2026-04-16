@@ -10,6 +10,9 @@ set -o pipefail
 
 {{ include "shell/environment/_path.sh" }}
 test -d .venv/bin || python3 -m venv .venv
+
+source .venv/bin/activate
 command -v pip-sync &>/dev/null || pip install --constraint .venv/requirements.in --quiet pip-tools
+
 pip-compile --upgrade --config .config/pip-tools.toml .venv/requirements.in
 pip-sync --config .config/pip-tools.toml .venv/requirements.txt
