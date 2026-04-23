@@ -1,0 +1,366 @@
+---
+- hosts: 'localhost'
+  become: true
+  become_flags: '--preserve-env --preserve-env=PATH --stdin'
+  tasks:
+    - name: 'Extract variables from Chezmoi data'
+      block:
+        - ansible.builtin.command: 'chezmoi data'
+          register: 'chezmoi_data_cmd'
+        - ansible.builtin.set_fact:
+            chezmoi_data: '{{ (chezmoi_data_cmd.stdout | from_json).chezmoi.config.data }}'
+        - ansible.builtin.set_fact:
+            personal: '{{ chezmoi_data.personal }}'
+            work: '{{ chezmoi_data.work }}'
+
+    - name: 'Update APT cache'
+      ansible.builtin.apt:
+        cache_valid_time: 3600
+        update_cache: true
+
+    - name: '1Password'
+      when: 'work'
+      block:
+        - name: 'Add 1Password repository'
+          ansible.builtin.deb822_repository:
+            name: '1password'
+            uris: 'https://downloads.1password.com/linux/debian/{{ ansible_facts.architecture }}'
+            suites: 'stable'
+            components: 'main'
+            architectures: '{{ ansible_facts.architecture }}'
+            signed_by: 'https://downloads.1password.com/linux/keys/1password.asc'
+        - name: 'Install 1Password'
+          ansible.builtin.apt:
+            name: '1password'
+
+    - name: 'AWS CLI'
+      block:
+        - name: 'Install AWS CLI'
+          community.general.snap:
+            name: 'aws-cli'
+            classic: true
+        - name: 'Install Session Manager Plugin'
+          ansible.builtin.apt:
+            deb: 'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb'
+
+    - name: 'Cloudflare'
+      when: 'work'
+      block:
+        - name: 'Add Cloudflare repository'
+          ansible.builtin.deb822_repository:
+            name: 'cloudflare'
+            uris: 'https://pkg.cloudflareclient.com'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'main'
+            architectures: '{{ ansible_facts.architecture }}'
+            signed_by: 'https://pkg.cloudflareclient.com/pubkey.gpg'
+
+    - name: 'Docker'
+      block:
+        - name: 'Add Docker repository'
+          ansible.builtin.deb822_repository:
+            name: 'docker'
+            uris: 'https://download.docker.com/linux/ubuntu'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'stable'
+            architectures: '{{ ansible_facts.architecture }}'
+            signed_by: 'https://download.docker.com/linux/ubuntu/gpg'
+        - name: 'Install Docker packages'
+          ansible.builtin.apt:
+            name:
+              - 'docker-ce'
+              - 'docker-ce-cli'
+              - 'golang-docker-credential-helpers'
+
+    - name: 'Dropbox'
+      when: 'personal'
+      block:
+        - name: 'Add Dropbox repository'
+          ansible.builtin.deb822_repository:
+            name: 'dropbox'
+            uris: 'https://linux.dropbox.com/ubuntu'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'main'
+            signed_by: 'https://linux.dropbox.com/fedora/rpm-public-key.asc'
+        - name: 'Install Dropbox'
+          ansible.builtin.apt:
+            name: 'dropbox'
+
+    - name: 'GitHub CLI'
+      block:
+        - name: 'Add GitHub CLI repository'
+          ansible.builtin.deb822_repository:
+            name: 'github_cli'
+            uris: 'https://cli.github.com/packages'
+            suites: 'stable'
+            components: 'main'
+            signed_by: 'https://cli.github.com/packages/githubcli-archive-keyring.gpg'
+        - name: 'Install GitHub CLI'
+          ansible.builtin.apt:
+            name: 'gh'
+
+    - name: 'HashiCorp'
+      block:
+        - name: 'Add HashiCorp repository'
+          ansible.builtin.deb822_repository:
+            name: 'hashicorp'
+            uris: 'https://apt.releases.hashicorp.com'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'main'
+            architectures: '{{ ansible_facts.architecture }}'
+            signed_by: 'https://apt.releases.hashicorp.com/gpg'
+        - name: 'Install HashiCorp packages'
+          ansible.builtin.apt:
+            name:
+              - 'packer'
+              - 'terraform'
+
+    - name: 'Helm'
+      block:
+        - name: 'Add Helm repository'
+          ansible.builtin.deb822_repository:
+            name: 'helm'
+            uris: 'https://packages.buildkite.com/helm-linux/helm-debian/any/'
+            suites: 'any'
+            components: 'main'
+            signed_by: 'https://packages.buildkite.com/helm-linux/helm-debian/gpgkey'
+        - name: 'Install Helm'
+          ansible.builtin.apt:
+            name: 'helm'
+
+    - name: 'Install common utilities'
+      block:
+        - ansible.builtin.apt:
+            name:
+              - 'bat'
+              - 'curl'
+              - 'fd-find'
+              - 'fzf'
+              - 'htop'
+              - 'jq'
+              - 'meld'
+              - 'ncdu'
+              - 'parallel'
+              - 'pass'
+              - 'rename'
+              - 'retry'
+              - 'tree'
+              - 'wget'
+              - 'zoxide'
+        - community.general.snap:
+            name:
+              - 'httpie'
+              - 'imgcat'
+              - 'shellcheck'
+              - 'yq'
+
+    - name: 'Install development build tools'
+      ansible.builtin.apt:
+        name:
+          - 'autoconf'
+          - 'build-essential'
+          - 'libtool'
+          - 'pkg-config'
+
+    - name: 'Install file sharing packages'
+      when: 'personal'
+      ansible.builtin.apt:
+        name:
+          - 'cifs-utils'
+          - 'nfs-common'
+          - 'smbclient'
+
+    - name: 'Install Git packages'
+      ansible.builtin.apt:
+        name:
+          - 'git'
+          - 'git-crypt'
+          - 'git-lfs'
+
+    - name: 'Install GNOME utilities'
+      ansible.builtin.apt:
+        name:
+          - 'gnome-shell-extensions'
+          - 'gnome-tweaks'
+
+    - name: 'Install Go'
+      ansible.builtin.apt:
+        name: 'golang-go'
+
+    - name: 'Install Google Chrome'
+      ansible.builtin.apt:
+        deb: 'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb'
+
+    - name: 'Install miscellaneous build dependencies'
+      ansible.builtin.apt:
+        name:
+          - 'libcairo2-dev'
+          - 'libgirepository-2.0-dev'
+
+    - name: 'Install network utilities'
+      ansible.builtin.apt:
+        name:
+          - 'nmap'
+          - 'tcpdump'
+          - 'traceroute'
+          - 'whois'
+          - 'wireshark'
+
+    - name: 'Install OpenSSH client'
+      ansible.builtin.apt:
+        name: 'openssh-client'
+
+    - name: 'Install Python packages'
+      ansible.builtin.apt:
+        name:
+          - 'pipx'
+          - 'python3'
+          - 'python3-argcomplete'
+          - 'python3-pip'
+          - 'python3-virtualenv'
+
+    - name: 'Install Raspberry Pi Imager'
+      when: 'personal'
+      ansible.builtin.apt:
+        name: 'rpi-imager'
+
+    - name: 'Install Remmina'
+      ansible.builtin.apt:
+        name:
+          - 'remmina'
+          - 'remmina-plugin-vnc'
+
+    - name: 'Install tmux'
+      ansible.builtin.apt:
+        name: 'tmux'
+
+    - name: 'Install Vim'
+      ansible.builtin.apt:
+        name: 'vim'
+
+    - name: 'Install VLC'
+      when: 'personal'
+      ansible.builtin.apt:
+        name: 'vlc'
+
+    - name: 'Install xclip'
+      ansible.builtin.apt:
+        name: 'xclip'
+
+    - name: 'Install Yubikey packages'
+      when: 'work'
+      ansible.builtin.apt:
+        name:
+          - 'pamu2fcfg'
+          - 'yubikey-manager'
+          - 'yubikey-manager-qt'
+
+    - name: 'JFrog'
+      when: 'work'
+      block:
+        - name: 'Add JFrog repository'
+          ansible.builtin.deb822_repository:
+            name: 'jfrog'
+            uris: 'https://releases.jfrog.io/artifactory/jfrog-debs'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'contrib'
+            signed_by: 'https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key'
+        - name: 'Install JFrog CLI'
+          ansible.builtin.apt:
+            name: 'jfrog-cli-v2'
+
+    - name: 'Kubernetes'
+      block:
+        - name: 'Add Kubernetes repository'
+          ansible.builtin.deb822_repository:
+            name: 'kubernetes'
+            uris: 'https://pkgs.k8s.io/core:/stable:/v1.35/deb/'
+            suites: '/'
+            components: []
+            signed_by: 'https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key'
+        - name: 'Install kubectl'
+          ansible.builtin.apt:
+            name: 'kubectl'
+
+    - name: 'Slack'
+      when: 'work'
+      block:
+        - name: 'Add Slack repository'
+          ansible.builtin.deb822_repository:
+            name: 'slack'
+            uris: 'https://packagecloud.io/slacktechnologies/slack/debian'
+            suites: 'jessie'
+            components: 'main'
+            signed_by: 'https://packagecloud.io/slacktechnologies/slack/gpgkey'
+        - name: 'Install Slack'
+          ansible.builtin.apt:
+            name: 'slack-desktop'
+
+    - name: 'Speedtest'
+      block:
+        - name: 'Add Speedtest repository'
+          ansible.builtin.deb822_repository:
+            name: 'speedtest'
+            uris: 'https://packagecloud.io/ookla/speedtest-cli/ubuntu'
+            suites: '{{ ansible_facts.distribution_release | replace("noble", "jammy") }}'
+            components: 'main'
+            signed_by: 'https://packagecloud.io/ookla/speedtest-cli/gpgkey'
+        - name: 'Install Speedtest'
+          ansible.builtin.apt:
+            name: 'speedtest'
+
+    - name: 'Task'
+      block:
+        - name: 'Add Task repository'
+          ansible.builtin.deb822_repository:
+            name: 'task'
+            uris: 'https://dl.cloudsmith.io/public/task/task/deb/ubuntu'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'main'
+            signed_by: 'https://dl.cloudsmith.io/public/task/task/gpg.key'
+        - name: 'Install Task'
+          ansible.builtin.apt:
+            name: 'task'
+
+    - name: 'Teleport'
+      when: 'work'
+      block:
+        - name: 'Add Teleport repository'
+          ansible.builtin.deb822_repository:
+            name: 'teleport'
+            uris: 'https://apt.releases.teleport.dev/ubuntu'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'stable/v15'
+            signed_by: 'https://apt.releases.teleport.dev/gpg'
+        - name: 'Install Teleport'
+          ansible.builtin.apt:
+            name: 'teleport'
+
+    - name: 'VSCode'
+      block:
+        - name: 'Add VSCode repository'
+          ansible.builtin.deb822_repository:
+            name: 'vscode'
+            uris: 'https://packages.microsoft.com/repos/code'
+            suites: 'stable'
+            components: 'main'
+            architectures: ['amd64', 'arm64', 'armhf']
+            signed_by: 'https://packages.microsoft.com/keys/microsoft.asc'
+        - name: 'Install VSCode'
+          ansible.builtin.apt:
+            name: 'code'
+
+    - name: 'Zoom'
+      when: 'work'
+      block:
+        - name: 'Add Zoom repository'
+          ansible.builtin.deb822_repository:
+            name: 'zoom'
+            uris: 'https://mirror.mwt.me/zoom/deb'
+            suites: 'any'
+            components: 'main'
+            architectures: 'amd64'
+            signed_by: 'https://mirror.mwt.me/zoom/gpgkey'
+        - name: 'Install Zoom'
+          ansible.builtin.apt:
+            name: 'zoom'

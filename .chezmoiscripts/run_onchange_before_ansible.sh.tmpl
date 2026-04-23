@@ -1,0 +1,13 @@
+#!/bin/bash
+# shellcheck shell=bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+{{ $sourceDir := .chezmoi.sourceDir -}}
+{{ range $file := glob (joinPath $sourceDir "ansible/*.yaml") -}}
+# {{ trimPrefix (print $sourceDir "/") $file }}: {{ include $file | sha256sum }}
+{{ end }}
+command -v ansible-playbook >/dev/null || sudo apt-get install --no-install-recommends --quiet --yes ansible-core
+ansible-playbook {{ joinPath $sourceDir "ansible/site.yaml" }}
