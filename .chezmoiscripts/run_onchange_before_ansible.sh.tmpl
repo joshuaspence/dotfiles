@@ -9,5 +9,5 @@ set -o pipefail
 {{ range $file := glob (joinPath $sourceDir "ansible/*.yaml") -}}
 # {{ trimPrefix (print $sourceDir "/") $file }}: {{ include $file | sha256sum }}
 {{ end }}
-command -v ansible-playbook >/dev/null || sudo apt-get install --no-install-recommends --quiet --yes ansible-core
+command -v ansible-playbook >/dev/null || sudo apt-get install --no-install-recommends --quiet --yes ansible ansible-core
 ansible-playbook --ask-become-pass {{ joinPath $sourceDir "ansible/site.yaml" }}
