@@ -288,19 +288,22 @@
 
     - name: 'Kubernetes'
       block:
-        - name: 'Get latest Kubernetes releas'
+        - name: 'Get latest Kubernetes release'
           community.general.github_release:
             user: 'kubernetes'
             repo: 'kubernetes'
             action: 'latest_release'
           register: 'kubernetes_release'
+        - name: 'Set target Kubernetes version'
+          set_fact:
+            kubernetes_version: '{{ (kubernetes_release.tag | split("."))[:-1] | join(".") }}'
         - name: 'Add Kubernetes repository'
           ansible.builtin.deb822_repository:
             name: 'kubernetes'
-            uris: 'https://pkgs.k8s.io/core:/stable:/{{ (kubernetes_release.tag | split("."))[:-1] | join(".") }}/deb/'
+            uris: 'https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/'
             suites: '/'
             components: []
-            signed_by: 'https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key'
+            signed_by: 'https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/Release.key'
         - name: 'Install kubectl'
           ansible.builtin.apt:
             name: 'kubectl'
