@@ -54,6 +54,9 @@
             components: 'main'
             architectures: '{{ ansible_facts.architecture }}'
             signed_by: 'https://pkg.cloudflareclient.com/pubkey.gpg'
+        - name: 'Install Cloudflare Warp'
+          ansible.builtin.apt:
+            name: 'cloudflare-warp'
 
     - name: 'Docker'
       block:
@@ -68,8 +71,10 @@
         - name: 'Install Docker packages'
           ansible.builtin.apt:
             name:
+              - 'docker-buildx-plugin'
               - 'docker-ce'
               - 'docker-ce-cli'
+              - 'docker-compose-plugin'
               - 'golang-docker-credential-helpers'
 
     - name: 'Dropbox'
@@ -142,6 +147,7 @@
               - 'ncdu'
               - 'parallel'
               - 'pass'
+              - 'pigz'
               - 'rename'
               - 'retry'
               - 'tree'
@@ -187,9 +193,18 @@
       ansible.builtin.apt:
         name: 'golang-go'
 
-    - name: 'Install Google Chrome'
-      ansible.builtin.apt:
-        deb: 'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb'
+    - name: 'Google Chrome'
+      block:
+        - name: 'Add Google Chrome repository'
+          ansible.builtin.deb822_repository:
+            name: 'google-chrome'
+            uris: 'https://dl.google.com/linux/chrome-stable/deb/'
+            suites: 'stable'
+            components: 'main'
+            signed_by: 'https://dl.google.com/linux/linux_signing_key.pub'
+        - name: 'Install Google Chrome'
+          ansible.builtin.apt:
+            name: 'google-chrome-stable'
 
     - name: 'Install miscellaneous build dependencies'
       ansible.builtin.apt:
