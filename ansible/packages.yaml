@@ -24,10 +24,10 @@
         - name: 'Add 1Password repository'
           ansible.builtin.deb822_repository:
             name: '1password'
-            uris: 'https://downloads.1password.com/linux/debian/{{ ansible_facts.architecture }}'
+            uris: 'https://downloads.1password.com/linux/debian/{{ ansible_facts.facter_os.architecture }}'
             suites: 'stable'
             components: 'main'
-            architectures: '{{ ansible_facts.architecture }}'
+            architectures: '{{ ansible_facts.facter_os.architecture }}'
             signed_by: 'https://downloads.1password.com/linux/keys/1password.asc'
         - name: 'Install 1Password'
           ansible.builtin.apt:
@@ -52,7 +52,7 @@
             uris: 'https://pkg.cloudflareclient.com'
             suites: '{{ ansible_facts.distribution_release }}'
             components: 'main'
-            architectures: '{{ ansible_facts.architecture }}'
+            architectures: '{{ ansible_facts.facter_os.architecture }}'
             signed_by: 'https://pkg.cloudflareclient.com/pubkey.gpg'
         - name: 'Install Cloudflare Warp'
           ansible.builtin.apt:
@@ -66,7 +66,7 @@
             uris: 'https://download.docker.com/linux/ubuntu'
             suites: '{{ ansible_facts.distribution_release }}'
             components: 'stable'
-            architectures: '{{ ansible_facts.architecture }}'
+            architectures: '{{ ansible_facts.facter_os.architecture }}'
             signed_by: 'https://download.docker.com/linux/ubuntu/gpg'
         - name: 'Install Docker packages'
           ansible.builtin.apt:
@@ -112,7 +112,7 @@
             uris: 'https://apt.releases.hashicorp.com'
             suites: '{{ ansible_facts.distribution_release }}'
             components: 'main'
-            architectures: '{{ ansible_facts.architecture }}'
+            architectures: '{{ ansible_facts.facter_os.architecture }}'
             signed_by: 'https://apt.releases.hashicorp.com/gpg'
         - name: 'Install HashiCorp packages'
           ansible.builtin.apt:
@@ -297,7 +297,7 @@
         - name: 'Add Kubernetes repository'
           ansible.builtin.deb822_repository:
             name: 'kubernetes'
-            uris: 'https://pkgs.k8s.io/core:/stable:/{{ (kubernetes_release.tag | split("."))[:-1] | join("." }}/deb/'
+            uris: 'https://pkgs.k8s.io/core:/stable:/{{ (kubernetes_release.tag | split("."))[:-1] | join(".") }}/deb/'
             suites: '/'
             components: []
             signed_by: 'https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key'
