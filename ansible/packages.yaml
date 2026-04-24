@@ -223,7 +223,9 @@
 
     - name: 'Install OpenSSH client'
       ansible.builtin.apt:
-        name: 'openssh-client'
+        name:
+          - 'openssh-client'
+          - 'ssh-askpass-gnome'
 
     - name: 'Install Python packages'
       ansible.builtin.apt:
@@ -286,10 +288,16 @@
 
     - name: 'Kubernetes'
       block:
+        - name: 'Get latest Kubernetes releas'
+          community.general.github_release:
+            user: 'kubernetes'
+            repo: 'kubernetes'
+            action: 'latest_release'
+          register: 'kubernetes_release'
         - name: 'Add Kubernetes repository'
           ansible.builtin.deb822_repository:
             name: 'kubernetes'
-            uris: 'https://pkgs.k8s.io/core:/stable:/v1.35/deb/'
+            uris: 'https://pkgs.k8s.io/core:/stable:/{{ (kubernetes_release.tag | split("."))[:-1] | join("." }}/deb/'
             suites: '/'
             components: []
             signed_by: 'https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key'
