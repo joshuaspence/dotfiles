@@ -55,6 +55,19 @@
           ansible.builtin.apt:
             deb: 'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb'
 
+    - name: 'Claude'
+      block:
+        - name: 'Add Claude repository'
+          ansible.builtin.deb822_repository:
+            name: 'claude'
+            uris: 'https://pkg.claude-desktop-debian.dev'
+            suites: 'stable'
+            components: 'main'
+            signed_by: 'https://pkg.claude-desktop-debian.dev/KEY.gpg'
+        - name: 'Install Claude Desktop'
+          ansible.builtin.apt:
+            name: 'claude-desktop'
+
     - name: 'Cloudflare'
       when: 'work'
       block:
