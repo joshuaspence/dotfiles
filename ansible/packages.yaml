@@ -39,7 +39,7 @@
             architectures: '{{ dpkg_architecture }}'
             signed_by: 'https://downloads.1password.com/linux/keys/1password.asc'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install 1Password'
           ansible.builtin.apt:
             name: '1password'
@@ -67,7 +67,7 @@
             architectures: '{{ dpkg_architecture }}'
             signed_by: 'https://pkg.cloudflareclient.com/pubkey.gpg'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Cloudflare Warp'
           ansible.builtin.apt:
             name: 'cloudflare-warp'
@@ -83,7 +83,7 @@
             architectures: '{{ dpkg_architecture }}'
             signed_by: 'https://download.docker.com/linux/ubuntu/gpg'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Docker packages'
           ansible.builtin.apt:
             name:
@@ -103,7 +103,7 @@
             components: 'main'
             signed_by: 'https://linux.dropbox.com/fedora/rpm-public-key.asc'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Dropbox'
           ansible.builtin.apt:
             name: 'dropbox'
@@ -118,7 +118,7 @@
             components: 'main'
             signed_by: 'https://cli.github.com/packages/githubcli-archive-keyring.gpg'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install GitHub CLI'
           ansible.builtin.apt:
             name: 'gh'
@@ -134,7 +134,7 @@
             architectures: '{{ dpkg_architecture }}'
             signed_by: 'https://apt.releases.hashicorp.com/gpg'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install HashiCorp packages'
           ansible.builtin.apt:
             name:
@@ -151,7 +151,7 @@
             components: 'main'
             signed_by: 'https://packages.buildkite.com/helm-linux/helm-debian/gpgkey'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Helm'
           ansible.builtin.apt:
             name: 'helm'
@@ -173,6 +173,7 @@
               - 'pigz'
               - 'rename'
               - 'retry'
+              - 'tesseract-ocr'
               - 'tree'
               - 'wget'
               - 'zoxide'
@@ -227,7 +228,7 @@
             components: 'main'
             signed_by: 'https://dl.google.com/linux/linux_signing_key.pub'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Google Chrome'
           ansible.builtin.apt:
             name: 'google-chrome-stable'
@@ -309,7 +310,7 @@
             components: 'contrib'
             signed_by: 'https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install JFrog CLI'
           ansible.builtin.apt:
             name: 'jfrog-cli-v2'
@@ -333,7 +334,7 @@
             components: []
             signed_by: 'https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/Release.key'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install kubectl'
           ansible.builtin.apt:
             name: 'kubectl'
@@ -349,7 +350,7 @@
             components: 'main'
             signed_by: 'https://packagecloud.io/slacktechnologies/slack/gpgkey'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Slack'
           ansible.builtin.apt:
             name: 'slack-desktop'
@@ -364,7 +365,7 @@
             components: 'main'
             signed_by: 'https://packagecloud.io/ookla/speedtest-cli/gpgkey'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Speedtest'
           ansible.builtin.apt:
             name: 'speedtest'
@@ -379,7 +380,7 @@
             components: 'main'
             signed_by: 'https://dl.cloudsmith.io/public/task/task/gpg.key'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Task'
           ansible.builtin.apt:
             name: 'task'
@@ -395,7 +396,7 @@
             components: 'stable/v15'
             signed_by: 'https://apt.releases.teleport.dev/gpg'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Teleport'
           ansible.builtin.apt:
             name: 'teleport'
@@ -411,7 +412,7 @@
             architectures: ['amd64', 'arm64', 'armhf']
             signed_by: 'https://packages.microsoft.com/keys/microsoft.asc'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install VSCode'
           ansible.builtin.apt:
             name: 'code'
@@ -428,7 +429,7 @@
             architectures: 'amd64'
             signed_by: 'https://mirror.mwt.me/zoom/gpgkey'
           notify: 'Update APT cache'
-        - ansible.builtin.meta: flush_handlers
+        - ansible.builtin.meta: 'flush_handlers'
         - name: 'Install Zoom'
           ansible.builtin.apt:
             name: 'zoom'
