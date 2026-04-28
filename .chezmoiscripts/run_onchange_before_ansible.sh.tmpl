@@ -9,5 +9,10 @@ set -o pipefail
 {{ range $file := glob (joinPath $sourceDir "ansible/*.yaml") -}}
 # {{ trimPrefix (print $sourceDir "/") $file }}: {{ include $file | sha256sum }}
 {{ end }}
-command -v ansible-playbook >/dev/null || sudo apt-get install --no-install-recommends --quiet --yes ansible ansible-core python3-debian
+if ! command -v ansible-playbook >/dev/null; then
+  python3 -m venv /tmp/venv
+  source /tmp/venv/bin/activate
+  pip install --constraint <(chezmoi execute-template < {{ $sourceDir }}/dot_venv/requirements.in.tmpl) ansible github3.py
+fi
+
 ansible-playbook {{ if ne .chezmoi.username "root" -}} --ask-become-pass {{ end -}} {{ joinPath $sourceDir "ansible/site.yaml" }}
