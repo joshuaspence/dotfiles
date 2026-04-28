@@ -55,6 +55,16 @@
   "tui" "fullscreen"
 -}}
 
+{{- if .personal -}}
+{{- $config = merge $config (dict
+  "permissions" (dict
+    "allow" (list
+      "Read(~/Dropbox/Documents/Personal/Invoices/**/*.pdf)"
+    )
+  )
+) -}}
+{{- end -}}
+
 {{- if .work -}}
 {{- $config = merge $config (dict
   "awsAuthRefresh" "aws sso login --sso-session anduril-govcom"
