@@ -1,18 +1,11 @@
-/backups/
-/cache/
-/.claude.json
-/debug/
-/file-history/
-/history.jsonl
-/paste-cache/
-/plans/
-/plugins/
-/projects/
-/session-env/
-/sessions/
-/shell-snapshots/
-/stats-cache.json
-/statsig/
-/tasks/
-/telemetry/
-/todos/
+*
+!/settings.json
+!/statusline.sh
+!/agents/
+/agents/*
+
+{{- if .personal }}
+!/agents/invoice-organizer.md
+!/agents/ndis-extractor.md
+!/agents/pocketsmith-transaction-reviewer.md
+{{- end }}
