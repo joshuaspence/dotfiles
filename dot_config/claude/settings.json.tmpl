@@ -1,143 +1,78 @@
-{
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "awsAuthRefresh": "aws sso login --sso-session anduril-govcom",
-  "env": {
-    "AWS_PROFILE": "claude",
-    "AWS_REGION": "ap-southeast-2",
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "true",
-    "CLAUDE_CODE_NEW_INIT": "true",
-    "CLAUDE_CODE_USE_BEDROCK": "true"
-  },
-  "permissions": {
-    "allow": [
-      "Bash(jq:*)",
+{{- $config := dict
+  "$schema" "https://json.schemastore.org/claude-code-settings.json"
+  "autoMode" (dict
+    "environment" (list "$defaults")
+    "allow" (list "$defaults")
+    "soft_deny" (list "$defaults")
+  )
+  "defaultMode" "auto"
+  "editorMode" "default"
+  "enabledPlugins" (dict)
+  "env" (dict
+    "CLAUDE_CODE_NEW_INIT" "true"
+  )
+  "model" "opusplan"
+  "permissions" (dict
+    "allow" (list 
+      "Bash(jq:*)"
       "Read(~/workspace)"
-    ],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)"
-    ],
-    "ask": [],
-    "disableBypassPermissionsMode": "disable"
-  },
-  "model": "opusplan",
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "permission_prompt|elicitation_dialog",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agent-deck hook-handler",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agent-deck hook-handler",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agent-deck hook-handler"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agent-deck hook-handler",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agent-deck hook-handler",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agent-deck hook-handler",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agent-deck hook-handler",
-            "async": true
-          }
-        ]
-      }
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.config/claude/statusline.sh"
-  },
-{{- if .work }}
-  "extraKnownMarketplaces": {
-    "anduril": {
-      "source": {
-        "source": "git",
-        "url": "https://ghe.anduril.dev/anduril/claude-clams.git"
-      }
-    }
-  },
-  "skipWebFetchPreflight": true,
-{{- end }}
-  "sandbox": {
-    "enabled": true,
-    "network": {
-      "allowedDomains": [
-        "api.github.com",
-        "docs.aws.amazon.com",
-        "docs.kernel.org",
-        "github.com",
-        "manpages.ubuntu.com",
-        "man7.org",
-        "raw.githubusercontent.com",
-        "*.readthedocs.io",
-        "serverfault.com",
-        "stackoverflow.com",
-        "superuser.com",
+    )
+    "deny" (list 
+      "Read(./.env)"
+    )
+    "ask" (list)
+  )
+  "sandbox" (dict
+    "enabled" true
+    "excludedCommands" (list)
+    "failIfUnavailable" true
+    "filesystem" (dict
+      "allowWrite" (list "/tmp")
+    )
+    "network" (dict
+      "allowedDomains" (list
+        "api.github.com"
+        "docs.aws.amazon.com"
+        "docs.kernel.org"
+        "github.com"
+        "manpages.ubuntu.com"
+        "man7.org"
+        "raw.githubusercontent.com"
+        "*.readthedocs.io"
+        "serverfault.com"
+        "stackoverflow.com"
+        "superuser.com"
         "systemd.io"
-      ],
-      "allowUnixSockets": [
-        "/run/docker.sock",
-        "/run/user/1000/keyring/ssh"
-      ]
-    },
-    "excludedCommands": []
-  },
-  "autoUpdatesChannel": "stable"
-}
+      )
+      "allowAllUnixSockets" true
+    )
+  )
+  "statusLine" (dict
+    "type" "command"
+    "command" "bash ~/.config/claude/statusline.sh"
+  )
+  "tui" "fullscreen"
+-}}
+
+{{- if .work -}}
+{{- $config = merge $config (dict
+  "awsAuthRefresh" "aws sso login --sso-session anduril-govcom"
+  "env" (dict
+    "AWS_PROFILE" "claude"
+    "AWS_REGION" "ap-southeast-2"
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC" "true"
+    "CLAUDE_CODE_USE_BEDROCK" "true"
+  )
+  "extraKnownMarketplaces" (dict
+    "anduril" (dict
+      "source" (dict
+        "source" "git"
+        "url" "https://ghe.anduril.dev/anduril/claude-clams.git"
+      )
+    )
+  )
+  "skipWebFetchPreflight" true
+) -}}
+{{- end -}}
+
+{{ $config | toPrettyJson }}
