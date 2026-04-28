@@ -12,7 +12,7 @@ set -o pipefail
 if ! command -v ansible-playbook >/dev/null; then
   python3 -m venv /tmp/venv
   source /tmp/venv/bin/activate
-  pip install --constraint <(chezmoi execute-template < {{ $sourceDir }}/dot_venv/requirements.in.tmpl) ansible github3.py
+  pip install --constraint <(chezmoi execute-template <{{ $sourceDir }}/dot_venv/requirements.in.tmpl) ansible github3.py
 fi
 
 ansible-playbook {{ if ne .chezmoi.username "root" -}} --ask-become-pass {{ end -}} {{ joinPath $sourceDir "ansible/site.yaml" }}
