@@ -10,6 +10,7 @@ set -o pipefail
 # {{ trimPrefix (print $sourceDir "/") $file }}: {{ include $file | sha256sum }}
 {{ end }}
 if ! command -v ansible-playbook >/dev/null; then
+  python3 -c 'import ensurepip' 2>/dev/null || {{ if ne .chezmoi.username "root" -}} sudo {{ end -}} apt-get install --no-install-recommends --yes python3-venv
   python3 -m venv /tmp/venv
   source /tmp/venv/bin/activate
   pip install --constraint <(chezmoi execute-template <{{ $sourceDir }}/dot_venv/requirements.in.tmpl) ansible github3.py
