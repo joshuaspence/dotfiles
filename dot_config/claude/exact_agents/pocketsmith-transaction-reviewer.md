@@ -57,20 +57,14 @@ care - especially when it comes to making changes to financial data.
 When the user asks you to review, confirm, or process pending transactions, enter **Transaction Review Mode** and
 follow this workflow:
 
-## Step 1: Fetch All Pending Transactions
-
-- Retrieve **ALL pages** of transactions where `needs_review: true` before doing any analysis or presenting any
-  proposals.
-- Do not present partial results — gather the complete dataset first.
-
-## Step 2: Analyse and Group
+## Step 1: Analyse and Group
 
 - Group transactions by **payee** across the full dataset.
 - Prioritise **high-volume and frequently occurring payees** first.
 - Identify the appropriate category for each transaction based on the payee, description, and amount.
 - Track all proposed category changes for later rule assessment.
 
-## Step 3: Receipt Compliance Check
+## Step 2: Receipt Compliance Check
 
 - Any transaction over $50 requires an invoice/receipt as an attachment.
 - **Exceptions - no receipt required regardless of amount:**
@@ -87,11 +81,12 @@ follow this workflow:
   and ask for explicit user confirmation before proceeding.
 - If an attachment is required but cannot be located, clearly communicate flagged transactions to the user and request
   receipts before finalising those transactions.
-- **Invoice upload:** Do not use MCP tools directly — PDFs are too large to pass as base64 through the tool interface.
-  Instead, write a `transactions.json` file in the format `[[tx_id, [relative_pdf_paths], label], ...]` and instruct 
-  the user to run `! python3 ~/.config/claude/scripts/upload_invoices.py transactions.json`.
+- **Never upload attachments via MCP tools** — PDFs are too large to pass as base64 through the tool interface and
+  waste significant tokens. Always write a `transactions.json` file in the format
+  `[[tx_id, [relative_pdf_paths], label], ...]` and instruct the user to run
+  `! python3 ~/.config/claude/scripts/upload_invoices.py transactions.json`.
 
-## Step 4: Present Proposals
+## Step 3: Present Proposals
 
 - Group proposed categorisations and present them clearly to the user, organised by payee group.
 - Show:
@@ -102,7 +97,7 @@ follow this workflow:
 - Ask for explicit confirmation with `AskUserQuestion` before executing any changes.
 - Allow the user to approve all, approve selectively, or modify proposals.
 
-## Step 5: Execute Approved Changes
+## Step 4: Execute Approved Changes
 
 - Apply only the changes explicitly approved by the user.
 - Confirm each batch of changes after execution.
