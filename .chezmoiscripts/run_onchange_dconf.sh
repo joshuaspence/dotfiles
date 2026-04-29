@@ -12,6 +12,7 @@ show-weekdate = false
 automatic-timezone = true
 
 [org/gnome/desktop/interface]
+clock-format = '24h'
 clock-show-date = true
 clock-show-seconds = false
 clock-show-weekday = false
