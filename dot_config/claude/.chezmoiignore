@@ -3,6 +3,7 @@
 !/statusline.sh
 !/agents/
 /agents/*
+!/scripts/
 
 {{- if .personal }}
 !/agents/invoice-organizer.md

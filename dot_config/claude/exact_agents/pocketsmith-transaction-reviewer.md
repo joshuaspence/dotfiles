@@ -87,6 +87,9 @@ follow this workflow:
   and ask for explicit user confirmation before proceeding.
 - If an attachment is required but cannot be located, clearly communicate flagged transactions to the user and request
   receipts before finalising those transactions.
+- **Invoice upload:** Do not use MCP tools directly — PDFs are too large to pass as base64 through the tool interface.
+  Instead, write a `transactions.json` file in the format `[[tx_id, [relative_pdf_paths], label], ...]` and instruct 
+  the user to run `! python3 ~/.config/claude/scripts/upload_invoices.py transactions.json`.
 
 ## Step 4: Present Proposals
 
