@@ -44,31 +44,6 @@
     )
     "ask" (list)
   )
-  "sandbox" (dict
-    "enabled" true
-    "excludedCommands" (list)
-    "failIfUnavailable" true
-    "filesystem" (dict
-      "allowWrite" (list "/tmp")
-    )
-    "network" (dict
-      "allowedDomains" (list
-        "api.github.com"
-        "docs.aws.amazon.com"
-        "docs.kernel.org"
-        "github.com"
-        "manpages.ubuntu.com"
-        "man7.org"
-        "raw.githubusercontent.com"
-        "*.readthedocs.io"
-        "serverfault.com"
-        "stackoverflow.com"
-        "superuser.com"
-        "systemd.io"
-      )
-      "allowAllUnixSockets" true
-    )
-  )
   "statusLine" (dict
     "type" "command"
     "command" "bash ~/.config/claude/statusline.sh"
