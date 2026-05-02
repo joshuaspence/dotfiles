@@ -60,15 +60,25 @@
         - name: 'Add Claude repository'
           ansible.builtin.deb822_repository:
             name: 'claude'
+            uri: 'https://downloads.claude.ai/claude-code/apt/stable'
+            suites: 'stable'
+            components: 'main'
+            signed_by: 'https://downloads.claude.ai/keys/claude-code.asc'
+          notify: 'Update APT cache'
+        - name: 'Add Claude Desktop repository'
+          ansible.builtin.deb822_repository:
+            name: 'claude-desktop'
             uris: 'https://pkg.claude-desktop-debian.dev'
             suites: 'stable'
             components: 'main'
             signed_by: 'https://pkg.claude-desktop-debian.dev/KEY.gpg'
           notify: 'Update APT cache'
         - ansible.builtin.meta: 'flush_handlers'
-        - name: 'Install Claude Desktop'
+        - name: 'Install Claude'
           ansible.builtin.apt:
-            name: 'claude-desktop'
+            name:
+              - 'claude-code'
+              - 'claude-desktop'
 
     - name: 'Cloudflare'
       when: 'work'
