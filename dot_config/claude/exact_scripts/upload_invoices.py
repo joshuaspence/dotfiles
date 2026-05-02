@@ -119,6 +119,19 @@ def confirm_transaction(token: str, transaction_id: int) -> bool:
     return True
 
 
+def recategorize_transaction(token: str, transaction_id: int, category_id: int) -> bool:
+    r = requests.put(
+        f"{API_BASE}/transactions/{transaction_id}",
+        headers=make_headers(token),
+        json={"category_id": category_id},
+    )
+    if not r.ok:
+        print(f"    ERROR recategorizing transaction: {r.status_code} {r.text[:200]}")
+        return False
+    print(f"    Transaction {transaction_id} recategorized to category_id={category_id}")
+    return True
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -144,13 +157,18 @@ def main():
     print()
     results = []
 
-    for tx_id, invoice_rel_paths, label in transactions:
+    for entry in transactions:
+        tx_id = entry[0]
+        invoice_rel_paths = entry[1]
+        label = entry[2]
+        category_id = entry[3] if len(entry) > 3 else None
+
         print(f"Processing: {label} (tx={tx_id})")
         success = True
         att_ids = []
 
         for rel_path in invoice_rel_paths:
-            pdf_path = INVOICES_BASE / rel_path
+            pdf_path = Path(rel_path) if Path(rel_path).is_absolute() else INVOICES_BASE / rel_path
             if not pdf_path.exists():
                 print(f"    ERROR: file not found: {pdf_path}")
                 success = False
@@ -167,6 +185,10 @@ def main():
 
         if success and att_ids:
             if not confirm_transaction(token, tx_id):
+                success = False
+
+        if success and category_id:
+            if not recategorize_transaction(token, tx_id, category_id):
                 success = False
 
         status = "DONE" if success else "FAILED"
