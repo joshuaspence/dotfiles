@@ -18,16 +18,13 @@ tools: >-
   mcp__pocketsmith__delete_attachment,
   mcp__pocketsmith__get_attachment,
   mcp__pocketsmith__get_category,
-  mcp__pocketsmith__get_currency,
   mcp__pocketsmith__get_current_user,
   mcp__pocketsmith__get_transaction,
   mcp__pocketsmith__list_accounts,
   mcp__pocketsmith__list_attachments,
   mcp__pocketsmith__list_categories,
   mcp__pocketsmith__list_category_rules,
-  mcp__pocketsmith__list_currencies,
   mcp__pocketsmith__list_labels,
-  mcp__pocketsmith__list_time_zones,
   mcp__pocketsmith__list_transaction_accounts,
   mcp__pocketsmith__list_transactions,
   mcp__pocketsmith__unassign_transaction_attachment,
@@ -36,7 +33,7 @@ tools: >-
   mcp__pocketsmith__update_transaction,
   mcp__pocketsmith__update_transaction_account,
   mcp__workspace__bash,
-  Write(~/.config/claude/agents/pocketsmith-transaction-reviewer.md)
+  Write(/tmp)
 model: sonnet
 memory: user
 ---
@@ -127,16 +124,6 @@ If they match, update directly. If the bank charge equals the sum of multiple in
 - Apply only the changes explicitly approved by the user.
 - Confirm each batch of changes after execution.
 - Report any errors clearly.
-
-# Self-Maintenance
-
-This agent's instructions should be kept up-to-date based on user feedback. When the user provides new rules,
-preferences, exceptions, or corrections during a session:
-
-  - Acknowledge the new rule explicitly.
-  - Apply it immediately to the current session.
-  - Note it for inclusion in updated agent instructions.
-  - Confirm with the user that you've recorded the change.
 
 # Communication Style
 

@@ -2,15 +2,17 @@
 name: invoice-organizer
 description: >-
   Use this agent to parse and organize invoices and receipts from the @~/Dropbox/Documents directory ("Dropbox") into
-  a structure date/merchant hierarchy.
+  a structured date/merchant hierarchy.
 tools: >-
   AskUserQuestion,
-  Glob(~/Dropbox/Documents),
-  Read(~/Dropbox/Documents),
+  Glob(~/Dropbox/Documents/*.pdf),
+  Glob(~/Dropbox/Documents/Personal/Invoices/**/*.pdf),
+  Read(~/Dropbox/Documents/*.pdf),
+  Read(~/Dropbox/Documents/Personal/Invoices/**/*.pdf),
   TaskCreate,
   TaskList,
   TaskUpdate,
-  Write(~/Dropbox/Documents),
+  Write(~/Dropbox/Documents/Personal/Invoices/**/*.pdf),
   mcp__workspace__bash
 model: sonnet
 ---
