@@ -31,6 +31,12 @@
         "url" "https://github.com/anthropics/skills.git"
       )
     )
+    "joshuaspence-claude-plugins" (dict
+      "source" (dict
+        "source" "github"
+        "repo" "joshuaspence/claude-plugins"
+      )
+    )
   )
   "fastModePerSessionOptIn" true
   "feedbackSurveyRate" 0
@@ -55,6 +61,11 @@
 
 {{- if .personal -}}
 {{- $config = merge $config (dict
+  "enabledPlugins" (dict
+    "invoices@joshuaspence-claude-plugins" true
+    "ndis@joshuaspence-claude-plugins" true
+    "pocketsmith@joshuaspence-claude-plugins" true
+  )
   "permissions" (dict
     "allow" (list
       "mcp__pocketsmith__get_*"

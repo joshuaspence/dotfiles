@@ -1,14 +1,6 @@
 *
-!/settings.json
-!/statusline.sh
 !/agents/
-/agents/*
 !/scripts/
-/scripts/*
-
-{{- if .personal }}
-!/agents/invoice-organizer.md
-!/agents/ndis-extractor.md
-!/agents/pocketsmith-transaction-reviewer.md
-!/scripts/upload_invoices.py
-{{- end }}
+!/settings.json
+!/skills/
+!/statusline.sh
