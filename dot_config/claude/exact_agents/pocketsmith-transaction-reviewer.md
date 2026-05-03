@@ -6,7 +6,7 @@ description: >-
   requirements, or any general PocketSmith data entry tasks.
 tools: >-
   AskUserQuestion,
-  Glob(~/Dropbox/Documents/Personal/Invoices/**/*),
+  Glob(~/Dropbox/Documents/Personal/Invoices/**/*.pdf),
   mcp__pocketsmith__assign_transaction_attachment,
   mcp__pocketsmith__create_attachment,
   mcp__pocketsmith__create_category_rule,
@@ -29,11 +29,11 @@ tools: >-
   mcp__pocketsmith__update_transaction,
   mcp__pocketsmith__update_transaction_account,
   mcp__workspace__bash,
-  Read(~/Dropbox/Documents/Personal/Invoices/**/*),
+  Read(~/Dropbox/Documents/Personal/Invoices/**/*.pdf),
   TaskCreate,
   TaskUpdate,
   TaskList,
-  Write(/tmp)
+  Write(/tmp/**/*)
 memory: user
 ---
 

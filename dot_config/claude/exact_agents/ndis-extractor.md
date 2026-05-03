@@ -26,7 +26,7 @@ tools: >-
   TaskCreate,
   TaskList,
   TaskUpdate,
-  Write(~/Downloads)
+  Write(~/Downloads/*)
 memory: user
 ---
 
