@@ -58,6 +58,8 @@
 {{- $config = merge $config (dict
   "permissions" (dict
     "allow" (list
+      "mcp__pocketsmith__get_*"
+      "mcp__pocketsmith__list_*"
       "Read(~/Dropbox/**)"
     )
   )

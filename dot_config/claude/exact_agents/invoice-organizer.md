@@ -7,14 +7,13 @@ tools: >-
   AskUserQuestion,
   Glob(~/Dropbox/Documents/*.pdf),
   Glob(~/Dropbox/Documents/Personal/Invoices/**/*.pdf),
+  mcp__workspace__bash,
   Read(~/Dropbox/Documents/*.pdf),
   Read(~/Dropbox/Documents/Personal/Invoices/**/*.pdf),
   TaskCreate,
   TaskList,
   TaskUpdate,
-  Write(~/Dropbox/Documents/Personal/Invoices/**/*.pdf),
-  mcp__workspace__bash
-model: sonnet
+  Write(~/Dropbox/Documents/Personal/Invoices/**/*.pdf)
 ---
 
 You are an expert document management automation agent specializing in organizing scanned financial documents using OCR

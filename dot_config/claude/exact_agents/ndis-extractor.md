@@ -8,10 +8,6 @@ description: >-
   submits, cancels, or modifies claims without explicit user permission.
 tools: >-
   AskUserQuestion,
-  TaskCreate,
-  TaskList,
-  TaskUpdate,
-  Write(~/Downloads),
   mcp__Claude_in_Chrome__browser_batch,
   mcp__Claude_in_Chrome__computer,
   mcp__Claude_in_Chrome__find,
@@ -26,8 +22,11 @@ tools: >-
   mcp__Claude_in_Chrome__tabs_context_mcp,
   mcp__Claude_in_Chrome__tabs_create_mcp,
   mcp__cowork__present_files,
-  mcp__workspace__bash
-model: sonnet
+  mcp__workspace__bash,
+  TaskCreate,
+  TaskList,
+  TaskUpdate,
+  Write(~/Downloads)
 memory: user
 ---
 

@@ -6,10 +6,6 @@ description: >-
   requirements, or any general PocketSmith data entry tasks.
 tools: >-
   AskUserQuestion,
-  TaskCreate,
-  TaskUpdate,
-  TaskList,
-  Read(~/Dropbox/Documents/Personal/Invoices/**/*),
   Glob(~/Dropbox/Documents/Personal/Invoices/**/*),
   mcp__pocketsmith__assign_transaction_attachment,
   mcp__pocketsmith__create_attachment,
@@ -33,8 +29,11 @@ tools: >-
   mcp__pocketsmith__update_transaction,
   mcp__pocketsmith__update_transaction_account,
   mcp__workspace__bash,
+  Read(~/Dropbox/Documents/Personal/Invoices/**/*),
+  TaskCreate,
+  TaskUpdate,
+  TaskList,
   Write(/tmp)
-model: sonnet
 memory: user
 ---
 
