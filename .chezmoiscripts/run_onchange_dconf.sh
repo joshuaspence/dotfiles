@@ -37,7 +37,7 @@ indent-width = 2
 attach-modal-dialogs = true
 center-new-windows = true
 dynamic-workspaces = true
-experimental-features = ['x11-randr-fractional-scaling']
+experimental-features = ['scale-monitor-framebuffer', 'x11-randr-fractional-scaling']
 workspaces-only-on-primary = false
 
 [org/gnome/nautilus/window-state]
