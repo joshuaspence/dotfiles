@@ -5,3 +5,13 @@ data:
   work: {{ promptBoolOnce . "work" "Enable work profile" false }}
 github:
   refreshPeriod: '12h'
+textconv:
+  - pattern: '**/*.json'
+    command: 'jq'
+    args:
+      - '--sort-keys'
+      - '.'
+  - pattern: '**/*.yaml'
+    command: 'yq'
+    args:
+      - 'sort_keys(..)'
