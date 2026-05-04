@@ -251,6 +251,7 @@
             uris: 'https://dl.google.com/linux/chrome-stable/deb/'
             suites: 'stable'
             components: 'main'
+            architectures: 'amd64'
             signed_by: 'https://dl.google.com/linux/linux_signing_key.pub'
           notify: 'Update APT cache'
         - ansible.builtin.meta: 'flush_handlers'
