@@ -1,5 +1,6 @@
 *
 !/agents/
+!/file-suggestion.sh
 !/scripts/
 !/settings.json
 !/skills/

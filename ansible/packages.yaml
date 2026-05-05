@@ -198,6 +198,7 @@
               - 'pigz'
               - 'rename'
               - 'retry'
+              - 'ripgrep'
               - 'tesseract-ocr'
               - 'tree'
               - 'wget'
