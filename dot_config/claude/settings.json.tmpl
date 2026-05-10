@@ -99,6 +99,7 @@
 
 {{- if .personal -}}
 {{- $config = merge $config (dict
+  "agentPushNotifEnabled" true
   "enabledPlugins" (dict
     "invoices@joshuaspence-claude-plugins" true
     "ndis@joshuaspence-claude-plugins" true
