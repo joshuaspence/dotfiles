@@ -435,6 +435,11 @@
           ansible.builtin.apt:
             name: 'teleport'
 
+    - name: 'VirtualBox'
+      when: 'personal'
+      ansible.builtin.apt:
+        name: 'virtualbox'
+
     - name: 'VSCode'
       block:
         - name: 'Add VSCode repository'
