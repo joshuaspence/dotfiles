@@ -28,6 +28,7 @@ jobs:
 
         ubuntu_version:
           - '24.04'
+          - '26.04'
           - 'latest'
 
     steps:
