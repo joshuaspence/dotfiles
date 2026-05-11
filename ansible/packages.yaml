@@ -437,8 +437,17 @@
 
     - name: 'VirtualBox'
       when: 'personal'
-      ansible.builtin.apt:
-        name: 'virtualbox'
+      block:
+        - name: 'Add VirtualBox repository'
+          ansible.builtin.deb822_repository:
+            name: 'virtualbox'
+            uris: 'https://download.virtualbox.org/virtualbox/debian'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'contrib'
+            signed_by: 'https://www.virtualbox.org/download/oracle_vbox_2016.asc'
+        - name: 'Install VirtualBox'
+          ansible.builtin.apt:
+            name: 'virtualbox'
 
     - name: 'VSCode'
       block:
