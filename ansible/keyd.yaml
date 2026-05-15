@@ -1,0 +1,40 @@
+---
+- hosts: 'localhost'
+
+  handlers:
+    - name: 'Update APT cache'
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: 'Reload keyd'
+      ansible.builtin.command: 'keyd.rvaiya reload'
+
+  tasks:
+    - name: 'keyd'
+      when: 'ansible_facts.product_name == "Precision 5690"'
+      block:
+        - name: 'Add keyd repository'
+          ansible.builtin.deb822_repository:
+            name: 'keyd'
+            uris: 'https://ppa.launchpadcontent.net/keyd-team/ppa/ubuntu'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'main'
+            signed_by: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x67D33FE29A58DA9441D20A9DCD9F79EC6A8AFB2F'
+          notify: 'Update APT cache'
+        - name: 'Flush handlers'
+          ansible.builtin.meta: 'flush_handlers'
+        - name: 'Install keyd'
+          ansible.builtin.apt:
+            name: 'keyd'
+
+        - name: 'Configure keyd'
+          ansible.builtin.copy:
+            dest: '/etc/keyd/default.conf'
+            content: |
+              [ids]
+              *
+
+              [main]
+              leftshift+leftmeta+f23 = rightcontrol
+          notify: 'Reload keyd'
+

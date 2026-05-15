@@ -6,7 +6,7 @@ set -o nounset
 set -o pipefail
 
 {{ $sourceDir := .chezmoi.sourceDir -}}
-{{ range $file := glob (joinPath $sourceDir "ansible/*.yaml") -}}
+{{ range $file := glob (joinPath $sourceDir "ansible/*.{cfg,yaml}") -}}
 # {{ trimPrefix (print $sourceDir "/") $file }}: {{ include $file | sha256sum }}
 {{ end }}
 if ! command -v ansible-playbook >/dev/null; then
@@ -16,4 +16,5 @@ if ! command -v ansible-playbook >/dev/null; then
   pip install --constraint <(chezmoi execute-template <{{ $sourceDir }}/dot_venv/requirements.in.tmpl) ansible github3.py python-debian
 fi
 
+export ANSIBLE_CONFIG={{ joinPath $sourceDir "ansible/ansible.cfg" }}
 ansible-playbook {{ if ne .chezmoi.username "root" -}} --ask-become-pass {{ end -}} {{ joinPath $sourceDir "ansible/site.yaml" }}

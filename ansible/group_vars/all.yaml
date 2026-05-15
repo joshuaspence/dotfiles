@@ -1,0 +1,6 @@
+---
+chezmoi_data: '{{ (lookup("pipe", "chezmoi data") | from_json).chezmoi.config.data }}'
+dpkg_architecture: '{{ lookup("pipe", "dpkg --print-architecture") }}'
+is_ci: '{{ lookup("env", "CI") | default(false, true) | bool }}'
+is_personal: '{{ chezmoi_data.personal }}'
+is_work: '{{ chezmoi_data.work }}'

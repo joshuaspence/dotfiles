@@ -1,2 +1,3 @@
 ---
+- import_playbook: 'keyd.yaml'
 - import_playbook: 'packages.yaml'
