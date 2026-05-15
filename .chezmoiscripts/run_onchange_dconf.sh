@@ -47,6 +47,7 @@ maximized = true
 calculator = ['<Primary><Alt>c']
 home = ['<Primary><Alt>e']
 terminal = ['<Primary><Alt>t']
+www = ['<Primary><Alt>w']
 
 [org/gnome/settings-daemon/plugins/power]
 ambient-enabled = false
