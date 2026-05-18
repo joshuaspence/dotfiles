@@ -54,10 +54,10 @@ ambient-enabled = false
 
 [org/gnome/shell]
 enabled-extensions = ['tiling-assistant@leleat-on-github', 'tiling-assistant@ubuntu.com', 'ubuntu-dock@ubuntu.com', 'ubuntu-appindicators@ubuntu.com', 'system-monitor@gnome-shell-extensions.gcampax.github.com', 'auto-move-windows@gnome-shell-extensions.gcampax.github.com', 'nightthemeswitcher@romainvigier.fr', 'ding@rastersoft.com', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
-favorite-apps = ['google-chrome.desktop', 'slack_slack.desktop', 'code.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Nautilus.desktop', 'Zoom.desktop']
+favorite-apps = ['google-chrome.desktop', 'slackdesktop', 'code.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Nautilus.desktop', 'Zoom.desktop']
 
 [org/gnome/shell/extensions/auto-move-windows]
-application-list = ['slack_slack.desktop:1']
+application-list = ['slack.desktop:1']
 
 [org/gnome/shell/extensions/dash-to-dock]
 autohide = false
