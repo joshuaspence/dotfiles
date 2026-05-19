@@ -1,3 +1,4 @@
 ---
+- import_playbook: 'dconf.yaml'
 - import_playbook: 'keyd.yaml'
 - import_playbook: 'packages.yaml'
