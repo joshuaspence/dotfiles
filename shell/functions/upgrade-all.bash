@@ -3,6 +3,7 @@ function upgrade-all() {
   upgrade-gnome-extensions
   upgrade-snap
   upgrade-virtualenv
+  upgrade-drivers
   upgrade-firmware
 }
 
@@ -10,6 +11,10 @@ function upgrade-apt() {
   for COMMAND in update upgrade full-upgrade autoremove; do
     sudo apt "${COMMAND}"
   done
+}
+
+function upgrade-drivers() {
+  sudo ubuntu-drivers install
 }
 
 function upgrade-gnome-extensions() {
