@@ -98,12 +98,15 @@
 -}}
 
 {{- if .personal -}}
-{{- $config = merge $config (dict
+{{- $config = mergeOverwrite $config (dict
   "agentPushNotifEnabled" true
   "autoMode" (dict
-    "environment" (list
-      "Internal domains: *.joshuaspence.com, *.spence.au, *.spence.com.au, *.spence.family, *.spence.network"
-      "Source control: github.com/joshuaspence/*"
+    "environment" (concat
+      (dig "autoMode" "environment" (list) $config)
+      (list
+        "Internal domains: *.joshuaspence.com, *.spence.au, *.spence.com.au, *.spence.family, *.spence.network"
+        "Source control: github.com/joshuaspence/*"
+      )
     )
   )
   "enabledPlugins" (dict
@@ -113,17 +116,20 @@
     "pocketsmith@joshuaspence-claude-plugins" true
   )
   "permissions" (dict
-    "allow" (list
-      "mcp__pocketsmith__get_*"
-      "mcp__pocketsmith__list_*"
-      "Read(~/Dropbox/**)"
+    "allow" (concat
+      (dig "permissions" "allow" (list) $config)
+      (list
+        "mcp__pocketsmith__get_*"
+        "mcp__pocketsmith__list_*"
+        "Read(~/Dropbox/**)"
+      )
     )
   )
 ) -}}
 {{- end -}}
 
 {{- if .work -}}
-{{- $config = merge $config (dict
+{{- $config = mergeOverwrite $config (dict
   "awsAuthRefresh" "aws sso login --sso-session anduril-govcom"
   "env" (dict
     "AWS_PROFILE" "claude"
