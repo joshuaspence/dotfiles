@@ -5,3 +5,9 @@
 !/settings.json
 !/skills/
 !/statusline.sh
+
+!/plugins/
+/plugins/*
+!/plugins/claude-hud/
+/plugins/claude-hud/*
+!/plugins/claude-hud/config.json

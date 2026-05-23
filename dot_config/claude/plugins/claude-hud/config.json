@@ -1,0 +1,10 @@
+{
+  "display": {
+    "showAgents": true,
+    "showConfigCounts": true,
+    "showDuration": true,
+    "showSessionName": true,
+    "showTodos": true,
+    "showTools": true
+  }
+}
