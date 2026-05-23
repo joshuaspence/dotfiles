@@ -1,9 +1,11 @@
 {{- $config := dict
-  "$schema" "https://json.schemastore.org/claude-code-settings.json"
+  "$schema" "https://www.schemastore.org/claude-code-settings.json"
+
   "autoMode" (dict
     "environment" (list "$defaults")
     "allow" (list "$defaults")
     "soft_deny" (list "$defaults")
+    "hard_deny" (list "$defaults")
   )
   "editorMode" "default"
   "enabledPlugins" (dict
@@ -100,6 +102,12 @@
 {{- if .personal -}}
 {{- $config = merge $config (dict
   "agentPushNotifEnabled" true
+  "autoMode" (dict
+    "environment" (list
+      "Internal domains: *.joshuaspence.com, *.spence.au, *.spence.com.au, *.spence.family, *.spence.network"
+      "Source control: github.com/joshuaspence/*"
+    )
+  )
   "enabledPlugins" (dict
     "invoices@joshuaspence-claude-plugins" true
     "ndis@joshuaspence-claude-plugins" true
