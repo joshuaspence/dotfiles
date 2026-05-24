@@ -15,7 +15,7 @@
           {%- set ns = namespace(entries=[]) -%}
           {%- for path in dconf_settings.keys() -%}
             {%- for key in dconf_settings[path].keys() -%}
-              {%- ns.entries.append({'path': path, 'key': key, 'value': dconf_settings[path][key]}) -%}
+              {%- set _ = ns.entries.append({'path': path, 'key': key, 'value': dconf_settings[path][key]}) -%}
             {%- endfor -%}
           {%- endfor -%}
           {{ ns.entries | to_json }}
