@@ -1,5 +1,6 @@
 ---
-- hosts: 'localhost'
+- name: 'Configure keyd'
+  hosts: 'localhost'
 
   handlers:
     - name: 'Update APT cache'
@@ -8,9 +9,10 @@
 
     - name: 'Reload keyd'
       ansible.builtin.command: 'keyd.rvaiya reload'
+      changed_when: false
 
   tasks:
-    - name: 'keyd'
+    - name: 'Install and configure keyd'
       when: 'ansible_facts.product_name == "Precision 5690"'
       block:
         - name: 'Add keyd repository'
@@ -36,5 +38,7 @@
 
               [main]
               leftshift+leftmeta+f23 = rightcontrol
+            owner: 'root'
+            group: 'root'
+            mode: '0644'
           notify: 'Reload keyd'
-

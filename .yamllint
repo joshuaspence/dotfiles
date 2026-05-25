@@ -5,8 +5,11 @@ rules:
   braces:
     max-spaces-inside: 1
     max-spaces-inside-empty: 0
-    min-spaces-inside: 1
+    min-spaces-inside: 0
     min-spaces-inside-empty: 0
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: 'disable'
   document-end:
     level: 'warning'
     present: false
@@ -15,6 +18,9 @@ rules:
   indentation:
     spaces: 2
   line-length: 'disable'
+  octal-values:
+    forbid-explicit-octal: true
+    forbid-implicit-octal: true
   quoted-strings:
     quote-type: 'single'
     ignore: '/.github/workflows/'

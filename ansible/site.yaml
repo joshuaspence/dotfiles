@@ -1,4 +1,7 @@
 ---
-- import_playbook: 'dconf.yaml'
-- import_playbook: 'keyd.yaml'
-- import_playbook: 'packages.yaml'
+- name: 'Apply dconf settings'
+  import_playbook: 'dconf.yaml'
+- name: 'Configure keyd'
+  import_playbook: 'keyd.yaml'
+- name: 'Install packages'
+  import_playbook: 'packages.yaml'

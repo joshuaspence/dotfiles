@@ -1,5 +1,6 @@
 ---
-- hosts: 'localhost'
+- name: 'Install packages'
+  hosts: 'localhost'
 
   handlers:
     - name: 'Update APT cache'
@@ -202,7 +203,8 @@
 
     - name: 'Install common utilities'
       block:
-        - ansible.builtin.apt:
+        - name: 'Install common APT utilities'
+          ansible.builtin.apt:
             name:
               - 'bat'
               - 'curl'
@@ -222,7 +224,8 @@
               - 'tree'
               - 'wget'
               - 'zoxide'
-        - when: 'not is_ci'
+        - name: 'Install common snap utilities'
+          when: 'not is_ci'
           community.general.snap:
             name:
               - 'httpie'
@@ -359,7 +362,7 @@
           register: 'kubernetes_release'
           changed_when: false
         - name: 'Set target Kubernetes version'
-          set_fact:
+          ansible.builtin.set_fact:
             kubernetes_version: '{{ (kubernetes_release.tag | split("."))[:-1] | join(".") }}'
         - name: 'Add Kubernetes repository'
           ansible.builtin.deb822_repository:

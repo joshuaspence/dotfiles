@@ -1,5 +1,6 @@
 ---
-- hosts: 'localhost'
+- name: 'Apply dconf settings'
+  hosts: 'localhost'
   become: false
 
   tasks:
@@ -25,7 +26,7 @@
           /org/gnome/desktop/datetime:
             automatic-timezone: true
           /org/gnome/desktop/interface:
-            clock-format: "'24h'"
+            clock-format: '"24h"'
             clock-show-date: true
             clock-show-seconds: false
             clock-show-weekday: false
@@ -87,16 +88,16 @@
           /org/gnome/shell/extensions/dash-to-dock:
             autohide: false
             dock-fixed: false
-            dock-position: "'LEFT'"
+            dock-position: '"LEFT"'
             extend-height: true
             multi-monitor: true
-            shift-click-action: "'launch'"
+            shift-click-action: '"launch"'
             show-apps-at-top: false
             show-favorites: true
             show-running: true
           /org/gnome/shell/extensions/nightthemeswitcher/time:
             manual-schedule: false
-            time-source: "'location'"
+            time-source: '"location"'
           /org/gnome/shell/extensions/system-monitor:
             show-cpu: true
             show-download: true
@@ -120,8 +121,8 @@
             enabled: true
           /org/gnome/terminal/legacy:
             new-tab-position: true
-            new-terminal-mode: "'window'"
-            theme-variant: "'system'"
+            new-terminal-mode: '"window"'
+            theme-variant: '"system"'
           '/org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9':
             default-size-columns: 275
             default-size-rows: 75
@@ -144,10 +145,10 @@
               - 'rgb(238,238,236)'
             use-theme-colors: true
             use-theme-transparency: true
-            visible-name: "'Default'"
+            visible-name: '"Default"'
           /org/gtk/gtk4/settings/file-chooser:
             show-hidden: true
             sort-directories-first: true
           /org/gtk/settings/file-chooser:
-            clock-format: "'24h'"
+            clock-format: '"24h"'
             show-hidden: true

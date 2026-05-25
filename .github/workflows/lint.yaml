@@ -6,6 +6,17 @@ on:
     branches:
       - 'master'
 jobs:
+  ansible-lint:
+    name: 'Ansible Lint'
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v6'
+      - name: 'Run ansible-lint'
+        uses: 'ansible/ansible-lint@v26'
+        with:
+          args: '--strict'
+          working_directory: 'ansible'
+
   render:
     name: 'Render (personal=${{ matrix.personal }}, work=${{ matrix.work }})'
     runs-on: 'ubuntu-latest'
