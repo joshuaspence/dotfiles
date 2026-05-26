@@ -8,6 +8,7 @@ on:
 jobs:
   ansible-lint:
     name: 'Ansible Lint'
+    runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v6'
