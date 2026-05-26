@@ -308,6 +308,10 @@
           - 'remmina'
           - 'remmina-plugin-vnc'
 
+    - name: 'Install Skopeo'
+      ansible.builtin.apt:
+        name: 'skopeo'
+
     - name: 'Install tmux'
       ansible.builtin.apt:
         name: 'tmux'

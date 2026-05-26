@@ -1,0 +1,1 @@
+source <(skopeo completion bash)
