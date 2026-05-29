@@ -1,3 +1,5 @@
+# shellcheck disable=SC2155,SC2164
+
 function git-workspace-clone() {
   local repository="${1?Repository not specified}"
   local destination="${HOME}/workspace/$(sed --regexp-extended 's|\.git$||; s|^([a-z+]+://)?([^@]+@)?([^/:]+)[:/](.+)$|\3/\4|' <<< "${repository}")"
