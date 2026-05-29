@@ -16,6 +16,7 @@ jobs:
         uses: 'ansible/ansible-lint@v26'
         with:
           args: '--strict'
+          requirements_file: 'requirements.yaml'
           working_directory: 'ansible'
 
   render:
