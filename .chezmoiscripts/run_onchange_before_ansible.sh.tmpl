@@ -9,13 +9,22 @@ set -o pipefail
 {{ range $file := glob (joinPath $sourceDir "ansible/*.{cfg,yaml}") -}}
 # {{ trimPrefix (print $sourceDir "/") $file }}: {{ include $file | sha256sum }}
 {{ end }}
+ANSIBLE_ARGS=()
+
+if [[ ${EUID} -ne 0 ]]; then
+  ANSIBLE_ARGS+=(--ask-become-pass)
+fi
+
 if ! command -v ansible-playbook >/dev/null; then
   python3 -c 'import ensurepip' 2>/dev/null || {{ if ne .chezmoi.username "root" -}} sudo {{ end -}} apt-get install --no-install-recommends --yes python3-venv
   python3 -m venv /tmp/venv
   source /tmp/venv/bin/activate
+
   pip install --constraint <(chezmoi execute-template <{{ $sourceDir }}/dot_venv/requirements.in.tmpl) ansible github3.py psutil python-debian
-  export ANSIBLE_PYTHON_INTERPRETER="$(which python)"
+
+  printf 'localhost ansible_connection=local ansible_python_interpreter=%s\n' "$(command -v python)" >/tmp/ansible-inventory.txt
+  ANSIBLE_ARGS+=(--inventory /tmp/ansible-inventory.txt)
 fi
 
 export ANSIBLE_CONFIG={{ joinPath $sourceDir "ansible/ansible.cfg" }}
-ansible-playbook {{ if ne .chezmoi.username "root" -}} --ask-become-pass {{ end -}} {{ joinPath $sourceDir "ansible/site.yaml" }}
+ansible-playbook "${ANSIBLE_ARGS[@]}" {{ joinPath $sourceDir "ansible/site.yaml" }}
