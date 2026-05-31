@@ -1,6 +1,7 @@
 ---
 - name: 'Apply dconf settings'
   import_playbook: 'dconf.yaml'
+  when: 'not is_ci'
 - name: 'Configure keyd'
   import_playbook: 'keyd.yaml'
 - name: 'Install packages'
