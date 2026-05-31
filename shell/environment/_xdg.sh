@@ -12,6 +12,7 @@
 export AWS_ECR_CACHE_DIR="${XDG_CACHE_HOME}/ecr"
 export DOCKER_CONFIG="${XDG_CONFIG_HOME}/docker"
 export INPUTRC="${XDG_CONFIG_HOME}/readline/inputrc"
+export TASKRC="${XDG_CONFIG_HOME}/taskrc"
 export VSCODE_EXTENSIONS="${XDG_DATA_HOME}/Code/extensions"
 export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
 

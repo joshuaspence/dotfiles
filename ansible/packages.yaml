@@ -241,6 +241,10 @@
           - 'libtool'
           - 'pkg-config'
 
+    - name: 'Install Taskwarrior'
+      ansible.builtin.apt:
+        name: 'taskwarrior'
+
     - name: 'Install file sharing packages'
       when: 'is_personal'
       ansible.builtin.apt:
