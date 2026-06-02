@@ -1,0 +1,6 @@
+---
+# See https://github.com/anthropics/claude-code/issues/7738
+.local/share/claude-bash-completion:
+  type: 'git-repo'
+  refreshPeriod: '168h'
+  url: 'https://github.com/cldotdev/claude-bash-completion.git'
