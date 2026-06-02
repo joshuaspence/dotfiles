@@ -1,0 +1,6 @@
+{{- /* TODO: Use a regular external after twpayne/chezmoi#3724 */ -}}
+{{- $repo := "ghe.anduril.dev/anduril/slack-cli" -}}
+{{- $version := output "gh" "release" (printf "--repo=%s" $repo) "view" "--json=name" "--template={{ .name }}" -}}
+{{- $archive := (printf "slack-cli-*-%s-%s.tar.gz" .chezmoi.os .chezmoi.arch) -}}
+{{- $file := "slack-cli" -}}
+{{- output "sh" "-c" (printf "gh release --repo=%s download --output=- --pattern=%s %s | tar --extract --to-stdout --gunzip %s" $repo $archive $version $file) -}}

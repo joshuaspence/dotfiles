@@ -36,6 +36,7 @@
 /.local/share/bash-completion/completions/latticectl.bash
 /.local/share/bash-completion/completions/op.bash
 /.local/share/bash-completion/completions/sieclient.bash
+/.local/share/bash-completion/completions/slack-cli.bash
 /.local/share/bash-completion/completions/teleport.bash
 /.local/share/bash-completion/completions/tsh.bash
 {{ end -}}
@@ -108,6 +109,7 @@
 /.local/bin/jira
 /.local/bin/latticectl
 /.local/bin/sieclient
+/.local/bin/slack-cli
 /.ssh/conf.d/lattice.conf
 /.ssh/conf.d/teleport.conf
 /.ssh/conf.d/work.conf

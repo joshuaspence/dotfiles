@@ -92,6 +92,7 @@
 - [ ] `dot_local/exact_bin/executable_camctl`
 - [x] `dot_local/exact_bin/executable_latticectl.tmpl`
 - [x] `dot_local/exact_bin/executable_sieclient.tmpl`
+- [ ] `dot_local/exact_bin/executable_slack-cli.tmpl`
 - [x] `dot_local/exact_bin/symlink_bats.tmpl`
 - [x] `dot_local/private_state/bash/.keep`
 - [ ] `dot_local/share/applications/executable_com.ultimaker.cura.desktop`
@@ -116,6 +117,7 @@
 - [x] `dot_local/share/exact_bash-completion/exact_completions/pipx.sh`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/sieclient.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/skopeo.bash`
+- [ ] `dot_local/share/exact_bash-completion/exact_completions/slack-cli.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_claude.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_nix.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_op`
