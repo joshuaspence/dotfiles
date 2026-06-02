@@ -1,0 +1,186 @@
+- [ ] `.chezmoi.yaml.tmpl`
+- [x] `.chezmoiexternals/act.yaml`
+- [x] `.chezmoiexternals/agent-deck.yaml`
+- [x] `.chezmoiexternals/amazon-ecr-credential-helper.yaml`
+- [x] `.chezmoiexternals/bats.yaml`
+- [x] `.chezmoiexternals/bkt.yaml`
+- [x] `.chezmoiexternals/chezmoi.yaml`
+- [x] `.chezmoiexternals/circleci.yaml`
+- [x] `.chezmoiexternals/claude-bash-completion.yaml`
+- [x] `.chezmoiexternals/complete-alias.yaml`
+- [x] `.chezmoiexternals/dive.yaml`
+- [x] `.chezmoiexternals/docker-credential-magic.yaml`
+- [x] `.chezmoiexternals/grpcurl.yaml`
+- [x] `.chezmoiexternals/jira-cli.yaml`
+- [x] `.chezmoiexternals/k9s.yaml`
+- [x] `.chezmoiexternals/kubectx.yaml`
+- [x] `.chezmoiexternals/liquidprompt.yaml`
+- [x] `.chezmoiexternals/shfmt.yaml`
+- [x] `.chezmoiexternals/terraform-docs.yaml`
+- [x] `.chezmoiexternals/terragrunt.yaml`
+- [x] `.chezmoiexternals/tflint.yaml`
+- [x] `.chezmoiexternals/tpm.yaml`
+- [x] `.chezmoiexternals/ultimaker-cura.yaml`
+- [x] `.chezmoiexternals/vim-plug.yaml`
+- [ ] `.chezmoiignore`
+- [x] `.chezmoiremove`
+- [ ] `.chezmoiscripts/run_onchange_after_50_nix.sh.tmpl`
+- [ ] `.chezmoiscripts/run_onchange_after_50_tmux.sh.tmpl`
+- [ ] `.chezmoiscripts/run_onchange_after_50_vim.sh.tmpl`
+- [ ] `.chezmoiscripts/run_onchange_after_50_virtualenv.sh.tmpl`
+- [ ] `.chezmoiscripts/run_onchange_after_50_vscode.sh.tmpl`
+- [ ] `.chezmoiscripts/run_onchange_after_70_gnome-extensions.sh.tmpl`
+- [x] `.chezmoiscripts/run_onchange_before_ansible.sh.tmpl`
+- [ ] `.chezmoiscripts/run_onchange_gh.sh.tmpl`
+- [ ] `.chezmoiscripts/run_onchange_ip-route.sh`
+- [ ] `.chezmoiscripts/run_onchange_sudoers.sh`
+- [x] `.chezmoiversion`
+- [x] `.git-crypt/.gitattributes`
+- [x] `.git-crypt/keys/default/0/1F85C8F428714274803B3B108A35B059C5EAB32A.gpg`
+- [x] `.github/actions/chezmoi/action.yaml`
+- [x] `.github/dependabot.yaml`
+- [ ] `.github/workflows/lint.yaml`
+- [ ] `.github/workflows/test.yaml`
+- [x] `.shellcheckrc`
+- [ ] `.yamllint`
+- [x] `README.md`
+- [ ] `ansible/ansible.cfg`
+- [ ] `ansible/dconf.yaml`
+- [ ] `ansible/group_vars/all.yaml`
+- [ ] `ansible/inventory.txt`
+- [ ] `ansible/keyd.yaml`
+- [ ] `ansible/packages.yaml`
+- [ ] `ansible/requirements.yaml`
+- [ ] `ansible/site.yaml`
+- [x] `create_dot_hushlogin`
+- [ ] `dot_agent-deck/config.toml`
+- [x] `dot_bash_logout`
+- [ ] `dot_bashrc.tmpl`
+- [ ] `dot_config/Code/User/settings.json`
+- [x] `dot_config/claude/.chezmoiignore`
+- [x] `dot_config/claude/exact_agents/.keep`
+- [x] `dot_config/claude/exact_scripts/.keep`
+- [x] `dot_config/claude/file-suggestion.sh`
+- [x] `dot_config/claude/plugins/claude-hud/config.json`
+- [x] `dot_config/claude/settings.json.tmpl`
+- [x] `dot_config/claude/statusline.sh`
+- [x] `dot_config/curlrc`
+- [x] `dot_config/docker/config.json`
+- [x] `dot_config/exact_bat/config`
+- [x] `dot_config/exact_git/config.tmpl`
+- [x] `dot_config/exact_git/ignore`
+- [x] `dot_config/exact_git/work.config`
+- [x] `dot_config/exact_go/env.tmpl`
+- [x] `dot_config/exact_helm/config.json`
+- [ ] `dot_config/exact_i3/config`
+- [x] `dot_config/exact_liquidprompt/custom.theme`
+- [x] `dot_config/exact_liquidprompt/minimal.theme`
+- [x] `dot_config/exact_magic/config.json`
+- [x] `dot_config/exact_magic/exact_etc/aws.yaml`
+- [x] `dot_config/exact_nix/nix.conf.tmpl`
+- [x] `dot_config/exact_nixpkgs/config.nix`
+- [ ] `dot_config/exact_readline/inputrc`
+- [x] `dot_config/gtk-3.0/bookmarks.tmpl`
+- [ ] `dot_config/kube/.gitattributes`
+- [ ] `dot_config/kube/config.tmpl`
+- [ ] `dot_config/lesskey`
+- [x] `dot_config/liquidpromptrc`
+- [ ] `dot_config/pip-tools.toml`
+- [ ] `dot_config/systemd/user/ssh-agent-sk.service`
+- [x] `dot_config/wgetrc`
+- [x] `dot_local/exact_bin/executable_appctl.tmpl`
+- [ ] `dot_local/exact_bin/executable_camctl`
+- [x] `dot_local/exact_bin/executable_latticectl.tmpl`
+- [x] `dot_local/exact_bin/executable_sieclient.tmpl`
+- [x] `dot_local/exact_bin/symlink_bats.tmpl`
+- [x] `dot_local/private_state/bash/.keep`
+- [ ] `dot_local/share/applications/executable_com.ultimaker.cura.desktop`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/1password-cli.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/appctl.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/aws.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/bat.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/cat.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/chezmoi.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/circleci.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/determinate-nixd.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/dive.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/hass-cli.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/helm.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/jfrog.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/jira.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/k9s.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/kubectl.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/latticectl.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/packer.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/pip.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/pipx.sh`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/sieclient.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/skopeo.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_claude.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_nix.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_op`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_tsh`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/teleport.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/terraform-docs.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/terraform.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/terragrunt.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/vscode.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/yq.bash`
+- [x] `dot_manpath`
+- [ ] `dot_profile.tmpl`
+- [x] `dot_ssh/.chezmoiremove`
+- [ ] `dot_ssh/config`
+- [x] `dot_ssh/exact_conf.d/.gitattributes`
+- [ ] `dot_ssh/exact_conf.d/aws.conf`
+- [ ] `dot_ssh/exact_conf.d/home.conf`
+- [ ] `dot_ssh/exact_conf.d/work.conf`
+- [ ] `dot_tmux.conf`
+- [ ] `dot_venv/requirements.in.tmpl`
+- [x] `exact_dot_aws/.gitattributes`
+- [ ] `exact_dot_aws/config.tmpl`
+- [ ] `exact_dot_vim/.chezmoiremove`
+- [ ] `exact_dot_vim/exact_autoload/.keep`
+- [ ] `exact_dot_vim/exact_plugin/search.vim`
+- [ ] `exact_dot_vim/exact_plugin/statusline.vim`
+- [ ] `exact_dot_vim/exact_plugin/sudo.vim`
+- [ ] `exact_dot_vim/exact_plugin/temp.vim`
+- [ ] `exact_dot_vim/exact_plugin/viminfo.vim`
+- [ ] `exact_dot_vim/exact_plugin/visual.vim`
+- [ ] `exact_dot_vim/vimrc`
+- [x] `shell/config/completion.bash`
+- [x] `shell/config/fignore.bash`
+- [ ] `shell/config/fzf.bash`
+- [ ] `shell/config/history.bash`
+- [x] `shell/config/liquidprompt.bash`
+- [ ] `shell/config/opts.bash`
+- [x] `shell/config/zoxide.bash`
+- [ ] `shell/environment/_path.sh`
+- [ ] `shell/environment/_xdg.sh`
+- [x] `shell/environment/browser.sh`
+- [x] `shell/environment/coreutils.sh`
+- [x] `shell/environment/docker.sh`
+- [x] `shell/environment/editor.sh`
+- [x] `shell/environment/pager.sh`
+- [x] `shell/functions/aws.bash`
+- [x] `shell/functions/b64diff.bash`
+- [ ] `shell/functions/bat.sh`
+- [x] `shell/functions/clipboard.sh`
+- [x] `shell/functions/coreutils.sh`
+- [x] `shell/functions/diffutils.sh`
+- [x] `shell/functions/git-workspace-clone.bash`
+- [x] `shell/functions/grep.sh`
+- [x] `shell/functions/iproute2.sh`
+- [x] `shell/functions/open.sh`
+- [x] `shell/functions/resize-pdf.bash`
+- [x] `shell/functions/upgrade-all.bash`
+- [x] `shell/functions/vscode.sh`
+- [x] `shell/functions/whatismyip.sh`
+- [x] `shell/helpers.sh`
+
+- [ ] `https://github.com/junegunn/fzf`
+- [ ] `https://github.com/sharkdp/fd`
+- [ ] `https://github.com/BurntSushi/ripgrep`
+- [ ] `https://github.com/eth-p/bat-extras`
+- [ ] `https://github.com/dandavison/delta`
+- [ ] `https://github.com/eth-p/bat-extras/blob/master/doc/batman.md`
+- [ ] `export MANPAGER="batcat -plman"`
