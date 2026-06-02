@@ -46,7 +46,7 @@
 /snap/
 /src/
 /.terraform.d/
-/TODO
+/TODO.md
 /workspace/
 
 # AWS
