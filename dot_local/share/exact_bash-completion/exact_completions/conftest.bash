@@ -1,0 +1,1 @@
+source <(conftest completion bash)
