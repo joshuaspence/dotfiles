@@ -363,15 +363,14 @@
     - name: 'Kubernetes'
       block:
         - name: 'Get latest Kubernetes release'
-          community.general.github_release:
-            user: 'kubernetes'
-            repo: 'kubernetes'
-            action: 'latest_release'
+          ansible.builtin.uri:
+            url: 'https://dl.k8s.io/release/stable.txt'
+            return_content: true
           register: 'kubernetes_release'
           changed_when: false
         - name: 'Set target Kubernetes version'
           ansible.builtin.set_fact:
-            kubernetes_version: '{{ (kubernetes_release.tag | split("."))[:-1] | join(".") }}'
+            kubernetes_version: '{{ (kubernetes_release.content | trim | split("."))[:-1] | join(".") }}'
         - name: 'Add Kubernetes repository'
           ansible.builtin.deb822_repository:
             name: 'kubernetes'
