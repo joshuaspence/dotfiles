@@ -408,7 +408,7 @@
           ansible.builtin.deb822_repository:
             name: 'speedtest'
             uris: 'https://packagecloud.io/ookla/speedtest-cli/ubuntu'
-            suites: '{{ ansible_facts.distribution_release | replace("noble", "jammy") }}'
+            suites: '{{ ansible_facts.distribution_release | replace("resolute", "jammy") | replace("noble", "jammy") }}'
             components: 'main'
             signed_by: 'https://packagecloud.io/ookla/speedtest-cli/gpgkey'
           notify: 'Update APT cache'
