@@ -17,7 +17,7 @@ jobs:
       # `bin/` is never added to `$PATH`, so the `requirements_file` step's `ansible-galaxy` resolves to the runner's
       # preinstalled ansible instead and never installs our pinned collection where lint searches. See ansible/ansible-lint#5034.
       - name: 'Run ansible-lint'
-        uses: 'ansible/ansible-lint@v26.1.1'
+        uses: 'ansible/ansible-lint@v26.6.0'
         with:
           args: '--strict'
           requirements_file: 'requirements.yaml'
