@@ -133,12 +133,6 @@
 - [x] `dot_local/share/exact_bash-completion/exact_completions/yq.bash`
 - [x] `dot_manpath`
 - [ ] `dot_profile.tmpl`
-- [x] `dot_ssh/.chezmoiremove`
-- [ ] `dot_ssh/config`
-- [x] `dot_ssh/exact_conf.d/.gitattributes`
-- [ ] `dot_ssh/exact_conf.d/aws.conf`
-- [ ] `dot_ssh/exact_conf.d/home.conf`
-- [ ] `dot_ssh/exact_conf.d/work.conf`
 - [ ] `dot_tmux.conf`
 - [ ] `dot_venv/requirements.in.tmpl`
 - [x] `exact_dot_aws/.gitattributes`
@@ -152,6 +146,12 @@
 - [ ] `exact_dot_vim/exact_plugin/viminfo.vim`
 - [ ] `exact_dot_vim/exact_plugin/visual.vim`
 - [ ] `exact_dot_vim/vimrc`
+- [x] `private_dot_ssh/.chezmoiremove`
+- [ ] `private_dot_ssh/config`
+- [x] `private_dot_ssh/exact_conf.d/.gitattributes`
+- [ ] `private_dot_ssh/exact_conf.d/aws.conf`
+- [ ] `private_dot_ssh/exact_conf.d/home.conf`
+- [ ] `private_dot_ssh/exact_conf.d/work.conf`
 - [x] `shell/config/completion.bash`
 - [x] `shell/config/fignore.bash`
 - [ ] `shell/config/fzf.bash`
