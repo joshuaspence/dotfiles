@@ -8,6 +8,7 @@
 - [x] `.chezmoiexternals/circleci.yaml`
 - [x] `.chezmoiexternals/claude-bash-completion.yaml`
 - [x] `.chezmoiexternals/complete-alias.yaml`
+- [x] `.chezmoiexternals/conftest.yaml`
 - [x] `.chezmoiexternals/dive.yaml`
 - [x] `.chezmoiexternals/docker-credential-magic.yaml`
 - [x] `.chezmoiexternals/grpcurl.yaml`
@@ -44,6 +45,7 @@
 - [x] `.shellcheckrc`
 - [ ] `.yamllint`
 - [x] `README.md`
+- [x] `TODO.md`
 - [ ] `ansible/ansible.cfg`
 - [ ] `ansible/dconf.yaml`
 - [ ] `ansible/group_vars/all.yaml`
@@ -103,6 +105,7 @@
 - [x] `dot_local/share/exact_bash-completion/exact_completions/cat.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/chezmoi.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/circleci.bash`
+- [ ] `dot_local/share/exact_bash-completion/exact_completions/conftest.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/determinate-nixd.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/dive.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/hass-cli.bash`
@@ -118,7 +121,7 @@
 - [x] `dot_local/share/exact_bash-completion/exact_completions/sieclient.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/skopeo.bash`
 - [ ] `dot_local/share/exact_bash-completion/exact_completions/slack-cli.bash`
-- [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_claude.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_claude.bash.tmpl`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_nix.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_op`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/symlink_tsh`
@@ -174,6 +177,7 @@
 - [x] `shell/functions/iproute2.sh`
 - [x] `shell/functions/open.sh`
 - [x] `shell/functions/resize-pdf.bash`
+- [x] `shell/functions/todo.bash`
 - [x] `shell/functions/upgrade-all.bash`
 - [x] `shell/functions/vscode.sh`
 - [x] `shell/functions/whatismyip.sh`
