@@ -99,6 +99,7 @@
 - [x] `dot_local/private_state/bash/.keep`
 - [ ] `dot_local/share/applications/executable_com.ultimaker.cura.desktop`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/1password-cli.bash`
+- [x] `dot_local/share/exact_bash-completion/exact_completions/act.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/appctl.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/aws.bash`
 - [x] `dot_local/share/exact_bash-completion/exact_completions/bat.bash`
