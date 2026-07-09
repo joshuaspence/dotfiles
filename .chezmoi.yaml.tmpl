@@ -1,5 +1,8 @@
 ---
 data:
+  goreleaser:
+    arch: '{{ .chezmoi.arch | replace "amd64" "x86_64" }}'
+    os: '{{ .chezmoi.os | title }}'
   headless: {{ env "GITHUB_ACTIONS" | empty | not }}
   personal: {{ promptBoolOnce . "personal" "Enable personal profile" false }}
   work: {{ promptBoolOnce . "work" "Enable work profile" false }}

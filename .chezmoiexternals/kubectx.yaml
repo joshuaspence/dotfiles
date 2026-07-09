@@ -1,16 +1,15 @@
 ---
-# {{ $arch := .chezmoi.arch | replace "amd64" "x86_64" }}
 .local/bin/kubectx:
   type: 'archive-file'
   executable: true
   path: 'kubectx'
-  url: '{{ gitHubLatestReleaseAssetURL "ahmetb/kubectx" (printf "kubectx_*_%s_%s.tar.gz" .chezmoi.os $arch) }}'
+  url: '{{ gitHubLatestReleaseAssetURL "ahmetb/kubectx" (printf "kubectx_*_%s_%s.tar.gz" .chezmoi.os .goreleaser.arch) }}'
 
 .local/bin/kubens:
   type: 'archive-file'
   executable: true
   path: 'kubens'
-  url: '{{ gitHubLatestReleaseAssetURL "ahmetb/kubectx" (printf "kubens_*_%s_%s.tar.gz" .chezmoi.os $arch) }}'
+  url: '{{ gitHubLatestReleaseAssetURL "ahmetb/kubectx" (printf "kubens_*_%s_%s.tar.gz" .chezmoi.os .goreleaser.arch) }}'
 
 .local/share/bash-completion/completions/kubectx:
   type: 'archive-file'

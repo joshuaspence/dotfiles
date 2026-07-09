@@ -3,4 +3,4 @@
   type: 'archive-file'
   executable: true
   path: 'conftest'
-  url: '{{ gitHubLatestReleaseAssetURL "open-policy-agent/conftest" (printf "conftest_*_%s_%s.tar.gz" (.chezmoi.os | title) (.chezmoi.arch | replace "amd64" "x86_64")) }}'
+  url: '{{ gitHubLatestReleaseAssetURL "open-policy-agent/conftest" (printf "conftest_*_%s_%s.tar.gz" .goreleaser.os .goreleaser.arch) }}'
