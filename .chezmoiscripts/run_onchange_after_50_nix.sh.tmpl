@@ -1,4 +1,4 @@
-#!{{ if ne .chezmoi.username "root" -}} {{ lookPath "sudo" }} {{ end -}} {{ lookPath "bash" }}
+#!{{ lookPath (.sudo | trim) }} {{ lookPath "bash" }}
 
 set -o errexit
 set -o nounset

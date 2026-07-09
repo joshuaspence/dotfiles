@@ -16,7 +16,7 @@ if [[ ${EUID} -ne 0 ]]; then
 fi
 
 if ! command -v ansible-playbook >/dev/null; then
-  {{ if ne .chezmoi.username "root" -}} sudo {{ end -}} apt-get install --no-install-recommends --yes ansible python3-debian python3-psutil
+  {{ .sudo -}} apt-get install --no-install-recommends --yes ansible python3-debian python3-psutil
 fi
 
 export ANSIBLE_CONFIG={{ joinPath $sourceDir "ansible/ansible.cfg" }}

@@ -5,6 +5,7 @@ data:
     os: '{{ .chezmoi.os | title }}'
   headless: {{ env "GITHUB_ACTIONS" | empty | not }}
   personal: {{ promptBoolOnce . "personal" "Enable personal profile" false }}
+  sudo: '{{ if ne .chezmoi.username "root" -}} sudo {{ end }}'
   work: {{ promptBoolOnce . "work" "Enable work profile" false }}
 github:
   refreshPeriod: '12h'
