@@ -8,18 +8,17 @@
       community.general.dconf:
         key: '{{ item.path }}/{{ item.key }}'
         value: '{{ item.value if item.value is string else item.value | to_json }}'
-      loop: '{{ dconf_entries | from_json }}'
+      loop: |-
+        {%- set entries = [] -%}
+        {%- for path, keys in dconf_settings.items() -%}
+          {%- for key, value in keys.items() -%}
+            {%- set _ = entries.append({'path': path, 'key': key, 'value': value}) -%}
+          {%- endfor -%}
+        {%- endfor -%}
+        {{ entries }}
       loop_control:
         label: '{{ item.path }}/{{ item.key }}'
       vars:
-        dconf_entries: |-
-          {%- set ns = namespace(entries=[]) -%}
-          {%- for path in dconf_settings.keys() -%}
-            {%- for key in dconf_settings[path].keys() -%}
-              {%- set _ = ns.entries.append({'path': path, 'key': key, 'value': dconf_settings[path][key]}) -%}
-            {%- endfor -%}
-          {%- endfor -%}
-          {{ ns.entries | to_json }}
         dconf_settings:
           /org/gnome/desktop/calendar:
             show-weekdate: false
@@ -120,7 +119,7 @@
           /org/gnome/system/location:
             enabled: true
           /org/gnome/terminal/legacy:
-            new-tab-position: true
+            new-tab-position: '"next"'
             new-terminal-mode: '"window"'
             theme-variant: '"system"'
           '/org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9':
