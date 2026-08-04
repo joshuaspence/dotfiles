@@ -1,4 +1,5 @@
 function diff-todo() {
+  # shellcheck disable=SC2016
   diff \
     --old-line-format=$'\033[31m%l\033[m\n' \
     --new-line-format=$'\033[32m%l\033[m\n' \
