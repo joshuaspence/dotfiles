@@ -19,3 +19,9 @@ textconv:
     command: 'yq'
     args:
       - 'sort_keys(..)'
+
+  # Diff the embedded release version of installed binaries rather than their
+  # (huge, unreadable) contents. Go binaries expose a version in their build
+  # info; anything else passes through and diffs normally. See the helper.
+  - pattern: '**/.local/bin/*'
+    command: '{{ .chezmoi.sourceDir }}/bin/textconv-goversion'
