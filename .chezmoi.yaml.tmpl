@@ -18,7 +18,9 @@ textconv:
   - pattern: '**/*.yaml'
     command: 'yq'
     args:
-      - 'sort_keys(..)'
+      # Sort keys and reset scalar/collection styles so key order, indentation, quoting and flow-vs-block differences
+      # don't show as cosmetic diffs. Quotes required for correctness (e.g. "true", "007") are preserved.
+      - 'sort_keys(..) | ... style=""'
 
   # The kube config is rewritten by tsh/kubectl with different formatting than the template, producing large cosmetic
   # diffs. Canonicalise it through kubectl so only real changes show. --raw keeps credentials that `view` otherwise
