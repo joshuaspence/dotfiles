@@ -1,128 +1,128 @@
 {{ if .work -}}
-/.1password/agent.sock
-/.GlobalProtect/
+.1password/agent.sock
+.GlobalProtect/
 {{ end -}}
-/.aws/cli/cache/
-/.aws/login/cache/
-/.aws/sso/cache/
-/.cache/
-/.config/chezmoi/
-/.config/dconf/
-/.config/evolution/
-/.config/goa-1.0/
-/.config/go/telemetry/
-/.config/gnome-initial-setup-done
-/.config/gnome-session/
-/.config/helm/registry/
-/.config/helm/repositories.lock
-/.config/helm/repositories.yaml
-/.config/ibus/
-/.config/monitors.xml*
-/.config/nautilus/
+.aws/cli/cache/
+.aws/login/cache/
+.aws/sso/cache/
+.cache/
+.config/chezmoi/
+.config/dconf/
+.config/evolution/
+.config/goa-1.0/
+.config/go/telemetry/
+.config/gnome-initial-setup-done
+.config/gnome-session/
+.config/helm/registry/
+.config/helm/repositories.lock
+.config/helm/repositories.yaml
+.config/ibus/
+.config/monitors.xml*
+.config/nautilus/
 {{ if .work -}}
-/.config/nix/netrc
+.config/nix/netrc
 {{ end -}}
-/.config/pulse/
-/.config/update-notifier/
-/.config/user-dirs.dirs
-/.config/user-dirs.locale
-/go/
+.config/pulse/
+.config/update-notifier/
+.config/user-dirs.dirs
+.config/user-dirs.locale
+go/
 {{ if not .personal -}}
-/.local/share/bash-completion/completions/hass-cli.bash
+.local/share/bash-completion/completions/hass-cli.bash
 {{ end -}}
 {{ if not .work -}}
-/.local/share/bash-completion/completions/1password-cli.bash
-/.local/share/bash-completion/completions/appctl.bash
-/.local/share/bash-completion/completions/jira.bash
-/.local/share/bash-completion/completions/latticectl.bash
-/.local/share/bash-completion/completions/op.bash
-/.local/share/bash-completion/completions/sieclient.bash
-/.local/share/bash-completion/completions/slack-cli.bash
-/.local/share/bash-completion/completions/teleport.bash
-/.local/share/bash-completion/completions/tsh.bash
+.local/share/bash-completion/completions/1password-cli.bash
+.local/share/bash-completion/completions/appctl.bash
+.local/share/bash-completion/completions/jira.bash
+.local/share/bash-completion/completions/latticectl.bash
+.local/share/bash-completion/completions/op.bash
+.local/share/bash-completion/completions/sieclient.bash
+.local/share/bash-completion/completions/slack-cli.bash
+.local/share/bash-completion/completions/teleport.bash
+.local/share/bash-completion/completions/tsh.bash
 {{ end -}}
-/ansible/
-/bin/
-/README.md
-/shell/
-/.ssh/known_hosts{,.old}
-/snap/
-/src/
-/.terraform.d/
-/TODO.md
-/workspace/
+ansible/
+bin/
+README.md
+shell/
+.ssh/known_hosts{,.old}
+snap/
+src/
+.terraform.d/
+TODO.md
+workspace/
 
 # AWS
-/.aws/cli/
-/.aws/cli/cache/
-/.aws/credentials
-/.aws/sso/
-/.aws/sso/cache/
+.aws/cli/
+.aws/cli/cache/
+.aws/credentials
+.aws/sso/
+.aws/sso/cache/
 
 {{ if .headless -}}
 # Desktop
-/.chezmoiscripts/dconf.sh
-/.chezmoiscripts/gnome-extensions.sh
-/.config/gtk-3.0/
-/.config/gtk-4.0/
-/.config/mimeapps.list
+.chezmoiscripts/dconf.sh
+.chezmoiscripts/gnome-extensions.sh
+.config/gtk-3.0/
+.config/gtk-4.0/
+.config/mimeapps.list
 
 {{ end -}}
 
 # Private
-/.gnupg/
-/.ssh/keys/
+.gnupg/
+.ssh/keys/
 
 # User
-/Desktop/
-/Documents/
-/Downloads/
-/Music/
-/Pictures/
-/Public/
-/Templates/
-/Videos/
+Desktop/
+Documents/
+Downloads/
+Music/
+Pictures/
+Public/
+Templates/
+Videos/
 
 # Vim
-/.vim/backup/
-/.vim/.netrwhist
-/.vim/plugged/
-/.vim/swap/
-/.vim/undo/
-/.vim/view/
-/.vim/viminfo
+.vim/backup/
+.vim/.netrwhist
+.vim/plugged/
+.vim/swap/
+.vim/undo/
+.vim/view/
+.vim/viminfo
 
 # VSCode
-/.config/Code/*
-!/.config/Code/User
-/.config/Code/User/*
-!/.config/Code/User/settings.json
+.config/Code/*
+!.config/Code/User
+.config/Code/User/*
+!.config/Code/User/settings.json
 
 {{ if not .work -}}
-/.aws/config
-/.chezmoiscripts/50_nix.sh
-/.chezmoiscripts/ip-route.sh
-/.config/kube/config
-/.config/nix
-/.config/nixpkgs
-/.config/systemd/user/ssh-agent-sk.service
-/.local/bin/appctl
-/.local/bin/circleci
-/.local/bin/jira
-/.local/bin/latticectl
-/.local/bin/sieclient
-/.local/bin/slack-cli
-/.ssh/conf.d/lattice.conf
-/.ssh/conf.d/teleport.conf
-/.ssh/conf.d/work.conf
+.aws/config
+.chezmoiscripts/50_nix.sh
+.chezmoiscripts/ip-route.sh
+.config/kube/config
+.config/nix
+.config/nixpkgs
+.config/systemd/user/ssh-agent-sk.service
+.local/bin/appctl
+.local/bin/circleci
+.local/bin/jira
+.local/bin/latticectl
+.local/bin/sieclient
+.local/bin/slack-cli
+.ssh/conf.d/lattice.conf
+.ssh/conf.d/teleport.conf
+.ssh/conf.d/work.conf
 {{ end -}}
 
 {{ if not (and (eq (output "cat" "/sys/devices/virtual/dmi/id/sys_vendor" | trim) "Dell Inc.") (eq (output "cat" "/sys/devices/virtual/dmi/id/product_name" | trim) "Precision 5680")) -}}
-/.local/bin/camctl
+.local/bin/camctl
 {{ end -}}
 
 {{ if not .personal -}}
-/.local/bin/Ultimaker-Cura
-/.local/share/applications/com.ultimaker.cura.desktop
-/.local/share/icons/hicolor/256x256/apps/ultimaker-cura.png
+.local/bin/Ultimaker-Cura
+.local/share/applications/com.ultimaker.cura.desktop
+.local/share/icons/hicolor/256x256/apps/ultimaker-cura.png
 {{ end -}}
