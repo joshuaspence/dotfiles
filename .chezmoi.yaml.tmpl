@@ -9,30 +9,28 @@ data:
   work: {{ promptBoolOnce . "work" "Enable work profile" false }}
 github:
   refreshPeriod: '12h'
+
 textconv:
   - pattern: '**/*.json'
     command: 'jq'
     args:
       - '--sort-keys'
       - '.'
+
   - pattern: '**/*.yaml'
     command: 'yq'
     args:
-      # Sort keys and reset scalar/collection styles so key order, indentation, quoting and flow-vs-block differences
-      # don't show as cosmetic diffs. Quotes required for correctness (e.g. "true", "007") are preserved.
-      - 'sort_keys(..) | ... style=""'
+      - '--prettyPrint'
+      - 'sort_keys(..)'
 
-  # The kube config is rewritten by tsh/kubectl with different formatting than the template, producing large cosmetic
-  # diffs. Canonicalise it through kubectl so only real changes show. --raw keeps credentials that `view` otherwise
-  # redacts.
+  # Kubernetes configuration is rewritten by `tsh`/`kubectl` with different formatting than the template, producing
+  # large cosmetic diffs. Canonicalise it through `kubectl` so only real changes show.
   - pattern: '{{ .chezmoi.homeDir }}/.config/kube/config'
     command: 'kubectl'
     args:
       - 'config'
       - 'view'
       - '--kubeconfig=/dev/stdin'
-      - '--raw'
-      - '--output=yaml'
 
   # Diff the embedded release version of installed binaries rather than their contents. Go binaries expose a version in
   # their build info; anything else passes through and diffs normally.
