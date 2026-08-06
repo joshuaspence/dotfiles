@@ -13,3 +13,6 @@ call plug#end()
 
 set clipboard^=unnamed,unnamedplus
 set smartindent
+
+set ruler
+set colorcolumn=120

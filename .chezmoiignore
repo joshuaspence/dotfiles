@@ -3,6 +3,7 @@
 /.GlobalProtect/
 {{ end -}}
 /.aws/cli/cache/
+/.aws/login/cache/
 /.aws/sso/cache/
 /.cache/
 /.config/chezmoi/
