@@ -3,5 +3,4 @@
   type: 'archive-file'
   executable: true
   path: 'circleci'
-  stripComponents: 1
   url: '{{ gitHubLatestReleaseAssetURL "CircleCI-Public/circleci-cli" (printf "circleci-cli_*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) }}'
