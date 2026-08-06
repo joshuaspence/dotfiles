@@ -27,10 +27,12 @@ for arg in "$@"; do
 done
 readonly FORCE
 
+# shellcheck disable=SC2155
 readonly TMP=$(mktemp)
 trap 'rm --force "${TMP}"' EXIT
 cat >"${TMP}"
 
+# shellcheck disable=SC2155
 readonly VERSION=$(
   { go version -m "${TMP}" 2>/dev/null || true; } | awk '
     /-ldflags=/ && /-X / && match($0, /[^ ]*[Vv]ersion=[vV]?[0-9]+\.[0-9]+\.[0-9]+/) {
