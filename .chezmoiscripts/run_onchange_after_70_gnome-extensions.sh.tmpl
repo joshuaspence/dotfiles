@@ -13,6 +13,6 @@ set -o pipefail
 
 {{ if not (env "CI") -}}
 {{- range $extensions }}
-gnome-extensions-cli install {{ . }}
+gnome-extensions-cli install {{ . | shellQuote }}
 {{- end }}
 {{ end -}}

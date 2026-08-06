@@ -3,4 +3,4 @@
 {{- $version := output "gh" "release" (printf "--repo=%s" $repo) "view" "--json=name" "--template={{ .name }}" -}}
 {{- $archive := (printf "slack-cli-*-%s-%s.tar.gz" .chezmoi.os .chezmoi.arch) -}}
 {{- $file := "slack-cli" -}}
-{{- output "sh" "-c" (printf "gh release --repo=%s download --output=- --pattern=%s %s | tar --extract --to-stdout --gunzip %s" $repo $archive $version $file) -}}
+{{- output "sh" "-c" (printf "gh release --repo=%s download --output=- --pattern=%s %s | tar --extract --to-stdout --gunzip %s" (shellQuote $repo) (shellQuote $archive) (shellQuote $version) (shellQuote $file)) -}}

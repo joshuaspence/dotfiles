@@ -44,5 +44,5 @@ set -o pipefail
 {{ end -}}
 
 {{ range $extension := $extensions | sortAlpha -}}
-code {{ if env "CI" -}} --no-sandbox --user-data-dir ~/.config/Code {{ end -}} --force --install-extension {{ $extension }}
+code {{ if env "CI" -}} --no-sandbox --user-data-dir ~/.config/Code {{ end -}} --force --install-extension {{ $extension | shellQuote }}
 {{ end -}}
