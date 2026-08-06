@@ -20,8 +20,7 @@ textconv:
     args:
       - 'sort_keys(..)'
 
-  # Diff the embedded release version of installed binaries rather than their
-  # (huge, unreadable) contents. Go binaries expose a version in their build
-  # info; anything else passes through and diffs normally. See the helper.
-  - pattern: '**/.local/bin/*'
+  # Diff the embedded release version of installed binaries rather than their contents. Go binaries expose a version in
+  # their build info; anything else passes through and diffs normally.
+  - pattern: '{{ .chezmoi.homeDir }}/.local/bin/*'
     command: '{{ .chezmoi.sourceDir }}/bin/textconv-goversion'
