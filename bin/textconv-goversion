@@ -4,12 +4,28 @@
 # binary content.
 #
 # The version is read from the binary's embedded Go build info: an explicit `-X …Version=…` ldflag if present
-# (goreleaser's convention), otherwise the main module version. Non-Go binaries have no build info, so their contents
-# are passed through unchanged and diff normally.
+# (goreleaser's convention), otherwise the main module version. hen no version can be detected (e.g. a non-Go binary),
+# the script fails with an error unless `--force` is given, in which case the input is passed through unchanged so it
+# diffs normally.
 
 set -o errexit
 set -o nounset
 set -o pipefail
+
+force=false
+for arg in "$@"; do
+  case "${arg}" in
+    --force)
+      force=true
+      ;;
+
+    *)
+      echo "${0##*/}: unknown argument: ${arg}" >&2
+      exit 2
+      ;;
+  esac
+done
+readonly force
 
 readonly tmp=$(mktemp)
 trap 'rm --force "${tmp}"' EXIT
@@ -30,6 +46,9 @@ readonly version=$(
 
 if [[ -n "${version}" ]]; then
   echo "${version}"
-else
+elif "${force}"; then
   cat "${tmp}"
+else
+  echo "${0##*/}: unable to detect a version; pass --force to output the contents unchanged" >&2
+  exit 1
 fi

@@ -24,3 +24,5 @@ textconv:
   # their build info; anything else passes through and diffs normally.
   - pattern: '{{ .chezmoi.homeDir }}/.local/bin/*'
     command: '{{ .chezmoi.sourceDir }}/bin/textconv-goversion'
+    args:
+      - '--force'
