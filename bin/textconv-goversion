@@ -15,14 +15,14 @@ set -o pipefail
 FORCE=false
 for arg in "$@"; do
   case "${arg}" in
-    --force)
-      FORCE=true
-      ;;
+  --force)
+    FORCE=true
+    ;;
 
-    *)
-      echo "${0##*/}: unknown argument: ${arg}" >&2
-      exit 2
-      ;;
+  *)
+    echo "${0##*/}: unknown argument: ${arg}" >&2
+    exit 2
+    ;;
   esac
 done
 readonly FORCE
