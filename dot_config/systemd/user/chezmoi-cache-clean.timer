@@ -1,9 +1,0 @@
-[Unit]
-Description=Clear Chezmoi cache
-
-[Timer]
-OnCalendar=monthly
-Persistent=true
-
-[Install]
-WantedBy=timers.target

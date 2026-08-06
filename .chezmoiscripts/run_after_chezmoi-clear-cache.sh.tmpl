@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# Chezmoi never evicts its download cache (twpayne/chezmoi#3149) and so it grows unbounded as externals track new
+# releases. The maintainer confirms it is safe to delete; Chezmoi refetches what it needs on the next run.
+#
+# Clear the cache whenever it is older than 30 days, using the cache directory's modification time (which is set when
+# the directory is created and is not bumped by writes to files within it).
+
+readonly CACHE={{ .chezmoi.cacheDir | shellQuote }}
+readonly MAX_AGE_DAYS=30
+
+if [[ ! -d "${CACHE}" ]]; then
+  exit 0
+fi
+
+readonly AGE_DAYS=$(( ( $(date +%s) - $(stat --format=%Y "${CACHE}") ) / 86400 ))
+
+if (( AGE_DAYS >= MAX_AGE_DAYS )); then
+  echo "Clearing Chezmoi cache (${AGE_DAYS} days old)"
+  rm --recursive --force "${CACHE}"
+fi

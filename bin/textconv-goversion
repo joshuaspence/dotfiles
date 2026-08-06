@@ -12,11 +12,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-force=false
+FORCE=false
 for arg in "$@"; do
   case "${arg}" in
     --force)
-      force=true
+      FORCE=true
       ;;
 
     *)
@@ -25,14 +25,14 @@ for arg in "$@"; do
       ;;
   esac
 done
-readonly force
+readonly FORCE
 
-readonly tmp=$(mktemp)
-trap 'rm --force "${tmp}"' EXIT
-cat >"${tmp}"
+readonly TMP=$(mktemp)
+trap 'rm --force "${TMP}"' EXIT
+cat >"${TMP}"
 
-readonly version=$(
-  { go version -m "${tmp}" 2>/dev/null || true; } | awk '
+readonly VERSION=$(
+  { go version -m "${TMP}" 2>/dev/null || true; } | awk '
     /-ldflags=/ && /-X / && match($0, /[^ ]*[Vv]ersion=[vV]?[0-9]+\.[0-9]+\.[0-9]+/) {
       token = substr($0, RSTART, RLENGTH)
       sub(/.*=/, "", token)
@@ -44,10 +44,10 @@ readonly version=$(
   ' | head --lines=1
 )
 
-if [[ -n "${version}" ]]; then
-  echo "${version}"
-elif "${force}"; then
-  cat "${tmp}"
+if [[ -n "${VERSION}" ]]; then
+  echo "${VERSION}"
+elif "${FORCE}"; then
+  cat "${TMP}"
 else
   echo "${0##*/}: unable to detect a version; pass --force to output the contents unchanged" >&2
   exit 1
