@@ -17,9 +17,9 @@ if [[ ! -d "${CACHE}" ]]; then
   exit 0
 fi
 
-readonly AGE_DAYS=$(( ( $(date +%s) - $(stat --format=%Y "${CACHE}") ) / 86400 ))
+readonly AGE_DAYS=$((($(date +%s) - $(stat --format=%Y "${CACHE}")) / 86400))
 
-if (( AGE_DAYS >= MAX_AGE_DAYS )); then
+if ((AGE_DAYS >= MAX_AGE_DAYS)); then
   echo "Clearing Chezmoi cache (${AGE_DAYS} days old)"
   rm --recursive --force "${CACHE}"
 fi
