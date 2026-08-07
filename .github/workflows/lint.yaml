@@ -91,7 +91,7 @@ jobs:
       - name: 'Setup shfmt'
         uses: 'mfinelli/setup-shfmt@v4.0.1'
       - name: 'Run shfmt'
-        run: 'shfmt --diff --indent=2 ${{ needs.shellcheck.outputs.files }}'
+        run: 'shfmt --diff --indent=2 --case-indent ${{ needs.shellcheck.outputs.files }}'
 
   yamllint:
     runs-on: 'ubuntu-latest'
