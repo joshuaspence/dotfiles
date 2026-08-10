@@ -82,6 +82,7 @@
 - [x] `dot_config/exact_nix/nix.conf.tmpl`
 - [x] `dot_config/exact_nixpkgs/config.nix`
 - [ ] `dot_config/exact_readline/inputrc`
+- [ ] `dot_config/exact_tmux/tmux.conf`
 - [x] `dot_config/gtk-3.0/bookmarks.tmpl`
 - [ ] `dot_config/kube/.gitattributes`
 - [ ] `dot_config/kube/config.tmpl`
@@ -134,7 +135,6 @@
 - [x] `dot_local/share/exact_bash-completion/exact_completions/yq.bash`
 - [x] `dot_manpath`
 - [ ] `dot_profile.tmpl`
-- [ ] `dot_tmux.conf`
 - [ ] `dot_venv/requirements.in.tmpl`
 - [x] `exact_dot_aws/.gitattributes`
 - [ ] `exact_dot_aws/config.tmpl`

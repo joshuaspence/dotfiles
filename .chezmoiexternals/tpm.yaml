@@ -1,5 +1,5 @@
 ---
-.tmux/plugins/tpm:
+.local/share/tmux/plugins/tpm:
   type: 'git-repo'
   refreshPeriod: '168h'
   url: 'https://github.com/tmux-plugins/tpm.git'

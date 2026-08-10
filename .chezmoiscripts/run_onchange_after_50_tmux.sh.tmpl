@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Configuration
-# .tmux.conf: {{ include "dot_tmux.conf" | sha256sum }}
+# tmux.conf: {{ include "dot_config/exact_tmux/tmux.conf" | sha256sum }}
 
 set -o errexit
 set -o nounset
 set -o pipefail
 
-{{ if lookPath "tmux" -}}
-~/.tmux/plugins/tpm/bin/install_plugins
-~/.tmux/plugins/tpm/bin/update_plugins all
-{{ end -}}
+export PATH="${HOME}/.local/share/tmux/plugins/tpm/bin:${PATH}"
+
+install_plugins
+update_plugins all
