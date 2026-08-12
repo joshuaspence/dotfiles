@@ -1,4 +1,23 @@
 ---
+# The variables in `group_vars/all.yaml` are lookups, which Ansible re-evaluates on every reference. Resolve them once
+# into facts, which are stored per host and so are inherited by every imported playbook below.
+- name: 'Resolve variables'
+  hosts: 'localhost'
+  gather_facts: false
+
+  tasks:
+    # `is_personal` and `is_work` are defined in terms of `chezmoi_data`, so they must be resolved in a later task to
+    # see the fact set here rather than the lookup it shadows.
+    - name: 'Resolve Chezmoi data'
+      ansible.builtin.set_fact:
+        chezmoi_data: '{{ chezmoi_data }}'
+        dpkg_architecture: '{{ dpkg_architecture }}'
+    - name: 'Resolve profile flags'
+      ansible.builtin.set_fact:
+        is_ci: '{{ is_ci }}'
+        is_personal: '{{ is_personal }}'
+        is_work: '{{ is_work }}'
+
 - name: 'Apply dconf settings'
   import_playbook: 'dconf.yaml'
   when: 'not is_ci'
