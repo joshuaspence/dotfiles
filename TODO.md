@@ -92,7 +92,6 @@
 - [ ] `dot_config/systemd/user/ssh-agent-sk.service`
 - [x] `dot_config/wgetrc`
 - [x] `dot_local/exact_bin/executable_appctl.tmpl`
-- [ ] `dot_local/exact_bin/executable_camctl`
 - [x] `dot_local/exact_bin/executable_latticectl.tmpl`
 - [x] `dot_local/exact_bin/executable_sieclient.tmpl`
 - [ ] `dot_local/exact_bin/executable_slack-cli.tmpl`
