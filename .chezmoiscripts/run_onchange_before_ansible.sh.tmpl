@@ -6,8 +6,10 @@ set -o nounset
 set -o pipefail
 
 {{ $sourceDir := .chezmoi.sourceDir -}}
-{{ range $file := glob (joinPath $sourceDir "ansible/*.{cfg,yaml}") -}}
+{{ range $file := glob (joinPath $sourceDir "ansible/**") -}}
+{{ if not (stat $file).isDir -}}
 # {{ trimPrefix (print $sourceDir "/") $file }}: {{ include $file | sha256sum }}
+{{ end -}}
 {{ end }}
 ANSIBLE_ARGS=()
 

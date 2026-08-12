@@ -2,7 +2,7 @@
 
 # Configuration
 # .config/pip-tools.toml: {{ include "dot_config/pip-tools.toml" | sha256sum }}
-# .venv/requirements.in: {{ include "dot_venv/requirements.in.tmpl" | sha256sum }}
+# .venv/requirements.in: {{ includeTemplate "dot_venv/requirements.in.tmpl" . | sha256sum }}
 
 set -o errexit
 set -o nounset
