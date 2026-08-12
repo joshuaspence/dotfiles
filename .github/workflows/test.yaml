@@ -11,7 +11,7 @@ jobs:
   bootstrap:
     name: 'Bootstrap (ubuntu=${{ matrix.ubuntu_version }}, personal=${{ matrix.personal }}, work=${{ matrix.work }})'
     runs-on: 'ubuntu-latest'
-    continue-on-error: "${{ matrix.ubuntu_version == 'rolling' }}"
+    continue-on-error: "${{ matrix.ubuntu_version == 'devel' }}"
     container: 'ubuntu:${{ matrix.ubuntu_version }}'
     env:
       DEBIAN_FRONTEND: 'noninteractive'
@@ -29,7 +29,7 @@ jobs:
         ubuntu_version:
           - '24.04'
           - '26.04'
-          - 'latest'
+          - 'devel'
 
     steps:
       - name: 'Install dependencies'
