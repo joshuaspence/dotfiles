@@ -172,7 +172,7 @@
           ansible.builtin.deb822_repository:
             name: 'hashicorp'
             uris: 'https://apt.releases.hashicorp.com'
-            suites: '{{ ansible_facts.distribution_release | replace("resolute", "noble") }}'
+            suites: '{{ ansible_facts.distribution_release }}'
             components: 'main'
             architectures: '{{ dpkg_architecture }}'
             signed_by: 'https://apt.releases.hashicorp.com/gpg'
@@ -350,9 +350,11 @@
           ansible.builtin.deb822_repository:
             name: 'jfrog'
             uris: 'https://releases.jfrog.io/artifactory/jfrog-debs'
-            suites: '{{ ansible_facts.distribution_release }}'
             components: 'contrib'
             signed_by: 'https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key'
+
+            # JFrog only publishes up to Noble, so pin every newer release to it rather than tracking the running one.
+            suites: '{{ ansible_facts.distribution_version is version("24.04", ">") | ternary("noble", ansible_facts.distribution_release) }}'
           notify: 'Update APT cache'
         - name: 'Flush handlers'
           ansible.builtin.meta: 'flush_handlers'
@@ -408,9 +410,11 @@
           ansible.builtin.deb822_repository:
             name: 'speedtest'
             uris: 'https://packagecloud.io/ookla/speedtest-cli/ubuntu'
-            suites: '{{ ansible_facts.distribution_release | replace("resolute", "jammy") | replace("noble", "jammy") }}'
             components: 'main'
             signed_by: 'https://packagecloud.io/ookla/speedtest-cli/gpgkey'
+
+            # Ookla only publishes up to Jammy, so pin every newer release to it rather than tracking the running one.
+            suites: '{{ ansible_facts.distribution_version is version("22.04", ">") | ternary("jammy", ansible_facts.distribution_release) }}'
           notify: 'Update APT cache'
         - name: 'Flush handlers'
           ansible.builtin.meta: 'flush_handlers'
@@ -441,9 +445,12 @@
           ansible.builtin.deb822_repository:
             name: 'teleport'
             uris: 'https://apt.releases.teleport.dev/ubuntu'
-            suites: '{{ ansible_facts.distribution_release }}'
             components: 'stable/v15'
             signed_by: 'https://apt.releases.teleport.dev/gpg'
+
+            # The `stable/v15` channel (pinned to match the Teleport proxy) is only published up to Noble, so pin every
+            # newer release to it rather than tracking the running one.
+            suites: '{{ ansible_facts.distribution_version is version("24.04", ">") | ternary("noble", ansible_facts.distribution_release) }}'
           notify: 'Update APT cache'
         - name: 'Flush handlers'
           ansible.builtin.meta: 'flush_handlers'

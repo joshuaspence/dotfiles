@@ -16,6 +16,7 @@
       when: 'ansible_facts.product_name == "Precision 5690"'
       block:
         - name: 'Add keyd repository'
+          when: 'ansible_facts.distribution_version is version("25.10", "<")'
           ansible.builtin.deb822_repository:
             name: 'keyd'
             uris: 'https://ppa.launchpadcontent.net/keyd-team/ppa/ubuntu'
