@@ -11,7 +11,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v6'
+        uses: 'actions/checkout@v7'
 
       # Pinned to v26.1.1 as v26.2.0 switched the action to install `ansible-lint` in an isolated `uv` virtualenv whose
       # `bin/` is never added to `$PATH`, so the `requirements_file` step's `ansible-galaxy` resolves to the runner's
@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v6'
+        uses: 'actions/checkout@v7'
       - name: 'Setup Chezmoi'
         uses: './.github/actions/chezmoi'
 
@@ -64,7 +64,7 @@ jobs:
       files: '${{ steps.shellcheck.outputs.files }}'
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v6'
+        uses: 'actions/checkout@v7'
       - name: 'Download rendered templates'
         uses: 'actions/download-artifact@v8.0.1'
         with:
@@ -82,7 +82,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v6'
+        uses: 'actions/checkout@v7'
       - name: 'Download rendered templates'
         uses: 'actions/download-artifact@v8.0.1'
         with:
@@ -97,6 +97,6 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v6'
+        uses: 'actions/checkout@v7'
       - name: 'Run yamllint'
         uses: 'ibiqlik/action-yamllint@v3.1.1'
