@@ -1,5 +1,6 @@
 *
 !agents/
+!commands/
 !file-suggestion.sh
 !scripts/
 !settings.json
