@@ -387,6 +387,22 @@
           ansible.builtin.apt:
             name: 'kubectl'
 
+    - name: 'NodeJS'
+      block:
+        - name: 'Add NodeSource repository'
+          ansible.builtin.deb822_repository:
+            name: 'nodejs'
+            uris: 'https://deb.nodesource.com/node_24.x'
+            suites: 'nodistro'
+            components: 'main'
+            signed_by: 'https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key'
+          notify: 'Update APT cache'
+        - name: 'Flush handlers'
+          ansible.builtin.meta: 'flush_handlers'
+        - name: 'Install NodeJS'
+          ansible.builtin.apt:
+            name: 'nodejs'
+
     - name: 'Slack'
       when: 'is_work'
       block:
