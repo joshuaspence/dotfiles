@@ -6,9 +6,6 @@ allowed-tools:
   - Bash(git ls-files:*)
   - Bash(git remote:*)
   - Bash(git rev-parse:*)
-  - Glob
-  - Grep
-  - Read
   - Task
   - Write
 ---
@@ -242,6 +239,11 @@ not on when it was introduced.
   they are not dropped. Do not silently sample or truncate to stay under a limit. If you deliberately bound the run to
   save cost or time, say so in the output — a bounded review that looks complete is worse than one that states its
   limits.
+- The `allowed-tools` list in this command's frontmatter governs only this orchestrating command — not the subagents it
+  launches. Each subagent carries its own default tool pool (filtered by its own definition), so reviewers and
+  validators can `Read`, `Grep`, and `Glob` the repository regardless of what this list contains; you neither need to
+  nor can provision their tools from here. This command's own list is therefore minimal: `Task` to launch subagents,
+  the three read-only `git` commands used to build GitHub permalinks, and `Write` for `--output`.
 - Do not check build signal, and do not attempt to build, typecheck, lint, or test the repository. Review the source as
   written.
 - Reviewers and validators may consult authoritative upstream documentation (official docs, release notes, security
