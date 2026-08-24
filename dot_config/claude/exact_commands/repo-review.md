@@ -39,8 +39,8 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 
 - `--output <file>` writes the report to that file in addition to the terminal.
 
-Whenever you launch a subagent in the steps below — surveyors, partitioner, reviewers, and validators alike — two
-settings apply, by different mechanisms:
+Whenever you launch a subagent in the steps below — surveyors, partitioner, reviewers, and validators alike — the
+following rules apply:
 
 - **Model tier:** Each step names the tier its subagents must run on (`haiku`, `sonnet`, or `opus`). Enforce it by
   passing that tier as the `model` argument of the `Task` tool on every launch — not as an instruction in the prompt
@@ -59,6 +59,13 @@ settings apply, by different mechanisms:
   `--breadth` × 6 reviewers, plus validators per issue), and launching that many concurrent `xhigh`/`max` opus
   inferences has been observed to intermittently stall — an agent receives its tool result and its next turn never
   arrives — which, because step 4 is a barrier, can wedge the entire review (see Notes).
+- **Failure handling:** If a subagent returns an error or the runtime reports it as timed out, retry it at most twice,
+  dropping one effort tier on each retry (e.g. `high` → `medium` → `low`); never retry at the same level, since an
+  intermittent stall recurs at identical parameters. If it still has not succeeded, do not block the run — record the
+  affected review unit, lens, or validation as "not reviewed" and continue. This covers failures the runtime surfaces;
+  a subagent that hangs with no timeout cannot be retried from here (the launch is still blocking), which is why the
+  effort cap above is the primary defence. Report every such gap in the final output alongside the step-3 exclusions:
+  a unit that failed to complete but is left off the report reads as "clean" when it was never examined.
 
 Before starting, create a todo list to track your progress through the steps below, then follow them precisely:
 
@@ -252,6 +259,13 @@ not on when it was introduced.
   they are not dropped. Do not silently sample or truncate to stay under a limit. If you deliberately bound the run to
   save cost or time, say so in the output — a bounded review that looks complete is worse than one that states its
   limits.
+- Stalled subagents can wedge the run. Many concurrent high-effort opus inferences occasionally hang — the agent gets
+  its tool result and its next turn never arrives — and because step 4 is a barrier, one hung agent can block the whole
+  review with no result and no per-attempt timeout to recover from. The defences are preventive and partial: the effort
+  cap keeps the count of concurrent `xhigh`/`max` opus inferences small, and the failure-handling rule retries the
+  failures the runtime surfaces and reports unreachable units as gaps. If a run still wedges — most agents done, a few
+  idle for many minutes — stop it and re-run, optionally at a lower `--effort`; the stall is intermittent and unlikely
+  to recur on the same agents.
 - The `allowed-tools` list in this command's frontmatter governs only this orchestrating command — not the subagents it
   launches. Each subagent carries its own default tool pool (filtered by its own definition), so reviewers and
   validators can `Read`, `Grep`, and `Glob` the repository regardless of what this list contains; you neither need to
