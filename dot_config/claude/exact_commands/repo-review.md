@@ -18,7 +18,9 @@ Provide a code review for an entire repository.
 The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 
 - A bare `path` argument is an optional path which scopes the review to a subtree. If absent, review the whole
-  repository.
+  repository. When a `path` is given, it applies throughout: the survey (step 1), the partition (step 3), and the
+  per-unit reviewers cover only files under that subtree, enumerated with `git ls-files -- <path>`. The Architecture
+  agent (step 4) is the one exception — see that step.
 - `--effort <low|medium|high|xhigh|max>` sets the reasoning effort each spawned subagent should use. If absent, default
   to `high`. Reject any other value and stop with an error rather than guessing.
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into in step 3. Must be a
@@ -51,14 +53,16 @@ settings apply, by different mechanisms:
 
 To do this, follow these steps precisely:
 
-1. Launch a `haiku` agent to survey the repository and return: the primary languages, the build/test tooling, the entry
-   points, and the top-level directory structure with a file count per directory. Instruct it to use `git ls-files`
-   rather than walking the filesystem, so that ignored files are excluded automatically.
+1. Launch a `haiku` agent to survey the repository (or, if a `path` scope was given, that subtree) and return: the
+   primary languages, the build/test tooling, the entry points, and the top-level directory structure with a file count
+   per directory. Instruct it to use `git ls-files` (scoped to the subtree with `git ls-files -- <path>` when a `path`
+   was given) rather than walking the filesystem, so that ignored files are excluded automatically.
 
 2. Launch a `haiku` agent to return a list of file paths (not their contents) for all `CLAUDE.md` files in the
    repository.
 
-3. Launch a `sonnet` agent to partition the repository into coherent review units, using the survey from step 1.
+3. Launch a `sonnet` agent to partition the repository (or, when a `path` scope was given, that subtree) into coherent
+   review units, using the survey from step 1.
    Partition into the number of units given by `--breadth`; if `--breadth` is `auto` or was not provided, let the agent
    choose in the range 4–8.
    Each unit should be a module, package, or directory group that can be understood on its own. The agent must return,
@@ -74,7 +78,8 @@ To do this, follow these steps precisely:
      independently review that unit.
    - Over the **entire** repository, launch the Architecture agent ([Agent 7](#agent-7-architecture-agent-opus)) — **one
      instance per lens** listed under that agent, not per review unit, since each lens reasons about the repository as a
-     whole.
+     whole. When a `path` scope is in effect, each lens still examines the whole repository but reports only defects that
+     involve the scoped subtree.
 
    Each agent should return a list of issues, where each issue includes a description, the file and line (or the set of
    files and modules involved, for repository-wide findings), and the reason it was flagged (e.g. "`CLAUDE.md`
