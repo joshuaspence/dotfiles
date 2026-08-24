@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# Configuration
-# .config/mise/config.toml: {{ includeTemplate "dot_config/mise/config.toml.tmpl" . | sha256sum }}
-
 set -o errexit
 set -o nounset
 set -o pipefail
 
+# Configuration
+# ~/.config/mise/config.toml: {{ includeTemplate "dot_config/mise/config.toml.tmpl" . | sha256sum }}
+
 mise install --yes
+mise prune --yes

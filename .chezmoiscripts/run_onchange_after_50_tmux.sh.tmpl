@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Configuration
-# tmux.conf: {{ include "dot_config/exact_tmux/tmux.conf" | sha256sum }}
-
 set -o errexit
 set -o nounset
 set -o pipefail
+
+# Configuration
+# ~/.config/tmux/tmux.conf: {{ include "dot_config/exact_tmux/tmux.conf" | sha256sum }}
 
 export PATH="${HOME}/.local/share/tmux/plugins/tpm/bin:${PATH}"
 
