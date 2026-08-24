@@ -22,10 +22,10 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 - `--effort <low|medium|high|xhigh|max>` sets the reasoning effort each spawned subagent should use. If absent, default
   to `high`. Reject any other value and stop with an error rather than guessing.
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into in step 3. Must be a
-  positive integer or `auto`. `auto` (also the behaviour when the flag is absent) lets the partitioner choose the
-  number of units that best fits the repository, in the range 4–8.
-- `--depth <n|auto>` sets how many independent validators run per issue in step 5. Must be a positive integer or
-  `auto`; default `1`. With a fixed `n > 1`, keep an issue only if a strict majority of its validators confirm it
+  positive integer or `auto`. `auto` (also the behaviour when the flag is absent) lets the partitioner choose the number
+  of units that best fits the repository, in the range 4–8.
+- `--depth <n|auto>` sets how many independent validators run per issue in step 5. Must be a positive integer or `auto`;
+  default `1`. With a fixed `n > 1`, keep an issue only if a strict majority of its validators confirm it
   (e.g. ≥2 of 3, ≥3 of 5). `auto` scales the validator count per issue by its risk: use more validators (3–5) for
   higher-stakes or lower-confidence findings (bugs, security, architecture, consistency) and a single validator for
   lower-risk ones (code quality, test critique, `CLAUDE.md`), applying the same strict-majority rule wherever more than
