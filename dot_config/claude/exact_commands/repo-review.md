@@ -36,9 +36,17 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 
 - `--output <file>` writes the report to that file in addition to the terminal.
 
-Whenever you launch a subagent in the steps below — surveyors, partitioner, reviewers, and validators alike — instruct
-it in its prompt to use the chosen effort level (e.g. "Use `high` reasoning effort for this task."). This does not
-change which model tier each step calls for, nor how many agents run; it only scales how hard each agent thinks.
+Whenever you launch a subagent in the steps below — surveyors, partitioner, reviewers, and validators alike — two
+settings apply, by different mechanisms:
+
+- **Model tier:** Each step names the tier its subagents must run on (`haiku`, `sonnet`, or `opus`). Enforce it by
+  passing that tier as the `model` argument of the `Task` tool on every launch — not as an instruction in the prompt
+  that the subagent is left to honour. If the `Task` tool in this runtime does not accept a `model` argument, stop and
+  report that the model tier could not be enforced; do not silently fall back to the default model, which would
+  collapse the cost/quality tiering this command depends on.
+- **Reasoning effort:** Instruct the subagent in its prompt to use the chosen effort level (e.g. "Use `high` reasoning
+  effort for this task."), as there is no tool argument for it. This does not change which model tier each step calls
+  for, nor how many agents run; it only scales how hard each agent thinks.
 
 To do this, follow these steps precisely:
 
