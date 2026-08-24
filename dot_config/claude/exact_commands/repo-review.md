@@ -18,8 +18,10 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   repository. When a `path` is given, it applies throughout: the survey (step 1), the partition (step 3), and the
   per-unit reviewers cover only files under that subtree, enumerated with `git ls-files -- <path>`. The
   [Architecture agent](#agent-7-architecture-agent-opus) (step 4) is the one exception — see that step.
-- `--effort <low|medium|high|xhigh|max>` sets the reasoning effort each spawned subagent should use. If absent, default
-  to `high`. Reject any other value and stop with an error rather than guessing.
+- `--effort <low|medium|high|xhigh|max>` sets the requested reasoning effort for spawned subagents. If absent, default
+  to `high`. Reject any other value and stop with an error rather than guessing. The high-fan-out agents are capped:
+  the per-unit reviewers (step 4) and the validators (step 6) never exceed `high`, while the surveyors, partitioner,
+  and the three architecture lenses use the requested level in full (see "Reasoning effort" for why).
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into in step 3. Must be a
   positive integer or `auto`; reject any other value and stop with an error rather than guessing. `auto` (also the
   behaviour when the flag is absent) lets the partitioner choose the number of units that best fits the repository, in
@@ -49,6 +51,14 @@ settings apply, by different mechanisms:
   instruction in its prompt (e.g. "Use `high` reasoning effort for this task."). Treat this as a best-effort hint that
   nudges how hard the agent thinks but — unlike the model tier — cannot be enforced. It changes neither which model
   tier each step calls for nor how many agents run.
+
+  Cap effort for the high-fan-out agents. The per-unit reviewers (step 4) and the validators (step 6) run at the
+  requested `--effort` only up to `high`: use it as-is when it is `high` or lower, and clamp `xhigh` or `max` down to
+  `high`. The surveyors, partitioner, and the three whole-repo architecture lenses are few, so they keep the requested
+  level. This is a deliberate reliability tradeoff: the reviewers and validators run at high multiplicity (roughly
+  `--breadth` × 6 reviewers, plus validators per issue), and launching that many concurrent `xhigh`/`max` opus
+  inferences has been observed to intermittently stall — an agent receives its tool result and its next turn never
+  arrives — which, because step 4 is a barrier, can wedge the entire review (see Notes).
 
 Before starting, create a todo list to track your progress through the steps below, then follow them precisely:
 
