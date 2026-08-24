@@ -1,7 +1,7 @@
 ---
 name: Repo Review
 description: Review an entire repository
-argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n>] [--depth <n>] [--output <file>]'
+argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>] [--output <file>]'
 allowed-tools:
   - Bash(git ls-files:*)
   - Bash(git remote:*)
@@ -21,10 +21,15 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   repository.
 - `--effort <low|medium|high|xhigh|max>` sets the reasoning effort each spawned subagent should use. If absent, default
   to `high`. Reject any other value and stop with an error rather than guessing.
-- `--breadth <n>` sets how many coherent review units the repository is partitioned into in step 3. Must be a positive
-  integer. If absent, let the partitioner choose in the range 4–8.
-- `--depth <n>` sets how many independent validators run per issue in step 5. Must be a positive integer; default `1`.
-  With `n > 1`, keep an issue only if a strict majority of its validators confirm it (e.g. ≥2 of 3, ≥3 of 5).
+- `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into in step 3. Must be a
+  positive integer or `auto`. `auto` (also the behaviour when the flag is absent) lets the partitioner choose the
+  number of units that best fits the repository, in the range 4–8.
+- `--depth <n|auto>` sets how many independent validators run per issue in step 5. Must be a positive integer or
+  `auto`; default `1`. With a fixed `n > 1`, keep an issue only if a strict majority of its validators confirm it
+  (e.g. ≥2 of 3, ≥3 of 5). `auto` scales the validator count per issue by its risk: use more validators (3–5) for
+  higher-stakes or lower-confidence findings (bugs, security, architecture, consistency) and a single validator for
+  lower-risk ones (code quality, test critique, `CLAUDE.md`), applying the same strict-majority rule wherever more than
+  one validator runs.
 
   `--breadth` and `--depth` are orthogonal to `--effort`: they scale how many agents run and how many times findings
   are challenged, whereas `--effort` scales how hard each individual agent thinks.
@@ -45,8 +50,8 @@ To do this, follow these steps precisely:
    repository.
 
 3. Launch a `sonnet` agent to partition the repository into coherent review units, using the survey from step 1.
-   Partition into the number of units given by `--breadth`; if `--breadth` was not provided, let the agent choose in
-   the range 4–8.
+   Partition into the number of units given by `--breadth`; if `--breadth` is `auto` or was not provided, let the agent
+   choose in the range 4–8.
    Each unit should be a module, package, or directory group that can be understood on its own. The agent must return,
    alongside the units, an explicit list of everything it excluded and why.
 
@@ -69,10 +74,10 @@ To do this, follow these steps precisely:
 
    If you are not certain an issue is real, do not flag it. False positives erode trust and waste reviewer time.
 
-5. For each issue found in the previous step, launch parallel subagents to validate the issue — run `--depth`
-   independent validators per issue (default `1`), and when `--depth` is greater than 1 keep the issue only if a strict
-   majority of its validators confirm it. These subagents should
-   get the repository survey along with a description of the issue. The agent's job is to review the issue to validate
+5. For each issue found in the previous step, launch parallel subagents to validate the issue — run the number of
+   independent validators set by `--depth` (default `1`; if `auto`, scale per issue by its risk as described above).
+   Whenever more than one validator runs for an issue, keep it only if a strict majority of them confirm it. These
+   subagents should get the repository survey along with a description of the issue. The agent's job is to review the issue to validate
    that the stated issue is truly an issue with high confidence. For example, if an issue such as "variable is not
    defined" was flagged, the subagent's job would be to validate that is actually true in the code. Another example
    would be `CLAUDE.md` issues. The agent should validate that the `CLAUDE.md` rule that was violated is scoped for
