@@ -59,7 +59,8 @@ To do this, follow these steps precisely:
    was given) rather than walking the filesystem, so that ignored files are excluded automatically.
 
 2. Launch a `haiku` agent to return a list of file paths (not their contents) for all `CLAUDE.md` files in the
-   repository.
+   repository. Keep this list; it is handed to the per-unit `CLAUDE.md` compliance reviewers (Agent 1) and the
+   Architecture agent's cohesion-and-duplication lens in step 4.
 
 3. Launch a `sonnet` agent to partition the repository (or, when a `path` scope was given, that subtree) into coherent
    review units, using the survey from step 1.
@@ -84,7 +85,11 @@ To do this, follow these steps precisely:
    Each agent should return a list of issues, where each issue includes a description, the file and line (or the set of
    files and modules involved, for repository-wide findings), and the reason it was flagged (e.g. "`CLAUDE.md`
    adherence", "bug", "architecture"). Each subagent should be told the survey from step 1. This will help provide
-   context regarding the repository's purpose and conventions.
+   context regarding the repository's purpose and conventions. In addition, give each `CLAUDE.md` compliance reviewer
+   (Agent 1) the step-2 list narrowed to the `CLAUDE.md` files that govern its unit — those in the unit's own
+   directories and in any ancestor directory up to the repository root — and give the Architecture agent's
+   cohesion-and-duplication lens the repository-root `CLAUDE.md`, if any. These agents receive paths only; they must
+   read the files' contents themselves.
 
    If you are not certain an issue is real, do not flag it. False positives erode trust and waste reviewer time.
 
@@ -122,7 +127,8 @@ To do this, follow these steps precisely:
 
 ### Agent 1: `CLAUDE.md` compliance agent (Sonnet)
 
-Audit the unit for `CLAUDE.md` compliance.
+Audit the unit for `CLAUDE.md` compliance against the governing `CLAUDE.md` files you were handed in step 4 (drawn from
+the step-2 list). You are given their paths, not their text — read their contents before judging.
 
 > [!NOTE]
 > When evaluating `CLAUDE.md` compliance for a file, you should only consider `CLAUDE.md` files that share a file path
@@ -196,7 +202,8 @@ one of the following lenses:
 - **Layering and boundaries** — modules reaching across architectural layers or package boundaries they should not, and
   internal details that leak across those boundaries.
 - **Cohesion and duplication** — subsystems with overlapping or duplicated responsibilities, and organization that
-  contradicts the conventions documented in the survey or `CLAUDE.md`.
+  contradicts the conventions documented in the survey or the repository-root `CLAUDE.md` (whose path is provided to
+  this lens; read it yourself).
 
 Regardless of lens, flag only concrete, demonstrable structural defects, and cite the specific modules or files
 involved. Do not flag subjective preferences or "this would be cleaner as X" rewrites.
