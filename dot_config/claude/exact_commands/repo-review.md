@@ -44,9 +44,10 @@ settings apply, by different mechanisms:
   that the subagent is left to honour. If the `Task` tool in this runtime does not accept a `model` argument, stop and
   report that the model tier could not be enforced; do not silently fall back to the default model, which would
   collapse the cost/quality tiering this command depends on.
-- **Reasoning effort:** Instruct the subagent in its prompt to use the chosen effort level (e.g. "Use `high` reasoning
-  effort for this task."), as there is no tool argument for it. This does not change which model tier each step calls
-  for, nor how many agents run; it only scales how hard each agent thinks.
+- **Reasoning effort:** There is no tool argument for reasoning effort, so pass the chosen level to the subagent as an
+  instruction in its prompt (e.g. "Use `high` reasoning effort for this task."). Treat this as a best-effort hint that
+  nudges how hard the agent thinks but — unlike the model tier — cannot be enforced. It changes neither which model
+  tier each step calls for nor how many agents run.
 
 To do this, follow these steps precisely:
 
