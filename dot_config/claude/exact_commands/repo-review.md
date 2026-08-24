@@ -118,6 +118,9 @@ Flag maintainability problems within the unit that a senior engineer would call 
 - Verbose, redundant, or stale comments: comments that merely restate what the code plainly does, commented-out code
   left in place, and comments that no longer match the code they describe.
 - Needless complexity where a simpler, idiomatic construct in the same language would achieve the same result.
+- Gaps in test coverage: non-trivial logic, branches, or error paths that no test exercises, in a unit that otherwise
+  ships tests. Name the specific behaviour that should be covered. Do not flag missing tests for trivial glue code, and
+  do not flag a repository (or unit) that has no test suite at all — that is a project decision, not a review finding.
 
 Do not flag stylistic preferences a linter or formatter would handle, and do not propose adding a dependency where the
 hand-written code is small and self-contained.
