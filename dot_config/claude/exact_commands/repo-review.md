@@ -82,9 +82,12 @@ To do this, follow these steps precisely:
      whole. When a `path` scope is in effect, each lens still examines the whole repository but reports only defects that
      involve the scoped subtree.
 
-   Each agent should return a list of issues, where each issue includes a description, the file and line (or the set of
-   files and modules involved, for repository-wide findings), and the reason it was flagged (e.g. "`CLAUDE.md`
-   adherence", "bug", "architecture"). Each subagent should be told the survey from step 1. This will help provide
+   Each agent should return a list of issues, where each issue includes a description, a severity, the file and line
+   (or the set of files and modules involved, for repository-wide findings), and the reason it was flagged (e.g.
+   "`CLAUDE.md` adherence", "bug", "architecture"). Severity reflects the impact if the issue is left unfixed:
+   `critical` (security hole, data loss, or a defect that breaks core behaviour), `high` (wrong behaviour on a common
+   path, or a serious maintainability trap), `medium` (a real defect with limited blast radius), or `low` (a minor
+   quality issue). Each subagent should be told the survey from step 1. This will help provide
    context regarding the repository's purpose and conventions. In addition, give each `CLAUDE.md` compliance reviewer
    (Agent 1) the step-2 list narrowed to the `CLAUDE.md` files that govern its unit — those in the unit's own
    directories and in any ancestor directory up to the repository root — and give the Architecture agent's
@@ -110,11 +113,15 @@ To do this, follow these steps precisely:
    our review.
 
 7. Deduplicate. The same defect will often be reported by several units, and a single root cause may surface at many
-   call sites. Merge those into one issue with a primary location and a list of the other affected sites.
+   call sites. Merge those into one issue with a primary location and a list of the other affected sites; give the
+   merged issue the highest severity among the ones merged.
 
-8. Output a summary of the review findings to the terminal, ordered most severe first:
+8. Output a summary of the review findings to the terminal, ordered by the severity assigned in step 4, most severe
+   first (break ties by putting security and correctness bugs ahead of consistency, architecture, code-quality, test,
+   and `CLAUDE.md` findings):
 
-   - If issues were found, list each issue with a brief description, its file and line, and why it was flagged.
+   - If issues were found, list each issue with its severity, a brief description, its file and line, and why it was
+     flagged.
    - If no issues were found, state: "No issues found. Checked for bugs, security, consistency, code quality,
      architecture, and `CLAUDE.md` compliance."
    - In both cases, state which parts of the repository were excluded in step 3.
