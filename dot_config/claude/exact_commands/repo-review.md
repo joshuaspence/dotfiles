@@ -80,8 +80,8 @@ To do this, follow these steps precisely:
      independently review that unit.
    - Over the **entire** repository, launch the Architecture agent ([Agent 7](#agent-7-architecture-agent-opus)) — **one
      instance per lens** listed under that agent, not per review unit, since each lens reasons about the repository as a
-     whole. When a `path` scope is in effect, each lens still examines the whole repository but reports only defects that
-     involve the scoped subtree.
+     whole. When a `path` scope is in effect, each lens still examines the whole repository but reports only defects
+     that involve the scoped subtree.
 
    Each agent should return a list of issues, where each issue includes a description, a severity, the file and line
    (or the set of files and modules involved, for repository-wide findings), and the reason it was flagged (e.g.
@@ -101,12 +101,12 @@ To do this, follow these steps precisely:
 5. For each issue found in the previous step, launch parallel subagents to validate the issue — run the number of
    independent validators set by `--depth` (default `1`; if `auto`, scale per issue by its risk as described above).
    Whenever more than one validator runs for an issue, keep it only if a strict majority of them confirm it. These
-   subagents should get the repository survey along with a description of the issue. The agent's job is to review the issue to validate
-   that the stated issue is truly an issue with high confidence. For example, if an issue such as "variable is not
-   defined" was flagged, the subagent's job would be to validate that is actually true in the code. Another example
-   would be `CLAUDE.md` issues. The agent should validate that the `CLAUDE.md` rule that was violated is scoped for
-   this file and is actually violated. Use `opus` subagents for bugs, security, consistency, and architecture issues,
-   and `sonnet` agents for `CLAUDE.md`, code-quality, and test-critique violations.
+   subagents should get the repository survey along with a description of the issue. The agent's job is to review the
+   issue to validate that the stated issue is truly an issue with high confidence. For example, if an issue such as
+   "variable is not defined" was flagged, the subagent's job would be to validate that is actually true in the code.
+   Another example would be `CLAUDE.md` issues. The agent should validate that the `CLAUDE.md` rule that was violated is
+   scoped for this file and is actually violated. Use `opus` subagents for bugs, security, consistency, and architecture
+   issues, and `sonnet` agents for `CLAUDE.md`, code-quality, and test-critique violations.
 
    Validators must open the actual file — or, for repository-wide findings such as architecture issues, the relevant
    files and structure — rather than trusting the reporting agent's excerpt.
@@ -180,8 +180,8 @@ hand-written code is small and self-contained.
 ### Agent 6: Test critique agent (Sonnet)
 
 Critique the quality and effectiveness of the tests that already exist in the unit — whether they would actually catch a
-regression. This is distinct from [Agent 5](#agent-5-code-quality-agent-sonnet)'s coverage gaps: that agent flags behaviour no test exercises; this agent
-judges the tests that are present.
+regression. This is distinct from [Agent 5](#agent-5-code-quality-agent-sonnet)'s coverage gaps: that agent flags
+behaviour no test exercises; this agent judges the tests that are present.
 
 - Vacuous or weak assertions: tests that would still pass if the code under test were broken — asserting only that a
   call did not throw, asserting against a mocked return value rather than the behaviour under test, or snapshot/golden
@@ -194,8 +194,9 @@ judges the tests that are present.
   between tests — anything that makes the test flaky or order-dependent.
 - Tests whose name or description contradicts what they actually assert, and tests that assert the wrong thing.
 
-Do not flag the mere absence of tests (that is [Agent 5](#agent-5-code-quality-agent-sonnet)'s remit), do not flag a unit or repository that ships no tests at
-all, and do not flag stylistic test preferences a linter or formatter would handle.
+Do not flag the mere absence of tests (that is [Agent 5](#agent-5-code-quality-agent-sonnet)'s remit), do not flag a
+unit or repository that ships no tests at all, and do not flag stylistic test preferences a linter or formatter would
+handle.
 
 ### Agent 7: Architecture agent (Opus)
 
