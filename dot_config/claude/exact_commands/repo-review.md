@@ -60,7 +60,8 @@ To do this, follow these steps precisely:
 2. Launch a `haiku` agent to return a list of file paths (not their contents) for all `CLAUDE.md` files in the
    repository. Keep this list; it is handed to the per-unit `CLAUDE.md` compliance reviewers
    ([Agent 1](#agent-1-claudemd-compliance-agent-sonnet)) and the
-   [Architecture agent](#agent-7-architecture-agent-opus)'s cohesion-and-duplication lens in step 4.
+   [Architecture agent](#agent-7-architecture-agent-opus)'s cohesion-and-duplication lens in step 4. Steps 1 and 2 are
+   independent, so launch both `haiku` agents concurrently rather than waiting for step 1 before starting step 2.
 
 3. Launch a `sonnet` agent to partition the repository (or, when a `path` scope was given, that subtree) into coherent
    review units, using the survey from step 1.
