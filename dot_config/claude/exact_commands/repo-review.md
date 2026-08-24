@@ -20,7 +20,7 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   [Architecture agent](#agent-7-architecture-agent-opus) (step 4) is the one exception — see that step.
 - `--effort <low|medium|high|xhigh|max>` sets the requested reasoning effort for spawned subagents. If absent, default
   to `high`. Reject any other value and stop with an error rather than guessing. The high-fan-out agents are capped:
-  the per-unit reviewers (step 4) and the validators (step 6) never exceed `high`, while the surveyors, partitioner,
+  the per-unit reviewers (step 4) and the validators (step 6) never exceed `xhigh`, while the surveyors, partitioner,
   and the three architecture lenses use the requested level in full (see "Reasoning effort" for why).
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into in step 3. Must be a
   positive integer or `auto`; reject any other value and stop with an error rather than guessing. `auto` (also the
@@ -53,14 +53,15 @@ following rules apply:
   tier each step calls for nor how many agents run.
 
   Cap effort for the high-fan-out agents. The per-unit reviewers (step 4) and the validators (step 6) run at the
-  requested `--effort` only up to `high`: use it as-is when it is `high` or lower, and clamp `xhigh` or `max` down to
-  `high`. The surveyors, partitioner, and the three whole-repo architecture lenses are few, so they keep the requested
-  level. This is a deliberate reliability tradeoff: the reviewers and validators run at high multiplicity (roughly
-  `--breadth` × 6 reviewers, plus validators per issue), and launching that many concurrent `xhigh`/`max` Opus
-  inferences has been observed to intermittently stall — an agent receives its tool result and its next turn never
-  arrives — which, because step 4 is a barrier, can wedge the entire review (see [Notes](#notes)).
+  requested `--effort` only up to `xhigh`: use it as-is when it is `xhigh` or lower, and clamp `max` down to `xhigh`.
+  The surveyors, partitioner, and the three whole-repo architecture lenses are few, so they keep the requested level.
+  This is a deliberate reliability tradeoff: the reviewers and validators run at high multiplicity (roughly
+  `--breadth` × 6 reviewers, plus validators per issue), and launching that many concurrent `max` Opus inferences has
+  been observed to intermittently stall — an agent receives its tool result and its next turn never arrives — which,
+  because step 4 is a barrier, can wedge the entire review (see [Notes](#notes)). `xhigh` is the starting cap because
+  `max` is the only level we have observed stalling; if stalls recur at `xhigh`, lower the cap to `high`.
 - **Failure handling:** If a subagent returns an error or the runtime reports it as timed out, retry it at most twice,
-  dropping one effort tier on each retry (e.g. `high` → `medium` → `low`); never retry at the same level, since an
+  dropping one effort tier on each retry (e.g. `xhigh` → `high` → `medium`); never retry at the same level, since an
   intermittent stall recurs at identical parameters. If it still has not succeeded, do not block the run — record the
   affected review unit, lens, or validation as "not reviewed" and continue. This covers failures the runtime surfaces;
   a subagent that hangs with no timeout cannot be retried from here (the launch is still blocking), which is why the
@@ -262,10 +263,10 @@ not on when it was introduced.
 - Stalled subagents can wedge the run. Many concurrent high-effort opus inferences occasionally hang — the agent gets
   its tool result and its next turn never arrives — and because step 4 is a barrier, one hung agent can block the whole
   review with no result and no per-attempt timeout to recover from. The defences are preventive and partial: the effort
-  cap keeps the count of concurrent `xhigh`/`max` opus inferences small, and the failure-handling rule retries the
-  failures the runtime surfaces and reports unreachable units as gaps. If a run still wedges — most agents done, a few
-  idle for many minutes — stop it and re-run, optionally at a lower `--effort`; the stall is intermittent and unlikely
-  to recur on the same agents.
+  cap keeps the many leaf reviewers and validators off `max` (the only level observed to stall), and the
+  failure-handling rule retries the failures the runtime surfaces and reports unreachable units as gaps. If a run
+  still wedges — most agents done, a few idle for many minutes — stop it and re-run, optionally at a lower `--effort`;
+  the stall is intermittent and unlikely to recur on the same agents.
 - The `allowed-tools` list in this command's frontmatter governs only this orchestrating command — not the subagents it
   launches. Each subagent carries its own default tool pool (filtered by its own definition), so reviewers and
   validators can `Read`, `Grep`, and `Glob` the repository regardless of what this list contains; you neither need to
