@@ -50,7 +50,7 @@ settings apply, by different mechanisms:
   nudges how hard the agent thinks but — unlike the model tier — cannot be enforced. It changes neither which model
   tier each step calls for nor how many agents run.
 
-To do this, follow these steps precisely:
+Before starting, create a todo list to track your progress through the steps below, then follow them precisely:
 
 1. Launch a `haiku` agent to survey the repository (or, if a `path` scope was given, that subtree) and return: the
    primary languages, the build/test tooling, the entry points, and the top-level directory structure with a file count
@@ -253,7 +253,6 @@ not on when it was introduced.
   advisories) to confirm how an external API, library, or framework behaves before flagging or validating an issue. This
   is the one exception to "review the source as written"; it does not license building, running, or testing the
   repository. A finding must still cite a location in this repository, not merely a discrepancy with the docs.
-- Create a todo list before starting.
 - You must cite each issue with a file path and line range, and link it if the repository has a GitHub remote.
 - Prefer `git ls-files` over `find` when enumerating or searching, so that ignored files stay out of the review.
 - When linking to code, follow the following format precisely, otherwise the Markdown preview won't render correctly: 
