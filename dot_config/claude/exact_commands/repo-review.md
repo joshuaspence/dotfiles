@@ -26,7 +26,7 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into in step 3. Must be a
   positive integer or `auto`. `auto` (also the behaviour when the flag is absent) lets the partitioner choose the number
   of units that best fits the repository, in the range 4–8.
-- `--depth <n|auto>` sets how many independent validators run per issue in step 5. Must be a positive integer or `auto`;
+- `--depth <n|auto>` sets how many independent validators run per issue in step 6. Must be a positive integer or `auto`;
   default `1`. With a fixed `n > 1`, keep an issue only if a strict majority of its validators confirm it
   (e.g. ≥2 of 3, ≥3 of 5). `auto` scales the validator count per issue by its risk: use more validators (3–5) for
   higher-stakes or lower-confidence findings (bugs, security, architecture, consistency) and a single validator for
@@ -98,7 +98,14 @@ To do this, follow these steps precisely:
 
    If you are not certain an issue is real, do not flag it. False positives erode trust and waste reviewer time.
 
-5. For each issue found in the previous step, launch parallel subagents to validate the issue — run the number of
+5. Deduplicate the issues from step 4 before validating them. The same defect is often reported by several units, and a
+   single root cause may surface at many call sites; validating each copy separately would waste validators (especially
+   costly at higher `--depth`). Merge only genuine duplicates — findings that share a root cause, or the same file,
+   line, and category — into one issue with a primary location and a list of the other affected sites, and give the
+   merged issue the highest severity among those merged. When in doubt, keep findings separate: merging two distinct
+   issues hides one of them.
+
+6. For each issue remaining after deduplication, launch parallel subagents to validate the issue — run the number of
    independent validators set by `--depth` (default `1`; if `auto`, scale per issue by its risk as described above).
    Whenever more than one validator runs for an issue, keep it only if a strict majority of them confirm it. These
    subagents should get the repository survey along with a description of the issue. The agent's job is to review the
@@ -111,12 +118,8 @@ To do this, follow these steps precisely:
    Validators must open the actual file — or, for repository-wide findings such as architecture issues, the relevant
    files and structure — rather than trusting the reporting agent's excerpt.
 
-6. Filter out any issues that were not validated in step 5. This step will give us our list of high signal issues for
+7. Filter out any issues that were not validated in step 6. This step will give us our list of high signal issues for
    our review.
-
-7. Deduplicate. The same defect will often be reported by several units, and a single root cause may surface at many
-   call sites. Merge those into one issue with a primary location and a list of the other affected sites; give the
-   merged issue the highest severity among the ones merged.
 
 8. Output a summary of the review findings to the terminal, ordered by the severity assigned in step 4, most severe
    first (break ties by putting security and correctness bugs ahead of consistency, architecture, code-quality, test,
@@ -219,7 +222,7 @@ Regardless of lens, flag only concrete, demonstrable structural defects, and cit
 involved. Do not flag subjective preferences or "this would be cleaner as X" rewrites.
 
 ## Evaluating issues
-Use this list when evaluating issues in Steps 4 and 5 (these are false positives, do NOT flag):
+Use this list when evaluating issues in Steps 4 and 6 (these are false positives, do NOT flag):
 
 - Something that appears to be a bug but is actually correct.
 - Pedantic nitpicks that a senior engineer would not flag.
