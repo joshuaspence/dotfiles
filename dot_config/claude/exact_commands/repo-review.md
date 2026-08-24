@@ -1,7 +1,7 @@
 ---
 name: Repo Review
 description: Review an entire repository
-argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--output <file>]'
+argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n>] [--depth <n>] [--output <file>]'
 allowed-tools:
   - Bash(git ls-files:*)
   - Bash(git remote:*)
@@ -21,6 +21,14 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   repository.
 - `--effort <low|medium|high|xhigh|max>` sets the reasoning effort each spawned subagent should use. If absent, default
   to `high`. Reject any other value and stop with an error rather than guessing.
+- `--breadth <n>` sets how many coherent review units the repository is partitioned into in step 3. Must be a positive
+  integer. If absent, let the partitioner choose in the range 4–8.
+- `--depth <n>` sets how many independent validators run per issue in step 5. Must be a positive integer; default `1`.
+  With `n > 1`, keep an issue only if a strict majority of its validators confirm it (e.g. ≥2 of 3, ≥3 of 5).
+
+  `--breadth` and `--depth` are orthogonal to `--effort`: they scale how many agents run and how many times findings
+  are challenged, whereas `--effort` scales how hard each individual agent thinks.
+
 - `--output <file>` writes the report to that file in addition to the terminal.
 
 Whenever you launch a subagent in the steps below — surveyors, partitioner, reviewers, and validators alike — instruct
@@ -36,7 +44,9 @@ To do this, follow these steps precisely:
 2. Launch a `haiku` agent to return a list of file paths (not their contents) for all `CLAUDE.md` files in the
    repository.
 
-3. Launch a `sonnet` agent to partition the repository into 4-8 coherent review units, using the survey from step 1.
+3. Launch a `sonnet` agent to partition the repository into coherent review units, using the survey from step 1.
+   Partition into the number of units given by `--breadth`; if `--breadth` was not provided, let the agent choose in
+   the range 4–8.
    Each unit should be a module, package, or directory group that can be understood on its own. The agent must return,
    alongside the units, an explicit list of everything it excluded and why.
 
@@ -59,7 +69,9 @@ To do this, follow these steps precisely:
 
    If you are not certain an issue is real, do not flag it. False positives erode trust and waste reviewer time.
 
-5. For each issue found in the previous step, launch parallel subagents to validate the issue. These subagents should
+5. For each issue found in the previous step, launch parallel subagents to validate the issue — run `--depth`
+   independent validators per issue (default `1`), and when `--depth` is greater than 1 keep the issue only if a strict
+   majority of its validators confirm it. These subagents should
    get the repository survey along with a description of the issue. The agent's job is to review the issue to validate
    that the stated issue is truly an issue with high confidence. For example, if an issue such as "variable is not
    defined" was flagged, the subagent's job would be to validate that is actually true in the code. Another example
