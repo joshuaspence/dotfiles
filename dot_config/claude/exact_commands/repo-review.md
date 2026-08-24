@@ -19,8 +19,8 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 
 - A bare `path` argument is an optional path which scopes the review to a subtree. If absent, review the whole
   repository. When a `path` is given, it applies throughout: the survey (step 1), the partition (step 3), and the
-  per-unit reviewers cover only files under that subtree, enumerated with `git ls-files -- <path>`. The Architecture
-  agent (step 4) is the one exception — see that step.
+  per-unit reviewers cover only files under that subtree, enumerated with `git ls-files -- <path>`. The
+  [Architecture agent](#agent-7-architecture-agent-opus) (step 4) is the one exception — see that step.
 - `--effort <low|medium|high|xhigh|max>` sets the reasoning effort each spawned subagent should use. If absent, default
   to `high`. Reject any other value and stop with an error rather than guessing.
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into in step 3. Must be a
@@ -59,8 +59,9 @@ To do this, follow these steps precisely:
    was given) rather than walking the filesystem, so that ignored files are excluded automatically.
 
 2. Launch a `haiku` agent to return a list of file paths (not their contents) for all `CLAUDE.md` files in the
-   repository. Keep this list; it is handed to the per-unit `CLAUDE.md` compliance reviewers (Agent 1) and the
-   Architecture agent's cohesion-and-duplication lens in step 4.
+   repository. Keep this list; it is handed to the per-unit `CLAUDE.md` compliance reviewers
+   ([Agent 1](#agent-1-claudemd-compliance-agent-sonnet)) and the
+   [Architecture agent](#agent-7-architecture-agent-opus)'s cohesion-and-duplication lens in step 4.
 
 3. Launch a `sonnet` agent to partition the repository (or, when a `path` scope was given, that subtree) into coherent
    review units, using the survey from step 1.
@@ -89,8 +90,9 @@ To do this, follow these steps precisely:
    path, or a serious maintainability trap), `medium` (a real defect with limited blast radius), or `low` (a minor
    quality issue). Each subagent should be told the survey from step 1. This will help provide
    context regarding the repository's purpose and conventions. In addition, give each `CLAUDE.md` compliance reviewer
-   (Agent 1) the step-2 list narrowed to the `CLAUDE.md` files that govern its unit — those in the unit's own
-   directories and in any ancestor directory up to the repository root — and give the Architecture agent's
+   ([Agent 1](#agent-1-claudemd-compliance-agent-sonnet)) the step-2 list narrowed to the `CLAUDE.md` files that govern
+   its unit — those in the unit's own directories and in any ancestor directory up to the repository root — and give
+   the [Architecture agent](#agent-7-architecture-agent-opus)'s
    cohesion-and-duplication lens the repository-root `CLAUDE.md`, if any. These agents receive paths only; they must
    read the files' contents themselves.
 
@@ -178,7 +180,7 @@ hand-written code is small and self-contained.
 ### Agent 6: Test critique agent (Sonnet)
 
 Critique the quality and effectiveness of the tests that already exist in the unit — whether they would actually catch a
-regression. This is distinct from Agent 5's coverage gaps: that agent flags behaviour no test exercises; this agent
+regression. This is distinct from [Agent 5](#agent-5-code-quality-agent-sonnet)'s coverage gaps: that agent flags behaviour no test exercises; this agent
 judges the tests that are present.
 
 - Vacuous or weak assertions: tests that would still pass if the code under test were broken — asserting only that a
@@ -192,7 +194,7 @@ judges the tests that are present.
   between tests — anything that makes the test flaky or order-dependent.
 - Tests whose name or description contradicts what they actually assert, and tests that assert the wrong thing.
 
-Do not flag the mere absence of tests (that is Agent 5's remit), do not flag a unit or repository that ships no tests at
+Do not flag the mere absence of tests (that is [Agent 5](#agent-5-code-quality-agent-sonnet)'s remit), do not flag a unit or repository that ships no tests at
 all, and do not flag stylistic test preferences a linter or formatter would handle.
 
 ### Agent 7: Architecture agent (Opus)
