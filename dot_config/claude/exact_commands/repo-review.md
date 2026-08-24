@@ -40,9 +40,9 @@ To do this, follow these steps precisely:
 
 4. Review the repository, launching all of the following agents in parallel:
 
-   - For **each** review unit from step 3, launch the per-unit reviewers (Agents 1-5 in [Subagents](#subagents)) to
+   - For **each** review unit from step 3, launch the per-unit reviewers (Agents 1-6 in [Subagents](#subagents)) to
      independently review that unit.
-   - Over the **entire** repository, launch the Architecture agent ([Agent 6](#agent-6-architecture-agent-opus)) — **one
+   - Over the **entire** repository, launch the Architecture agent ([Agent 7](#agent-7-architecture-agent-opus)) — **one
      instance per lens** listed under that agent, not per review unit, since each lens reasons about the repository as a
      whole.
 
@@ -59,7 +59,7 @@ To do this, follow these steps precisely:
    defined" was flagged, the subagent's job would be to validate that is actually true in the code. Another example
    would be `CLAUDE.md` issues. The agent should validate that the `CLAUDE.md` rule that was violated is scoped for
    this file and is actually violated. Use `opus` subagents for bugs, security, consistency, and architecture issues,
-   and `sonnet` agents for `CLAUDE.md` and code-quality violations.
+   and `sonnet` agents for `CLAUDE.md`, code-quality, and test-critique violations.
 
    Validators must open the actual file — or, for repository-wide findings such as architecture issues, the relevant
    files and structure — rather than trusting the reporting agent's excerpt.
@@ -125,7 +125,27 @@ Flag maintainability problems within the unit that a senior engineer would call 
 Do not flag stylistic preferences a linter or formatter would handle, and do not propose adding a dependency where the
 hand-written code is small and self-contained.
 
-### Agent 6: Architecture agent (Opus)
+### Agent 6: Test critique agent (Sonnet)
+
+Critique the quality and effectiveness of the tests that already exist in the unit — whether they would actually catch a
+regression. This is distinct from Agent 5's coverage gaps: that agent flags behaviour no test exercises; this agent
+judges the tests that are present.
+
+- Vacuous or weak assertions: tests that would still pass if the code under test were broken — asserting only that a
+  call did not throw, asserting against a mocked return value rather than the behaviour under test, or snapshot/golden
+  tests that assert nothing meaningful.
+- Tests coupled to implementation details rather than observable behaviour, so they break under harmless refactors yet
+  miss real regressions.
+- Over-mocking: so much of the system under test is stubbed that the test exercises the test doubles rather than the
+  real code path.
+- Non-determinism: reliance on wall-clock time, `sleep`, network access, iteration/order assumptions, or state leaked
+  between tests — anything that makes the test flaky or order-dependent.
+- Tests whose name or description contradicts what they actually assert, and tests that assert the wrong thing.
+
+Do not flag the mere absence of tests (that is Agent 5's remit), do not flag a unit or repository that ships no tests at
+all, and do not flag stylistic test preferences a linter or formatter would handle.
+
+### Agent 7: Architecture agent (Opus)
 
 > [!NOTE]
 > Unlike the other agents, this agent runs over the **entire repository**, not per review unit. Launch **one instance
