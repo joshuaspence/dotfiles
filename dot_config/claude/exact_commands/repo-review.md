@@ -236,6 +236,12 @@ not on when it was introduced.
 
 ## Notes
 
+- Fan-out is large, and "in parallel" is aspirational. Step 4 alone launches `--breadth` × 6 per-unit reviewers plus
+  the 3 architecture lenses, and step 6 launches up to `--depth` validators per surviving issue. The harness caps how
+  many subagents run at once, so launches beyond that cap queue and start as slots free — you still launch them all;
+  they are not dropped. Do not silently sample or truncate to stay under a limit. If you deliberately bound the run to
+  save cost or time, say so in the output — a bounded review that looks complete is worse than one that states its
+  limits.
 - Do not check build signal, and do not attempt to build, typecheck, lint, or test the repository. Review the source as
   written.
 - Reviewers and validators may consult authoritative upstream documentation (official docs, release notes, security
