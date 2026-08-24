@@ -1,0 +1,5 @@
+---
+.local/bin/mise:
+  type: 'file'
+  executable: true
+  url: '{{ gitHubLatestReleaseAssetURL "jdx/mise" (printf "mise-*-%s-%s" .chezmoi.os (.chezmoi.arch | replace "amd64" "x64")) }}'

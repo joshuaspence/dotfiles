@@ -1,6 +1,0 @@
----
-.local/bin/act:
-  type: 'archive-file'
-  executable: true
-  path: 'act'
-  url: '{{ gitHubLatestReleaseAssetURL "nektos/act" (printf "act_%s_%s.tar.gz" .goreleaser.os .goreleaser.arch) }}'

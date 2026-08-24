@@ -1,6 +1,0 @@
----
-.local/bin/dive:
-  type: 'archive-file'
-  executable: true
-  path: 'dive'
-  url: '{{ gitHubLatestReleaseAssetURL "wagoodman/dive" (printf "dive_*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) }}'

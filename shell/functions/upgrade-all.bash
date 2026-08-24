@@ -1,8 +1,8 @@
 function upgrade-all() {
   upgrade-apt
   upgrade-gnome-extensions
+  upgrade-mise
   upgrade-snap
-  upgrade-virtualenv
   upgrade-drivers
   upgrade-firmware
 }
@@ -21,13 +21,12 @@ function upgrade-gnome-extensions() {
   gnome-extensions-cli update --user
 }
 
-function upgrade-snap() {
-  sudo snap refresh
+function upgrade-mise() {
+  mise upgrade --prune
 }
 
-function upgrade-virtualenv() {
-  pip-compile --upgrade --config ~/.config/pip-tools.toml ~/.venv/requirements.in
-  pip-sync --config ~/.config/pip-tools.toml ~/.venv/requirements.txt
+function upgrade-snap() {
+  sudo snap refresh
 }
 
 function upgrade-firmware() {

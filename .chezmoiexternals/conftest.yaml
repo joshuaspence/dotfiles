@@ -1,6 +1,0 @@
----
-.local/bin/conftest:
-  type: 'archive-file'
-  executable: true
-  path: 'conftest'
-  url: '{{ gitHubLatestReleaseAssetURL "open-policy-agent/conftest" (printf "conftest_*_%s_%s.tar.gz" .goreleaser.os .goreleaser.arch) }}'

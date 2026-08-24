@@ -230,8 +230,6 @@
             name:
               - 'httpie'
               - 'imgcat'
-              - 'shellcheck'
-              - 'yq'
 
     - name: 'Install development build tools'
       ansible.builtin.apt:

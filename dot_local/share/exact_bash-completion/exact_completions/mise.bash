@@ -1,0 +1,1 @@
+source <(mise completion bash)
