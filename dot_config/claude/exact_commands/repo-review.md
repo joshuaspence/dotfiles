@@ -56,9 +56,9 @@ following rules apply:
   requested `--effort` only up to `high`: use it as-is when it is `high` or lower, and clamp `xhigh` or `max` down to
   `high`. The surveyors, partitioner, and the three whole-repo architecture lenses are few, so they keep the requested
   level. This is a deliberate reliability tradeoff: the reviewers and validators run at high multiplicity (roughly
-  `--breadth` × 6 reviewers, plus validators per issue), and launching that many concurrent `xhigh`/`max` opus
+  `--breadth` × 6 reviewers, plus validators per issue), and launching that many concurrent `xhigh`/`max` Opus
   inferences has been observed to intermittently stall — an agent receives its tool result and its next turn never
-  arrives — which, because step 4 is a barrier, can wedge the entire review (see Notes).
+  arrives — which, because step 4 is a barrier, can wedge the entire review (see [Notes](#notes)).
 - **Failure handling:** If a subagent returns an error or the runtime reports it as timed out, retry it at most twice,
   dropping one effort tier on each retry (e.g. `high` → `medium` → `low`); never retry at the same level, since an
   intermittent stall recurs at identical parameters. If it still has not succeeded, do not block the run — record the
