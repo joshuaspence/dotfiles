@@ -125,8 +125,8 @@ Before starting, create a todo list to track your progress through the steps bel
    first (break ties by putting security and correctness bugs ahead of consistency, architecture, code-quality, test,
    and `CLAUDE.md` findings):
 
-   - If issues were found, list each issue with its severity, a brief description, its file and line, and why it was
-     flagged.
+   - If issues were found, list each issue with its severity, a brief description, the file and line (or the set of
+     files and modules involved, for repository-wide findings), and why it was flagged.
    - If no issues were found, state: "No issues found. Checked for bugs, security, consistency, code quality,
      architecture, and `CLAUDE.md` compliance."
    - In both cases, state which parts of the repository were excluded in step 3.
