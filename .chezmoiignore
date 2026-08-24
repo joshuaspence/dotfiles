@@ -106,12 +106,6 @@ Videos/
 .config/nix
 .config/nixpkgs
 .config/systemd/user/ssh-agent-sk.service
-.local/bin/appctl
-.local/bin/circleci
-.local/bin/jira
-.local/bin/latticectl
-.local/bin/sieclient
-.local/bin/slack-cli
 .ssh/conf.d/lattice.conf
 .ssh/conf.d/teleport.conf
 .ssh/conf.d/work.conf
