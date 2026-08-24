@@ -1,7 +1,7 @@
 ---
 name: Repo Review
 description: Review an entire repository
-argument-hint: '[path] [--output <file>]'
+argument-hint: '[path] [--effort <low|medium|high>] [--output <file>]'
 allowed-tools:
   - Bash(git ls-files:*)
   - Bash(git remote:*)
@@ -19,7 +19,13 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 
 - A bare `path` argument is an optional path which scopes the review to a subtree. If absent, review the whole
   repository.
+- `--effort <low|medium|high>` sets the reasoning effort each spawned subagent should use. If absent, default to
+  `high`. Reject any other value and stop with an error rather than guessing.
 - `--output <file>` writes the report to that file in addition to the terminal.
+
+Whenever you launch a subagent in the steps below — surveyors, partitioner, reviewers, and validators alike — instruct
+it in its prompt to use the chosen effort level (e.g. "Use `high` reasoning effort for this task."). This does not
+change which model tier each step calls for, nor how many agents run; it only scales how hard each agent thinks.
 
 To do this, follow these steps precisely:
 
