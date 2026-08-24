@@ -19,12 +19,12 @@ function _systemd_run_claude() {
   systemd_run_opts+=("--quiet")
   systemd_run_opts+=("--collect")
   systemd_run_opts+=("--user")
-  
+
   # Claude always sees the SAME workspace path (/tmp/claude-scratch), so the folder-trust prompt only fires once --
   # trust is keyed by cwd. Each session bind-mounts its own fresh, auto-reaped RuntimeDirectory onto that path inside a
   # private mount namespace, so concurrent sessions stay isolated despite sharing the path. `PrivateTmp` keeps the bind
   # mountpoint off the host's `/tmp`.
-  systemd_run_opts+=("--property" "BindPaths=${XDG_RUNTIME_DIR}/${unit}:/tmp/claude-scratch")
+  systemd_run_opts+=("--property" "BindPaths=${XDG_RUNTIME_DIR:-/run/user/$(id --user)}/${unit}:/tmp/claude-scratch")
 
   while [[ $# -gt 0 && "$1" != "--" ]]; do
     systemd_run_opts+=("$1")
