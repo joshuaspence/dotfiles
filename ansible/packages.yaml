@@ -211,7 +211,6 @@
               - 'fd-find'
               - 'fzf'
               - 'htop'
-              - 'jq'
               - 'meld'
               - 'ncdu'
               - 'parallel'
@@ -263,10 +262,6 @@
         name:
           - 'gnome-shell-extensions'
           - 'gnome-tweaks'
-
-    - name: 'Install Go'
-      ansible.builtin.apt:
-        name: 'golang-go'
 
     - name: 'Install miscellaneous build dependencies'
       ansible.builtin.apt:
