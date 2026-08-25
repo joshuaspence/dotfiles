@@ -1,10 +1,14 @@
 ---
 name: Repo Review
 description: Review an entire repository
-argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>] [--loop [<max-rounds>]] [--output <file>]'
+argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>] [--loop [<max-rounds>]] [--fix] [--output <file>]'
 allowed-tools:
   - Bash(git remote:*)
   - Bash(git rev-parse:*)
+  - Bash(git switch:*)
+  - Bash(git branch:*)
+  - Bash(git cherry-pick:*)
+  - Bash(git log:*)
   - Workflow
   - Write
 ---
@@ -51,6 +55,13 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   each agent thinks, `--breadth`/`--depth` scale how many agents run and how often findings are challenged, and `--loop`
   scales how many times the whole review repeats.
 
+- `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix and Reconcile phases
+  — one isolated agent per validated finding attempts a clean, verified fix and commits it, and a reconciliation agent
+  merges any fixes that collide on a shared file — and returns a conflict-free list of commits plus a per-finding
+  outcome. This command then lands those commits on a dedicated branch (see [Apply fixes](#apply-fixes)). If omitted,
+  the review is strictly read-only, as before. Pass it as `fix`: `true` when present; omit it otherwise. `--fix` is
+  independent of the other flags (it fixes whatever the review, at whatever breadth/depth/effort/loop, validated).
+
 - `--output <file>` writes the report to that file in addition to the terminal. This command handles it; do **not** pass
   it to the script.
 
@@ -64,8 +75,8 @@ Call the `Workflow` tool with:
   gave, and omit the rest. The script fills in the documented defaults for anything omitted (whole repository,
   `--effort high`, `--breadth auto`, `--depth 1`, a single review pass), so do not synthesise default values here, and
   never include `--output`. Examples: `/repo-review src --breadth 6` → `{ "path": "src", "breadth": 6 }`;
-  `/repo-review --loop` → `{ "loop": true }`; `/repo-review src --loop 3` → `{ "path": "src", "loop": 3 }`; a bare
-  `/repo-review` with no arguments → `{}`.
+  `/repo-review --loop` → `{ "loop": true }`; `/repo-review src --loop 3` → `{ "path": "src", "loop": 3 }`;
+  `/repo-review --fix` → `{ "fix": true }`; a bare `/repo-review` with no arguments → `{}`.
 
 Finalise every argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs in the
 background and returns a structured result when it finishes. Do not launch review subagents outside it, do not re-run it
@@ -82,6 +93,14 @@ The result is `{ findings, exclusions, gaps }`:
   generated code, lock files, binaries).
 - `gaps` — strings naming any reviewer, lens, or validation that did not complete, plus (when `--loop` is used) a note
   if the loop hit its round cap without going dry — a signal that more findings may exist.
+- `fix` — present **only when `--fix` was requested** and there were findings. It is `{ commits, outcomes }`:
+  - `commits` — a conflict-free, ordered list of `{ sha, changedFiles, findingCount }` to cherry-pick. Every commit
+    touches a disjoint set of files and is based on the review's `HEAD`, so the cherry-picks below cannot conflict.
+  - `outcomes` — one entry per finding: `{ description, category, severity, file, lines, status, sha, reason }`, where
+    `status` is `applied` (fixed and committed), `conflict-resolved` (merged with other fixes into one commit),
+    `declined` (not a safe, localized fix), `verify-failed` (the fix broke the build/tests in its sandbox), or
+    `conflict-skipped` (collided and reconciliation could not merge it). Only `applied` and `conflict-resolved` are
+    fixed; every other status is an **unfixed** finding.
 
 ## Produce the output
 
@@ -96,10 +115,32 @@ findings):
   and `CLAUDE.md` compliance."
 - In both cases, state which parts of the repository were excluded (`exclusions`), and report every entry in `gaps` as
   **not reviewed / not validated** — a dropped reviewer, lens, or validation must not read as "clean".
+- When a `fix` object is present, annotate each finding with its outcome from `fix.outcomes` (fixed, or the reason it
+  was not), and after applying the commits (below) report the branch name and a tally: how many findings were fixed
+  (`applied` + `conflict-resolved`) versus left unfixed (`declined` / `verify-failed` / `conflict-skipped`). An unfixed
+  finding must never read as fixed.
 
 If `--output <file>` was provided, write the same report to that file.
 
-Do not create GitHub issues, do not post comments, and do not commit anything. This command reports; it does not act.
+## Apply fixes
+
+Only when a `fix` object was returned. The commits already exist as objects in the repository (each Fix/Reconcile
+agent committed on its own branch in an isolated worktree); your job is only to land them on a review branch — you do
+**not** edit files or resolve conflicts, because `fix.commits` is already conflict-free.
+
+1. Create a dedicated branch off the current `HEAD` and switch to it: `git switch -c repo-review-fixes` (if it already
+   exists, use a numbered suffix, e.g. `repo-review-fixes-2`, rather than clobbering it).
+2. Cherry-pick each `sha` in `fix.commits`, in order: `git cherry-pick <sha>`. These cannot conflict by construction;
+   if one unexpectedly does, `git cherry-pick --abort`, stop landing further commits, and report the remaining ones as
+   **not applied** rather than forcing a resolution.
+3. Switch back to the original branch (`git switch -`) so the user's working checkout is left as it was, with the
+   fixes isolated on `repo-review-fixes` for them to review and merge.
+
+Do not push, and do not open a pull request — landing the commits on the local branch is where this stops.
+
+Without `--fix`, this command only reports: do not create GitHub issues, do not post comments, do not edit files, and
+do not commit anything. With `--fix`, the *only* action it takes is the branch-and-cherry-pick above — it still does
+not push, comment, or open PRs.
 
 ## Notes
 
@@ -118,11 +159,18 @@ Do not create GitHub issues, do not post comments, and do not commit anything. T
   over the accumulated set. Later rounds are told which findings are already known and are pushed to look elsewhere, so
   cost grows roughly per round until the run goes dry or hits the cap. Because looping multiplies the high-fan-out
   review phase, watch `/workflows` as with any long run.
-- `allowed-tools` governs only this wrapper — running the workflow and formatting its result — not the subagents the
-  workflow launches. Those carry their own default tool pool, so reviewers and validators can `Read`, `Grep`, `Glob`,
-  and `git ls-files` the repository regardless of this list; you neither need to nor can provision their tools from
-  here. This list is therefore minimal: `Workflow` to run the review, the two read-only `git` commands used to build
-  permalinks, and `Write` for `--output`.
+- With `--fix`, the Fix phase adds one worktree-isolated agent **per validated finding**, each of which edits and then
+  runs the repository's typecheck/tests in its sandbox before committing — the expensive-and-slow part. A fixer commits
+  only a clear, safe, localized change that still passes; otherwise it declines or reports a verify failure, and that
+  finding is reported unfixed. In-sandbox verification silently degrades to "commit the edit" when the repository has
+  no runnable test suite, so the `repo-review-fixes` branch plus your own review is the real safety net. Fixes land on
+  that branch only; nothing touches your working checkout or is pushed.
+- `allowed-tools` governs only this wrapper — running the workflow, landing the fix commits, and formatting the result
+  — not the subagents the workflow launches. Those carry their own default tool pool, so reviewers and validators can
+  `Read`, `Grep`, `Glob`, and `git ls-files`, and the `--fix` agents can `Edit` and commit in their own worktrees,
+  regardless of this list; you neither need to nor can provision their tools from here. This list is therefore minimal:
+  `Workflow` to run the review, `Write` for `--output`, the two read-only `git` commands used to build permalinks, and
+  the `git switch`/`branch`/`cherry-pick`/`log` commands used to land `--fix` commits on the review branch.
 - Cite each finding with a file path and line range, and link it if the repository has a GitHub remote. Follow this
   format precisely, otherwise the Markdown preview won't render correctly:
   https://github.com/anthropics/claude-code/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15
