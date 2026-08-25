@@ -3,14 +3,17 @@ name: Repo Review
 description: Review an entire repository
 argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>] [--output <file>]'
 allowed-tools:
-  - Bash(git ls-files:*)
   - Bash(git remote:*)
   - Bash(git rev-parse:*)
-  - Task
+  - Workflow
   - Write
 ---
 
 Provide a code review for an entire repository.
+
+This command runs the review as a **workflow**. After parsing the arguments below, use the `Workflow` tool to author
+and run a single deterministic workflow that fans the review out across subagents; then format the findings it returns.
+Running that workflow *is* the review — do not launch review subagents any other way.
 
 The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 
@@ -18,10 +21,10 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   repository. When a `path` is given, it applies throughout: the survey (step 1), the partition (step 3), and the
   per-unit reviewers cover only files under that subtree, enumerated with `git ls-files -- <path>`. The
   [Architecture agent](#agent-7-architecture-agent-opus) (step 4) is the one exception — see that step.
-- `--effort <low|medium|high|xhigh|max>` sets the requested reasoning effort for spawned subagents. If absent, default
-  to `high`. Reject any other value and stop with an error rather than guessing. The high-fan-out agents are capped:
-  the per-unit reviewers (step 4) and the validators (step 6) never exceed `xhigh`, while the surveyors, partitioner,
-  and the three architecture lenses use the requested level in full (see "Reasoning effort" for why).
+- `--effort <low|medium|high|xhigh|max>` sets the requested reasoning effort for the workflow's subagents. If absent,
+  default to `high`. Reject any other value and stop with an error rather than guessing. The high-fan-out agents are
+  capped: the per-unit reviewers (step 4) and the validators (step 6) never exceed `xhigh`, while the surveyors,
+  partitioner, and the three architecture lenses use the requested level in full (see "Reasoning effort" for why).
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into in step 3. Must be a
   positive integer or `auto`; reject any other value and stop with an error rather than guessing. `auto` (also the
   behaviour when the flag is absent) lets the partitioner choose the number of units that best fits the repository, in
@@ -39,115 +42,124 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 
 - `--output <file>` writes the report to that file in addition to the terminal.
 
-Whenever you launch a subagent in the steps below — surveyors, partitioner, reviewers, and validators alike — the
-following rules apply:
+Run the review as a single **workflow**: call the `Workflow` tool with an inline `script` that implements steps 1–7
+below, and pass the parsed arguments as the workflow's `args` (a JSON object `{ path, effort, breadth, depth }` — omit
+`--output`, which this command writes itself). Give the workflow's phases clear titles (`Survey`, `Partition`, `Review`,
+`Dedup`, `Validate`) so its progress is legible in `/workflows`. The workflow runs in the background and returns a
+structured result — `{ findings, exclusions, gaps }` — when it finishes; do not re-run it while it is in flight, and do
+not launch review subagents outside it.
 
-- **Model tier:** Each step names the tier its subagents must run on (`haiku`, `sonnet`, or `opus`). Enforce it by
-  passing that tier as the `model` argument of the `Task` tool on every launch — not as an instruction in the prompt
-  that the subagent is left to honour. If the `Task` tool in this runtime does not accept a `model` argument, stop and
-  report that the model tier could not be enforced; do not silently fall back to the default model, which would
-  collapse the cost/quality tiering this command depends on.
-- **Reasoning effort:** There is no tool argument for reasoning effort, so pass the chosen level to the subagent as an
-  instruction in its prompt (e.g. "Use `high` reasoning effort for this task."). Treat this as a best-effort hint that
-  nudges how hard the agent thinks but — unlike the model tier — cannot be enforced. It changes neither which model
-  tier each step calls for nor how many agents run.
+Inside the workflow, every `agent()` call obeys these rules:
+
+- **Model tier:** each step names the tier its agents must run on (`haiku`, `sonnet`, or `opus`). Set it with the
+  `model` option on the `agent()` call, not as an instruction in the prompt that the agent is left to honour. The
+  harness enforces `model`, so the cost/quality tiering this command depends on is guaranteed — there is no fallback to
+  the default model to collapse it.
+- **Reasoning effort:** set the level with the `effort` option on the `agent()` call. Unlike a prompt hint, `effort` is
+  enforced by the harness — so the cap below is a real clamp, not a suggestion. It changes neither which model tier each
+  step calls for nor how many agents run.
 
   Cap effort for the high-fan-out agents. The per-unit reviewers (step 4) and the validators (step 6) run at the
-  requested `--effort` only up to `xhigh`: use it as-is when it is `xhigh` or lower, and clamp `max` down to `xhigh`.
-  The surveyors, partitioner, and the three whole-repo architecture lenses are few, so they keep the requested level.
-  This is a deliberate reliability tradeoff: the reviewers and validators run at high multiplicity (roughly
+  requested `--effort` only up to `xhigh`: pass it through when it is `xhigh` or lower, and clamp `max` down to `xhigh`
+  in code. The surveyors, partitioner, and the three whole-repo architecture lenses are few, so they keep the requested
+  level. This is a deliberate reliability tradeoff: the reviewers and validators run at high multiplicity (roughly
   `--breadth` × 6 reviewers, plus validators per issue), and launching that many concurrent `max` Opus inferences has
   been observed to intermittently stall — an agent receives its tool result and its next turn never arrives — which,
   because step 4 is a barrier, can wedge the entire review (see [Notes](#notes)). `xhigh` is the starting cap because
   `max` is the only level we have observed stalling; if stalls recur at `xhigh`, lower the cap to `high`.
-- **Failure handling:** If a subagent returns an error or the runtime reports it as timed out, retry it at most twice,
-  dropping one effort tier on each retry (e.g. `xhigh` → `high` → `medium`); never retry at the same level, since an
-  intermittent stall recurs at identical parameters. If it still has not succeeded, do not block the run — record the
-  affected review unit, lens, or validation as "not reviewed" and continue. This covers failures the runtime surfaces;
-  a subagent that hangs with no timeout cannot be retried from here (the launch is still blocking), which is why the
-  effort cap above is the primary defence. Report every such gap in the final output alongside the step-3 exclusions:
-  a unit that failed to complete but is left off the report reads as "clean" when it was never examined.
+- **Failure handling:** run each fan-out with `parallel()` or `pipeline()`, which resolve a failed agent to `null`
+  instead of rejecting the whole batch. Filter the nulls, and record every dropped reviewer, lens, or validation as a
+  gap in the returned result — one failure must not wedge the batch, and a unit left off the report reads as "clean"
+  when it was never examined. An optional retry may re-run a surfaced failure one effort tier lower
+  (`xhigh` → `high` → `medium`); never retry at the same level, since an intermittent stall recurs at identical
+  parameters. This handles the failures the runtime surfaces; a *silent* hang — an agent that never returns and never
+  errors — still blocks the surrounding `parallel()` barrier with no timeout to recover from, which is why the effort
+  cap above is the primary defence.
 
-Before starting, create a todo list to track your progress through the steps below, then follow them precisely:
+Before starting, create a todo list to track your progress, then proceed precisely. Steps 1–7 are the workflow's
+phases; step 8 you perform yourself from the result it returns.
 
-1. Launch a `haiku` agent to survey the repository (or, if a `path` scope was given, that subtree) and return: the
-   primary languages, the build/test tooling, the entry points, and the top-level directory structure with a file count
-   per directory. Instruct it to use `git ls-files` (scoped to the subtree with `git ls-files -- <path>` when a `path`
-   was given) rather than walking the filesystem, so that ignored files are excluded automatically.
+1. **Survey** (`haiku`) — one agent surveys the repository (or, if a `path` scope was given, that subtree) and returns:
+   the primary languages, the build/test tooling, the entry points, and the top-level directory structure with a file
+   count per directory. Instruct it to use `git ls-files` (scoped to the subtree with `git ls-files -- <path>` when a
+   `path` was given) rather than walking the filesystem, so that ignored files are excluded automatically.
 
-2. Launch a `haiku` agent to return a list of file paths (not their contents) for all `CLAUDE.md` files in the
-   repository. Keep this list; it is handed to the per-unit `CLAUDE.md` compliance reviewers
+2. **CLAUDE.md scan** (`haiku`) — one agent returns a list of file paths (not their contents) for all `CLAUDE.md` files
+   in the repository. Keep this list; it is handed to the per-unit `CLAUDE.md` compliance reviewers
    ([Agent 1](#agent-1-claudemd-compliance-agent-sonnet)) and the
    [Architecture agent](#agent-7-architecture-agent-opus)'s cohesion-and-duplication lens in step 4. Steps 1 and 2 are
-   independent, so launch both `haiku` agents concurrently rather than waiting for step 1 before starting step 2.
+   independent, so run both `haiku` agents concurrently rather than waiting for step 1 before starting step 2.
 
-3. Launch a `sonnet` agent to partition the repository (or, when a `path` scope was given, that subtree) into coherent
-   review units, using the survey from step 1.
+3. **Partition** (`sonnet`) — one agent partitions the repository (or, when a `path` scope was given, that subtree) into
+   coherent review units, using the survey from step 1.
    Partition into the number of units given by `--breadth`; if `--breadth` is `auto` or was not provided, let the agent
    choose in the range 4–8.
    Each unit should be a module, package, or directory group that can be understood on its own. The agent must return,
    alongside the units, an explicit list of everything it excluded and why.
 
    Explicitly excluded from review are vendored and third-party dependencies, generated code, lock files and binary
-   files. Report the exclusions in your final output. A repository review that silently skipped half the tree reads as
+   files. Report the exclusions in the final output. A repository review that silently skipped half the tree reads as
    "the whole repo is clean" when it is not.
 
-4. Review the repository, launching all of the following agents in parallel:
+4. **Review** (barrier) — fan out the following concurrently with `parallel()`. This is a barrier: step 5 reasons over
+   every finding, so it cannot begin until all reviewers return.
 
-   - For **each** review unit from step 3, launch the per-unit reviewers (Agents 1-6 in [Subagents](#subagents)) to
+   - For **each** review unit from step 3, run the per-unit reviewers (Agents 1-6 in [Subagents](#subagents)) to
      independently review that unit.
-   - Over the **entire** repository, launch the Architecture agent ([Agent 7](#agent-7-architecture-agent-opus)) — **one
+   - Over the **entire** repository, run the Architecture agent ([Agent 7](#agent-7-architecture-agent-opus)) — **one
      instance per lens** listed under that agent, not per review unit, since each lens reasons about the repository as a
      whole. When a `path` scope is in effect, each lens still examines the whole repository but reports only defects
      that involve the scoped subtree.
 
-   Each agent should return a list of issues, where each issue includes a description, a severity, the file and line
+   Each agent returns a list of issues, where each issue includes a description, a severity, the file and line
    (or the set of files and modules involved, for repository-wide findings), and the reason it was flagged (e.g.
    "`CLAUDE.md` adherence", "bug", "architecture"). Severity reflects the impact if the issue is left unfixed:
    `critical` (security hole, data loss, or a defect that breaks core behaviour), `high` (wrong behaviour on a common
    path, or a serious maintainability trap), `medium` (a real defect with limited blast radius), or `low` (a minor
-   quality issue). Each subagent should be told the survey from step 1. This will help provide
-   context regarding the repository's purpose and conventions. In addition, give each `CLAUDE.md` compliance reviewer
-   ([Agent 1](#agent-1-claudemd-compliance-agent-sonnet)) the step-2 list narrowed to the `CLAUDE.md` files that govern
-   its unit — those in the unit's own directories and in any ancestor directory up to the repository root — and give
-   the [Architecture agent](#agent-7-architecture-agent-opus)'s
+   quality issue). Give each agent the survey from step 1 for context on the repository's purpose and conventions. In
+   addition, give each `CLAUDE.md` compliance reviewer ([Agent 1](#agent-1-claudemd-compliance-agent-sonnet)) the step-2
+   list narrowed to the `CLAUDE.md` files that govern its unit — those in the unit's own directories and in any ancestor
+   directory up to the repository root — and give the [Architecture agent](#agent-7-architecture-agent-opus)'s
    cohesion-and-duplication lens the repository-root `CLAUDE.md`, if any. These agents receive paths only; they must
    read the files' contents themselves.
 
    If you are not certain an issue is real, do not flag it. False positives erode trust and waste reviewer time.
 
-5. Deduplicate the issues from step 4 before validating them. The same defect is often reported by several units, and a
-   single root cause may surface at many call sites; validating each copy separately would waste validators (especially
-   costly at higher `--depth`). Merge only genuine duplicates — findings that share a root cause, or the same file,
-   line, and category — into one issue with a primary location and a list of the other affected sites, and give the
-   merged issue the highest severity among those merged. When in doubt, keep findings separate: merging two distinct
-   issues hides one of them.
+5. **Dedup** (`opus`, one agent) — deduplicate the issues from step 4 before validating them. The workflow script is
+   deterministic and cannot reason over the findings itself, so delegate this to a single `opus` agent (the tier the
+   orchestrator would otherwise use). The same defect is often reported by several units, and a single root cause may
+   surface at many call sites; validating each copy separately would waste validators (especially costly at higher
+   `--depth`). Merge only genuine duplicates — findings that share a root cause, or the same file, line, and category —
+   into one issue with a primary location and a list of the other affected sites, and give the merged issue the highest
+   severity among those merged. When in doubt, keep findings separate: merging two distinct issues hides one of them.
 
-6. For each issue remaining after deduplication, launch parallel subagents to validate the issue — run the number of
-   independent validators set by `--depth` (default `1`; if `auto`, scale per issue by its risk as described above).
-   Whenever more than one validator runs for an issue, keep it only if a strict majority of them confirm it. These
-   subagents should get the repository survey along with a description of the issue. The agent's job is to review the
-   issue to validate that the stated issue is truly an issue with high confidence. For example, if an issue such as
-   "variable is not defined" was flagged, the subagent's job would be to validate that is actually true in the code.
-   Another example would be `CLAUDE.md` issues. The agent should validate that the `CLAUDE.md` rule that was violated is
-   scoped for this file and is actually violated. Use `opus` subagents for bugs, security, consistency, and architecture
-   issues, and `sonnet` agents for `CLAUDE.md`, code-quality, and test-critique violations.
+6. **Validate** (barrier) — for each issue remaining after deduplication, run independent validators concurrently — the
+   number set by `--depth` (default `1`; if `auto`, scale per issue by its risk as described above). Whenever more than
+   one validator runs for an issue, keep it only if a strict majority of them confirm it. Each validator gets the
+   repository survey along with a description of the issue; its job is to confirm, with high confidence, that the stated
+   issue is truly an issue. For example, if an issue such as "variable is not defined" was flagged, the validator's job
+   is to confirm that is actually true in the code. Another example would be `CLAUDE.md` issues: the validator confirms
+   that the `CLAUDE.md` rule that was violated is scoped for this file and is actually violated. Use `opus` validators
+   for bugs, security, consistency, and architecture issues, and `sonnet` validators for `CLAUDE.md`, code-quality, and
+   test-critique violations.
 
    Validators must open the actual file — or, for repository-wide findings such as architecture issues, the relevant
    files and structure — rather than trusting the reporting agent's excerpt.
 
-7. Filter out any issues that were not validated in step 6. This step will give us our list of high signal issues for
-   our review.
+7. **Filter** — keep only the issues validated in step 6; these are the high-signal findings of the review. The workflow
+   returns them, together with the step-3 exclusions and every gap recorded in steps 4 and 6, as
+   `{ findings, exclusions, gaps }`.
 
-8. Output a summary of the review findings to the terminal, ordered by the severity assigned in step 4, most severe
-   first (break ties by putting security and correctness bugs ahead of consistency, architecture, code-quality, test,
-   and `CLAUDE.md` findings):
+8. **Output** — the workflow has returned; now produce a summary to the terminal yourself, ordered by the severity
+   assigned in step 4, most severe first (break ties by putting security and correctness bugs ahead of consistency,
+   architecture, code-quality, test, and `CLAUDE.md` findings):
 
    - If issues were found, list each issue with its severity, a brief description, the file and line (or the set of
      files and modules involved, for repository-wide findings), and why it was flagged.
    - If no issues were found, state: "No issues found. Checked for bugs, security, consistency, code quality,
      architecture, and `CLAUDE.md` compliance."
-   - In both cases, state which parts of the repository were excluded in step 3.
+   - In both cases, state which parts of the repository were excluded in step 3, and report every gap the workflow
+     returned as **not reviewed / not validated** — a dropped reviewer, lens, or validation must not read as "clean".
 
    If `--output <file>` was provided, write the same report to that file.
 
@@ -254,24 +266,25 @@ not on when it was introduced.
 
 ## Notes
 
-- Fan-out is large, and "in parallel" is aspirational. Step 4 alone launches `--breadth` × 6 per-unit reviewers plus
-  the 3 architecture lenses, and step 6 launches up to `--depth` validators per surviving issue. The harness caps how
-  many subagents run at once, so launches beyond that cap queue and start as slots free — you still launch them all;
-  they are not dropped. Do not silently sample or truncate to stay under a limit. If you deliberately bound the run to
-  save cost or time, say so in the output — a bounded review that looks complete is worse than one that states its
-  limits.
-- Stalled subagents can wedge the run. Many concurrent high-effort opus inferences occasionally hang — the agent gets
-  its tool result and its next turn never arrives — and because step 4 is a barrier, one hung agent can block the whole
-  review with no result and no per-attempt timeout to recover from. The defences are preventive and partial: the effort
-  cap keeps the many leaf reviewers and validators off `max` (the only level observed to stall), and the
-  failure-handling rule retries the failures the runtime surfaces and reports unreachable units as gaps. If a run
-  still wedges — most agents done, a few idle for many minutes — stop it and re-run, optionally at a lower `--effort`;
-  the stall is intermittent and unlikely to recur on the same agents.
-- The `allowed-tools` list in this command's frontmatter governs only this orchestrating command — not the subagents it
-  launches. Each subagent carries its own default tool pool (filtered by its own definition), so reviewers and
-  validators can `Read`, `Grep`, and `Glob` the repository regardless of what this list contains; you neither need to
-  nor can provision their tools from here. This command's own list is therefore minimal: `Task` to launch subagents,
-  the three read-only `git` commands used to build GitHub permalinks, and `Write` for `--output`.
+- Fan-out is large. Step 4 alone runs `--breadth` × 6 per-unit reviewers plus the 3 architecture lenses, and step 6
+  runs up to `--depth` validators per surviving issue. The workflow harness caps how many agents run at once (roughly
+  `min(16, cores − 2)`), so `agent()` calls beyond that cap queue and start as slots free — pass them all to
+  `parallel()`/`pipeline()`; they are not dropped. Do not silently sample or truncate to stay under a limit. If you
+  deliberately bound the run to save cost or time, say so in the output — a bounded review that looks complete is worse
+  than one that states its limits.
+- Stalled agents can wedge the run. Many concurrent high-effort opus inferences occasionally hang — the agent gets its
+  tool result and its next turn never arrives — and because step 4's `parallel()` is a barrier, one hung agent can block
+  the whole review with no result and no per-attempt timeout to recover from. The defences are preventive and partial:
+  the effort cap keeps the many leaf reviewers and validators off `max` (the only level observed to stall), and the
+  failure-handling rule filters the failures the runtime surfaces and reports unreachable units as gaps. Watch progress
+  in `/workflows`; if a run wedges — most agents done, a few idle for many minutes — stop it there and re-run, optionally
+  at a lower `--effort`. The stall is intermittent and unlikely to recur on the same agents.
+- The `allowed-tools` list in this command's frontmatter governs only this orchestrating command — running the workflow
+  and formatting its result — not the subagents the workflow launches. Each of those agents carries its own default tool
+  pool, so reviewers and validators can `Read`, `Grep`, `Glob`, and `git ls-files` the repository regardless of what
+  this list contains; you neither need to nor can provision their tools from here. This command's own list is therefore
+  minimal: `Workflow` to run the review, the two read-only `git` commands used to build GitHub permalinks, and `Write`
+  for `--output`.
 - Do not check build signal, and do not attempt to build, typecheck, lint, or test the repository. Review the source as
   written.
 - Reviewers and validators may consult authoritative upstream documentation (official docs, release notes, security
