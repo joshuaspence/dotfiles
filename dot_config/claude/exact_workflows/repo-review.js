@@ -10,6 +10,7 @@
 export const meta = {
   name: 'repo-review',
   description: 'Review an entire repository across many subagents, then validate the findings',
+  whenToUse: 'When a review of the entire repository is requested',
   phases: [
     { title: 'Survey' },
     { title: 'Partition' },
@@ -19,13 +20,13 @@ export const meta = {
   ],
 };
 
-const path = args && args.path ? String(args.path) : null;
-const effort = args && args.effort ? String(args.effort) : 'high';
-const breadthArg = args && args.breadth != null ? args.breadth : 'auto';
-const depthArg = args && args.depth != null ? args.depth : 1;
+const path = args?.path;
+const effort = args?.effort ?? 'high';
+const breadth = parseInt(args?.breadth, 10) || 'auto';
+const depth = parseInt(args?.depth, 10) || 0;
 
 const scope = path ? 'the subtree `' + path + '`' : 'the whole repository';
-const lsFiles = path ? 'git ls-files -- ' + path : 'git ls-files';
+const lsFiles = path ? `git ls-files -- ${path}` : 'git ls-files';
 
 // --- Effort cap for the high-fan-out (leaf) agents ---------------------------------------------------------------
 // The per-unit reviewers (Review phase) and the validators (Validate phase) run at high multiplicity; launching many
@@ -33,14 +34,13 @@ const lsFiles = path ? 'git ls-files -- ' + path : 'git ls-files';
 // single hung agent can wedge the run. Cap those leaf agents at `xhigh` (clamp only `max` down). The few surveyors,
 // the partitioner, the dedup agent, and the three architecture lenses keep the requested effort.
 const EFFORT_ORDER = ['low', 'medium', 'high', 'xhigh', 'max'];
-function capLeaf(e) {
-  const i = EFFORT_ORDER.indexOf(e);
-  const cap = EFFORT_ORDER.indexOf('xhigh');
-  return i > cap ? 'xhigh' : e;
-}
+const capLeaf = (e) =>
+  EFFORT_ORDER.indexOf(e) > EFFORT_ORDER.indexOf('xhigh') ? 'xhigh' : e;
 const leafEffort = capLeaf(effort);
 
 // --- Schemas -----------------------------------------------------------------------------------------------------
+const STRING_ARRAY = { type: 'array', items: { type: 'string' } };
+
 const ISSUE = {
   type: 'object',
   properties: {
@@ -65,10 +65,7 @@ const ISSUE = {
       description: 'Line or range, e.g. "10" or "10-15"; empty when not line-specific',
     },
     otherSites: {
-      type: 'array',
-      items: {
-        type: 'string',
-      },
+      ...STRING_ARRAY,
       description: 'Other affected sites (file:line or module), if any',
     },
     reason: {
@@ -82,10 +79,7 @@ const ISSUE = {
 const ISSUES_SCHEMA = {
   type: 'object',
   properties: {
-    issues: {
-      type: 'array',
-      items: ISSUE,
-    },
+    issues: { type: 'array', items: ISSUE },
   },
   required: ['issues'],
 };
@@ -93,22 +87,12 @@ const ISSUES_SCHEMA = {
 const SURVEY_SCHEMA = {
   type: 'object',
   properties: {
-    languages: {
-      type: 'array',
-      items: {
-        type: 'string',
-      },
-    },
+    languages: STRING_ARRAY,
     tooling: {
       type: 'string',
       description: 'Build and test tooling',
     },
-    entryPoints: {
-      type: 'array',
-      items: {
-        type: 'string',
-      },
-    },
+    entryPoints: STRING_ARRAY,
     structure: {
       type: 'string',
       description: 'Top-level directory structure with a file count per directory',
@@ -119,14 +103,7 @@ const SURVEY_SCHEMA = {
 
 const CLAUDEMD_SCHEMA = {
   type: 'object',
-  properties: {
-    paths: {
-      type: 'array',
-      items: {
-        type: 'string',
-      },
-    },
-  },
+  properties: { paths: STRING_ARRAY },
   required: ['paths'],
 };
 
@@ -138,18 +115,9 @@ const PARTITION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          name: {
-            type: 'string',
-          },
-          paths: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          summary: {
-            type: 'string',
-          },
+          name: { type: 'string' },
+          paths: STRING_ARRAY,
+          summary: { type: 'string' },
         },
         required: ['name', 'paths'],
       },
@@ -159,12 +127,8 @@ const PARTITION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          path: {
-            type: 'string',
-          },
-          reason: {
-            type: 'string',
-          },
+          path: { type: 'string' },
+          reason: { type: 'string' },
         },
         required: ['path', 'reason'],
       },
@@ -176,23 +140,18 @@ const PARTITION_SCHEMA = {
 const VERDICT_SCHEMA = {
   type: 'object',
   properties: {
-    confirmed: {
-      type: 'boolean',
-    },
-    rationale: {
-      type: 'string',
-    },
+    confirmed: { type: 'boolean' },
+    rationale: { type: 'string' },
   },
   required: ['confirmed', 'rationale'],
 };
 
 // --- Shared prompt fragments -------------------------------------------------------------------------------------
-function surveyBlock(survey) {
-  return (
-    "Repository survey (for context on the repo's purpose and conventions):\n" +
-    JSON.stringify(survey, null, 2)
-  );
-}
+// Render a list of paths/sites as markdown bullets, falling back to `empty` when there is nothing to list.
+const bulletList = (items, empty) => items?.length ? items.map((p) => `- ${p}`).join('\n') : empty;
+
+const surveyBlock = (survey) =>
+  `Repository survey (for context on the repo's purpose and conventions):\n${JSON.stringify(survey, null, 2)}`;
 
 const SEVERITY_RUBRIC =
   'Severity reflects the impact if the issue is left unfixed: "critical" (security hole, data loss, or a defect that ' +
@@ -299,193 +258,115 @@ const ARCH_LENSES = [
   },
 ];
 
-function surveyPrompt() {
-  return (
-    'Survey ' +
-    scope +
-    ' to orient a whole-repository code review. Use `' +
-    lsFiles +
-    '` to enumerate files (do not ' +
-    'walk the filesystem, so ignored files stay out). Return: the primary programming languages; the build and test ' +
-    'tooling; the entry points; and the top-level directory structure with a file count per directory.'
-  );
-}
+const surveyPrompt = () =>
+  `Survey ${scope} to orient a whole-repository code review. Use \`${lsFiles}\` to enumerate files (do not walk the ` +
+  'filesystem, so ignored files stay out). Return: the primary programming languages; the build and test tooling; ' +
+  'the entry points; and the top-level directory structure with a file count per directory.';
 
-function claudemdPrompt() {
-  return (
-    'List the repo-relative paths of every CLAUDE.md file in the repository (enumerate with `git ls-files`). Return ' +
-    'only the paths — not their contents.'
-  );
-}
+const claudemdPrompt = () =>
+  'List the repo-relative paths of every CLAUDE.md file in the repository (enumerate with `git ls-files`). Return ' +
+  'only the paths — not their contents.';
 
 function partitionPrompt(survey) {
   const target =
-    breadthArg === 'auto' || breadthArg == null
+    breadth === 'auto' || breadth == null
       ? 'Choose the number of units that best fits the repository, in the range 4-8.'
-      : 'Partition into exactly ' + parseInt(breadthArg, 10) + ' units.';
+      : `Partition into exactly ${breadth} units.`;
   return (
-    'Partition ' +
-    scope +
-    ' into coherent review units, using the survey below. ' +
-    target +
-    ' Each unit should be a ' +
-    'module, package, or directory group that can be understood on its own; give it a short name and the list of ' +
-    'repo-relative paths it covers (enumerate with `' +
-    lsFiles +
-    '`). Also return an explicit list of everything you ' +
+    `Partition ${scope} into coherent review units, using the survey below. ${target} Each unit should be a module, ` +
+    'package, or directory group that can be understood on its own; give it a short name and the list of ' +
+    `repo-relative paths it covers (enumerate with \`${lsFiles}\`). Also return an explicit list of everything you ` +
     'excluded and why — exclude vendored/third-party dependencies, generated code, lock files, and binary files.\n\n' +
     surveyBlock(survey)
   );
 }
 
 function reviewerPrompt(r, unit, survey, claudemdPaths) {
-  let extra = '';
-  if (r.key === 'claude-md') {
-    const list = claudemdPaths.length
-      ? claudemdPaths
-          .map(function (p) {
-            return '- ' + p;
-          })
-          .join('\n')
-      : '(none found)';
-    extra =
-      '\n\nGoverning CLAUDE.md files (paths only — read their contents yourself):\n' +
-      list;
-  }
-  const files = (unit.paths || [])
-    .map(function (p) {
-      return '- ' + p;
-    })
-    .join('\n');
+  const extra =
+    r.key === 'claude-md'
+      ? '\n\nGoverning CLAUDE.md files (paths only — read their contents yourself):\n' +
+        bulletList(claudemdPaths, '(none found)')
+      : '';
+  const files = bulletList(unit.paths, '');
   return (
-    'You are the ' +
-    r.title +
-    ' reviewer. ' +
-    r.instruction +
-    '\n\n' +
-    'Review this unit: "' +
-    unit.name +
-    '".\nFiles in scope:\n' +
-    files +
-    '\n\n' +
-    SEVERITY_RUBRIC +
-    '\n\n' +
-    'Return a list of issues. For each: a description, a severity, the category "' +
-    r.key +
-    '", the primary file and ' +
+    `You are the ${r.title} reviewer. ${r.instruction}\n\n` +
+    `Review this unit: "${unit.name}".\nFiles in scope:\n${files}\n\n` +
+    `${SEVERITY_RUBRIC}\n\n` +
+    `Return a list of issues. For each: a description, a severity, the category "${r.key}", the primary file and ` +
     'line/range (or the set of files/modules for repo-wide findings), and the reason it was flagged. ' +
-    REVIEW_RULES +
-    '\n\n' +
-    FALSE_POSITIVES +
-    extra +
-    '\n\n' +
-    surveyBlock(survey)
+    `${REVIEW_RULES}\n\n${FALSE_POSITIVES}${extra}\n\n${surveyBlock(survey)}`
   );
 }
 
 function archPrompt(lens, survey, claudemdPaths) {
   let extra = '';
   if (lens.key === 'cohesion-and-duplication') {
-    const root = claudemdPaths.filter(function (p) {
-      return p === 'CLAUDE.md';
-    })[0];
+    const root = claudemdPaths.find((p) => p === 'CLAUDE.md');
     if (root)
-      extra =
-        '\n\nRepository-root CLAUDE.md: ' +
-        root +
-        ' — read it yourself and judge organization against it.';
+      extra = `\n\nRepository-root CLAUDE.md: ${root} — read it yourself and judge organization against it.`;
   }
   const scopeNote = path
-    ? ' A path scope is in effect (`' +
-      path +
-      '`): examine the whole repository but report only defects that involve ' +
+    ? ` A path scope is in effect (\`${path}\`): examine the whole repository but report only defects that involve ` +
       'that subtree.'
     : '';
   return (
     "You are the Architecture reviewer, restricted to a single lens and blind to the others. Assess the repository's " +
-    'overall structure and design coherence, not individual files.\n\nLens — ' +
-    lens.instruction +
-    scopeNote +
-    '\n\n' +
-    SEVERITY_RUBRIC +
-    '\n\n' +
+    `overall structure and design coherence, not individual files.\n\nLens — ${lens.instruction}${scopeNote}\n\n` +
+    `${SEVERITY_RUBRIC}\n\n` +
     'Flag only concrete, demonstrable structural defects, and cite the specific modules or files involved. Do not flag ' +
     'subjective preferences or "this would be cleaner as X" rewrites. Return issues with category "architecture". ' +
-    REVIEW_RULES +
-    extra +
-    '\n\n' +
-    surveyBlock(survey)
+    `${REVIEW_RULES}${extra}\n\n${surveyBlock(survey)}`
   );
 }
 
-function dedupPrompt(issues) {
-  return (
-    'Deduplicate the following review findings before validation. Merge only genuine duplicates — findings that share ' +
-    'a root cause, or the same file, line, and category — into one issue with a primary location and a list of the ' +
-    'other affected sites (`otherSites`), giving the merged issue the highest severity among those merged. When in ' +
-    "doubt, keep findings separate. Preserve each issue's description, severity, category, file, lines, and reason.\n\n" +
-    'Findings (' +
-    issues.length +
-    '):\n' +
-    JSON.stringify(issues, null, 2)
-  );
-}
+const dedupPrompt = (issues) =>
+  'Deduplicate the following review findings before validation. Merge only genuine duplicates — findings that share ' +
+  'a root cause, or the same file, line, and category — into one issue with a primary location and a list of the ' +
+  'other affected sites (`otherSites`), giving the merged issue the highest severity among those merged. When in ' +
+  "doubt, keep findings separate. Preserve each issue's description, severity, category, file, lines, and reason.\n\n" +
+  `Findings (${issues.length}):\n${JSON.stringify(issues, null, 2)}`;
 
-function validatorPrompt(issue, survey) {
-  return (
-    'Independently validate whether the following reported issue is real, with high confidence. Open the actual ' +
-    'file(s) yourself — or, for repository-wide findings, the relevant files and structure — rather than trusting the ' +
-    'report\'s excerpt. Confirm the specific claim: e.g. if "variable is not defined" was flagged, verify that is ' +
-    'actually true in the code; for a CLAUDE.md issue, confirm the cited rule is scoped for the file and is actually ' +
-    'violated. Confirm only if the issue is truly an issue and significant today ("pre-existing" is not grounds to ' +
-    'dismiss it). Return { confirmed, rationale }.\n\nIssue:\n' +
-    JSON.stringify(issue, null, 2) +
-    '\n\n' +
-    surveyBlock(survey)
-  );
-}
+const validatorPrompt = (issue, survey) =>
+  'Independently validate whether the following reported issue is real, with high confidence. Open the actual ' +
+  'file(s) yourself — or, for repository-wide findings, the relevant files and structure — rather than trusting the ' +
+  'report\'s excerpt. Confirm the specific claim: e.g. if "variable is not defined" was flagged, verify that is ' +
+  'actually true in the code; for a CLAUDE.md issue, confirm the cited rule is scoped for the file and is actually ' +
+  'violated. Confirm only if the issue is truly an issue and significant today ("pre-existing" is not grounds to ' +
+  `dismiss it). Return { confirmed, rationale }.\n\nIssue:\n${JSON.stringify(issue, null, 2)}\n\n${surveyBlock(survey)}`;
 
 // --- Orchestration ------------------------------------------------------------------------------------------------
 const gaps = [];
 
 // Phases 1 & 2 — Survey and CLAUDE.md scan, concurrently (both `haiku`, full requested effort).
 phase('Survey');
-const surveyResults = await parallel([
-  function () {
-    return agent(surveyPrompt(), {
+const [survey, claudemd] = await parallel([
+  () =>
+    agent(surveyPrompt(), {
       label: 'survey',
       phase: 'Survey',
       model: 'haiku',
-      effort: effort,
+      effort,
       schema: SURVEY_SCHEMA,
-    });
-  },
-  function () {
-    return agent(claudemdPrompt(), {
+    }),
+  () =>
+    agent(claudemdPrompt(), {
       label: 'claude-md-scan',
       phase: 'Survey',
       model: 'haiku',
-      effort: effort,
+      effort,
       schema: CLAUDEMD_SCHEMA,
-    });
-  },
+    }),
 ]);
-const survey = surveyResults[0];
-const claudemd = surveyResults[1];
 if (!survey) {
   return {
     findings: [],
     exclusions: [],
-    gaps: [
-      'Survey agent did not return — review aborted (no repository context to work from).',
-    ],
+    gaps: ['Survey agent did not return — review aborted (no repository context to work from).'],
   };
 }
-const claudemdPaths = claudemd && claudemd.paths ? claudemd.paths : [];
+const claudemdPaths = claudemd?.paths ?? [];
 if (!claudemd)
-  gaps.push(
-    'CLAUDE.md scan did not return — compliance reviewers ran without a governing-file list.',
-  );
+  gaps.push('CLAUDE.md scan did not return — compliance reviewers ran without a governing-file list.');
 
 // Phase 3 — Partition (`sonnet`, full requested effort).
 phase('Partition');
@@ -493,87 +374,65 @@ const partition = await agent(partitionPrompt(survey), {
   label: 'partition',
   phase: 'Partition',
   model: 'sonnet',
-  effort: effort,
+  effort,
   schema: PARTITION_SCHEMA,
 });
 if (!partition || !partition.units || partition.units.length === 0) {
   return {
     findings: [],
-    exclusions: partition && partition.exclusions ? partition.exclusions : [],
+    exclusions: partition?.exclusions ?? [],
     gaps: ['Partition agent did not return usable units — review aborted.'],
   };
 }
 const units = partition.units;
 const exclusions = partition.exclusions || [];
-log(
-  'Partitioned into ' +
-    units.length +
-    ' unit(s); ' +
-    exclusions.length +
-    ' exclusion(s).',
-);
+log(`Partitioned into ${units.length} unit(s); ${exclusions.length} exclusion(s).`);
 
 // Phase 4 — Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full
 // effort. This must complete before dedup, which reasons over every finding, so it runs as a single parallel() barrier.
 phase('Review');
-const reviewSpecs = [];
-for (let u = 0; u < units.length; u++) {
-  const unit = units[u];
-  for (let ri = 0; ri < REVIEWERS.length; ri++) {
-    const r = REVIEWERS[ri];
-    reviewSpecs.push({
-      label: 'review:' + unit.name + ':' + r.key,
+const reviewSpecs = [
+  ...units.flatMap((unit) =>
+    REVIEWERS.map((r) => ({
+      label: `review:${unit.name}:${r.key}`,
       model: r.model,
       effort: leafEffort,
       category: r.key,
       prompt: reviewerPrompt(r, unit, survey, claudemdPaths),
-    });
-  }
-}
-for (let li = 0; li < ARCH_LENSES.length; li++) {
-  const lens = ARCH_LENSES[li];
-  reviewSpecs.push({
-    label: 'review:arch:' + lens.key,
+    })),
+  ),
+  ...ARCH_LENSES.map((lens) => ({
+    label: `review:arch:${lens.key}`,
     model: 'opus',
-    effort: effort,
+    effort,
     category: 'architecture',
     prompt: archPrompt(lens, survey, claudemdPaths),
-  });
-}
+  })),
+];
 const reviewResults = await parallel(
-  reviewSpecs.map(function (s) {
-    return function () {
-      return agent(s.prompt, {
-        label: s.label,
-        phase: 'Review',
-        model: s.model,
-        effort: s.effort,
-        schema: ISSUES_SCHEMA,
-      });
-    };
-  }),
+  reviewSpecs.map((s) => () =>
+    agent(s.prompt, {
+      label: s.label,
+      phase: 'Review',
+      model: s.model,
+      effort: s.effort,
+      schema: ISSUES_SCHEMA,
+    }),
+  ),
 );
 const rawIssues = [];
-for (let i = 0; i < reviewResults.length; i++) {
-  const res = reviewResults[i];
+reviewResults.forEach((res, i) => {
   const spec = reviewSpecs[i];
   if (!res || !res.issues) {
-    gaps.push('Reviewer did not complete: ' + spec.label);
-    continue;
+    gaps.push(`Reviewer did not complete: ${spec.label}`);
+    return;
   }
-  for (let j = 0; j < res.issues.length; j++) {
-    const issue = res.issues[j];
+  for (const issue of res.issues) {
     issue.category = spec.category; // authoritative — do not depend on the model to label it
     rawIssues.push(issue);
   }
-}
-log(
-  'Review produced ' +
-    rawIssues.length +
-    ' raw finding(s) across ' +
-    reviewSpecs.length +
-    ' reviewer(s).',
-);
+});
+log(`Review produced ${rawIssues.length} raw finding(s) across ${reviewSpecs.length} reviewer(s).`);
 
 // Phase 5 — Dedupe (`opus`, one agent). A deterministic script cannot reason over findings, so this is delegated.
 phase('Dedupe');
@@ -583,78 +442,57 @@ if (rawIssues.length > 0) {
     label: 'dedupe',
     phase: 'Dedupe',
     model: 'opus',
-    effort: effort,
+    effort,
     schema: ISSUES_SCHEMA,
   });
   if (dd && dd.issues) {
     deduped = dd.issues;
-    log(
-      'Deduplicated ' +
-        rawIssues.length +
-        ' -> ' +
-        deduped.length +
-        ' finding(s).',
-    );
+    log(`Deduplicated ${rawIssues.length} -> ${deduped.length} finding(s).`);
   } else {
-    gaps.push(
-      'Dedupe agent did not return — validating the raw, un-deduplicated findings instead.',
-    );
+    gaps.push('Dedupe agent did not return — validating the raw, un-deduplicated findings instead.');
   }
 }
 
-// Phase 6 — Validate (barrier). Per issue, run --depth independent validators; keep on a strict majority of those that
-// return. High-risk categories validate on `opus`, the rest on `sonnet`; both at capped leaf effort.
+// Phase 6 — Validate (barrier). Per issue, run `--depth` independent validators; keep on a strict majority of those
+// that return. High-risk categories validate with Opus, the rest with Sonnet; both at capped leaf effort.
 phase('Validate');
 const HIGH_RISK = ['bug', 'security', 'consistency', 'architecture'];
-function isHighRisk(issue) {
-  return HIGH_RISK.indexOf(issue.category) !== -1;
-}
+const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 function validatorCount(issue) {
-  if (depthArg === 'auto') return isHighRisk(issue) ? 3 : 1;
-  const n = parseInt(depthArg, 10);
+  if (depth === 'auto') return isHighRisk(issue) ? 3 : 1;
+  const n = depth;
   return isNaN(n) || n < 1 ? 1 : n;
 }
 const verdicts = await parallel(
-  deduped.map(function (issue, idx) {
-    return async function () {
-      const count = validatorCount(issue);
-      const model = isHighRisk(issue) ? 'opus' : 'sonnet';
-      const votes = await parallel(
-        Array.from({ length: count }, function (_, k) {
-          return function () {
-            return agent(validatorPrompt(issue, survey), {
-              label: 'validate:' + issue.category + ':' + idx + ':' + k,
-              phase: 'Validate',
-              model: model,
-              effort: leafEffort,
-              schema: VERDICT_SCHEMA,
-            });
-          };
+  deduped.map((issue, idx) => async () => {
+    const count = validatorCount(issue);
+    const model = isHighRisk(issue) ? 'opus' : 'sonnet';
+    const votes = await parallel(
+      Array.from({ length: count }, (_, k) => () =>
+        agent(validatorPrompt(issue, survey), {
+          label: `validate:${issue.category}:${idx}:${k}`,
+          phase: 'Validate',
+          model,
+          effort: leafEffort,
+          schema: VERDICT_SCHEMA,
         }),
+      ),
+    );
+    const returned = votes.filter(Boolean);
+    if (returned.length === 0) {
+      gaps.push(
+        `Validation did not complete for a ${issue.category} finding: ${issue.description.slice(0, 80)}`,
       );
-      const returned = votes.filter(Boolean);
-      if (returned.length === 0) {
-        gaps.push(
-          'Validation did not complete for a ' +
-            issue.category +
-            ' finding: ' +
-            issue.description.slice(0, 80),
-        );
-        return null;
-      }
-      const yes = returned.filter(function (v) {
-        return v.confirmed;
-      }).length;
-      // Strict majority of the validators that actually returned (>, not >=, so 1-of-2 is dropped).
-      return yes > returned.length / 2 ? issue : null;
-    };
+      return null;
+    }
+    const yes = returned.filter((v) => v.confirmed).length;
+    // Strict majority of the validators that actually returned (>, not >=, so 1-of-2 is dropped).
+    return yes > returned.length / 2 ? issue : null;
   }),
 );
+
 const findings = verdicts.filter(Boolean);
 
-log('Validated ' + findings.length + ' finding(s); ' + gaps.length + ' gap(s).');
-return {
-  findings: findings,
-  exclusions: exclusions,
-  gaps: gaps,
-};
+log(`Validated ${findings.length} finding(s); ${gaps.length} gap(s).`);
+
+return { findings, exclusions, gaps };
