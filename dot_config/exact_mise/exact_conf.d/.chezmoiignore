@@ -1,6 +1,6 @@
 {{ if not .personal -}}
-/personal.toml
+personal.toml
 {{ end -}}
 {{ if not .work -}}
-/work.toml
+work.toml
 {{ end -}}
