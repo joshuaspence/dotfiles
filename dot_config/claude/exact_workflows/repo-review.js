@@ -219,10 +219,8 @@ const REVIEWERS = [
       'Flag maintainability problems within the unit that a senior engineer would call out in review: hand-written ' +
       'code that reimplements what a mature, widely-used package already provides (name the package, and only where ' +
       'adopting it is a clear win — not trivial one-liners); verbose, redundant, or stale comments and commented-out ' +
-      'code; needless complexity where a simpler idiomatic construct would do; and gaps in test coverage (non-trivial ' +
-      'logic, branches, or error paths no test exercises) in a unit that otherwise ships tests — name the specific ' +
-      'behaviour. Do not flag missing tests for trivial glue code, a unit/repo with no test suite at all, stylistic ' +
-      'preferences a linter/formatter handles, or dependencies where the hand-written code is small and self-contained.',
+      'code; and needless complexity where a simpler idiomatic construct would do. Do not flag stylistic preferences ' +
+      'a linter/formatter handles, or dependencies where the hand-written code is small and self-contained.',
   },
   {
     key: 'consistency',
@@ -247,13 +245,14 @@ const REVIEWERS = [
     model: 'sonnet',
     title: 'Test critique',
     instruction:
-      'Critique the quality of the tests that already exist in the unit — whether they would actually catch a ' +
-      'regression (distinct from coverage gaps). Flag: vacuous or weak assertions (would still pass if the code were ' +
-      'broken; asserting only that a call did not throw; asserting a mocked return value; meaningless snapshots); ' +
-      'tests coupled to implementation details rather than observable behaviour; over-mocking so the test exercises ' +
-      'the doubles, not the real path; non-determinism (wall-clock, sleep, network, order/state leakage); and tests ' +
-      'whose name contradicts what they assert. Do not flag the mere absence of tests, a unit/repo that ships none, ' +
-      'or stylistic test preferences a linter/formatter handles.',
+      'Critique the tests in the unit on two axes. Coverage — non-trivial logic, branches, or error paths that no ' +
+      'test exercises, in a unit that otherwise ships tests; name the specific untested behaviour. Quality — whether ' +
+      'the tests that exist would actually catch a regression: vacuous or weak assertions (would still pass if the ' +
+      'code were broken; asserting only that a call did not throw; asserting a mocked return value; meaningless ' +
+      'snapshots); tests coupled to implementation details rather than observable behaviour; over-mocking so the ' +
+      'test exercises the doubles, not the real path; non-determinism (wall-clock, sleep, network, order/state ' +
+      'leakage); and tests whose name contradicts what they assert. Do not flag missing tests for trivial glue code, ' +
+      'a unit/repo that ships no tests at all, or stylistic test preferences a linter/formatter handles.',
   },
 ];
 
