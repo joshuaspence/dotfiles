@@ -23,16 +23,18 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 
 - A bare `path` argument is an optional path that scopes the review to a subtree. If absent, review the whole
   repository. When given, it applies throughout the script (survey, partition, and the per-unit reviewers cover only
-  that subtree; the architecture lenses still read the whole repo but report only defects involving it). Pass it through
-  as `path`; pass `null` when absent.
-- `--effort <low|medium|high|xhigh|max>` sets the requested reasoning effort for the workflow's subagents. If absent,
-  default to `high`. Reject any other value and stop with an error rather than guessing. Pass it through unchanged — the
-  script itself caps the high-fan-out agents at `xhigh` (see [Notes](#notes)); you do not clamp it here.
+  that subtree; the architecture lenses still read the whole repo but report only defects involving it). Include it as
+  `path` when given; omit it when absent (the script then reviews the whole repository).
+- `--effort <low|medium|high|xhigh|max>` sets the requested reasoning effort for the workflow's subagents. If omitted,
+  the script uses `high`. Reject any other value and stop with an error rather than guessing. When given, pass it
+  through unchanged — the script itself caps the high-fan-out agents at `xhigh` (see [Notes](#notes)); you do not clamp
+  it here.
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into. Must be a positive
-  integer or `auto`; reject any other value and stop with an error rather than guessing. Defaults to `auto`, which lets
-  the partitioner choose in the range 4–8.
+  integer or `auto`; reject any other value and stop with an error rather than guessing. If omitted, the script defaults
+  it to `auto`, which lets the partitioner choose in the range 4–8.
 - `--depth <n|auto>` sets how many independent validators run per issue. Must be a positive integer or `auto`; reject
-  any other value and stop with an error rather than guessing. Defaults to `1`. A fixed `n > 1` keeps an issue only on a
+  any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` — do not pass
+  `auto` yourself; `auto` applies only when the user explicitly asks for it. A fixed `n > 1` keeps an issue only on a
   strict majority of its validators (≥2 of 3, ≥3 of 5); `auto` scales the count by risk (more for bugs, security,
   consistency, and architecture; a single validator for code-quality, test-critique, and `CLAUDE.md`). The script
   applies this rule — you only pass the value through.
@@ -49,13 +51,18 @@ Call the `Workflow` tool with:
 
 - `scriptPath` — the absolute path of `~/.config/claude/workflows/repo-review.js` (expand `~` to your home directory;
   the tool needs an absolute path, and the script lives under your config dir, not in the repository being reviewed).
-- `args` — a JSON object `{ "path": <path or null>, "effort": <effort>, "breadth": <n or "auto">, "depth": <n or "auto"> }`
-  built from the parsed arguments above.
+- `args` — a JSON object built from **only the flags the user actually supplied**: add a key for each flag the user
+  gave, and omit the rest. The script fills in the documented defaults for anything omitted (whole repository,
+  `--effort high`, `--breadth auto`, `--depth 1`), so do not synthesise default values here, and never include
+  `--output`. Examples: `/repo-review src --breadth 6` → `{ "path": "src", "breadth": 6 }`; a bare `/repo-review` with
+  no arguments → `{}`.
 
-Running that workflow *is* the review. It runs in the background and returns a structured result when it finishes; do
-not re-run it while it is in flight, and do not launch review subagents outside it. Watch its progress in `/workflows`;
-if a run wedges (most agents done, a few idle for many minutes), stop it there and re-run, optionally at a lower
-`--effort`.
+Finalise every argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs in the
+background and returns a structured result when it finishes. Do not launch review subagents outside it, do not re-run it
+while it is in flight, and — importantly — do not stop and restart it merely to change a default or an argument you
+could have set at launch (a run already under way is not wrong just because you could have passed, or omitted, a value
+explicitly). The only reason to stop a run is a genuine wedge — most agents done, a few idle for many minutes — after
+which you may re-run, watching progress in `/workflows`, optionally at a lower `--effort`.
 
 The result is `{ findings, exclusions, gaps }`:
 
