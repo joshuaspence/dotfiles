@@ -1,3 +1,6 @@
+{{ if not .personal -}}
+/personal.toml
+{{ end -}}
 {{ if not .work -}}
 /work.toml
 {{ end -}}

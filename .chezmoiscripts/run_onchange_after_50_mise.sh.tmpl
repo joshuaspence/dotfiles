@@ -6,8 +6,9 @@ set -o pipefail
 
 # Configuration
 # ~/.config/mise/config.toml: {{ include "dot_config/exact_mise/config.toml" | sha256sum }}
-{{- if .work }}
-# ~/.config/mise/conf.d/work.toml: {{ include "dot_config/exact_mise/exact_conf.d/work.toml" | sha256sum }}
+{{- $destDir := .chezmoi.destDir -}}
+{{ range $file := glob (joinPath $destDir ".config/mise/conf.d/*.toml") }}
+# {{ replace (print $destDir "/") "" $file }}: {{ include $file | sha256sum }}
 {{- end }}
 
 mise install --yes
