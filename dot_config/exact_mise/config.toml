@@ -2,9 +2,21 @@
 idiomatic_version_file_enable_tools = ["go", "node", "pnpm", "python", "terraform", "terragrunt"]
 npm.package_manager = "pnpm"
 
+# TODO: Consider adding these:
+#
+# - aws-sso
+# - bats
+# - claude
+# - claude-powerline
+# - claude-squad
+# - direnv
+# - docker-cli
+# - github-cli
+# - kubectx
 [tools]
 amazon-ecr-credential-helper = "latest"
 ansible = "latest"
+bat = "latest"
 chezmoi = "latest"
 conftest = "latest"
 "github:docker-credential-magic/docker-credential-magic" = "latest"
@@ -14,6 +26,7 @@ grpcurl = "latest"
 hadolint = "latest"
 jq = "latest"
 k9s = "latest"
+kubectl = "latest"
 markdownlint-cli2 = "latest"
 node = "lts"
 "pipx:ansible-lint" = "latest"

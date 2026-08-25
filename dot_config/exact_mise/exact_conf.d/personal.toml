@@ -1,3 +1,4 @@
 [tools]
+"pipx:cc2538-bsl" = "git+https://github.com/JelmerT/cc2538-bsl"
 "pipx:esphome" = "latest"
 "pipx:esptool" = "latest"

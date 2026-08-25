@@ -206,7 +206,6 @@
         - name: 'Install common APT utilities'
           ansible.builtin.apt:
             name:
-              - 'bat'
               - 'curl'
               - 'fd-find'
               - 'fzf'
@@ -350,31 +349,6 @@
         - name: 'Install JFrog CLI'
           ansible.builtin.apt:
             name: 'jfrog-cli-v2'
-
-    - name: 'Kubernetes'
-      block:
-        - name: 'Get latest Kubernetes release'
-          ansible.builtin.uri:
-            url: 'https://dl.k8s.io/release/stable.txt'
-            return_content: true
-          register: 'kubernetes_release'
-          changed_when: false
-        - name: 'Set target Kubernetes version'
-          ansible.builtin.set_fact:
-            kubernetes_version: '{{ (kubernetes_release.content | trim | split("."))[:-1] | join(".") }}'
-        - name: 'Add Kubernetes repository'
-          ansible.builtin.deb822_repository:
-            name: 'kubernetes'
-            uris: 'https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/'
-            suites: '/'
-            components: []
-            signed_by: 'https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/Release.key'
-          notify: 'Update APT cache'
-        - name: 'Flush handlers'
-          ansible.builtin.meta: 'flush_handlers'
-        - name: 'Install kubectl'
-          ansible.builtin.apt:
-            name: 'kubectl'
 
     - name: 'Slack'
       when: 'is_work'
