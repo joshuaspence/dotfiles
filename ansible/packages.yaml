@@ -238,10 +238,6 @@
           - 'libtool'
           - 'pkg-config'
 
-    - name: 'Install Taskwarrior'
-      ansible.builtin.apt:
-        name: 'taskwarrior'
-
     - name: 'Install file sharing packages'
       when: 'is_personal'
       ansible.builtin.apt:
@@ -379,30 +375,6 @@
         - name: 'Install kubectl'
           ansible.builtin.apt:
             name: 'kubectl'
-
-    - name: 'NodeJS'
-      block:
-        - name: 'Get latest NodeJS LTS release'
-          ansible.builtin.uri:
-            url: 'https://nodejs.org/dist/index.json'
-          register: 'nodejs_release'
-          changed_when: false
-        - name: 'Set target NodeJS version'
-          ansible.builtin.set_fact:
-            nodejs_version: '{{ (nodejs_release.json | selectattr("lts") | first).version | regex_replace("^v", "") | split(".") | first }}'
-        - name: 'Add NodeSource repository'
-          ansible.builtin.deb822_repository:
-            name: 'nodejs'
-            uris: 'https://deb.nodesource.com/node_{{ nodejs_version }}.x'
-            suites: 'nodistro'
-            components: 'main'
-            signed_by: 'https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key'
-          notify: 'Update APT cache'
-        - name: 'Flush handlers'
-          ansible.builtin.meta: 'flush_handlers'
-        - name: 'Install NodeJS'
-          ansible.builtin.apt:
-            name: 'nodejs'
 
     - name: 'Slack'
       when: 'is_work'
