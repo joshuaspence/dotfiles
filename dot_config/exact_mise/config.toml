@@ -1,5 +1,4 @@
 [settings]
-github.credential_command = "gh auth token --hostname ${MISE_CREDENTIAL_HOST}"
 idiomatic_version_file_enable_tools = [go", "node", "pnpm", "python", "terraform", "terragrunt"]
 npm.package_manager = pnpm"
 
@@ -24,10 +23,3 @@ terragrunt = "latest"
 tflint = "latest"
 yamllint = "latest"
 yq = "latest"
-
-{{- if .work }}
-"github:anduril/latticectl" = { version = "latest", api_url = "https://ghe.anduril.dev/api/v3" }
-"github:anduril/sieclient" = { version = "latest", api_url = "https://ghe.anduril.dev/api/v3" }
-"github:CircleCI-Public/circleci-cli" = "latest"
-"github:ankitpokhrel/jira-cli" = "latest"
-{{- end }}

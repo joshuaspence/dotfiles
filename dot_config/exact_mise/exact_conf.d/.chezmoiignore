@@ -1,0 +1,3 @@
+{{ if not .work -}}
+/work.toml
+{{ end -}}
