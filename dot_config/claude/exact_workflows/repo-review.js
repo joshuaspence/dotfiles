@@ -21,22 +21,34 @@ export const meta = {
 };
 
 const path = args?.path;
-const effort = args?.effort ?? 'high';
-const breadth = parseInt(args?.breadth, 10) || 'auto';
-const depth = parseInt(args?.depth, 10) || 0;
-
-const scope = path ? 'the subtree `' + path + '`' : 'the whole repository';
+const scope = path ? `the subtree \`${path}\`` : 'the whole repository';
 const lsFiles = path ? `git ls-files -- ${path}` : 'git ls-files';
+
+
+// --- Configuration knobs ------------------------------------------------------------------------------------------
+// Each knob tolerates missing or malformed input. `effort` gates every agent (clamped to a known level). `breadth`
+// (partition-unit count) and `depth` (validators per finding) accept the sentinel 'auto' or a positive integer.
+const EFFORT_ORDER = ['low', 'medium', 'high', 'xhigh', 'max'];
+const effort = EFFORT_ORDER.includes(args?.effort) ? args.effort : 'high';
+
+function positiveIntOr(value, fallback) {
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) || n < 1 ? fallback : n;
+}
+
+const breadth = args?.breadth === 'auto' ? 'auto' : positiveIntOr(args?.breadth, 'auto');
+const depth = args?.depth === 'auto' ? 'auto' : positiveIntOr(args?.depth, 1);
+
 
 // --- Effort cap for the high-fan-out (leaf) agents ---------------------------------------------------------------
 // The per-unit reviewers (Review phase) and the validators (Validate phase) run at high multiplicity; launching many
 // concurrent `max` Opus inferences has been observed to intermittently stall, and the Review phase is a barrier, so a
 // single hung agent can wedge the run. Cap those leaf agents at `xhigh` (clamp only `max` down). The few surveyors,
 // the partitioner, the dedup agent, and the three architecture lenses keep the requested effort.
-const EFFORT_ORDER = ['low', 'medium', 'high', 'xhigh', 'max'];
 const capLeaf = (e) =>
   EFFORT_ORDER.indexOf(e) > EFFORT_ORDER.indexOf('xhigh') ? 'xhigh' : e;
 const leafEffort = capLeaf(effort);
+
 
 // --- Schemas -----------------------------------------------------------------------------------------------------
 const STRING_ARRAY = { type: 'array', items: { type: 'string' } };
@@ -73,7 +85,7 @@ const ISSUE = {
       description: 'Why it was flagged (e.g. "bug", "CLAUDE.md adherence", "architecture")',
     },
   },
-  required: ['description', 'severity', 'file', 'reason'],
+  required: ['description', 'severity', 'category', 'file', 'reason'],
 };
 
 const ISSUES_SCHEMA = {
@@ -101,7 +113,7 @@ const SURVEY_SCHEMA = {
   required: ['languages', 'tooling', 'entryPoints', 'structure'],
 };
 
-const CLAUDEMD_SCHEMA = {
+const CLAUDE_MD_SCHEMA = {
   type: 'object',
   properties: { paths: STRING_ARRAY },
   required: ['paths'],
@@ -116,8 +128,8 @@ const PARTITION_SCHEMA = {
         type: 'object',
         properties: {
           name: { type: 'string' },
-          paths: STRING_ARRAY,
           summary: { type: 'string' },
+          paths: STRING_ARRAY,
         },
         required: ['name', 'paths'],
       },
@@ -146,17 +158,19 @@ const VERDICT_SCHEMA = {
   required: ['confirmed', 'rationale'],
 };
 
+
 // --- Shared prompt fragments -------------------------------------------------------------------------------------
 // Render a list of paths/sites as markdown bullets, falling back to `empty` when there is nothing to list.
 const bulletList = (items, empty) => items?.length ? items.map((p) => `- ${p}`).join('\n') : empty;
-
 const surveyBlock = (survey) =>
   `Repository survey (for context on the repo's purpose and conventions):\n${JSON.stringify(survey, null, 2)}`;
 
-const SEVERITY_RUBRIC =
-  'Severity reflects the impact if the issue is left unfixed: "critical" (security hole, data loss, or a defect that ' +
-  'breaks core behaviour), "high" (wrong behaviour on a common path, or a serious maintainability trap), "medium" (a ' +
-  'real defect with limited blast radius), "low" (a minor quality issue).';
+const FALSE_POSITIVES =
+  'Do NOT flag these (they are false positives): something that looks like a bug but is actually correct; pedantic ' +
+  'nitpicks a senior engineer would not raise; issues a linter would catch; issues named in `CLAUDE.md` but explicitly ' +
+  'silenced in the code (e.g. a lint-ignore comment); and deliberate, documented deviations where a comment explains ' +
+  'why. Note: "pre-existing" is NOT a reason to dismiss — every issue in a repository review is pre-existing. Judge ' +
+  'each issue on whether it is real and significant today.';
 
 const REVIEW_RULES =
   'Do not build, typecheck, lint, or test the repository — review the source as written. You may consult authoritative ' +
@@ -164,24 +178,14 @@ const REVIEW_RULES =
   'location in this repository. Prefer `git ls-files` over `find`. If you are not certain an issue is real, do not flag ' +
   'it — false positives erode trust. Cite each issue with a file path and, where applicable, a line or range.';
 
-const FALSE_POSITIVES =
-  'Do NOT flag these (they are false positives): something that looks like a bug but is actually correct; pedantic ' +
-  'nitpicks a senior engineer would not raise; issues a linter would catch; issues named in CLAUDE.md but explicitly ' +
-  'silenced in the code (e.g. a lint-ignore comment); and deliberate, documented deviations where a comment explains ' +
-  'why. Note: "pre-existing" is NOT a reason to dismiss — every issue in a repository review is pre-existing. Judge ' +
-  'each issue on whether it is real and significant today.';
+const SEVERITY_RUBRIC =
+  'Severity reflects the impact if the issue is left unfixed: "critical" (security hole, data loss, or a defect that ' +
+  'breaks core behaviour), "high" (wrong behaviour on a common path, or a serious maintainability trap), "medium" (a ' +
+  'real defect with limited blast radius), "low" (a minor quality issue).';
+
 
 // --- Per-unit reviewers (Agents 1-6) -----------------------------------------------------------------------------
 const REVIEWERS = [
-  {
-    key: 'claude-md',
-    model: 'sonnet',
-    title: 'CLAUDE.md compliance',
-    instruction:
-      'Audit the unit for CLAUDE.md compliance against the governing CLAUDE.md files listed below. You are given ' +
-      'their paths, not their text — read their contents before judging. When evaluating compliance for a file, ' +
-      'consider only CLAUDE.md files that share a path with that file or its ancestor directories.',
-  },
   {
     key: 'bug',
     model: 'opus',
@@ -191,22 +195,13 @@ const REVIEWERS = [
       'resource leaks, concurrency mistakes.',
   },
   {
-    key: 'security',
-    model: 'opus',
-    title: 'Security',
-    instruction:
-      'Look for security problems in the unit: injection, unsafe deserialization, path traversal, missing ' +
-      'authorization checks, secrets committed to the repository. Where a dependency or known-vulnerable pattern is ' +
-      'involved, cross-check against upstream security advisories before flagging.',
-  },
-  {
-    key: 'consistency',
+    key: 'claude-md',
     model: 'sonnet',
-    title: 'Consistency',
+    title: 'CLAUDE.md compliance',
     instruction:
-      "Look for problems only visible with the whole repository in view: callers that disagree with a function's " +
-      'current contract, duplicated logic that has diverged, dead code that is still exported, and configuration that ' +
-      'contradicts the code that reads it. Cross-reference against the other units, not just this one.',
+      'Audit the unit for `CLAUDE.md` compliance against the governing `CLAUDE.md` files listed below. You are ' +
+      'given their paths, not their text — read their contents before judging. When evaluating compliance for a ' +
+      'file, consider only `CLAUDE.md` files that share a path with that file or its ancestor directories.',
   },
   {
     key: 'code-quality',
@@ -220,6 +215,24 @@ const REVIEWERS = [
       'logic, branches, or error paths no test exercises) in a unit that otherwise ships tests — name the specific ' +
       'behaviour. Do not flag missing tests for trivial glue code, a unit/repo with no test suite at all, stylistic ' +
       'preferences a linter/formatter handles, or dependencies where the hand-written code is small and self-contained.',
+  },
+  {
+    key: 'consistency',
+    model: 'sonnet',
+    title: 'Consistency',
+    instruction:
+      "Look for problems only visible with the whole repository in view: callers that disagree with a function's " +
+      'current contract, duplicated logic that has diverged, dead code that is still exported, and configuration that ' +
+      'contradicts the code that reads it. Cross-reference against the other units, not just this one.',
+  },
+  {
+    key: 'security',
+    model: 'opus',
+    title: 'Security',
+    instruction:
+      'Look for security problems in the unit: injection, unsafe deserialization, path traversal, missing ' +
+      'authorization checks, secrets committed to the repository. Where a dependency or known-vulnerable pattern is ' +
+      'involved, cross-check against upstream security advisories before flagging.',
   },
   {
     key: 'test-critique',
@@ -236,8 +249,15 @@ const REVIEWERS = [
   },
 ];
 
+
 // --- Architecture lenses (Agent 7) — one instance each, over the whole repo, blind to the others -----------------
-const ARCH_LENSES = [
+const ARCHITECTURAL_LENSES = [
+  {
+    key: 'cohesion-and-duplication',
+    instruction:
+      'Cohesion and duplication — subsystems with overlapping or duplicated responsibilities, and organization that ' +
+      'contradicts the conventions in the survey or the repository-root CLAUDE.md.',
+  },
   {
     key: 'dependency-structure',
     instruction:
@@ -250,28 +270,65 @@ const ARCH_LENSES = [
       'Layering and boundaries — modules reaching across architectural layers or package boundaries they should not, ' +
       'and internal details that leak across those boundaries.',
   },
-  {
-    key: 'cohesion-and-duplication',
-    instruction:
-      'Cohesion and duplication — subsystems with overlapping or duplicated responsibilities, and organization that ' +
-      'contradicts the conventions in the survey or the repository-root CLAUDE.md.',
-  },
 ];
+
+const claudeMdPrompt = () =>
+  'List the repo-relative paths of every `CLAUDE.md` file in the repository (enumerate with `git ls-files`). Return ' +
+  'only the paths — not their contents.';
+
+const dedupePrompt = (issues) =>
+  'Deduplicate the following review findings before validation. Merge only genuine duplicates — findings that share ' +
+  'a root cause, or the same file, line, and category — into one issue with a primary location and a list of the ' +
+  'other affected sites (`otherSites`), giving the merged issue the highest severity among those merged. When in ' +
+  "doubt, keep findings separate. Preserve each issue's description, severity, category, file, lines, and reason.\n\n" +
+  `Findings (${issues.length}):\n${JSON.stringify(issues, null, 2)}`;
 
 const surveyPrompt = () =>
   `Survey ${scope} to orient a whole-repository code review. Use \`${lsFiles}\` to enumerate files (do not walk the ` +
   'filesystem, so ignored files stay out). Return: the primary programming languages; the build and test tooling; ' +
   'the entry points; and the top-level directory structure with a file count per directory.';
 
-const claudemdPrompt = () =>
-  'List the repo-relative paths of every CLAUDE.md file in the repository (enumerate with `git ls-files`). Return ' +
-  'only the paths — not their contents.';
+const validatorPrompt = (issue, survey) =>
+  'Independently validate whether the following reported issue is real, with high confidence. Open the actual ' +
+  'file(s) yourself — or, for repository-wide findings, the relevant files and structure — rather than trusting the ' +
+  'report\'s excerpt. Confirm the specific claim: e.g. if "variable is not defined" was flagged, verify that is ' +
+  'actually true in the code; for a `CLAUDE.md` issue, confirm the cited rule is scoped for the file and is actually ' +
+  'violated. Confirm only if the issue is truly an issue and significant today ("pre-existing" is not grounds to ' +
+  `dismiss it). Return \`{ confirmed, rationale }\`.\n\n` +
+  `Issue:\n${JSON.stringify(issue, null, 2)}\n\n${surveyBlock(survey)}`;
+
+function architecturalLensPrompt(lens, survey, claudeMdPaths) {
+  let extra = '';
+
+  if (lens.key === 'cohesion-and-duplication') {
+    const root = claudeMdPaths.find((p) => p === 'CLAUDE.md');
+
+    if (root) {
+      extra = `\n\nRepository-root \`CLAUDE.md\`: ${root} — read it yourself and judge organization against it.`;
+    }
+  }
+
+  const scopeNote = path
+    ? ` A path scope is in effect (\`${path}\`): examine the whole repository but report only defects that involve that subtree.`
+    : '';
+  
+  return (
+    "You are the Architecture reviewer, restricted to a single lens and blind to the others. " +
+    "Assess the repository's overall structure and design coherence, not individual files.\n\n" +
+    `Lens — ${lens.instruction}${scopeNote}\n\n` +
+    `${SEVERITY_RUBRIC}\n\n` +
+    'Flag only concrete, demonstrable structural defects, and cite the specific modules or files involved. Do not flag ' +
+    'subjective preferences or "this would be cleaner as X" rewrites. Return issues with category "architecture". ' +
+    `${REVIEW_RULES}${extra}\n\n${surveyBlock(survey)}`
+  );
+}
 
 function partitionPrompt(survey) {
   const target =
-    breadth === 'auto' || breadth == null
+    breadth === 'auto'
       ? 'Choose the number of units that best fits the repository, in the range 4-8.'
       : `Partition into exactly ${breadth} units.`;
+
   return (
     `Partition ${scope} into coherent review units, using the survey below. ${target} Each unit should be a module, ` +
     'package, or directory group that can be understood on its own; give it a short name and the list of ' +
@@ -281,65 +338,34 @@ function partitionPrompt(survey) {
   );
 }
 
-function reviewerPrompt(r, unit, survey, claudemdPaths) {
+function reviewerPrompt(reviewer, unit, survey, claudeMdPaths) {
   const extra =
-    r.key === 'claude-md'
-      ? '\n\nGoverning CLAUDE.md files (paths only — read their contents yourself):\n' +
-        bulletList(claudemdPaths, '(none found)')
+    reviewer.key === 'claude-md'
+      ? '\n\nGoverning `CLAUDE.md` files (paths only — read their contents yourself):\n' +
+        bulletList(claudeMdPaths, '(none found)')
       : '';
   const files = bulletList(unit.paths, '');
+
   return (
-    `You are the ${r.title} reviewer. ${r.instruction}\n\n` +
-    `Review this unit: "${unit.name}".\nFiles in scope:\n${files}\n\n` +
+    `You are the ${reviewer.title} reviewer. ${reviewer.instruction}\n\n` +
+    `Review this unit: "${unit.name}".\n` +
+    `Files in scope:\n${files}\n\n` +
     `${SEVERITY_RUBRIC}\n\n` +
-    `Return a list of issues. For each: a description, a severity, the category "${r.key}", the primary file and ` +
-    'line/range (or the set of files/modules for repo-wide findings), and the reason it was flagged. ' +
+    `Return a list of issues. For each: a description, a severity, the category "${reviewer.key}", the primary ` +
+    'file and line/range (or the set of files/modules for repo-wide findings), and the reason it was flagged. ' +
     `${REVIEW_RULES}\n\n${FALSE_POSITIVES}${extra}\n\n${surveyBlock(survey)}`
   );
 }
 
-function archPrompt(lens, survey, claudemdPaths) {
-  let extra = '';
-  if (lens.key === 'cohesion-and-duplication') {
-    const root = claudemdPaths.find((p) => p === 'CLAUDE.md');
-    if (root)
-      extra = `\n\nRepository-root CLAUDE.md: ${root} — read it yourself and judge organization against it.`;
-  }
-  const scopeNote = path
-    ? ` A path scope is in effect (\`${path}\`): examine the whole repository but report only defects that involve ` +
-      'that subtree.'
-    : '';
-  return (
-    "You are the Architecture reviewer, restricted to a single lens and blind to the others. Assess the repository's " +
-    `overall structure and design coherence, not individual files.\n\nLens — ${lens.instruction}${scopeNote}\n\n` +
-    `${SEVERITY_RUBRIC}\n\n` +
-    'Flag only concrete, demonstrable structural defects, and cite the specific modules or files involved. Do not flag ' +
-    'subjective preferences or "this would be cleaner as X" rewrites. Return issues with category "architecture". ' +
-    `${REVIEW_RULES}${extra}\n\n${surveyBlock(survey)}`
-  );
-}
-
-const dedupPrompt = (issues) =>
-  'Deduplicate the following review findings before validation. Merge only genuine duplicates — findings that share ' +
-  'a root cause, or the same file, line, and category — into one issue with a primary location and a list of the ' +
-  'other affected sites (`otherSites`), giving the merged issue the highest severity among those merged. When in ' +
-  "doubt, keep findings separate. Preserve each issue's description, severity, category, file, lines, and reason.\n\n" +
-  `Findings (${issues.length}):\n${JSON.stringify(issues, null, 2)}`;
-
-const validatorPrompt = (issue, survey) =>
-  'Independently validate whether the following reported issue is real, with high confidence. Open the actual ' +
-  'file(s) yourself — or, for repository-wide findings, the relevant files and structure — rather than trusting the ' +
-  'report\'s excerpt. Confirm the specific claim: e.g. if "variable is not defined" was flagged, verify that is ' +
-  'actually true in the code; for a CLAUDE.md issue, confirm the cited rule is scoped for the file and is actually ' +
-  'violated. Confirm only if the issue is truly an issue and significant today ("pre-existing" is not grounds to ' +
-  `dismiss it). Return { confirmed, rationale }.\n\nIssue:\n${JSON.stringify(issue, null, 2)}\n\n${surveyBlock(survey)}`;
 
 // --- Orchestration ------------------------------------------------------------------------------------------------
 const gaps = [];
 
-// Phases 1 & 2 — Survey and CLAUDE.md scan, concurrently (both `haiku`, full requested effort).
+log(`Config — effort: ${effort}, breadth: ${breadth}, depth: ${depth}, scope: ${path || 'whole repo'}.`);
+
+// Phases 1 & 2 — Survey and CLAUDE.md scan, concurrently (both Haiku, full requested effort).
 phase('Survey');
-const [survey, claudemd] = await parallel([
+const [survey, claudeMd] = await parallel([
   () =>
     agent(surveyPrompt(), {
       label: 'survey',
@@ -349,14 +375,15 @@ const [survey, claudemd] = await parallel([
       schema: SURVEY_SCHEMA,
     }),
   () =>
-    agent(claudemdPrompt(), {
+    agent(claudeMdPrompt(), {
       label: 'claude-md-scan',
       phase: 'Survey',
       model: 'haiku',
       effort,
-      schema: CLAUDEMD_SCHEMA,
+      schema: CLAUDE_MD_SCHEMA,
     }),
 ]);
+
 if (!survey) {
   return {
     findings: [],
@@ -364,11 +391,13 @@ if (!survey) {
     gaps: ['Survey agent did not return — review aborted (no repository context to work from).'],
   };
 }
-const claudemdPaths = claudemd?.paths ?? [];
-if (!claudemd)
-  gaps.push('CLAUDE.md scan did not return — compliance reviewers ran without a governing-file list.');
 
-// Phase 3 — Partition (`sonnet`, full requested effort).
+const claudeMdPaths = claudeMd?.paths ?? [];
+if (!claudeMd) {
+  gaps.push('`CLAUDE.md` scan did not return — compliance reviewers ran without a governing-file list.');
+}
+
+// Phase 3 — Partition (Sonnet, full requested effort).
 phase('Partition');
 const partition = await agent(partitionPrompt(survey), {
   label: 'partition',
@@ -377,75 +406,81 @@ const partition = await agent(partitionPrompt(survey), {
   effort,
   schema: PARTITION_SCHEMA,
 });
-if (!partition || !partition.units || partition.units.length === 0) {
+
+if (!partition?.units?.length) {
   return {
     findings: [],
     exclusions: partition?.exclusions ?? [],
     gaps: ['Partition agent did not return usable units — review aborted.'],
   };
 }
+
 const units = partition.units;
 const exclusions = partition.exclusions || [];
+
 log(`Partitioned into ${units.length} unit(s); ${exclusions.length} exclusion(s).`);
 
 // Phase 4 — Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full
-// effort. This must complete before dedup, which reasons over every finding, so it runs as a single parallel() barrier.
+// effort. This must complete before dedup, which reasons over every finding, so it runs as a single `parallel()` barrier.
 phase('Review');
 const reviewSpecs = [
   ...units.flatMap((unit) =>
-    REVIEWERS.map((r) => ({
-      label: `review:${unit.name}:${r.key}`,
-      model: r.model,
+    REVIEWERS.map((reviewer) => ({
+      label: `review:${unit.name}:${reviewer.key}`,
+      model: reviewer.model,
       effort: leafEffort,
-      category: r.key,
-      prompt: reviewerPrompt(r, unit, survey, claudemdPaths),
+      category: reviewer.key,
+      prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths),
     })),
   ),
-  ...ARCH_LENSES.map((lens) => ({
+  ...ARCHITECTURAL_LENSES.map((lens) => ({
     label: `review:arch:${lens.key}`,
     model: 'opus',
     effort,
     category: 'architecture',
-    prompt: archPrompt(lens, survey, claudemdPaths),
+    prompt: architecturalLensPrompt(lens, survey, claudeMdPaths),
   })),
 ];
+
 const reviewResults = await parallel(
-  reviewSpecs.map((s) => () =>
-    agent(s.prompt, {
-      label: s.label,
+  reviewSpecs.map((spec) => () =>
+    agent(spec.prompt, {
+      label: spec.label,
       phase: 'Review',
-      model: s.model,
-      effort: s.effort,
+      model: spec.model,
+      effort: spec.effort,
       schema: ISSUES_SCHEMA,
     }),
   ),
 );
-const rawIssues = [];
-reviewResults.forEach((res, i) => {
+
+const rawIssues = reviewResults.flatMap((result, i) => {
   const spec = reviewSpecs[i];
-  if (!res || !res.issues) {
+
+  if (!result?.issues) {
     gaps.push(`Reviewer did not complete: ${spec.label}`);
-    return;
+    return [];
   }
-  for (const issue of res.issues) {
-    issue.category = spec.category; // authoritative — do not depend on the model to label it
-    rawIssues.push(issue);
-  }
+
+  return result.issues.map((issue) => ({ ...issue, category: spec.category }));
 });
+
 log(`Review produced ${rawIssues.length} raw finding(s) across ${reviewSpecs.length} reviewer(s).`);
 
-// Phase 5 — Dedupe (`opus`, one agent). A deterministic script cannot reason over findings, so this is delegated.
+// Phase 5 — Dedupe (Opus, one agent). A deterministic script cannot reason over findings, so this is delegated.
 phase('Dedupe');
 let deduped = rawIssues;
+
 if (rawIssues.length > 0) {
-  const dd = await agent(dedupPrompt(rawIssues), {
+  const dd = await agent(dedupePrompt(rawIssues), {
     label: 'dedupe',
     phase: 'Dedupe',
     model: 'opus',
     effort,
     schema: ISSUES_SCHEMA,
   });
-  if (dd && dd.issues) {
+
+  if (dd?.issues) {
     deduped = dd.issues;
     log(`Deduplicated ${rawIssues.length} -> ${deduped.length} finding(s).`);
   } else {
@@ -456,13 +491,14 @@ if (rawIssues.length > 0) {
 // Phase 6 — Validate (barrier). Per issue, run `--depth` independent validators; keep on a strict majority of those
 // that return. High-risk categories validate with Opus, the rest with Sonnet; both at capped leaf effort.
 phase('Validate');
-const HIGH_RISK = ['bug', 'security', 'consistency', 'architecture'];
+const HIGH_RISK = ['architecture', 'bug', 'consistency', 'security'];
 const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
-function validatorCount(issue) {
-  if (depth === 'auto') return isHighRisk(issue) ? 3 : 1;
-  const n = depth;
-  return isNaN(n) || n < 1 ? 1 : n;
-}
+
+// With `--depth auto`, high-risk categories get 3 independent validators and the rest get 1; an explicit depth
+// applies uniformly. `depth` was normalized to 'auto' or a positive integer at the top, so no parsing here.
+const validatorCount = (issue) =>
+  depth === 'auto' ? (isHighRisk(issue) ? 3 : 1) : depth;
+
 const verdicts = await parallel(
   deduped.map((issue, idx) => async () => {
     const count = validatorCount(issue);
@@ -478,14 +514,16 @@ const verdicts = await parallel(
         }),
       ),
     );
+
     const returned = votes.filter(Boolean);
+
     if (returned.length === 0) {
-      gaps.push(
-        `Validation did not complete for a ${issue.category} finding: ${issue.description.slice(0, 80)}`,
-      );
+      gaps.push(`Validation did not complete for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
       return null;
     }
+
     const yes = returned.filter((v) => v.confirmed).length;
+    
     // Strict majority of the validators that actually returned (>, not >=, so 1-of-2 is dropped).
     return yes > returned.length / 2 ? issue : null;
   }),
