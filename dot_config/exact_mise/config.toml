@@ -1,6 +1,6 @@
 [settings]
-idiomatic_version_file_enable_tools = [go", "node", "pnpm", "python", "terraform", "terragrunt"]
-npm.package_manager = pnpm"
+idiomatic_version_file_enable_tools = ["go", "node", "pnpm", "python", "terraform", "terragrunt"]
+npm.package_manager = "pnpm"
 
 [tools]
 amazon-ecr-credential-helper = "latest"
