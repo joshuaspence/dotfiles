@@ -106,8 +106,16 @@ const SURVEY_SCHEMA = {
     },
     entryPoints: STRING_ARRAY,
     structure: {
-      type: 'string',
-      description: 'Top-level directory structure with a file count per directory',
+      type: 'array',
+      description: 'Top-level directory structure, one entry per directory',
+      items: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+          fileCount: { type: 'integer' },
+        },
+        required: ['path', 'fileCount'],
+      },
     },
   },
   required: ['languages', 'tooling', 'entryPoints', 'structure'],
