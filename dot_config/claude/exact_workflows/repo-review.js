@@ -4,7 +4,8 @@
  * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
  * access.
  *
- * Inputs arrive on `args`: `{ path, effort, breadth, depth }`. The return value is `{ findings, exclusions, gaps }`.
+ * Inputs arrive on `args`: `{ path, effort, breadth, depth, loop }`. The return value is
+ * `{ findings, exclusions, gaps }`.
  */
 
 export const meta = {
@@ -38,6 +39,13 @@ function positiveIntOr(value, fallback) {
 
 const breadth = args?.breadth === 'auto' ? 'auto' : positiveIntOr(args?.breadth, 'auto');
 const depth = args?.depth === 'auto' ? 'auto' : positiveIntOr(args?.depth, 1);
+
+// `--loop` turns on multi-round "loop-until-dry" reviewing. The wrapper sends `loop: true` for a bare `--loop` and an
+// integer for `--loop <n>`; anything absent means a single pass. `maxRounds` caps how many times the Review+Dedupe body
+// repeats; the loop stops earlier the first time a round adds no new findings.
+const LOOP_DEFAULT_ROUNDS = 4;
+const loopEnabled = (args?.loop ?? false) !== false;
+const maxRounds = loopEnabled ? positiveIntOr(args?.loop, LOOP_DEFAULT_ROUNDS) : 1;
 
 
 // --- Effort cap for the high-fan-out (leaf) agents ---------------------------------------------------------------
@@ -192,6 +200,39 @@ const SEVERITY_RUBRIC =
   'real defect with limited blast radius), "low" (a minor quality issue).';
 
 
+// --- Loop-until-dry fragments ------------------------------------------------------------------------------------
+// With `--loop`, the Review+Dedupe body repeats. Round 1 is the baseline pass — it gets no emphasis and an empty
+// feedback list, so its prompts are byte-identical to a single-pass run. Rounds 2+ are steered toward what earlier
+// passes missed by two additions: an escalating emphasis directive, and a scoped list of already-reported findings.
+// `ROUND_EMPHASIS` is indexed by 1-based round; rounds past the last entry reuse the deepest directive.
+const ROUND_EMPHASIS = [
+  '', // index 0 — unused (rounds are 1-based)
+  '', // round 1 — baseline pass, no emphasis
+  'This is a follow-up pass over code earlier passes already reviewed. Deliberately look past the issues they would ' +
+    'have caught: less-travelled branches, edge cases, and interactions a first read skims over.',
+  'This is a deeper follow-up pass. Concentrate on subtle, cross-cutting, or rare-condition defects that surface only ' +
+    'under specific inputs, orderings, or configurations — the kind a careful second reader finds after the easy wins.',
+  'This is a final deep pass. Assume the easy and moderate issues are already reported; hunt only for the most ' +
+    'subtle, well-hidden, or emergent problems that survive repeated reads.',
+];
+const roundEmphasis = (round) => ROUND_EMPHASIS[Math.min(round ?? 1, ROUND_EMPHASIS.length - 1)];
+const emphasisBlock = (round) => {
+  const text = roundEmphasis(round);
+  return text ? `\n\n${text}` : '';
+};
+
+// Render the "already reported, look elsewhere" feedback list; empty when there is nothing accumulated yet.
+const knownFindingsBlock = (known) =>
+  known?.length
+    ? '\n\nAlready reported by earlier passes — do NOT re-report these; find what they missed:\n' +
+      known.map((f) => `- [${f.category}] ${f.file}${f.lines ? `:${f.lines}` : ''} — ${f.description}`).join('\n')
+    : '';
+
+// A finding belongs to a unit when its primary file is one of the unit's paths or sits beneath one of them.
+const fileInUnit = (file, unit) =>
+  !!file && (unit.paths || []).some((p) => file === p || file.startsWith(p.endsWith('/') ? p : `${p}/`));
+
+
 // --- Per-unit reviewers (Agents 1-6) -----------------------------------------------------------------------------
 const REVIEWERS = [
   {
@@ -304,7 +345,7 @@ const validatorPrompt = (issue, survey) =>
   `dismiss it). Return \`{ confirmed, rationale }\`.\n\n` +
   `Issue:\n${JSON.stringify(issue, null, 2)}\n\n${surveyBlock(survey)}`;
 
-function architecturalLensPrompt(lens, survey, claudeMdPaths) {
+function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
   let extra = '';
 
   if (lens.key === 'cohesion-and-duplication') {
@@ -318,7 +359,7 @@ function architecturalLensPrompt(lens, survey, claudeMdPaths) {
   const scopeNote = path
     ? ` A path scope is in effect (\`${path}\`): examine the whole repository but report only defects that involve that subtree.`
     : '';
-  
+
   return (
     "You are the Architecture reviewer, restricted to a single lens and blind to the others. " +
     "Assess the repository's overall structure and design coherence, not individual files.\n\n" +
@@ -326,7 +367,7 @@ function architecturalLensPrompt(lens, survey, claudeMdPaths) {
     `${SEVERITY_RUBRIC}\n\n` +
     'Flag only concrete, demonstrable structural defects, and cite the specific modules or files involved. Do not flag ' +
     'subjective preferences or "this would be cleaner as X" rewrites. Return issues with category "architecture". ' +
-    `${REVIEW_RULES}${extra}\n\n${surveyBlock(survey)}`
+    `${REVIEW_RULES}${extra}${emphasisBlock(roundCtx.round)}${knownFindingsBlock(roundCtx.known)}\n\n${surveyBlock(survey)}`
   );
 }
 
@@ -345,7 +386,7 @@ function partitionPrompt(survey) {
   );
 }
 
-function reviewerPrompt(reviewer, unit, survey, claudeMdPaths) {
+function reviewerPrompt(reviewer, unit, survey, claudeMdPaths, roundCtx = {}) {
   const extra =
     reviewer.key === 'claude-md'
       ? '\n\nGoverning `CLAUDE.md` files (paths only — read their contents yourself):\n' +
@@ -360,7 +401,9 @@ function reviewerPrompt(reviewer, unit, survey, claudeMdPaths) {
     `${SEVERITY_RUBRIC}\n\n` +
     `Return a list of issues. For each: a description, a severity, the category "${reviewer.key}", the primary ` +
     'file and line/range (or the set of files/modules for repo-wide findings), and the reason it was flagged. ' +
-    `${REVIEW_RULES}\n\n${FALSE_POSITIVES}${extra}\n\n${surveyBlock(survey)}`
+    `${REVIEW_RULES}\n\n${FALSE_POSITIVES}${extra}`+
+    `${emphasisBlock(roundCtx.round)}${knownFindingsBlock(roundCtx.known)}` +
+    `\n\n${surveyBlock(survey)}`
   );
 }
 
@@ -368,7 +411,7 @@ function reviewerPrompt(reviewer, unit, survey, claudeMdPaths) {
 // --- Orchestration ------------------------------------------------------------------------------------------------
 const gaps = [];
 
-log(`Config — effort: ${effort}, breadth: ${breadth}, depth: ${depth}, scope: ${path || 'whole repo'}.`);
+log(`Config — effort: ${effort}, breadth: ${breadth}, depth: ${depth}, maxRounds: ${maxRounds}, scope: ${path || 'whole repo'}.`);
 
 // Phases 1 & 2 — Survey and CLAUDE.md scan, concurrently (both Haiku, full requested effort).
 phase('Survey');
@@ -427,60 +470,83 @@ const exclusions = partition.exclusions || [];
 
 log(`Partitioned into ${units.length} unit(s); ${exclusions.length} exclusion(s).`);
 
-// Phase 4 — Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full
-// effort. This must complete before dedup, which reasons over every finding, so it runs as a single `parallel()` barrier.
-phase('Review');
-const reviewSpecs = [
-  ...units.flatMap((unit) =>
-    REVIEWERS.map((reviewer) => ({
-      label: `review:${unit.name}:${reviewer.key}`,
-      model: reviewer.model,
-      effort: leafEffort,
-      category: reviewer.key,
-      prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths),
+// Phases 4 & 5 — Review + Dedupe, looped until dry. With `--loop` this body repeats up to `maxRounds` times,
+// accumulating de-duplicated findings across rounds; without it (`maxRounds === 1`) it runs exactly once — today's
+// single pass. Survey and Partition above are computed once and reused; validation below runs once at the end over
+// the accumulated set. Round 1 is the baseline pass; rounds 2+ feed each reviewer an escalating emphasis and a
+// scoped list of already-reported findings so they look where earlier passes did not. A round that adds no new
+// findings after dedup means the review has gone dry.
+let deduped = [];
+let converged = true;
+
+for (let round = 1; round <= maxRounds; round++) {
+  const suffix = round > 1 ? `:r${round}` : '';
+
+  // Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full effort.
+  // This must complete before dedup, which reasons over every finding, so it runs as a single `parallel()` barrier.
+  phase('Review');
+  const reviewSpecs = [
+    ...units.flatMap((unit) =>
+      REVIEWERS.map((reviewer) => ({
+        label: `review:${unit.name}:${reviewer.key}${suffix}`,
+        model: reviewer.model,
+        effort: leafEffort,
+        category: reviewer.key,
+        prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths, {
+          round,
+          known: deduped.filter((f) => f.category === reviewer.key && fileInUnit(f.file, unit)),
+        }),
+      })),
+    ),
+    ...ARCHITECTURAL_LENSES.map((lens) => ({
+      label: `review:arch:${lens.key}${suffix}`,
+      model: 'opus',
+      effort,
+      category: 'architecture',
+      prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
+        round,
+        known: deduped.filter((f) => f.category === 'architecture'),
+      }),
     })),
-  ),
-  ...ARCHITECTURAL_LENSES.map((lens) => ({
-    label: `review:arch:${lens.key}`,
-    model: 'opus',
-    effort,
-    category: 'architecture',
-    prompt: architecturalLensPrompt(lens, survey, claudeMdPaths),
-  })),
-];
+  ];
 
-const reviewResults = await parallel(
-  reviewSpecs.map((spec) => () =>
-    agent(spec.prompt, {
-      label: spec.label,
-      phase: 'Review',
-      model: spec.model,
-      effort: spec.effort,
-      schema: ISSUES_SCHEMA,
-    }),
-  ),
-);
+  const reviewResults = await parallel(
+    reviewSpecs.map((spec) => () =>
+      agent(spec.prompt, {
+        label: spec.label,
+        phase: 'Review',
+        model: spec.model,
+        effort: spec.effort,
+        schema: ISSUES_SCHEMA,
+      }),
+    ),
+  );
 
-const rawIssues = reviewResults.flatMap((result, i) => {
-  const spec = reviewSpecs[i];
+  const roundIssues = reviewResults.flatMap((result, i) => {
+    const spec = reviewSpecs[i];
 
-  if (!result?.issues) {
-    gaps.push(`Reviewer did not complete: ${spec.label}`);
-    return [];
+    if (!result?.issues) {
+      gaps.push(`Reviewer did not complete: ${spec.label}`);
+      return [];
+    }
+
+    return result.issues.map((issue) => ({ ...issue, category: spec.category }));
+  });
+
+  log(`Round ${round}: ${roundIssues.length} raw finding(s) across ${reviewSpecs.length} reviewer(s).`);
+
+  if (roundIssues.length === 0) {
+    log(`Round ${round} produced no findings — stopping.`);
+    break;
   }
 
-  return result.issues.map((issue) => ({ ...issue, category: spec.category }));
-});
-
-log(`Review produced ${rawIssues.length} raw finding(s) across ${reviewSpecs.length} reviewer(s).`);
-
-// Phase 5 — Dedupe (Opus, one agent). A deterministic script cannot reason over findings, so this is delegated.
-phase('Dedupe');
-let deduped = rawIssues;
-
-if (rawIssues.length > 0) {
-  const dd = await agent(dedupePrompt(rawIssues), {
-    label: 'dedupe',
+  // Dedupe (Opus, one agent). A deterministic script cannot reason over findings, so this is delegated. Merge this
+  // round's raw findings into everything accumulated so far; the change in count is the round's novelty signal.
+  phase('Dedupe');
+  const prevCount = deduped.length;
+  const union = [...deduped, ...roundIssues];
+  const dd = await agent(dedupePrompt(union), {
+    label: `dedupe${suffix}`,
     phase: 'Dedupe',
     model: 'opus',
     effort,
@@ -489,10 +555,33 @@ if (rawIssues.length > 0) {
 
   if (dd?.issues) {
     deduped = dd.issues;
-    log(`Deduplicated ${rawIssues.length} -> ${deduped.length} finding(s).`);
+    log(`Deduped round ${round}: ${union.length} -> ${deduped.length} finding(s) (${prevCount} before this round).`);
   } else {
-    gaps.push('Dedupe agent did not return — validating the raw, un-deduplicated findings instead.');
+    gaps.push(`Dedupe agent did not return in round ${round} — kept the raw, un-deduplicated findings for this round.`);
+    deduped = union;
   }
+
+  // "Dry" = this round added no net-new findings after dedup. Only evaluated when looping; a single pass never checks
+  // it. If we exhaust `maxRounds` while a round was still net-positive, the review did not converge.
+  if (maxRounds > 1) {
+    const netNew = deduped.length - prevCount;
+
+    if (netNew <= 0) {
+      log(`Round ${round} added no new findings — converged, stopping.`);
+      break;
+    }
+
+    if (round === maxRounds) {
+      converged = false;
+    }
+  }
+}
+
+if (!converged) {
+  gaps.push(
+    `Loop hit the ${maxRounds}-round cap while still finding new issues — the review did not converge, so more ` +
+      'findings may exist. Re-run with a higher `--loop` cap to keep going.',
+  );
 }
 
 // Phase 6 — Validate (barrier). Per issue, run `--depth` independent validators; keep on a strict majority of those

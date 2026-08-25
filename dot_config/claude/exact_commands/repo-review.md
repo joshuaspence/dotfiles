@@ -1,7 +1,7 @@
 ---
 name: Repo Review
 description: Review an entire repository
-argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>] [--output <file>]'
+argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>] [--loop [<max-rounds>]] [--output <file>]'
 allowed-tools:
   - Bash(git remote:*)
   - Bash(git rev-parse:*)
@@ -42,6 +42,15 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   `--breadth` and `--depth` are orthogonal to `--effort`: they scale how many agents run and how many times findings are
   challenged, whereas `--effort` scales how hard each individual agent thinks.
 
+- `--loop [<max-rounds>]` turns on multi-round *loop-until-dry* reviewing. The script repeats its review-and-dedupe pass,
+  accumulating de-duplicated findings and steering later rounds toward what earlier ones missed, and stops as soon as a
+  round surfaces nothing new (or when it reaches the cap). Bare `--loop` uses the script's default cap; an explicit
+  positive integer overrides that cap. Must be a positive integer when given; reject any other value and stop with an
+  error rather than guessing. If omitted, the script runs a single pass — today's behaviour. Pass it as `loop`: `true`
+  for a bare flag, or the integer when one is given. `--loop` is a third, orthogonal axis: `--effort` scales how hard
+  each agent thinks, `--breadth`/`--depth` scale how many agents run and how often findings are challenged, and `--loop`
+  scales how many times the whole review repeats.
+
 - `--output <file>` writes the report to that file in addition to the terminal. This command handles it; do **not** pass
   it to the script.
 
@@ -53,9 +62,10 @@ Call the `Workflow` tool with:
   the tool needs an absolute path, and the script lives under your config dir, not in the repository being reviewed).
 - `args` — a JSON object built from **only the flags the user actually supplied**: add a key for each flag the user
   gave, and omit the rest. The script fills in the documented defaults for anything omitted (whole repository,
-  `--effort high`, `--breadth auto`, `--depth 1`), so do not synthesise default values here, and never include
-  `--output`. Examples: `/repo-review src --breadth 6` → `{ "path": "src", "breadth": 6 }`; a bare `/repo-review` with
-  no arguments → `{}`.
+  `--effort high`, `--breadth auto`, `--depth 1`, a single review pass), so do not synthesise default values here, and
+  never include `--output`. Examples: `/repo-review src --breadth 6` → `{ "path": "src", "breadth": 6 }`;
+  `/repo-review --loop` → `{ "loop": true }`; `/repo-review src --loop 3` → `{ "path": "src", "loop": 3 }`; a bare
+  `/repo-review` with no arguments → `{}`.
 
 Finalise every argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs in the
 background and returns a structured result when it finishes. Do not launch review subagents outside it, do not re-run it
@@ -70,7 +80,8 @@ The result is `{ findings, exclusions, gaps }`:
   `file`, `lines` (may be empty), `otherSites` (other affected file:line or modules, may be empty), and `reason`.
 - `exclusions` — `{ path, reason }` entries for everything the partitioner left out (vendored/third-party code,
   generated code, lock files, binaries).
-- `gaps` — strings naming any reviewer, lens, or validation that did not complete.
+- `gaps` — strings naming any reviewer, lens, or validation that did not complete, plus (when `--loop` is used) a note
+  if the loop hit its round cap without going dry — a signal that more findings may exist.
 
 ## Produce the output
 
@@ -102,6 +113,11 @@ Do not create GitHub issues, do not post comments, and do not commit anything. T
 - The script resolves failures it can see: each fan-out runs under `parallel()`, which resolves a failed agent to
   `null` rather than rejecting the batch, and every dropped reviewer, lens, or validation is recorded in `gaps`. Surface
   those gaps in the output.
+- With `--loop`, only the review-and-dedupe phases repeat; the survey and partition run once (stable context — and
+  re-partitioning between rounds would move findings and defeat cross-round dedup), and validation runs once at the end
+  over the accumulated set. Later rounds are told which findings are already known and are pushed to look elsewhere, so
+  cost grows roughly per round until the run goes dry or hits the cap. Because looping multiplies the high-fan-out
+  review phase, watch `/workflows` as with any long run.
 - `allowed-tools` governs only this wrapper — running the workflow and formatting its result — not the subagents the
   workflow launches. Those carry their own default tool pool, so reviewers and validators can `Read`, `Grep`, `Glob`,
   and `git ls-files` the repository regardless of this list; you neither need to nor can provision their tools from
