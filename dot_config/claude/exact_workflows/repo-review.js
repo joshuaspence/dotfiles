@@ -1,20 +1,23 @@
+/**
+ * This script is the committed orchestration for the `/repo-review` command. The command (a thin prose wrapper) parses
+ * arguments, runs this workflow via the `Workflow` tool, and formats what it returns. All I/O — GitHub permalinks
+ * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
+ * access.
+ *
+ * Inputs arrive on `args`: `{ path, effort, breadth, depth }`. The return value is `{ findings, exclusions, gaps }`.
+ */
+
 export const meta = {
   name: 'repo-review',
-  description:
-    'Review an entire repository across many subagents, then validate the findings',
+  description: 'Review an entire repository across many subagents, then validate the findings',
   phases: [
     { title: 'Survey' },
     { title: 'Partition' },
     { title: 'Review' },
-    { title: 'Dedup' },
+    { title: 'Dedupe' },
     { title: 'Validate' },
   ],
 };
-
-// This script is the committed orchestration for the `/repo-review` command. The command (a thin prose wrapper) parses
-// arguments, runs this workflow via the Workflow tool, and formats what it returns. All I/O — GitHub permalinks (which
-// need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git access.
-// Inputs arrive on `args`: { path, effort, breadth, depth }. The return value is { findings, exclusions, gaps }.
 
 const path = args && args.path ? String(args.path) : null;
 const effort = args && args.effort ? String(args.effort) : 'high';
@@ -41,52 +44,74 @@ const leafEffort = capLeaf(effort);
 const ISSUE = {
   type: 'object',
   properties: {
-    description: { type: 'string', description: 'What the issue is' },
-    severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+    description: {
+      type: 'string',
+      description: 'What the issue is',
+    },
+    severity: {
+      type: 'string',
+      enum: ['critical', 'high', 'medium', 'low'],
+    },
     category: {
       type: 'string',
-      description:
-        'One of: claude-md, bug, security, consistency, code-quality, test-critique, architecture',
+      enum: ['architecture', 'bug', 'claude-md', 'code-quality', 'consistency', 'security', 'test-critique'],
     },
     file: {
       type: 'string',
-      description:
-        'Primary repo-relative file path; for repo-wide findings, the most relevant module or file',
+      description: 'Primary repo-relative file path; for repo-wide findings, the most relevant module or file',
     },
     lines: {
       type: 'string',
-      description:
-        'Line or range, e.g. "10" or "10-15"; empty when not line-specific',
+      description: 'Line or range, e.g. "10" or "10-15"; empty when not line-specific',
     },
     otherSites: {
       type: 'array',
-      items: { type: 'string' },
+      items: {
+        type: 'string',
+      },
       description: 'Other affected sites (file:line or module), if any',
     },
     reason: {
       type: 'string',
-      description:
-        'Why it was flagged (e.g. "bug", "CLAUDE.md adherence", "architecture")',
+      description: 'Why it was flagged (e.g. "bug", "CLAUDE.md adherence", "architecture")',
     },
   },
   required: ['description', 'severity', 'file', 'reason'],
 };
+
 const ISSUES_SCHEMA = {
   type: 'object',
-  properties: { issues: { type: 'array', items: ISSUE } },
+  properties: {
+    issues: {
+      type: 'array',
+      items: ISSUE,
+    },
+  },
   required: ['issues'],
 };
 
 const SURVEY_SCHEMA = {
   type: 'object',
   properties: {
-    languages: { type: 'array', items: { type: 'string' } },
-    tooling: { type: 'string', description: 'Build and test tooling' },
-    entryPoints: { type: 'array', items: { type: 'string' } },
+    languages: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    tooling: {
+      type: 'string',
+      description: 'Build and test tooling',
+    },
+    entryPoints: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
     structure: {
       type: 'string',
-      description:
-        'Top-level directory structure with a file count per directory',
+      description: 'Top-level directory structure with a file count per directory',
     },
   },
   required: ['languages', 'tooling', 'entryPoints', 'structure'],
@@ -94,7 +119,14 @@ const SURVEY_SCHEMA = {
 
 const CLAUDEMD_SCHEMA = {
   type: 'object',
-  properties: { paths: { type: 'array', items: { type: 'string' } } },
+  properties: {
+    paths: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+  },
   required: ['paths'],
 };
 
@@ -106,9 +138,18 @@ const PARTITION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          name: { type: 'string' },
-          paths: { type: 'array', items: { type: 'string' } },
-          summary: { type: 'string' },
+          name: {
+            type: 'string',
+          },
+          paths: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          summary: {
+            type: 'string',
+          },
         },
         required: ['name', 'paths'],
       },
@@ -117,7 +158,14 @@ const PARTITION_SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        properties: { path: { type: 'string' }, reason: { type: 'string' } },
+        properties: {
+          path: {
+            type: 'string',
+          },
+          reason: {
+            type: 'string',
+          },
+        },
         required: ['path', 'reason'],
       },
     },
@@ -127,7 +175,14 @@ const PARTITION_SCHEMA = {
 
 const VERDICT_SCHEMA = {
   type: 'object',
-  properties: { confirmed: { type: 'boolean' }, rationale: { type: 'string' } },
+  properties: {
+    confirmed: {
+      type: 'boolean',
+    },
+    rationale: {
+      type: 'string',
+    },
+  },
   required: ['confirmed', 'rationale'],
 };
 
@@ -520,13 +575,13 @@ log(
     ' reviewer(s).',
 );
 
-// Phase 5 — Dedup (`opus`, one agent). A deterministic script cannot reason over findings, so this is delegated.
-phase('Dedup');
+// Phase 5 — Dedupe (`opus`, one agent). A deterministic script cannot reason over findings, so this is delegated.
+phase('Dedupe');
 let deduped = rawIssues;
 if (rawIssues.length > 0) {
   const dd = await agent(dedupPrompt(rawIssues), {
-    label: 'dedup',
-    phase: 'Dedup',
+    label: 'dedupe',
+    phase: 'Dedupe',
     model: 'opus',
     effort: effort,
     schema: ISSUES_SCHEMA,
@@ -542,7 +597,7 @@ if (rawIssues.length > 0) {
     );
   } else {
     gaps.push(
-      'Dedup agent did not return — validating the raw, un-deduplicated findings instead.',
+      'Dedupe agent did not return — validating the raw, un-deduplicated findings instead.',
     );
   }
 }
@@ -597,7 +652,9 @@ const verdicts = await parallel(
 );
 const findings = verdicts.filter(Boolean);
 
-log(
-  'Validated ' + findings.length + ' finding(s); ' + gaps.length + ' gap(s).',
-);
-return { findings: findings, exclusions: exclusions, gaps: gaps };
+log('Validated ' + findings.length + ' finding(s); ' + gaps.length + ' gap(s).');
+return {
+  findings: findings,
+  exclusions: exclusions,
+  gaps: gaps,
+};
