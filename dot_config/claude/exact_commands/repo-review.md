@@ -43,8 +43,8 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into. Must be a positive
   integer or `auto`; reject any other value and stop with an error rather than guessing. If omitted, the script defaults
   it to `auto`, which lets the partitioner choose within a range the script scales to how many files are actually in
-  scope (1 unit for a single file, up to 4–8 for a whole repository) — so a narrow `path` argument does not fan out as
-  though it were the whole repository. Pass an explicit `n` to override that sizing in either direction.
+  scope — so a narrow `path` argument does not fan out as though it were the whole repository. Pass an explicit `n` to
+  override that sizing in either direction.
 - `--depth <n|auto>` sets how many independent validators run per issue. Must be a positive integer or `auto`; reject
   any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` — do not pass
   `auto` yourself; `auto` applies only when the user explicitly asks for it. A fixed `n > 1` keeps an issue only on a
