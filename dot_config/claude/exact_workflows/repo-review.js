@@ -169,9 +169,13 @@ const SURVEY_SCHEMA = {
       description: 'Build and test tooling',
     },
     entryPoints: STRING_ARRAY,
+    inScopeFileCount: {
+      type: 'integer',
+      description: 'Number of files in scope — exactly how many paths the enumeration command listed',
+    },
     structure: {
       type: 'array',
-      description: 'Top-level directory structure, one entry per directory',
+      description: "The whole repository's top-level directory structure, one entry per directory",
       items: {
         type: 'object',
         properties: {
@@ -182,7 +186,7 @@ const SURVEY_SCHEMA = {
       },
     },
   },
-  required: ['languages', 'tooling', 'entryPoints', 'structure'],
+  required: ['languages', 'tooling', 'entryPoints', 'inScopeFileCount', 'structure'],
 };
 
 const CLAUDE_MD_SCHEMA = {
@@ -459,9 +463,11 @@ const dedupePrompt = (issues) =>
   `Findings (${issues.length}):\n${JSON.stringify(issues, null, 2)}`;
 
 const surveyPrompt = () =>
-  `Survey ${scope} to orient a whole-repository code review. Use \`${lsFiles}\` to enumerate files (do not walk the ` +
+  `Survey ${scope} to orient a code review. Use \`${lsFiles}\` to enumerate the files in scope (do not walk the ` +
   'filesystem, so ignored files stay out). Return: the primary programming languages; the build and test tooling; ' +
-  'the entry points; and the top-level directory structure with a file count per directory.';
+  'the entry points; the number of files in scope, which is exactly how many paths that command listed and nothing ' +
+  "more; and, for orientation only, the whole repository's top-level directory structure with a file count per " +
+  'directory. The last two are different numbers whenever a scope narrower than the repository is in effect.';
 
 const validatorPrompt = (issue, survey) =>
   'Independently validate whether the following reported issue is real, with high confidence. Open the actual ' +
@@ -596,7 +602,7 @@ function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
 // repository but is pathological for a narrow `path` scope: told to find at least four units in a single file, the
 // partitioner splits that file into conceptual slices, and since the Review phase is `units × REVIEWERS`, every
 // invented slice costs six more reviewers all re-reading the same file. A count of 0 means the survey returned no
-// usable per-directory counts — treat the scope size as unknown and keep the repository-sized default.
+// usable in-scope count — treat the scope size as unknown and keep the repository-sized default.
 const autoUnitTarget = (fileCount) =>
   !fileCount ? 'the range 4-8'
   : fileCount <= 1 ? 'exactly 1 unit'
@@ -684,20 +690,23 @@ if (!claudeMd) {
   gaps.push('`CLAUDE.md` scan did not return — compliance reviewers ran without a governing-file list.');
 }
 
-// How much code is in scope, summed from the survey's per-directory counts. This scales the `auto` breadth range and
-// gates the architecture lenses below — both are right-sized for a repository and wasteful for a `path` scope of a
-// file or two. 0 means the survey gave no usable counts and is treated as "unknown" by both consumers.
-const inScopeFiles = (survey.structure || []).reduce((total, dir) => total + (dir.fileCount || 0), 0);
+// How much code is in scope, used below to scale the `auto` breadth range — a range right-sized for a repository is
+// pathological for a `path` scope of a file or two. This must come from the survey's dedicated in-scope count and not
+// from summing `structure`: `structure` describes the whole repository whatever the scope, so summing it reported ~170
+// files for a single-file review and the range never narrowed. 0 means no usable count — treated as unknown, keeping
+// the repository-sized default rather than guessing small.
+const surveyedFiles =
+  Number.isInteger(survey.inScopeFileCount) && survey.inScopeFileCount > 0 ? survey.inScopeFileCount : 0;
 
 log(
-  inScopeFiles
-    ? `${inScopeFiles} file(s) in scope.`
-    : 'Survey returned no file counts — sizing the review with repository-wide defaults.',
+  surveyedFiles
+    ? `${surveyedFiles} file(s) in scope.`
+    : 'Survey returned no in-scope file count — sizing the review with repository-wide defaults.',
 );
 
 // Phase 3 — Partition (Sonnet, full requested effort).
 phase('Partition');
-const partition = await agent(partitionPrompt(survey, inScopeFiles), {
+const partition = await agent(partitionPrompt(survey, surveyedFiles), {
   label: 'partition',
   phase: 'Partition',
   model: 'sonnet',
@@ -716,7 +725,12 @@ if (!partition?.units?.length) {
 const units = partition.units;
 const exclusions = partition.exclusions || [];
 
-log(`Partitioned into ${units.length} unit(s); ${exclusions.length} exclusion(s).`);
+// The distinct files the reviewers will actually open. This, not the survey's count, is what the lens gate below keys
+// on: it is the review's real scope, already narrowed by the partitioner's exclusions, and it cannot be inflated by a
+// surveyor answering a repository-shaped question about a one-file scope.
+const unitFiles = new Set(units.flatMap((unit) => unit.paths || [])).size;
+
+log(`Partitioned into ${units.length} unit(s) over ${unitFiles} file(s); ${exclusions.length} exclusion(s).`);
 
 // Phases 4 & 5 — Review + Dedupe, looped until dry. With `--loop` this body repeats up to `maxRounds` times,
 // accumulating de-duplicated findings across rounds; without it (`maxRounds === 1`) it runs exactly once — today's
@@ -730,12 +744,10 @@ let converged = true;
 // The architecture lenses assess repository-level structure, so on a scope of one or two files there is nothing
 // structural to assess — three whole-repo Opus agents would return noise at best. Skip them below that threshold and
 // record it: a lens that never ran must not read as "architecture: clean". An unknown scope size still runs them.
-const runLenses = !inScopeFiles || inScopeFiles > 2;
+const runLenses = !unitFiles || unitFiles > 2;
 
 if (!runLenses) {
-  gaps.push(
-    `Architecture lenses not run: only ${inScopeFiles} file(s) in scope — too small for a structural review.`,
-  );
+  gaps.push(`Architecture lenses not run: only ${unitFiles} file(s) in scope — too small for a structural review.`);
 }
 
 for (let round = 1; round <= maxRounds; round++) {
