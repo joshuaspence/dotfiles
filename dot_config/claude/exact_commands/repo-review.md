@@ -98,12 +98,12 @@ Call the `Workflow` tool with:
 
 - `scriptPath` — the absolute path of `~/.config/claude/workflows/repo-review.js` (expand `~` to your home directory;
   the tool needs an absolute path, and the script lives under your config dir, not in the repository being reviewed).
-- `args` — an **actual JSON object**, not a string. Pass `args: { "path": "src" }`; never `args: "{\"path\": \"src\"}"`.
-  The `Workflow` tool hands `args` to the script verbatim, so a JSON-encoded string arrives as a string and no
-  `args?.foo` lookup on it can succeed. **The script rejects that shape outright**: it returns immediately, spawns no
-  agents, and reports a single gap saying nothing was reviewed. So the cost of getting this wrong is a wasted round
-  trip, not a wrong review — but it is still yours to get right, and note that checking you built the right keys is not
-  the same as checking you passed them as an object.
+- `args` — aim for an **actual JSON object**: `args: { "path": "src" }`, not `args: "{\"path\": \"src\"}"`. In practice
+  this call site has been observed to deliver the object JSON-encoded as a string every time, so the script parses that
+  form rather than trusting the shape. You therefore do not need to work around it: build the object, pass it, and move
+  on. In particular do **not** write a shim workflow to route past it, and do not deliberately send a string — one that
+  is not valid JSON cannot be recovered, and the script then reviews nothing and reports a gap. Note also that checking
+  you built the right keys is not the same as checking you passed them as an object; only the second check was failing.
 
   Build it from **only the flags the user actually supplied**: add a key for each flag the user gave, and omit the rest.
   The script fills in the documented defaults for anything omitted (whole repository, `--effort high`, `--breadth auto`,

@@ -4,8 +4,8 @@
  * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
  * access.
  *
- * Inputs arrive on `args`, which must be a JSON *object* `{ path, effort, breadth, depth, loop, fix, reviewers }`; a
- * JSON-encoded string is rejected outright (see the argument contract below). The return value is
+ * Inputs arrive on `args` as `{ path, effort, breadth, depth, loop, fix, reviewers }`, normalized through
+ * `normalizeArgs` below because this call site delivers that object JSON-encoded as a string. The return value is
  * `{ findings, exclusions, gaps }`, plus a `fix` object (`{ commits, outcomes }`) when `--fix` was requested.
  */
 
@@ -25,24 +25,44 @@ export const meta = {
   ],
 };
 
-// --- Argument contract --------------------------------------------------------------------------------------------
-// `args` reaches this script verbatim, so a wrapper that JSON-encodes its argument object delivers a *string* here. No
-// `args?.foo` lookup on a string can succeed, so every knob below would silently fall back to its default — widening
-// the review from a scoped subtree to the whole repository and turning `--fix` off — with nothing but the `Config —`
-// line to give it away, and a full, expensive, wrong-scoped run to show for it. Refuse that shape rather than guessing
-// at it: return immediately, having spawned nothing, and name the defect so the caller can correct the call.
-if (typeof args === 'string') {
+// --- Argument normalization ---------------------------------------------------------------------------------------
+// `args` is meant to arrive as an object, but in practice this call site delivers a JSON-encoded *string*: four
+// consecutive launches did so, including one where the caller knew about the defect, was actively trying to avoid it,
+// and had just re-read this very code. Neither trusting the shape nor refusing it works. Trusting it is silent and
+// expensive — no `args?.foo` lookup on a string can succeed, so every knob below falls back to its default, widening a
+// scoped review to the whole repository and turning `--fix` off with only the `Config —` line to give it away.
+// Refusing it outright is worse: it fails every invocation. So recover the object here, where the check is
+// deterministic, while leaving the object form as what the caller should still send.
+function normalizeArgs(value) {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+const input = normalizeArgs(args);
+
+// A string that is not JSON at all cannot be recovered, and proceeding would review the whole repository while
+// appearing to honour the caller's arguments. That case does abort — it is unrecoverable rather than merely
+// mis-encoded, and costs nothing to reject here, before the first agent. (`typeof null === 'object'`, hence the
+// truthiness test first.)
+if (typeof args === 'string' && (!input || typeof input !== 'object')) {
   return {
     findings: [],
     exclusions: [],
     gaps: [
-      '`args` arrived as a JSON-encoded string, so no argument could be read and **nothing was reviewed**. ' +
-        'Re-run the workflow passing `args` as an actual JSON object, not a string.',
+      '`args` arrived as a string that is not a JSON object, so no argument could be read and **nothing was ' +
+        'reviewed**. Re-run the workflow passing `args` as a JSON object.',
     ],
   };
 }
 
-const path = args?.path;
+const path = input?.path;
 const scope = path ? `the subtree \`${path}\`` : 'the whole repository';
 const lsFiles = path ? `git ls-files -- ${path}` : 'git ls-files';
 
@@ -51,27 +71,27 @@ const lsFiles = path ? `git ls-files -- ${path}` : 'git ls-files';
 // Each knob tolerates missing or malformed input. `effort` gates every agent (clamped to a known level). `breadth`
 // (partition-unit count) and `depth` (validators per finding) accept the sentinel 'auto' or a positive integer.
 const EFFORT_ORDER = ['low', 'medium', 'high', 'xhigh', 'max'];
-const effort = EFFORT_ORDER.includes(args?.effort) ? args.effort : 'high';
+const effort = EFFORT_ORDER.includes(input?.effort) ? input.effort : 'high';
 
 function positiveIntOr(value, fallback) {
   const n = parseInt(value, 10);
   return Number.isNaN(n) || n < 1 ? fallback : n;
 }
 
-const breadth = args?.breadth === 'auto' ? 'auto' : positiveIntOr(args?.breadth, 'auto');
-const depth = args?.depth === 'auto' ? 'auto' : positiveIntOr(args?.depth, 1);
+const breadth = input?.breadth === 'auto' ? 'auto' : positiveIntOr(input?.breadth, 'auto');
+const depth = input?.depth === 'auto' ? 'auto' : positiveIntOr(input?.depth, 1);
 
 // `--loop` turns on multi-round "loop-until-dry" reviewing. The wrapper sends `loop: true` for a bare `--loop` and an
 // integer for `--loop <n>`; anything absent means a single pass. `maxRounds` caps how many times the Review+Dedupe body
 // repeats; the loop stops earlier the first time a round adds no new findings.
 const LOOP_DEFAULT_ROUNDS = 4;
-const loopEnabled = (args?.loop ?? false) !== false;
-const maxRounds = loopEnabled ? positiveIntOr(args?.loop, LOOP_DEFAULT_ROUNDS) : 1;
+const loopEnabled = (input?.loop ?? false) !== false;
+const maxRounds = loopEnabled ? positiveIntOr(input?.loop, LOOP_DEFAULT_ROUNDS) : 1;
 
 // `--fix` turns on the optional Fix + Reconcile phases: after validation, one worktree-isolated agent per finding
 // tries to fix it and commit, then a reconciliation agent merges any fixes that collide on a shared file. Off by
 // default — the review stays strictly read-only unless the wrapper sends `fix: true`.
-const fix = args?.fix;
+const fix = input?.fix;
 
 // `--reviewers <n>` gates each applied fix through independent review (approve on a strict majority) with a bounded
 // revision loop. 0 disables the Review phase entirely — applied fixes go straight to Reconcile. Default 1. Accepts 0,
@@ -80,7 +100,7 @@ function nonNegativeIntOr(value, fallback) {
   const n = parseInt(value, 10);
   return Number.isNaN(n) || n < 0 ? fallback : n;
 }
-const reviewers = nonNegativeIntOr(args?.reviewers, 1);
+const reviewers = nonNegativeIntOr(input?.reviewers, 1);
 const FIX_REVISION_CAP = 2; // up to 2 revisions (3 total fix attempts) before a rejected fix is dropped.
 
 
