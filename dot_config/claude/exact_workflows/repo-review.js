@@ -438,12 +438,12 @@ const fixerPrompt = (issue, survey, branchName, revisionCtx = null) => {
   const revisionBlock = revisionCtx
     ? '\n\nThis is a REVISION. A previous attempt to fix this issue was reviewed and REJECTED. Inspect that attempt ' +
       `with \`git show ${revisionCtx.priorSha}\`, then produce a better fix that addresses the objection — starting ` +
-      `fresh from HEAD, not building on the rejected commit.\nReviewer objection: ${revisionCtx.objection}`
+      `fresh from \`HEAD\`, not building on the rejected commit.\nReviewer objection: ${revisionCtx.objection}`
     : '';
 
   return (
     'You are a Fix agent working in an isolated git worktree checked out at the repository `HEAD`. Fix exactly ONE ' +
-    'already-validated issue — and only if you can do so cleanly. A wrong "fix" is worse than none.\n\n' +
+    'already-validated issue — a/find only if you can do so cleanly. A wrong "fix" is worse than none.\n\n' +
     `Issue:\n${JSON.stringify(issue, null, 2)}${revisionBlock}\n\n` +
     'Procedure:\n' +
     '1. Open the cited file(s), confirm the issue, and make the smallest change that correctly fixes it — confined to ' +
@@ -865,14 +865,23 @@ const reviewFix = async (issue, current, idx, rev) => {
 
   if (returned.length === 0) {
     gaps.push(`Fix review did not complete for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
-    return { completed: false, approved: false, objection: 'review did not complete' };
+
+    return {
+      completed: false,
+      approved: false,
+      objection: 'review did not complete',
+    };
   }
 
   const yes = returned.filter((v) => v.approved).length;
   const objection = returned.filter((v) => !v.approved && v.objection).map((v) => v.objection).join('; ');
 
   // Strict majority of the reviewers that actually returned (>, not >=, so 1-of-2 is a rejection).
-  return { completed: true, approved: yes > returned.length / 2, objection };
+  return {
+    completed: true,
+    approved: yes > returned.length / 2,
+    objection,
+  };
 };
 
 const asOutcome = (issue, result) => ({
@@ -890,7 +899,13 @@ const fixAndReview = async (issue, idx) => {
 
   if (!current) {
     gaps.push(`Fix agent did not return for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
-    return { issue, status: 'verify-failed', reason: 'fix agent did not return', changedFiles: [] };
+
+    return {
+      issue,
+      status: 'verify-failed',
+      reason: 'fix agent did not return',
+      changedFiles: [],
+    };
   }
 
   // Nothing committed (declined / verify-failed), or review disabled with `--reviewers 0`: take the fix as-is.
@@ -925,7 +940,13 @@ const fixAndReview = async (issue, idx) => {
 
     if (!revised) {
       gaps.push(`Revision agent did not return for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
-      return { issue, status: 'verify-failed', reason: 'revision agent did not return', changedFiles: [] };
+
+      return {
+        issue,
+        status: 'verify-failed',
+        reason: 'revision agent did not return',
+        changedFiles: [],
+      };
     }
 
     // Reviser declined or its change failed verification: that terminal status stands (no further revisions).
@@ -985,15 +1006,15 @@ const reconciled = await parallel(
     if (rr?.status === 'resolved' && rr.sha) {
       return {
         sha: rr.sha,
-        findings: groupFixes.map((f) => f.issue),
+        findings: groupFixes.map((finding) => finding.issue),
         changedFiles: rr.changedFiles || [],
       };
     }
 
     // Reconciliation failed: none of the colliding group's fixes can be landed together. Mark them conflict-skipped.
-    const files = [...new Set(groupFixes.flatMap((f) => f.changedFiles))].join(', ');
-    groupFixes.forEach((f) => {
-      const outcome = outcomes.find((x) => x.issue === f.issue);
+    const files = [...new Set(groupFixes.flatMap((fix) => fix.changedFiles))].join(', ');
+    groupFixes.forEach((fix) => {
+      const outcome = outcomes.find((outcome) => outcome.issue === fix.issue);
 
       if (outcome) {
         outcome.status = 'conflict-skipped';

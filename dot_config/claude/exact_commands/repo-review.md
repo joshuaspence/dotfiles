@@ -2,8 +2,13 @@
 name: Repo Review
 description: Review an entire repository
 argument-hint: >-
-  [path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>]
-  [--loop [<max-rounds>]] [--fix] [--reviewers <n>] [--output <file>]
+  [path]
+  [--effort <low|medium|high|xhigh|max>]
+  [--breadth <n|auto>] [--depth <n|auto>]
+  [--loop [<max-rounds>]
+  [--fix]
+  [--reviewers <n>]
+  [--output <file>]
 allowed-tools:
   - Bash(git branch:*)
   - Bash(git cherry-pick:*)
@@ -57,13 +62,13 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   `--breadth`/`--depth` scale how many agents run and how often findings are challenged, and `--loop` scales how many
   times the whole review repeats.
 
-- `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix, Review, and
-  Reconcile phases — one isolated agent per validated finding attempts a clean, verified fix and commits it, those
-  fixes are independently reviewed (see `--reviewers`), and a reconciliation agent merges any surviving fixes that
-  collide on a shared file — and returns a conflict-free list of commits plus a per-finding outcome. This command then
-  lands those commits on a dedicated branch (see [Apply fixes](#apply-fixes)). If omitted, the review is strictly
-  read-only, as before. Pass it as `fix`: `true` when present; omit it otherwise. `--fix` is independent of the other
-  flags (it fixes whatever the review, at whatever breadth/depth/effort/loop, validated).
+- `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix, Review, and Reconcile
+  phases — one isolated agent per validated finding attempts a clean, verified fix and commits it, those fixes are
+  independently reviewed (see `--reviewers`), and a reconciliation agent merges any surviving fixes that collide on a
+  shared file — and returns a conflict-free list of commits plus a per-finding outcome. This command then lands those
+  commits on a dedicated branch (see [Apply fixes](#apply-fixes)). If omitted, the review is strictly read-only, as
+  before. Pass it as `fix`: `true` when present; omit it otherwise. `--fix` is independent of the other flags (it fixes
+  whatever the review, at whatever breadth/depth/effort/loop, validated).
 
 - `--reviewers <n>` sets how many independent reviewers judge each fix in the Review phase (only meaningful with
   `--fix`). Must be a non-negative integer; reject any other value and stop with an error rather than guessing. If
