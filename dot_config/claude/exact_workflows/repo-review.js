@@ -867,6 +867,20 @@ phase('Validate');
 const HIGH_RISK = ['architecture', 'bug', 'consistency', 'security'];
 const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 
+// --- Agent labels for the per-finding phases -----------------------------------------------------------------------
+// One handle per finding, shared by every agent that touches it — validator, fixer, reviser, fix reviewer — so a single
+// finding can be followed across phases in the progress tree. The number is the same index the fixer's branch uses
+// (`rrfix/<n>`), so a label points at its branch without arithmetic.
+const findingTag = (issue, idx) => `${issue.category}#${idx}`;
+
+// Name a member of a redundant group only when the group has more than one member. `vote 1/1` is noise, and under the
+// default `--depth 1` / `--reviewers 1` every label would carry it — which is how `validate:bug:3:0` came to end in a
+// constant `:0` that looked like it meant something.
+const voteTag = (k, count) => (count > 1 ? ` vote ${k + 1}/${count}` : '');
+
+// Attempt 0 is the original fix; only the revisions need saying, counted from 1 as attempts rather than from 0.
+const attemptTag = (attempt) => (attempt > 0 ? ` attempt ${attempt + 1}` : '');
+
 // With `--depth auto`, high-risk categories get 3 independent validators and the rest get 1; an explicit depth
 // applies uniformly. `depth` was normalized to 'auto' or a positive integer at the top, so no parsing here.
 const validatorCount = (issue) =>
@@ -879,7 +893,7 @@ const verdicts = await parallel(
     const votes = await parallel(
       Array.from({ length: count }, (_, k) => () =>
         agent(validatorPrompt(issue, survey), {
-          label: `validate:${issue.category}:${idx}:${k}`,
+          label: `validate:${findingTag(issue, idx)}${voteTag(k, count)}`,
           phase: 'Validate',
           model,
           effort: leafEffort,
@@ -925,9 +939,10 @@ phase('Fix');
 // the prior rejected commit and the objection. Each attempt commits on its own branch so branch names never collide.
 const runFixer = (issue, idx, attempt, revisionCtx) => {
   const branch = attempt === 0 ? `rrfix/${idx}` : `rrfix/${idx}-r${attempt}`;
+  const tag = findingTag(issue, idx);
 
   return agent(fixerPrompt(issue, survey, branch, revisionCtx), {
-    label: attempt === 0 ? `fix:${issue.category}:${idx}` : `revise:${issue.category}:${idx}:r${attempt}`,
+    label: attempt === 0 ? `fix:${tag}` : `revise:${tag}${attemptTag(attempt)}`,
     phase: attempt === 0 ? 'Fix' : 'Fix Review',
     model: isHighRisk(issue) ? 'opus' : 'sonnet',
     effort: leafEffort,
@@ -943,7 +958,7 @@ const reviewFix = async (issue, current, idx, rev) => {
   const votes = await parallel(
     Array.from({ length: reviewers }, (_, k) => () =>
       agent(fixReviewPrompt(issue, current, survey), {
-        label: `review:${issue.category}:${idx}:r${rev}:${k}`,
+        label: `fix-review:${findingTag(issue, idx)}${attemptTag(rev)}${voteTag(k, reviewers)}`,
         phase: 'Fix Review',
         model,
         effort: leafEffort,
@@ -1122,9 +1137,14 @@ const reconciled = await parallel(
     let rr = null;
     let rrError = '';
 
+    // Name the group by the findings it merges rather than by its position in the group list, which said nothing about
+    // what was being reconciled: `reconcile:bug#3+security#7`.
+    const merging = groupFixes.map((groupFix) => findingTag(groupFix.issue, findings.indexOf(groupFix.issue)));
+    const mergeTag = merging.slice(0, 3).join('+') + (merging.length > 3 ? `+${merging.length - 3} more` : '');
+
     try {
       rr = await agent(reconcilePrompt(groupFixes, gi, survey), {
-        label: `reconcile:${gi}`,
+        label: `reconcile:${mergeTag}`,
         phase: 'Reconcile',
         model: 'opus',
         effort,
