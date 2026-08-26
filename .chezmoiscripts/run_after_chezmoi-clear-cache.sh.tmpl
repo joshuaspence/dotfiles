@@ -1,3 +1,6 @@
+{{ $age := sub (now | unixEpoch) (stat .chezmoi.cacheDir).modTime -}}
+{{ $days := mul 24 60 60 -}}
+{{ if ge $age (mul 30 $days) -}}
 #!/bin/bash
 
 set -o errexit
@@ -10,16 +13,6 @@ set -o pipefail
 # Clear the cache whenever it is older than 30 days, using the cache directory's modification time (which is set when
 # the directory is created and is not bumped by writes to files within it).
 
-readonly CACHE={{ .chezmoi.cacheDir | shellQuote }}
-readonly MAX_AGE_DAYS=30
-
-if [[ ! -d "${CACHE}" ]]; then
-  exit 0
-fi
-
-readonly AGE_DAYS=$((($(date +%s) - $(stat --format=%Y "${CACHE}")) / 86400))
-
-if ((AGE_DAYS >= MAX_AGE_DAYS)); then
-  echo "Clearing Chezmoi cache (${AGE_DAYS} days old)"
-  rm --recursive --force "${CACHE}"
-fi
+echo "Clearing Chezmoi cache ({{ (divf $age $days) | floor }} days old)"
+rm --recursive --force "${CACHE}"
+{{ end -}}
