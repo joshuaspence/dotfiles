@@ -171,6 +171,63 @@ findings):
   (`applied` + `conflict-resolved`) versus left unfixed (`declined` / `verify-failed` / `review-rejected` /
   `conflict-skipped`). An unfixed finding must never read as fixed.
 
+### Run summary
+
+End the report with a **Run summary** stating what the run consumed. Everything it needs is on the `Workflow` result
+itself rather than inside `result`: `agentCount`, `totalToolCalls`, `totalTokens`, and the `workflowProgress` array.
+That array interleaves two kinds of entry — agents, which carry `model`, `tokens`, `toolCalls` and `durationMs`, and
+bare `type: "workflow_phase"` markers, which carry none of them — so filter to the entries that have a `model` before
+you tally anything. The agent `tokens` sum to exactly `totalTokens`; if yours don't, you have counted the phase markers.
+
+Report, in a few lines:
+
+- **Scale** — `agentCount` agents, `totalToolCalls` tool calls, and the wall-clock duration.
+- **Total tokens** — `totalTokens`, broken down per model tier. Bucket each agent by the tier named in its `model`
+  string (they arrive as fully-qualified IDs such as `au.anthropic.claude-opus-5` or
+  `au.anthropic.claude-sonnet-4-5-20250929-v1:0`, so match on the `opus`/`sonnet`/`haiku` substring, not on equality).
+- **Approximate cost** — the per-tier token counts priced at the tier's **output** rate and summed.
+
+`tokens` counts **output** tokens only; no field in the result reports input or cache-read tokens. That is the same
+accounting the `Workflow` tool's own `budget.spent()` documents, and the magnitudes confirm it — a run averaging ~32k
+tokens per agent cannot be counting input, since a single reviewer re-sends its whole context on every one of its dozen
+or so tool-call turns.
+
+Price it at Anthropic's list rates, per million tokens (verified 2026-08-27 against
+https://platform.claude.com/docs/en/about-claude/pricing.md  — that `.md` suffix serves clean markdown, so it is worth
+re-fetching rather than trusting this copy):
+
+| Model                            | Output ($/1M) | Input ($/1M) | Cache read ($/1M) |
+|----------------------------------|---------------|--------------|-------------------|
+| Fable 5                          | $50.00        | $10.00       | $1.00             |
+| Opus 5 / 4.8 / 4.7 / 4.6 / 4.5   | $25.00        | $5.00        | $0.50             |
+| Sonnet 4.6 / 4.5                 | $15.00        | $3.00        | $0.30             |
+| Sonnet 5                         | $10.00        | $2.00        | $0.20             |
+| Haiku 4.5                        | $5.00         | $1.00        | $0.10             |
+
+Match the **version**, not just the tier: Sonnet 5 is 33% cheaper on output than Sonnet 4.5/4.6, so collapsing them into
+one "Sonnet" rate misprices the run. If an agent's `model` names a version that is not in this table, say so and leave
+it out of the total rather than guessing a rate.
+
+State the figure as approximate and say why, in one line — do not present it as a bill. Because input and cache-read
+tokens are unreported, the computed number is a **floor**. Input tokens are far more numerous than output tokens on a
+review run (every reviewer reads files) but are priced at a fifth of the output rate — and a *cached* read at a fiftieth
+of it — so the all-in figure has tended to land within roughly a factor of two of the floor. Offer that as an
+order-of-magnitude expectation, not a second number to add — it is a rule of thumb, not measured.
+
+A worked example, from a 32-agent single-file `--fix` run — note that Opus is 79% of the tokens and 88% of the cost, so
+the per-tier split is the useful part of this summary, and the reviewer count (`--breadth` × 6, see [Notes](#notes)) is
+where it is actually spent:
+
+| Tier          | Agents | Tokens        | Output rate ($/1M) | Cost   |
+|---------------|--------|---------------|--------------------|--------|
+| Opus 5        | 25     | 806,803       | $25.00             | $20.17 |
+| Sonnet 4.5    | 5      | 168,826       | $15.00             | $2.53  |
+| Haiku 4.5     | 2      | 39,896        | $5.00              | $0.20  |
+| **Total**     | **32** | **1,015,525** |                    | **≈$22.90** |
+
+If `workflowProgress` is missing or carries no per-agent `model`, still report `totalTokens` and the scale line, and say
+the per-tier cost breakdown was unavailable — an unpriceable run is not a free one.
+
 If `--output <file>` was provided, write the same report to that file.
 
 ## Apply fixes
