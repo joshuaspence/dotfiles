@@ -98,8 +98,8 @@ const maxRounds = loopEnabled ? positiveIntOr(input?.loop, LOOP_DEFAULT_ROUNDS) 
 const fix = input?.fix;
 
 // `--reviewers <n>` gates each applied fix through independent review (approve on a strict majority) with a bounded
-// revision loop. 0 disables the Review phase entirely — applied fixes go straight to Reconcile. Default 1. Accepts 0,
-// so it needs its own non-negative parser rather than `positiveIntOr`.
+// revision loop. 0 disables the Review Fix phase entirely — applied fixes go straight to Reconcile. Default 1. It
+// accepts 0, so it needs its own non-negative parser rather than `positiveIntOr`.
 function nonNegativeIntOr(value, fallback) {
   const n = parseInt(value, 10);
   return Number.isNaN(n) || n < 0 ? fallback : n;
@@ -249,7 +249,7 @@ const FIX_RESULT_SCHEMA = {
     },
     sha: {
       type: 'string',
-      description: 'New commit SHA when applied; empty otherwise',
+      description: 'New commit SHA (hex, from `git rev-parse HEAD`) when applied; empty otherwise',
     },
     branch: {
       type: 'string',
@@ -257,7 +257,9 @@ const FIX_RESULT_SCHEMA = {
     },
     changedFiles: {
       ...STRING_ARRAY,
-      description: 'Repo-relative paths the fix modified (empty when not applied)',
+      description:
+        'Every repo-relative path the fix modified; must be complete and non-empty when applied, since collision ' +
+        'detection keys on it. Empty only when nothing was committed',
     },
     reason: {
       type: 'string',
@@ -278,7 +280,7 @@ const RECONCILE_RESULT_SCHEMA = {
     },
     sha: {
       type: 'string',
-      description: 'Merged commit SHA when resolved; empty otherwise',
+      description: 'Merged commit SHA (hex, from `git rev-parse HEAD`) when resolved; empty otherwise',
     },
     branch: {
       type: 'string',
@@ -491,7 +493,7 @@ const fixerPrompt = (issue, survey, branchName, revisionCtx = null) => {
 
   return (
     'You are a Fix agent working in an isolated git worktree checked out at the repository `HEAD`. Fix exactly ONE ' +
-    'already-validated issue — a/find only if you can do so cleanly. A wrong "fix" is worse than none.\n\n' +
+    'already-validated issue — and only if you can do so cleanly. A wrong "fix" is worse than none.\n\n' +
     `Issue:\n${JSON.stringify(issue, null, 2)}${revisionBlock}\n\n` +
     'Procedure:\n' +
     '1. Open the cited file(s), confirm the issue, and make the smallest change that correctly fixes it — confined to ' +
@@ -502,11 +504,14 @@ const fixerPrompt = (issue, survey, branchName, revisionCtx = null) => {
     '3. If you did edit, verify in this worktree using the build/test tooling from the survey below (typecheck and ' +
     'run the tests). If verification fails, revert and return `{ status: "verify-failed", reason }`. If the ' +
     'repository has no runnable typecheck or test suite, skip this step and say so in `reason`.\n' +
-    `4. On success, commit on a fresh branch: \`git switch -c ${branchName} && git add -A && git commit\` with a ` +
-    'concise message. Do NOT push. Return `{ status: "applied", sha, branch, changedFiles, reason }` — `sha` from ' +
+    `4. On success, commit on a fresh branch: \`git switch -c ${branchName}\`, then stage ONLY the files your fix ` +
+    'edited — `git add -- <paths>`, never `git add -A`, so that build output, logs, generated fixtures or any other ' +
+    'artifact the verification step left in the worktree stay out of the commit — and `git commit` with a concise ' +
+    'message. Do NOT push. Return `{ status: "applied", sha, branch, changedFiles, reason }` — `sha` from ' +
     `\`git rev-parse HEAD\`, \`branch\` = "${branchName}", and \`changedFiles\` listing every repo-relative path you ` +
-    'modified. Accurate `changedFiles` is critical: the orchestrator uses it to detect fixes that collide on a ' +
-    'shared file.\n\nReturn only the structured result.\n\n' +
+    'modified, which must match the commit exactly (check with `git show --name-only`). Accurate `changedFiles` is ' +
+    'critical: the orchestrator uses it to detect fixes that collide on a shared file.\n\n' +
+    'Return only the structured result.\n\n' +
     surveyBlock(survey)
   );
 };
@@ -545,7 +550,9 @@ const fixReviewPrompt = (issue, fixResult, survey) =>
 
 // Group applied fixes into connected components by shared changed file (union-find). Two fixes that modify a common
 // file must land together — they would conflict on cherry-pick otherwise — so they go to one reconciliation agent; a
-// fix sharing no file with any other is its own singleton group and passes through untouched.
+// fix sharing no file with any other is its own singleton group and passes through untouched. This is only sound for
+// fixes whose file list is actually known: a fix reporting an empty list unions with nothing and so looks disjoint from
+// everything. The caller drops those before grouping (see `unverifiable` below) rather than trusting them here.
 function groupByFileCollision(fixes) {
   const parent = fixes.map((_, i) => i);
   const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
@@ -660,7 +667,7 @@ log(
     `fix: ${fix ? 'on' : 'off'}, reviewers: ${reviewers}, scope: ${path || 'whole repo'}.`,
 );
 
-// Phases 1 & 2 — Survey and CLAUDE.md scan, concurrently (both Haiku, full requested effort).
+// Phase 1 — Survey: the repository survey and the CLAUDE.md scan, concurrently (both Haiku, full requested effort).
 phase('Survey');
 const [survey, claudeMd] = await parallel([
   () =>
@@ -708,7 +715,7 @@ log(
     : 'Survey returned no in-scope file count — sizing the review with repository-wide defaults.',
 );
 
-// Phase 3 — Partition (Sonnet, full requested effort).
+// Phase 2 — Partition (Sonnet, full requested effort).
 phase('Partition');
 const partition = await agent(partitionPrompt(survey, surveyedFiles), {
   label: 'partition',
@@ -736,7 +743,7 @@ const unitFiles = new Set(units.flatMap((unit) => unit.paths || [])).size;
 
 log(`Partitioned into ${units.length} unit(s) over ${unitFiles} file(s); ${exclusions.length} exclusion(s).`);
 
-// Phases 4 & 5 — Review + Dedupe, looped until dry. With `--loop` this body repeats up to `maxRounds` times,
+// Phases 3 & 4 — Review + Dedupe, looped until dry. With `--loop` this body repeats up to `maxRounds` times,
 // accumulating de-duplicated findings across rounds; without it (`maxRounds === 1`) it runs exactly once — today's
 // single pass. Survey and Partition above are computed once and reused; validation below runs once at the end over
 // the accumulated set. Round 1 is the baseline pass; rounds 2+ feed each reviewer an escalating emphasis and a
@@ -861,7 +868,7 @@ if (!converged) {
   );
 }
 
-// Phase 6 — Validate (barrier). Per issue, run `--depth` independent validators; keep on a strict majority of those
+// Phase 5 — Validate (barrier). Per issue, run `--depth` independent validators; keep on a strict majority of those
 // that return. High-risk categories validate with Opus, the rest with Sonnet; both at capped leaf effort.
 phase('Validate');
 const HIGH_RISK = ['architecture', 'bug', 'consistency', 'security'];
@@ -925,7 +932,7 @@ if (!fix || findings.length === 0) {
   return { findings, exclusions, gaps };
 }
 
-// Phases 7 & 7.5 — Fix, then Review, per finding and concurrent. Each validated finding runs its own pipeline: a
+// Phases 6 & 7 — Fix, then Fix review, per finding and concurrent. Each validated finding runs its own pipeline: a
 // worktree-isolated Fix agent edits, verifies in its sandbox, and commits only a clear, safe, localized change (Opus
 // for high-risk categories, Sonnet otherwise, at capped leaf effort). Then, unless `--reviewers 0` disabled it,
 // `reviewers` read-only reviewers judge the commit for correctness and quality and approve on a strict majority. A
@@ -935,13 +942,23 @@ if (!fix || findings.length === 0) {
 // whole fix→review→revise loop runs concurrently across them; isolation keeps their parallel edits from colliding.
 phase('Fix');
 
+// The `sha` and `branch` a Fix or Reconcile agent returns are model-supplied strings that end up on a `git` command
+// line: interpolated into the `git show` / `git cherry-pick` instructions of downstream prompts, and handed to the
+// wrapper, which cherry-picks them under a pre-authorized `Bash(git cherry-pick:*)`. Fixers read the repository under
+// review, so those strings are untrusted input — a returned `sha` of `HEAD; <command>` reads to the next agent as an
+// instruction to run `<command>`. Accept only a bare hex object name and a plain branch name; anything else is not a
+// commit that can be landed anyway, so the result is refused rather than passed along.
+const isCommitSha = (value) => typeof value === 'string' && /^[0-9a-fA-F]{7,40}$/.test(value);
+const isSafeBranchName = (value) =>
+  typeof value === 'string' && /^[0-9A-Za-z][0-9A-Za-z._/-]*$/.test(value) && !value.includes('..');
+
 // Run a Fix agent: attempt 0 is the initial fix (Fix phase); later attempts are revisions (Review Fix phase) that see
 // the prior rejected commit and the objection. Each attempt commits on its own branch so branch names never collide.
-const runFixer = (issue, idx, attempt, revisionCtx) => {
+const runFixer = async (issue, idx, attempt, revisionCtx) => {
   const branch = attempt === 0 ? `rrfix/${idx}` : `rrfix/${idx}-r${attempt}`;
   const tag = findingTag(issue, idx);
 
-  return agent(fixerPrompt(issue, survey, branch, revisionCtx), {
+  const result = await agent(fixerPrompt(issue, survey, branch, revisionCtx), {
     label: attempt === 0 ? `fix:${tag}` : `revise:${tag}${attemptTag(attempt)}`,
     phase: attempt === 0 ? 'Fix' : 'Review Fix',
     model: isHighRisk(issue) ? 'opus' : 'sonnet',
@@ -949,6 +966,20 @@ const runFixer = (issue, idx, attempt, revisionCtx) => {
     isolation: 'worktree',
     schema: FIX_RESULT_SCHEMA,
   });
+
+  // An 'applied' fix without a usable commit reference cannot be reviewed or cherry-picked, and its reference must not
+  // reach a command line, so drop the reference and report the finding unfixed.
+  if (result?.status === 'applied' && !(isCommitSha(result.sha) && isSafeBranchName(result.branch))) {
+    return {
+      ...result,
+      status: 'verify-failed',
+      sha: '',
+      branch: '',
+      reason: 'fix agent reported `applied` without a usable commit SHA / branch, so the fix was discarded',
+    };
+  }
+
+  return result;
 };
 
 // Run `reviewers` read-only reviewers over one fix commit; approve on a strict majority of those that return. When no
@@ -990,14 +1021,33 @@ const reviewFix = async (issue, current, idx, rev) => {
   };
 };
 
-const asOutcome = (issue, result) => ({
-  issue,
-  status: result.status,
-  sha: result.sha,
-  branch: result.branch,
-  changedFiles: result.changedFiles || [],
-  reason: result.reason,
-});
+// `sha` is optional in the fix schema, so a fixer can claim `applied` and return no commit. There is nothing to
+// cherry-pick in that case, so the finding is unfixed — but `applied` is one of the two statuses the wrapper reports
+// as fixed, and the commit list below drops SHA-less fixes, so passing the status through would report a fix that does
+// not exist. Downgrade it to `verify-failed` (the change never survived to a commit) and name the gap.
+const asOutcome = (issue, result) => {
+  if (result.status === 'applied' && !result.sha) {
+    gaps.push(
+      `Fix agent reported an applied fix with no commit for a ${issue.category} finding: ${issue.description.slice(0, 80)}`,
+    );
+
+    return {
+      issue,
+      status: 'verify-failed',
+      changedFiles: result.changedFiles || [],
+      reason: `fix reported as applied but returned no commit SHA${result.reason ? `: ${result.reason}` : ''}`,
+    };
+  }
+
+  return {
+    issue,
+    status: result.status,
+    sha: result.sha,
+    branch: result.branch,
+    changedFiles: result.changedFiles || [],
+    reason: result.reason,
+  };
+};
 
 // The full fix→review→revise loop for one finding. Returns its final per-finding outcome.
 const fixAndReview = async (issue, idx) => {
@@ -1105,10 +1155,37 @@ if (unreturned) {
   );
 }
 
-const applied = outcomes.filter((outcome) => outcome.status === 'applied' && outcome.sha);
+const committed = outcomes.filter((outcome) => outcome.status === 'applied' && outcome.sha);
+
+// An `applied` fix that reports no changed files is not disjoint from the others — its file set is *unknown*. It
+// committed something, `changedFiles` is self-reported (the schema cannot make it accurate, and this script has no git
+// access to re-derive it), and `groupByFileCollision` keys collisions solely on those lists: an empty one unions with
+// nothing, so the fix becomes its own singleton group and its commit goes straight into `commits`. If it did touch a
+// file another landed fix touched, the wrapper — told the list is conflict-free by construction — hits an unexpected
+// cherry-pick conflict, aborts, and stops, leaving a half-landed fix branch while the skipped findings still read as
+// `applied`. Such a commit can still land when it is the only one (nothing else is picked, so nothing can conflict with
+// it); alongside others it cannot, so drop it and report the finding honestly as unfixed.
+const unverifiable = committed.length > 1 ? committed.filter((outcome) => !outcome.changedFiles?.length) : [];
+unverifiable.forEach((outcome) => {
+  outcome.reason =
+    `the fix committed ${outcome.sha} but reported no changed files, so it could not be checked for collisions with ` +
+    `the other ${committed.length - 1} applied fix(es) and was not landed. Fixer's note: ${outcome.reason}`;
+  outcome.status = 'conflict-skipped';
+  outcome.sha = undefined;
+});
+
+if (unverifiable.length) {
+  gaps.push(
+    `${unverifiable.length} applied fix(es) reported no changed files, so they could not be proven conflict-free ` +
+      'against the other fixes and were left unlanded — those findings are **not** fixed and are **not** verified as ' +
+      'unfixable.',
+  );
+}
+
+const applied = committed.filter((outcome) => outcome.status === 'applied');
 log(
   `Fix/Review: ${applied.length} approved, ${outcomes.length - applied.length} unfixed ` +
-    '(declined / verify-failed / review-rejected).',
+    '(declined / verify-failed / review-rejected / conflict-skipped).',
 );
 
 // Phase 8 — Reconcile (barrier). Fixes that touch a shared file are merged by a reconciliation agent into one
@@ -1153,6 +1230,12 @@ const reconciled = await parallel(
       });
     } catch (error) {
       rrError = String(error?.message || error).split('\n').slice(0, 3).join(' — ');
+    }
+
+    // As with a fix result, a merged commit whose `sha` is not a bare hex object name cannot be cherry-picked and must
+    // not be interpolated into a `git` command, so it counts as a failed reconciliation.
+    if (rr?.status === 'resolved' && !isCommitSha(rr.sha)) {
+      rr = { ...rr, status: 'failed', reason: 'reconciliation reported no usable commit SHA' };
     }
 
     if (rr?.status === 'resolved' && rr.sha) {
