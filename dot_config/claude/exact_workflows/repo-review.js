@@ -4,7 +4,7 @@
  * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
  * access.
  *
- * Inputs arrive on `args`: `{ path, effort, breadth, depth, loop, fix }`. The return value is
+ * Inputs arrive on `args`: `{ path, effort, breadth, depth, loop, fix, reviewers }`. The return value is
  * `{ findings, exclusions, gaps }`, plus a `fix` object (`{ commits, outcomes }`) when `--fix` was requested.
  */
 
@@ -19,6 +19,7 @@ export const meta = {
     { title: 'Dedupe' },
     { title: 'Validate' },
     { title: 'Fix' },
+    { title: 'Review' },
     { title: 'Reconcile' },
   ],
 };
@@ -53,6 +54,16 @@ const maxRounds = loopEnabled ? positiveIntOr(args?.loop, LOOP_DEFAULT_ROUNDS) :
 // tries to fix it and commit, then a reconciliation agent merges any fixes that collide on a shared file. Off by
 // default — the review stays strictly read-only unless the wrapper sends `fix: true`.
 const fix = args?.fix;
+
+// `--reviewers <n>` gates each applied fix through independent review (approve on a strict majority) with a bounded
+// revision loop. 0 disables the Review phase entirely — applied fixes go straight to Reconcile. Default 1. Accepts 0,
+// so it needs its own non-negative parser rather than `positiveIntOr`.
+function nonNegativeIntOr(value, fallback) {
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) || n < 0 ? fallback : n;
+}
+const reviewers = nonNegativeIntOr(args?.reviewers, 1);
+const FIX_REVISION_CAP = 2; // up to 2 revisions (3 total fix attempts) before a rejected fix is dropped.
 
 
 // --- Effort cap for the high-fan-out (leaf) agents ---------------------------------------------------------------
@@ -186,10 +197,10 @@ const VERDICT_SCHEMA = {
 const FIX_RESULT_SCHEMA = {
   type: 'object',
   properties: {
-    status: { 
+    status: {
       type: 'string',
       enum: ['applied', 'declined', 'verify-failed'],
-    }
+    },
     sha: {
       type: 'string',
       description: 'New commit SHA when applied; empty otherwise',
@@ -237,6 +248,19 @@ const RECONCILE_RESULT_SCHEMA = {
     },
   },
   required: ['status', 'reason'],
+};
+
+// A Fix reviewer approves a fix commit or rejects it with a specific, actionable objection the reviser can act on.
+const REVIEW_RESULT_SCHEMA = {
+  type: 'object',
+  properties: {
+    approved: { type: 'boolean' },
+    objection: {
+      type: 'string',
+      description: 'Empty when approved; otherwise a concise, actionable reason the fix was rejected',
+    },
+  },
+  required: ['approved', 'objection'],
 };
 
 
@@ -410,24 +434,34 @@ const validatorPrompt = (issue, survey) =>
   `dismiss it). Return \`{ confirmed, rationale }\`.\n\n` +
   `Issue:\n${JSON.stringify(issue, null, 2)}\n\n${surveyBlock(survey)}`;
 
-const fixerPrompt = (issue, idx, survey) =>
-  'You are a Fix agent working in an isolated git worktree checked out at the repository `HEAD`. Fix exactly ONE ' +
-  'already-validated issue — and only if you can do so cleanly. A wrong "fix" is worse than none.\n\n' +
-  `Issue:\n${JSON.stringify(issue, null, 2)}\n\n` +
-  'Procedure:\n' +
-  '1. Open the cited file(s), confirm the issue, and make the smallest change that correctly fixes it — confined to ' +
-  'the cited site and anything in `otherSites`. Do not opportunistically refactor or touch unrelated code.\n' +
-  '2. Judge fixability honestly. If this is not a clear, safe, localized edit — an architectural change spanning many ' +
-  'files, a judgment call, or anything you are not confident in — make NO change and return `{ status: "declined", ' +
-  'reason }`.\n' +
-  '3. If you did edit, verify in this worktree using the build/test tooling from the survey below (typecheck and run ' +
-  'the tests). If verification fails, revert and return `{ status: "verify-failed", reason }`. If the repository has ' +
-  'no runnable typecheck or test suite, skip this step and say so in `reason`.\n' +
-  `4. On success, commit on a fresh branch: \`git switch -c rrfix/${idx} && git add -A && git commit\` with a concise ` +
-  'message. Do NOT push. Return `{ status: "applied", sha, branch, changedFiles, reason }` — `sha` from ' +
-  `\`git rev-parse HEAD\`, \`branch\` = "rrfix/${idx}", and \`changedFiles\` listing every repo-relative path you ` +
-  'modified. Accurate `changedFiles` is critical: the orchestrator uses it to detect fixes that collide on a shared ' +
-  'file.\n\nReturn only the structured result.\n\n' + surveyBlock(survey);
+const fixerPrompt = (issue, survey, branchName, revisionCtx = null) => {
+  const revisionBlock = revisionCtx
+    ? '\n\nThis is a REVISION. A previous attempt to fix this issue was reviewed and REJECTED. Inspect that attempt ' +
+      `with \`git show ${revisionCtx.priorSha}\`, then produce a better fix that addresses the objection — starting ` +
+      `fresh from HEAD, not building on the rejected commit.\nReviewer objection: ${revisionCtx.objection}`
+    : '';
+
+  return (
+    'You are a Fix agent working in an isolated git worktree checked out at the repository `HEAD`. Fix exactly ONE ' +
+    'already-validated issue — and only if you can do so cleanly. A wrong "fix" is worse than none.\n\n' +
+    `Issue:\n${JSON.stringify(issue, null, 2)}${revisionBlock}\n\n` +
+    'Procedure:\n' +
+    '1. Open the cited file(s), confirm the issue, and make the smallest change that correctly fixes it — confined to ' +
+    'the cited site and anything in `otherSites`. Do not opportunistically refactor or touch unrelated code.\n' +
+    '2. Judge fixability honestly. If this is not a clear, safe, localized edit — an architectural change spanning ' +
+    'many files, a judgment call, or anything you are not confident in — make NO change and return ' +
+    '`{ status: "declined", reason }`.\n' +
+    '3. If you did edit, verify in this worktree using the build/test tooling from the survey below (typecheck and ' +
+    'run the tests). If verification fails, revert and return `{ status: "verify-failed", reason }`. If the ' +
+    'repository has no runnable typecheck or test suite, skip this step and say so in `reason`.\n' +
+    `4. On success, commit on a fresh branch: \`git switch -c ${branchName} && git add -A && git commit\` with a ` +
+    'concise message. Do NOT push. Return `{ status: "applied", sha, branch, changedFiles, reason }` — `sha` from ' +
+    `\`git rev-parse HEAD\`, \`branch\` = "${branchName}", and \`changedFiles\` listing every repo-relative path you ` +
+    'modified. Accurate `changedFiles` is critical: the orchestrator uses it to detect fixes that collide on a ' +
+    'shared file.\n\nReturn only the structured result.\n\n' +
+    surveyBlock(survey)
+  );
+};
 
 const reconcilePrompt = (groupFixes, groupIdx, survey) =>
   'You are a Reconciliation agent in an isolated git worktree checked out at the repository `HEAD`. Several independent ' +
@@ -445,6 +479,20 @@ const reconcilePrompt = (groupFixes, groupIdx, survey) =>
   'pass, return `{ status: "failed", reason }`.\n' +
   `3. On success, land the result as a single commit on a fresh branch \`rrmerge/${groupIdx}\` and return ` +
   '`{ status: "resolved", sha, branch, changedFiles, reason }`.\n\nReturn only the structured result.\n\n' +
+  surveyBlock(survey);
+
+const fixReviewPrompt = (issue, fixResult, survey) =>
+  'You are a Fix reviewer. An automated Fix agent produced a commit intended to resolve the validated issue below. ' +
+  'Judge that commit independently — do NOT trust the fixer. Inspect the change read-only with ' +
+  `\`git show ${fixResult.sha}\` (do not modify anything, do not run the tests — the fixer already did). Judge two ` +
+  'things: (1) correctness — does the change actually resolve the issue as described, with no missed cases; and ' +
+  '(2) quality — is it a minimal, idiomatic change confined to the issue that introduces no new bugs, regressions, ' +
+  'or unsafe behaviour. Approve only if you are confident on both. If you reject, give a specific, actionable ' +
+  'objection the fixer can act on in a revision.\n\n' +
+  `Issue:\n${JSON.stringify(issue, null, 2)}\n\n` +
+  `Fix commit: ${fixResult.sha} — files: ${(fixResult.changedFiles || []).join(', ') || '(none reported)'}\n` +
+  `Fixer's note: ${fixResult.reason}\n\n` +
+  'Return `{ approved, objection }` — `objection` empty when approved.\n\n' +
   surveyBlock(survey);
 
 // Group applied fixes into connected components by shared changed file (union-find). Two fixes that modify a common
@@ -546,7 +594,10 @@ function reviewerPrompt(reviewer, unit, survey, claudeMdPaths, roundCtx = {}) {
 // --- Orchestration ------------------------------------------------------------------------------------------------
 const gaps = [];
 
-log(`Config — effort: ${effort}, breadth: ${breadth}, depth: ${depth}, maxRounds: ${maxRounds}, scope: ${path || 'whole repo'}.`);
+log(
+  `Config — effort: ${effort}, breadth: ${breadth}, depth: ${depth}, maxRounds: ${maxRounds}, ` +
+    `fix: ${fix ? 'on' : 'off'}, reviewers: ${reviewers}, scope: ${path || 'whole repo'}.`,
+);
 
 // Phases 1 & 2 — Survey and CLAUDE.md scan, concurrently (both Haiku, full requested effort).
 phase('Survey');
@@ -769,52 +820,138 @@ if (!fix || findings.length === 0) {
   return { findings, exclusions, gaps };
 }
 
-// Phase 7 — Fix (barrier). One worktree-isolated Fix agent per validated finding: it edits, verifies in its sandbox,
-// and commits only a clear, safe, localized change — returning its commit SHA and the files it touched, or declining.
-// High-risk categories get Opus, the rest Sonnet; both at capped leaf effort. Isolation keeps parallel edits from
-// corrupting each other; collisions are handled by reconciliation below, not by serializing here.
+// Phases 7 & 7.5 — Fix, then Review, per finding and concurrent. Each validated finding runs its own pipeline: a
+// worktree-isolated Fix agent edits, verifies in its sandbox, and commits only a clear, safe, localized change (Opus
+// for high-risk categories, Sonnet otherwise, at capped leaf effort). Then, unless `--reviewers 0` disabled it,
+// `reviewers` read-only reviewers judge the commit for correctness and quality and approve on a strict majority. A
+// rejected fix is handed back to a fresh Fix agent — given the rejected diff and the objection — up to
+// `FIX_REVISION_CAP` times, re-reviewing each attempt. Only an approved commit reaches Reconcile; declined,
+// verify-failed, and review-rejected findings are reported unfixed. Findings are independent until Reconcile, so the
+// whole fix→review→revise loop runs concurrently across them; isolation keeps their parallel edits from colliding.
 phase('Fix');
-const fixResults = await parallel(
-  findings.map((issue, idx) => () =>
-    agent(fixerPrompt(issue, idx, survey), {
-      label: `fix:${issue.category}:${idx}`,
-      phase: 'Fix',
-      model: isHighRisk(issue) ? 'opus' : 'sonnet',
-      effort: leafEffort,
-      isolation: 'worktree',
-      schema: FIX_RESULT_SCHEMA,
-    }),
-  ),
-);
 
-// Per-finding outcome for reporting. `applied` fixes (with a SHA) also feed reconciliation and the wrapper's
-// cherry-pick; everything else is an unfixed finding the wrapper must surface, not hide.
-const outcomes = findings.map((issue, idx) => {
-  const result = fixResults[idx];
+// Run a Fix agent: attempt 0 is the initial fix (Fix phase); later attempts are revisions (Review phase) that see the
+// prior rejected commit and the objection. Each attempt commits on its own branch so branch names never collide.
+const runFixer = (issue, idx, attempt, revisionCtx) => {
+  const branch = attempt === 0 ? `rrfix/${idx}` : `rrfix/${idx}-r${attempt}`;
 
-  if (!result) {
-    gaps.push(`Fix agent did not return for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
+  return agent(fixerPrompt(issue, survey, branch, revisionCtx), {
+    label: attempt === 0 ? `fix:${issue.category}:${idx}` : `revise:${issue.category}:${idx}:r${attempt}`,
+    phase: attempt === 0 ? 'Fix' : 'Review',
+    model: isHighRisk(issue) ? 'opus' : 'sonnet',
+    effort: leafEffort,
+    isolation: 'worktree',
+    schema: FIX_RESULT_SCHEMA,
+  });
+};
 
-    return {
-      issue,
-      status: 'verify-failed',
-      reason: 'fix agent did not return',
-      changedFiles: [],
-    };
+// Run `reviewers` read-only reviewers over one fix commit; approve on a strict majority of those that return. When no
+// reviewer returns at all, the gate could not run — signal that (completed: false) rather than silently approving.
+const reviewFix = async (issue, current, idx, rev) => {
+  const model = isHighRisk(issue) ? 'opus' : 'sonnet';
+  const votes = await parallel(
+    Array.from({ length: reviewers }, (_, k) => () =>
+      agent(fixReviewPrompt(issue, current, survey), {
+        label: `review:${issue.category}:${idx}:r${rev}:${k}`,
+        phase: 'Review',
+        model,
+        effort: leafEffort,
+        schema: REVIEW_RESULT_SCHEMA,
+      }),
+    ),
+  );
+
+  const returned = votes.filter(Boolean);
+
+  if (returned.length === 0) {
+    gaps.push(`Fix review did not complete for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
+    return { completed: false, approved: false, objection: 'review did not complete' };
   }
 
-  return {
-    issue,
-    status: result.status,
-    sha: result.sha,
-    branch: result.branch,
-    changedFiles: result.changedFiles || [],
-    reason: result.reason,
-  };
+  const yes = returned.filter((v) => v.approved).length;
+  const objection = returned.filter((v) => !v.approved && v.objection).map((v) => v.objection).join('; ');
+
+  // Strict majority of the reviewers that actually returned (>, not >=, so 1-of-2 is a rejection).
+  return { completed: true, approved: yes > returned.length / 2, objection };
+};
+
+const asOutcome = (issue, result) => ({
+  issue,
+  status: result.status,
+  sha: result.sha,
+  branch: result.branch,
+  changedFiles: result.changedFiles || [],
+  reason: result.reason,
 });
 
+// The full fix→review→revise loop for one finding. Returns its final per-finding outcome.
+const fixAndReview = async (issue, idx) => {
+  let current = await runFixer(issue, idx, 0, null);
+
+  if (!current) {
+    gaps.push(`Fix agent did not return for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
+    return { issue, status: 'verify-failed', reason: 'fix agent did not return', changedFiles: [] };
+  }
+
+  // Nothing committed (declined / verify-failed), or review disabled with `--reviewers 0`: take the fix as-is.
+  if (current.status !== 'applied' || !current.sha || reviewers === 0) {
+    return asOutcome(issue, current);
+  }
+
+  for (let rev = 0; rev <= FIX_REVISION_CAP; rev++) {
+    const review = await reviewFix(issue, current, idx, rev);
+
+    if (review.approved) {
+      return asOutcome(issue, current);
+    }
+
+    // Review could not run (no reviewer returned): don't spend revisions on an infrastructure gap — drop, unfixed.
+    if (!review.completed) {
+      return { issue, status: 'review-rejected', reason: review.objection, changedFiles: current.changedFiles || [] };
+    }
+
+    // Out of revision attempts: the fix stays rejected and unfixed.
+    if (rev === FIX_REVISION_CAP) {
+      return {
+        issue,
+        status: 'review-rejected',
+        reason: review.objection || 'fix rejected by review',
+        changedFiles: current.changedFiles || [],
+      };
+    }
+
+    // Revise: a fresh Fix agent starts from HEAD with the rejected diff and the objection.
+    const revised = await runFixer(issue, idx, rev + 1, { priorSha: current.sha, objection: review.objection });
+
+    if (!revised) {
+      gaps.push(`Revision agent did not return for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
+      return { issue, status: 'verify-failed', reason: 'revision agent did not return', changedFiles: [] };
+    }
+
+    // Reviser declined or its change failed verification: that terminal status stands (no further revisions).
+    if (revised.status !== 'applied' || !revised.sha) {
+      return asOutcome(issue, revised);
+    }
+
+    current = revised;
+  }
+};
+
+const rawOutcomes = await parallel(findings.map((issue, idx) => () => fixAndReview(issue, idx)));
+const outcomes = rawOutcomes.map((outcome, idx) =>
+  outcome ?? {
+    issue: findings[idx],
+    status: 'verify-failed',
+    reason: 'fix/review pipeline did not return',
+    changedFiles: [],
+  },
+);
+
 const applied = outcomes.filter((outcome) => outcome.status === 'applied' && outcome.sha);
-log(`Fix: ${applied.length} applied, ${outcomes.length - applied.length} unfixed (declined / verify-failed).`);
+log(
+  `Fix/Review: ${applied.length} approved, ${outcomes.length - applied.length} unfixed ` +
+    '(declined / verify-failed / review-rejected).',
+);
 
 // Phase 8 — Reconcile (barrier). Fixes that touch a shared file are merged by a reconciliation agent into one
 // coherent commit; fixes that collide with nothing pass through as-is. The result is a conflict-free, ordered list of

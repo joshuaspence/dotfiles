@@ -1,7 +1,9 @@
 ---
 name: Repo Review
 description: Review an entire repository
-argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>] [--loop [<max-rounds>]] [--fix] [--output <file>]'
+argument-hint: >-
+  [path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>]
+  [--loop [<max-rounds>]] [--fix] [--reviewers <n>] [--output <file>]
 allowed-tools:
   - Bash(git branch:*)
   - Bash(git cherry-pick:*)
@@ -55,12 +57,21 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   `--breadth`/`--depth` scale how many agents run and how often findings are challenged, and `--loop` scales how many
   times the whole review repeats.
 
-- `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix and Reconcile phases
-  — one isolated agent per validated finding attempts a clean, verified fix and commits it, and a reconciliation agent
-  merges any fixes that collide on a shared file — and returns a conflict-free list of commits plus a per-finding
-  outcome. This command then lands those commits on a dedicated branch (see [Apply fixes](#apply-fixes)). If omitted,
-  the review is strictly read-only, as before. Pass it as `fix`: `true` when present; omit it otherwise. `--fix` is
-  independent of the other flags (it fixes whatever the review, at whatever breadth/depth/effort/loop, validated).
+- `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix, Review, and
+  Reconcile phases — one isolated agent per validated finding attempts a clean, verified fix and commits it, those
+  fixes are independently reviewed (see `--reviewers`), and a reconciliation agent merges any surviving fixes that
+  collide on a shared file — and returns a conflict-free list of commits plus a per-finding outcome. This command then
+  lands those commits on a dedicated branch (see [Apply fixes](#apply-fixes)). If omitted, the review is strictly
+  read-only, as before. Pass it as `fix`: `true` when present; omit it otherwise. `--fix` is independent of the other
+  flags (it fixes whatever the review, at whatever breadth/depth/effort/loop, validated).
+
+- `--reviewers <n>` sets how many independent reviewers judge each fix in the Review phase (only meaningful with
+  `--fix`). Must be a non-negative integer; reject any other value and stop with an error rather than guessing. If
+  omitted, the script defaults it to `1`. A fix is kept only on a **strict majority** of its reviewers; a rejected fix
+  is sent back to the fixer with the objection and re-reviewed, up to an internal revision cap, before being reported
+  unfixed. **`--reviewers 0` disables the Review phase entirely** — applied fixes go straight to reconciliation, as
+  they did before this phase existed. Pass it through as `reviewers` when given; omit it otherwise. This is to *fixes*
+  what `--depth` is to *findings*.
 
 - `--output <file>` writes the report to that file in addition to the terminal. This command handles it; do **not** pass
   it to the script.
@@ -76,7 +87,8 @@ Call the `Workflow` tool with:
   `--effort high`, `--breadth auto`, `--depth 1`, a single review pass), so do not synthesise default values here, and
   never include `--output`. Examples: `/repo-review src --breadth 6` → `{ "path": "src", "breadth": 6 }`;
   `/repo-review --loop` → `{ "loop": true }`; `/repo-review src --loop 3` → `{ "path": "src", "loop": 3 }`;
-  `/repo-review --fix` → `{ "fix": true }`; a bare `/repo-review` with no arguments → `{}`.
+  `/repo-review --fix` → `{ "fix": true }`; `/repo-review --fix --reviewers 2` → `{ "fix": true, "reviewers": 2 }`; a
+  bare `/repo-review` with no arguments → `{}`.
 
 Finalise every argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs in the
 background and returns a structured result when it finishes. Do not launch review subagents outside it, do not re-run it
@@ -98,9 +110,10 @@ The result is `{ findings, exclusions, gaps }`:
     touches a disjoint set of files and is based on the review's `HEAD`, so the cherry-picks below cannot conflict.
   - `outcomes` — one entry per finding: `{ description, category, severity, file, lines, status, sha, reason }`, where
     `status` is `applied` (fixed and committed), `conflict-resolved` (merged with other fixes into one commit),
-    `declined` (not a safe, localized fix), `verify-failed` (the fix broke the build/tests in its sandbox), or
-    `conflict-skipped` (collided and reconciliation could not merge it). Only `applied` and `conflict-resolved` are
-    fixed; every other status is an **unfixed** finding.
+    `declined` (not a safe, localized fix), `verify-failed` (the fix broke the build/tests in its sandbox),
+    `review-rejected` (reviewers rejected the fix and revisions were exhausted), or `conflict-skipped` (collided and
+    reconciliation could not merge it). Only `applied` and `conflict-resolved` are fixed; every other status is an
+    **unfixed** finding.
 
 ## Produce the output
 
@@ -117,8 +130,8 @@ findings):
   **not reviewed / not validated** — a dropped reviewer, lens, or validation must not read as "clean".
 - When a `fix` object is present, annotate each finding with its outcome from `fix.outcomes` (fixed, or the reason it
   was not), and after applying the commits (below) report the branch name and a tally: how many findings were fixed
-  (`applied` + `conflict-resolved`) versus left unfixed (`declined` / `verify-failed` / `conflict-skipped`). An unfixed
-  finding must never read as fixed.
+  (`applied` + `conflict-resolved`) versus left unfixed (`declined` / `verify-failed` / `review-rejected` /
+  `conflict-skipped`). An unfixed finding must never read as fixed.
 
 If `--output <file>` was provided, write the same report to that file.
 
@@ -165,6 +178,13 @@ not push, comment, or open PRs.
   finding is reported unfixed. In-sandbox verification silently degrades to "commit the edit" when the repository has
   no runnable test suite, so the `repo-review-fixes` branch plus your own review is the real safety net. Fixes land on
   that branch only; nothing touches your working checkout or is pushed.
+- The Review phase (unless `--reviewers 0`) adds, per applied fix, `--reviewers` read-only reviewers that judge the
+  diff for correctness and quality — the thing the in-sandbox tests can't. A fix rejected by a majority is handed back
+  to a fresh fixer with the objection and re-reviewed, up to an internal cap of two revisions, then reported
+  `review-rejected` if it still fails. Only review-approved fixes reach reconciliation, so a rejected fix can't drag an
+  unrelated finding into a file collision. Cost is roughly `findings × up-to-3 fix attempts` (the expensive worktree +
+  test runs) plus `findings × up-to-3 review rounds × --reviewers` (cheaper read-only reviewers); `--reviewers 0` skips
+  the review cost entirely and restores the pre-Review behaviour.
 - `allowed-tools` governs only this wrapper — running the workflow, landing the fix commits, and formatting the result
   — not the subagents the workflow launches. Those carry their own default tool pool, so reviewers and validators can
   `Read`, `Grep`, `Glob`, and `git ls-files`, and the `--fix` agents can `Edit` and commit in their own worktrees,
