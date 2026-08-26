@@ -30,7 +30,15 @@ lives in the script; do not re-implement it here, and do not launch review subag
 
 ## Parse arguments
 
-The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
+The arguments to this command are: `$ARGUMENTS`. Parse them as follows.
+
+**Invariant — account for every token.** Every token in `$ARGUMENTS` is exactly one of three things: a `--flag`, a value
+belonging to the `--flag` immediately before it, or the `path`. There is no fourth category and there is no token you
+may ignore. So: if a token is not a flag and not a preceding flag's value, it **is** the `path` — carry it through to
+`args`. Dropping it is not a harmless omission; it silently widens the review from one subtree to the entire repository,
+every phase then behaves correctly for that wider scope, and nothing downstream can detect the mistake. Adding a flag
+never removes the `path`: `path` is independent of `--fix`, `--output`, and every other flag, and combining them does
+not make it optional.
 
 - A bare `path` argument is an optional path that scopes the review to a subtree. If absent, review the whole
   repository. When given, it applies throughout the script (survey, partition, and the per-unit reviewers cover only
@@ -81,7 +89,8 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   what `--depth` is to *findings*.
 
 - `--output <file>` writes the report to that file in addition to the terminal. This command handles it; do **not** pass
-  it to the script.
+  it to the script. It is the only flag you parse and then deliberately withhold — every other flag is either passed
+  through or absent — so take care that consuming `--output` and its filename does not also consume the `path`.
 
 ## Run the workflow
 
@@ -92,17 +101,31 @@ Call the `Workflow` tool with:
 - `args` — a JSON object built from **only the flags the user actually supplied**: add a key for each flag the user
   gave, and omit the rest. The script fills in the documented defaults for anything omitted (whole repository,
   `--effort high`, `--breadth auto`, `--depth 1`, a single review pass), so do not synthesise default values here, and
-  never include `--output`. Examples: `/repo-review src --breadth 6` → `{ "path": "src", "breadth": 6 }`;
-  `/repo-review --loop` → `{ "loop": true }`; `/repo-review src --loop 3` → `{ "path": "src", "loop": 3 }`;
-  `/repo-review --fix` → `{ "fix": true }`; `/repo-review --fix --reviewers 2` → `{ "fix": true, "reviewers": 2 }`; a
-  bare `/repo-review` with no arguments → `{}`.
+  never include `--output`. Worked examples — note that a `path` survives every flag combination, and that the two
+  path-less rows are path-less only because the user gave no path:
 
-Finalise every argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs in the
-background and returns a structured result when it finishes. Do not launch review subagents outside it, do not re-run it
-while it is in flight, and — importantly — do not stop and restart it merely to change a default or an argument you
-could have set at launch (a run already under way is not wrong just because you could have passed, or omitted, a value
-explicitly). The only reason to stop a run is a genuine wedge — most agents done, a few idle for many minutes — after
-which you may re-run, watching progress in `/workflows`, optionally at a lower `--effort`.
+  | Invocation                                            | `args`                                              |
+  |-------------------------------------------------------|-----------------------------------------------------|
+  | `/repo-review`                                        | `{}`                                                |
+  | `/repo-review src --breadth 6`                        | `{ "path": "src", "breadth": 6 }`                   |
+  | `/repo-review --loop`                                 | `{ "loop": true }`                                  |
+  | `/repo-review src --loop 3`                           | `{ "path": "src", "loop": 3 }`                      |
+  | `/repo-review --fix`                                  | `{ "fix": true }`                                   |
+  | `/repo-review --fix --reviewers 2`                    | `{ "fix": true, "reviewers": 2 }`                   |
+  | `/repo-review src/a.js --fix`                         | `{ "path": "src/a.js", "fix": true }`               |
+  | `/repo-review src/a.js --output report.md`            | `{ "path": "src/a.js" }`                            |
+  | `/repo-review src/a.js --fix --output report.md`      | `{ "path": "src/a.js", "fix": true }`               |
+  | `/repo-review pkg --effort xhigh --fix --output r.md` | `{ "path": "pkg", "effort": "xhigh", "fix": true }` |
+
+Before you call `Workflow`, state in one line the `args` object you built and the scope it implies — e.g. "Reviewing
+`src/a.js` (scoped) with `--fix`." — then check it against `$ARGUMENTS`: every non-flag token must appear as `path`. If
+you wrote "whole repository" but the user gave a path, you have dropped it; fix `args` before launching. Finalise every
+argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs in the background and
+returns a structured result when it finishes. Do not launch review subagents outside it, do not re-run it while it is in
+flight, and — importantly — do not stop and restart it merely to change a default or an argument you could have set at
+launch (a run already under way is not wrong just because you could have passed, or omitted, a value explicitly). The
+only reason to stop a run is a genuine wedge — most agents done, a few idle for many minutes — after which you may
+re-run, watching progress in `/workflows`, optionally at a lower `--effort`.
 
 The result is `{ findings, exclusions, gaps }`:
 
