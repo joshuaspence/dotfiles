@@ -4,7 +4,8 @@
  * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
  * access.
  *
- * Inputs arrive on `args`: `{ path, effort, breadth, depth, loop, fix, reviewers }`. The return value is
+ * Inputs arrive on `args`, which must be a JSON *object* `{ path, effort, breadth, depth, loop, fix, reviewers }`; a
+ * JSON-encoded string is rejected outright (see the argument contract below). The return value is
  * `{ findings, exclusions, gaps }`, plus a `fix` object (`{ commits, outcomes }`) when `--fix` was requested.
  */
 
@@ -23,6 +24,23 @@ export const meta = {
     { title: 'Reconcile' },
   ],
 };
+
+// --- Argument contract --------------------------------------------------------------------------------------------
+// `args` reaches this script verbatim, so a wrapper that JSON-encodes its argument object delivers a *string* here. No
+// `args?.foo` lookup on a string can succeed, so every knob below would silently fall back to its default — widening
+// the review from a scoped subtree to the whole repository and turning `--fix` off — with nothing but the `Config —`
+// line to give it away, and a full, expensive, wrong-scoped run to show for it. Refuse that shape rather than guessing
+// at it: return immediately, having spawned nothing, and name the defect so the caller can correct the call.
+if (typeof args === 'string') {
+  return {
+    findings: [],
+    exclusions: [],
+    gaps: [
+      '`args` arrived as a JSON-encoded string, so no argument could be read and **nothing was reviewed**. ' +
+        'Re-run the workflow passing `args` as an actual JSON object, not a string.',
+    ],
+  };
+}
 
 const path = args?.path;
 const scope = path ? `the subtree \`${path}\`` : 'the whole repository';

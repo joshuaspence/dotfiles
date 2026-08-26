@@ -98,11 +98,18 @@ Call the `Workflow` tool with:
 
 - `scriptPath` — the absolute path of `~/.config/claude/workflows/repo-review.js` (expand `~` to your home directory;
   the tool needs an absolute path, and the script lives under your config dir, not in the repository being reviewed).
-- `args` — a JSON object built from **only the flags the user actually supplied**: add a key for each flag the user
-  gave, and omit the rest. The script fills in the documented defaults for anything omitted (whole repository,
-  `--effort high`, `--breadth auto`, `--depth 1`, a single review pass), so do not synthesise default values here, and
-  never include `--output`. Worked examples — note that a `path` survives every flag combination, and that the two
-  path-less rows are path-less only because the user gave no path:
+- `args` — an **actual JSON object**, not a string. Pass `args: { "path": "src" }`; never `args: "{\"path\": \"src\"}"`.
+  The `Workflow` tool hands `args` to the script verbatim, so a JSON-encoded string arrives as a string and no
+  `args?.foo` lookup on it can succeed. **The script rejects that shape outright**: it returns immediately, spawns no
+  agents, and reports a single gap saying nothing was reviewed. So the cost of getting this wrong is a wasted round
+  trip, not a wrong review — but it is still yours to get right, and note that checking you built the right keys is not
+  the same as checking you passed them as an object.
+
+  Build it from **only the flags the user actually supplied**: add a key for each flag the user gave, and omit the rest.
+  The script fills in the documented defaults for anything omitted (whole repository, `--effort high`, `--breadth auto`,
+  `--depth 1`, a single review pass), so do not synthesise default values here, and never include `--output`. Worked
+  examples — note that a `path` survives every flag combination, and that the two path-less rows are path-less only
+  because the user gave no path:
 
   | Invocation                                            | `args`                                              |
   |-------------------------------------------------------|-----------------------------------------------------|
