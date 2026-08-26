@@ -16,6 +16,7 @@ allowed-tools:
   - Bash(git remote:*)
   - Bash(git rev-parse:*)
   - Bash(git switch:*)
+  - Bash(git worktree:*)
   - Workflow
   - Write
 ---
@@ -185,12 +186,25 @@ agent committed on its own branch in an isolated worktree); your job is only to 
    **not applied** rather than forcing a resolution.
 3. Switch back to the original branch (`git switch -`) so the user's working checkout is left as it was, with the
    fixes isolated on `repo-review-fixes` for them to review and merge.
+4. Clean up the run's sandboxes, but **only if every `sha` in `fix.commits` landed**. Those branches and worktrees are
+   the only other copy of the work, so if step 2 aborted or you reported any commit as **not applied**, skip this step
+   entirely and say the sandboxes were left in place. When it is safe:
+   - Worktrees first — a branch checked out somewhere cannot be deleted. For each entry in
+     `git worktree list --porcelain` whose `branch` is under `refs/heads/rrfix/` or `refs/heads/rrmerge/`, run
+     `git worktree remove <path>`, adding `--force` if it refuses: the commit is what you landed, and anything else
+     left in the sandbox is scratch.
+   - Then `git branch -D` those same `rrfix/*` and `rrmerge/*` refs. It has to be `-D`, not `-d` — cherry-picking
+     rewrote the SHAs, so git cannot see the originals as merged and a safe delete would refuse every one of them.
+   - Finish with `git worktree prune` to drop the stale administrative files.
+
+   Touch nothing outside those two branch prefixes. The fixers restart their numbering at `0` every run, so leaving
+   them behind is not merely untidy: the next `--fix` run's `git switch -c rrfix/0` fails against a leftover `rrfix/0`.
 
 Do not push, and do not open a pull request — landing the commits on the local branch is where this stops.
 
 Without `--fix`, this command only reports: do not create GitHub issues, do not post comments, do not edit files, and
-do not commit anything. With `--fix`, the *only* action it takes is the branch-and-cherry-pick above — it still does
-not push, comment, or open PRs.
+do not commit anything. With `--fix`, the *only* actions it takes are the branch-and-cherry-pick above and the cleanup
+of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push, comment, or open PRs.
 
 ## Notes
 
@@ -231,7 +245,8 @@ not push, comment, or open PRs.
   `Read`, `Grep`, `Glob`, and `git ls-files`, and the `--fix` agents can `Edit` and commit in their own worktrees,
   regardless of this list; you neither need to nor can provision their tools from here. This list is therefore minimal:
   `Workflow` to run the review, `Write` for `--output`, the two read-only `git` commands used to build permalinks, and
-  the `git switch`/`branch`/`cherry-pick`/`log` commands used to land `--fix` commits on the review branch.
+  the `git switch`/`branch`/`cherry-pick`/`log`/`worktree` commands used to land `--fix` commits on the review branch
+  and then tear down the sandboxes they were built in.
 - Cite each finding with a file path and line range, and link it if the repository has a GitHub remote. Follow this
   format precisely, otherwise the Markdown preview won't render correctly:
   https://github.com/anthropics/claude-code/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15
