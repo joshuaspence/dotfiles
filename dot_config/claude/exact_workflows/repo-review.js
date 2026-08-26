@@ -23,8 +23,8 @@ export const meta = {
     // Distinct from the 'Review' above, and it must stay distinct: phase titles are matched exactly, so naming this
     // 'Review' too left the fix reviewers with no box of their own — nothing appeared below Fix as its reviews
     // started, which read as though Review were waiting for every fixer to finish when in fact each fix is reviewed
-    // the moment it lands.
-    { title: 'Fix Review' },
+    // the moment it lands. Verb-first, too: 'Fix Review' reads as fixing a review rather than reviewing a fix.
+    { title: 'Review Fix' },
     { title: 'Reconcile' },
   ],
 };
@@ -935,7 +935,7 @@ if (!fix || findings.length === 0) {
 // whole fix→review→revise loop runs concurrently across them; isolation keeps their parallel edits from colliding.
 phase('Fix');
 
-// Run a Fix agent: attempt 0 is the initial fix (Fix phase); later attempts are revisions (Fix Review phase) that see
+// Run a Fix agent: attempt 0 is the initial fix (Fix phase); later attempts are revisions (Review Fix phase) that see
 // the prior rejected commit and the objection. Each attempt commits on its own branch so branch names never collide.
 const runFixer = (issue, idx, attempt, revisionCtx) => {
   const branch = attempt === 0 ? `rrfix/${idx}` : `rrfix/${idx}-r${attempt}`;
@@ -943,7 +943,7 @@ const runFixer = (issue, idx, attempt, revisionCtx) => {
 
   return agent(fixerPrompt(issue, survey, branch, revisionCtx), {
     label: attempt === 0 ? `fix:${tag}` : `revise:${tag}${attemptTag(attempt)}`,
-    phase: attempt === 0 ? 'Fix' : 'Fix Review',
+    phase: attempt === 0 ? 'Fix' : 'Review Fix',
     model: isHighRisk(issue) ? 'opus' : 'sonnet',
     effort: leafEffort,
     isolation: 'worktree',
@@ -958,8 +958,8 @@ const reviewFix = async (issue, current, idx, rev) => {
   const votes = await parallel(
     Array.from({ length: reviewers }, (_, k) => () =>
       agent(fixReviewPrompt(issue, current, survey), {
-        label: `fix-review:${findingTag(issue, idx)}${attemptTag(rev)}${voteTag(k, reviewers)}`,
-        phase: 'Fix Review',
+        label: `review-fix:${findingTag(issue, idx)}${attemptTag(rev)}${voteTag(k, reviewers)}`,
+        phase: 'Review Fix',
         model,
         effort: leafEffort,
         schema: REVIEW_RESULT_SCHEMA,
