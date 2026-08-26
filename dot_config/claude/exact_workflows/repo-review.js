@@ -1045,7 +1045,22 @@ const fixAndReview = async (issue, idx) => {
   }
 };
 
-const rawOutcomes = await parallel(findings.map((issue, idx) => () => fixAndReview(issue, idx)));
+// A throw inside this pipeline is infrastructure, not a verdict on the finding: the agent never got to judge it. Catch
+// it here rather than letting `parallel` flatten it to a bare `null`, because the message names the cause — a worktree
+// that could not be created, say — and that is the one piece of information needed to fix the run. `parallel` logs it,
+// but the workflow's return value is what the wrapper reports, and the log is not in it.
+const pipelineErrors = [];
+const rawOutcomes = await parallel(
+  findings.map((issue, idx) => async () => {
+    try {
+      return await fixAndReview(issue, idx);
+    } catch (error) {
+      pipelineErrors.push(String(error?.message || error).split('\n').slice(0, 3).join(' — '));
+      return null;
+    }
+  }),
+);
+
 const outcomes = rawOutcomes.map((outcome, idx) =>
   outcome ?? {
     issue: findings[idx],
@@ -1054,6 +1069,22 @@ const outcomes = rawOutcomes.map((outcome, idx) =>
     changedFiles: [],
   },
 );
+
+// A pipeline that never returned is not a finding that survived scrutiny, and `verify-failed` alone reads as though one
+// did. When every pipeline dies the same way, the per-finding statuses show nine independent verification failures and
+// the phase-wide cause appears nowhere in the result. Say it once, plainly, with the underlying error attached.
+const unreturned = rawOutcomes.filter((outcome) => !outcome).length;
+if (unreturned) {
+  const causes = [...new Set(pipelineErrors)].slice(0, 2);
+  gaps.push(
+    (unreturned === findings.length
+      ? `The Fix phase did not run: all ${unreturned} fix pipeline(s) failed before returning`
+      : `${unreturned} of ${findings.length} fix pipeline(s) failed before returning`) +
+      `, so those findings were never fixed and are **not** verified as unfixable.${
+        causes.length ? ` Cause: ${causes.join(' | ')}` : ''
+      }`,
+  );
+}
 
 const applied = outcomes.filter((outcome) => outcome.status === 'applied' && outcome.sha);
 log(
@@ -1081,14 +1112,24 @@ const reconciled = await parallel(
       };
     }
 
-    const rr = await agent(reconcilePrompt(groupFixes, gi, survey), {
-      label: `reconcile:${gi}`,
-      phase: 'Reconcile',
-      model: 'opus',
-      effort,
-      isolation: 'worktree',
-      schema: RECONCILE_RESULT_SCHEMA,
-    });
+    // As in the Fix phase, a throw here must not escape the thunk: `parallel` would return `null` for this group, the
+    // `filter(Boolean)` below would drop it from `commits`, and its fixes would keep `status: 'applied'` with a SHA
+    // nothing ever cherry-picks — reported as landed while silently lost. Fold it into the failure branch instead.
+    let rr = null;
+    let rrError = '';
+
+    try {
+      rr = await agent(reconcilePrompt(groupFixes, gi, survey), {
+        label: `reconcile:${gi}`,
+        phase: 'Reconcile',
+        model: 'opus',
+        effort,
+        isolation: 'worktree',
+        schema: RECONCILE_RESULT_SCHEMA,
+      });
+    } catch (error) {
+      rrError = String(error?.message || error).split('\n').slice(0, 3).join(' — ');
+    }
 
     if (rr?.status === 'resolved' && rr.sha) {
       return {
@@ -1105,12 +1146,16 @@ const reconciled = await parallel(
 
       if (outcome) {
         outcome.status = 'conflict-skipped';
-        outcome.reason = rr?.reason || 'reconciliation failed';
+        outcome.reason = rr?.reason || rrError || 'reconciliation failed';
         outcome.sha = undefined;
       }
     });
 
-    gaps.push(`Reconciliation failed for ${groupFixes.length} colliding fix(es) on ${files} — left unfixed.`);
+    gaps.push(
+      `Reconciliation failed for ${groupFixes.length} colliding fix(es) on ${files} — left unfixed.${
+        rrError ? ` Cause: ${rrError}` : ''
+      }`,
+    );
     return null;
   }),
 );
