@@ -42,7 +42,9 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   it here.
 - `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into. Must be a positive
   integer or `auto`; reject any other value and stop with an error rather than guessing. If omitted, the script defaults
-  it to `auto`, which lets the partitioner choose in the range 4–8.
+  it to `auto`, which lets the partitioner choose within a range the script scales to how many files are actually in
+  scope (1 unit for a single file, up to 4–8 for a whole repository) — so a narrow `path` argument does not fan out as
+  though it were the whole repository. Pass an explicit `n` to override that sizing in either direction.
 - `--depth <n|auto>` sets how many independent validators run per issue. Must be a positive integer or `auto`; reject
   any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` — do not pass
   `auto` yourself; `auto` applies only when the user explicitly asks for it. A fixed `n > 1` keeps an issue only on a
@@ -169,6 +171,10 @@ not push, comment, or open PRs.
   to intermittently stall (an agent gets its tool result and its next turn never arrives). Because the review phase is a
   `parallel()` barrier, one hung agent can wedge the run; the cap keeps the many leaf agents off `max`, the only level
   observed to stall. A *silent* hang has no timeout to recover from — hence watching `/workflows` above.
+- The Review phase costs roughly `units × 6 reviewers`, plus 3 architecture lenses, per round — so the unit count is
+  the dominant cost lever. The script sizes it from the survey's file counts (see `--breadth`) and, on a scope of two
+  files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like
+  any other gap: architecture was **not reviewed**, not "clean".
 - The script resolves failures it can see: each fan-out runs under `parallel()`, which resolves a failed agent to
   `null` rather than rejecting the batch, and every dropped reviewer, lens, or validation is recorded in `gaps`. Surface
   those gaps in the output.

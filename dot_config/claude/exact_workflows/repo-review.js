@@ -554,16 +554,29 @@ function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
   );
 }
 
-function partitionPrompt(survey) {
+// With `--breadth auto`, scale the unit count to how much code is actually in scope. A fixed 4-8 range suits a whole
+// repository but is pathological for a narrow `path` scope: told to find at least four units in a single file, the
+// partitioner splits that file into conceptual slices, and since the Review phase is `units × REVIEWERS`, every
+// invented slice costs six more reviewers all re-reading the same file. A count of 0 means the survey returned no
+// usable per-directory counts — treat the scope size as unknown and keep the repository-sized default.
+const autoUnitTarget = (fileCount) =>
+  !fileCount ? 'the range 4-8'
+  : fileCount <= 1 ? 'exactly 1 unit'
+  : fileCount <= 5 ? 'the range 1-2'
+  : fileCount <= 20 ? 'the range 2-4'
+  : 'the range 4-8';
+
+function partitionPrompt(survey, fileCount) {
   const target =
     breadth === 'auto'
-      ? 'Choose the number of units that best fits the repository, in the range 4-8.'
+      ? `Choose the number of units that best fits the scope, in ${autoUnitTarget(fileCount)}.`
       : `Partition into exactly ${breadth} units.`;
 
   return (
     `Partition ${scope} into coherent review units, using the survey below. ${target} Each unit should be a module, ` +
     'package, or directory group that can be understood on its own; give it a short name and the list of ' +
-    `repo-relative paths it covers (enumerate with \`${lsFiles}\`). Also return an explicit list of everything you ` +
+    `repo-relative paths it covers (enumerate with \`${lsFiles}\`). Never split a single file across units — a unit is ` +
+    'a set of whole files, and each file belongs to exactly one unit. Also return an explicit list of everything you ' +
     'excluded and why — exclude vendored/third-party dependencies, generated code, lock files, and binary files.\n\n' +
     surveyBlock(survey)
   );
@@ -633,9 +646,20 @@ if (!claudeMd) {
   gaps.push('`CLAUDE.md` scan did not return — compliance reviewers ran without a governing-file list.');
 }
 
+// How much code is in scope, summed from the survey's per-directory counts. This scales the `auto` breadth range and
+// gates the architecture lenses below — both are right-sized for a repository and wasteful for a `path` scope of a
+// file or two. 0 means the survey gave no usable counts and is treated as "unknown" by both consumers.
+const inScopeFiles = (survey.structure || []).reduce((total, dir) => total + (dir.fileCount || 0), 0);
+
+log(
+  inScopeFiles
+    ? `${inScopeFiles} file(s) in scope.`
+    : 'Survey returned no file counts — sizing the review with repository-wide defaults.',
+);
+
 // Phase 3 — Partition (Sonnet, full requested effort).
 phase('Partition');
-const partition = await agent(partitionPrompt(survey), {
+const partition = await agent(partitionPrompt(survey, inScopeFiles), {
   label: 'partition',
   phase: 'Partition',
   model: 'sonnet',
@@ -665,6 +689,17 @@ log(`Partitioned into ${units.length} unit(s); ${exclusions.length} exclusion(s)
 let deduped = [];
 let converged = true;
 
+// The architecture lenses assess repository-level structure, so on a scope of one or two files there is nothing
+// structural to assess — three whole-repo Opus agents would return noise at best. Skip them below that threshold and
+// record it: a lens that never ran must not read as "architecture: clean". An unknown scope size still runs them.
+const runLenses = !inScopeFiles || inScopeFiles > 2;
+
+if (!runLenses) {
+  gaps.push(
+    `Architecture lenses not run: only ${inScopeFiles} file(s) in scope — too small for a structural review.`,
+  );
+}
+
 for (let round = 1; round <= maxRounds; round++) {
   const suffix = round > 1 ? `:r${round}` : '';
 
@@ -684,16 +719,18 @@ for (let round = 1; round <= maxRounds; round++) {
         }),
       })),
     ),
-    ...ARCHITECTURAL_LENSES.map((lens) => ({
-      label: `review:arch:${lens.key}${suffix}`,
-      model: 'opus',
-      effort,
-      category: 'architecture',
-      prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
-        round,
-        known: deduped.filter((f) => f.category === 'architecture'),
-      }),
-    })),
+    ...(runLenses
+      ? ARCHITECTURAL_LENSES.map((lens) => ({
+          label: `review:arch:${lens.key}${suffix}`,
+          model: 'opus',
+          effort,
+          category: 'architecture',
+          prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
+            round,
+            known: deduped.filter((f) => f.category === 'architecture'),
+          }),
+        }))
+      : []),
   ];
 
   const reviewResults = await parallel(
