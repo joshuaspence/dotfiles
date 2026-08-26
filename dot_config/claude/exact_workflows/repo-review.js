@@ -52,7 +52,7 @@ const maxRounds = loopEnabled ? positiveIntOr(args?.loop, LOOP_DEFAULT_ROUNDS) :
 // `--fix` turns on the optional Fix + Reconcile phases: after validation, one worktree-isolated agent per finding
 // tries to fix it and commit, then a reconciliation agent merges any fixes that collide on a shared file. Off by
 // default — the review stays strictly read-only unless the wrapper sends `fix: true`.
-const fix = (args?.fix ?? false) !== false;
+const fix = args?.fix;
 
 
 // --- Effort cap for the high-fan-out (leaf) agents ---------------------------------------------------------------
@@ -186,11 +186,26 @@ const VERDICT_SCHEMA = {
 const FIX_RESULT_SCHEMA = {
   type: 'object',
   properties: {
-    status: { type: 'string', enum: ['applied', 'declined', 'verify-failed'] },
-    sha: { type: 'string', description: 'New commit SHA when applied; empty otherwise' },
-    branch: { type: 'string', description: 'Branch holding the commit when applied; empty otherwise' },
-    changedFiles: { ...STRING_ARRAY, description: 'Repo-relative paths the fix modified (empty when not applied)' },
-    reason: { type: 'string', description: 'Note on the fix when applied, or why it was declined / failed' },
+    status: { 
+      type: 'string',
+      enum: ['applied', 'declined', 'verify-failed'],
+    }
+    sha: {
+      type: 'string',
+      description: 'New commit SHA when applied; empty otherwise',
+    },
+    branch: {
+      type: 'string',
+      description: 'Branch holding the commit when applied; empty otherwise',
+    },
+    changedFiles: {
+      ...STRING_ARRAY,
+      description: 'Repo-relative paths the fix modified (empty when not applied)',
+    },
+    reason: {
+      type: 'string',
+      description: 'Note on the fix when applied, or why it was declined / failed',
+    },
   },
   required: ['status', 'reason'],
 };
@@ -200,11 +215,26 @@ const FIX_RESULT_SCHEMA = {
 const RECONCILE_RESULT_SCHEMA = {
   type: 'object',
   properties: {
-    status: { type: 'string', enum: ['resolved', 'failed'] },
-    sha: { type: 'string', description: 'Merged commit SHA when resolved; empty otherwise' },
-    branch: { type: 'string', description: 'Branch holding the merged commit when resolved; empty otherwise' },
-    changedFiles: { ...STRING_ARRAY, description: 'Repo-relative paths the merged commit modified' },
-    reason: { type: 'string', description: 'How the fixes were combined, or why reconciliation failed' },
+    status: {
+      type: 'string',
+      enum: ['resolved', 'failed'],
+    },
+    sha: {
+      type: 'string',
+      description: 'Merged commit SHA when resolved; empty otherwise',
+    },
+    branch: {
+      type: 'string',
+      description: 'Branch holding the merged commit when resolved; empty otherwise',
+    },
+    changedFiles: {
+      ...STRING_ARRAY,
+      description: 'Repo-relative paths the merged commit modified',
+    },
+    reason: {
+      type: 'string',
+      description: 'How the fixes were combined, or why reconciliation failed',
+    },
   },
   required: ['status', 'reason'],
 };
@@ -381,7 +411,7 @@ const validatorPrompt = (issue, survey) =>
   `Issue:\n${JSON.stringify(issue, null, 2)}\n\n${surveyBlock(survey)}`;
 
 const fixerPrompt = (issue, idx, survey) =>
-  'You are a Fix agent working in an isolated git worktree checked out at the repository HEAD. Fix exactly ONE ' +
+  'You are a Fix agent working in an isolated git worktree checked out at the repository `HEAD`. Fix exactly ONE ' +
   'already-validated issue — and only if you can do so cleanly. A wrong "fix" is worse than none.\n\n' +
   `Issue:\n${JSON.stringify(issue, null, 2)}\n\n` +
   'Procedure:\n' +
@@ -397,11 +427,10 @@ const fixerPrompt = (issue, idx, survey) =>
   'message. Do NOT push. Return `{ status: "applied", sha, branch, changedFiles, reason }` — `sha` from ' +
   `\`git rev-parse HEAD\`, \`branch\` = "rrfix/${idx}", and \`changedFiles\` listing every repo-relative path you ` +
   'modified. Accurate `changedFiles` is critical: the orchestrator uses it to detect fixes that collide on a shared ' +
-  'file.\n\nReturn only the structured result.\n\n' +
-  surveyBlock(survey);
+  'file.\n\nReturn only the structured result.\n\n' + surveyBlock(survey);
 
 const reconcilePrompt = (groupFixes, groupIdx, survey) =>
-  'You are a Reconciliation agent in an isolated git worktree checked out at the repository HEAD. Several independent ' +
+  'You are a Reconciliation agent in an isolated git worktree checked out at the repository `HEAD`. Several independent ' +
   'Fix agents each committed a fix, but their changes touch overlapping files and cannot all be applied as-is. ' +
   'Produce ONE commit off HEAD that coherently applies ALL of their fixes together.\n\n' +
   'Fixes to combine (inspect each with `git show <sha>`):\n' +
@@ -409,10 +438,10 @@ const reconcilePrompt = (groupFixes, groupIdx, survey) =>
     .map((f) => `- ${f.sha} (${f.branch}) — files: ${(f.changedFiles || []).join(', ')} — ${f.reason}`)
     .join('\n') +
   '\n\nProcedure:\n' +
-  '1. Start from HEAD and apply each fix in turn (e.g. `git cherry-pick <sha>`), resolving conflicts so every fix\'s ' +
+  "1. Start from `HEAD` and apply each fix in turn (e.g. `git cherry-pick <sha>`), resolving conflicts so every fix's " +
   'intent is preserved and the result is coherent. If two fixes genuinely contradict, prefer the higher-severity ' +
   'intent and note the tradeoff in `reason`.\n' +
-  '2. Verify the combined result in this worktree with the survey\'s build/test tooling. If it cannot be made to ' +
+  "2. Verify the combined result in this worktree with the survey's build/test tooling. If it cannot be made to " +
   'pass, return `{ status: "failed", reason }`.\n' +
   `3. On success, land the result as a single commit on a fresh branch \`rrmerge/${groupIdx}\` and return ` +
   '`{ status: "resolved", sha, branch, changedFiles, reason }`.\n\nReturn only the structured result.\n\n' +
@@ -431,15 +460,20 @@ function groupByFileCollision(fixes) {
 
   fixes.forEach((fixResult, i) => {
     (fixResult.changedFiles || []).forEach((file) => {
-      if (fileOwner.has(file)) unite(i, fileOwner.get(file));
-      else fileOwner.set(file, i);
+      if (fileOwner.has(file)) {
+        unite(i, fileOwner.get(file));
+      } else {
+        fileOwner.set(file, i);
+      }
     });
   });
 
   const groups = new Map();
   fixes.forEach((_, i) => {
     const root = find(i);
-    if (!groups.has(root)) groups.set(root, []);
+    if (!groups.has(root)) {
+      groups.set(root, []);
+    }
     groups.get(root).push(i);
   });
 
@@ -756,24 +790,30 @@ const fixResults = await parallel(
 // Per-finding outcome for reporting. `applied` fixes (with a SHA) also feed reconciliation and the wrapper's
 // cherry-pick; everything else is an unfixed finding the wrapper must surface, not hide.
 const outcomes = findings.map((issue, idx) => {
-  const r = fixResults[idx];
+  const result = fixResults[idx];
 
-  if (!r) {
+  if (!result) {
     gaps.push(`Fix agent did not return for a ${issue.category} finding: ${issue.description.slice(0, 80)}`);
-    return { issue, status: 'verify-failed', reason: 'fix agent did not return', changedFiles: [] };
+
+    return {
+      issue,
+      status: 'verify-failed',
+      reason: 'fix agent did not return',
+      changedFiles: [],
+    };
   }
 
   return {
     issue,
-    status: r.status,
-    sha: r.sha,
-    branch: r.branch,
-    changedFiles: r.changedFiles || [],
-    reason: r.reason,
+    status: result.status,
+    sha: result.sha,
+    branch: result.branch,
+    changedFiles: result.changedFiles || [],
+    reason: result.reason,
   };
 });
 
-const applied = outcomes.filter((o) => o.status === 'applied' && o.sha);
+const applied = outcomes.filter((outcome) => outcome.status === 'applied' && outcome.sha);
 log(`Fix: ${applied.length} applied, ${outcomes.length - applied.length} unfixed (declined / verify-failed).`);
 
 // Phase 8 — Reconcile (barrier). Fixes that touch a shared file are merged by a reconciliation agent into one
@@ -788,7 +828,12 @@ const reconciled = await parallel(
     // Singleton group: the fixer's own commit lands unchanged.
     if (groupFixes.length === 1) {
       const only = groupFixes[0];
-      return { sha: only.sha, findings: [only.issue], changedFiles: only.changedFiles };
+
+      return {
+        sha: only.sha,
+        findings: [only.issue],
+        changedFiles: only.changedFiles,
+      };
     }
 
     const rr = await agent(reconcilePrompt(groupFixes, gi, survey), {
@@ -801,19 +846,25 @@ const reconciled = await parallel(
     });
 
     if (rr?.status === 'resolved' && rr.sha) {
-      return { sha: rr.sha, findings: groupFixes.map((f) => f.issue), changedFiles: rr.changedFiles || [] };
+      return {
+        sha: rr.sha,
+        findings: groupFixes.map((f) => f.issue),
+        changedFiles: rr.changedFiles || [],
+      };
     }
 
     // Reconciliation failed: none of the colliding group's fixes can be landed together. Mark them conflict-skipped.
     const files = [...new Set(groupFixes.flatMap((f) => f.changedFiles))].join(', ');
     groupFixes.forEach((f) => {
-      const o = outcomes.find((x) => x.issue === f.issue);
-      if (o) {
-        o.status = 'conflict-skipped';
-        o.reason = rr?.reason || 'reconciliation failed';
-        o.sha = undefined;
+      const outcome = outcomes.find((x) => x.issue === f.issue);
+
+      if (outcome) {
+        outcome.status = 'conflict-skipped';
+        outcome.reason = rr?.reason || 'reconciliation failed';
+        outcome.sha = undefined;
       }
     });
+
     gaps.push(`Reconciliation failed for ${groupFixes.length} colliding fix(es) on ${files} — left unfixed.`);
     return null;
   }),
@@ -823,13 +874,14 @@ const commits = reconciled.filter(Boolean);
 
 // A merged commit carries more than one finding: mark those findings conflict-resolved and point them at the merged
 // commit's SHA (the individual fixer commits are superseded and never cherry-picked).
-commits.forEach((c) => {
-  if (c.findings.length > 1) {
-    c.findings.forEach((issue) => {
-      const o = outcomes.find((x) => x.issue === issue);
-      if (o && o.status === 'applied') {
-        o.status = 'conflict-resolved';
-        o.sha = c.sha;
+commits.forEach((commit) => {
+  if (commit.findings.length > 1) {
+    commit.findings.forEach((issue) => {
+      const outcome = outcomes.find((x) => x.issue === issue);
+
+      if (outcome?.status === 'applied') {
+        outcome.status = 'conflict-resolved';
+        outcome.sha = commit.sha;
       }
     });
   }
@@ -844,16 +896,20 @@ return {
   exclusions,
   gaps,
   fix: {
-    commits: commits.map((c) => ({ sha: c.sha, changedFiles: c.changedFiles, findingCount: c.findings.length })),
-    outcomes: outcomes.map((o) => ({
-      description: o.issue.description,
-      category: o.issue.category,
-      severity: o.issue.severity,
-      file: o.issue.file,
-      lines: o.issue.lines,
-      status: o.status,
-      sha: o.sha,
-      reason: o.reason,
+    commits: commits.map((commit) => ({
+      sha: commit.sha,
+      changedFiles: commit.changedFiles,
+      findingCount: commit.findings.length,
+    })),
+    outcomes: outcomes.map((outcome) => ({
+      description: outcome.issue.description,
+      category: outcome.issue.category,
+      severity: outcome.issue.severity,
+      file: outcome.issue.file,
+      lines: outcome.issue.lines,
+      status: outcome.status,
+      sha: outcome.sha,
+      reason: outcome.reason,
     })),
   },
 };

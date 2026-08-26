@@ -3,12 +3,12 @@ name: Repo Review
 description: Review an entire repository
 argument-hint: '[path] [--effort <low|medium|high|xhigh|max>] [--breadth <n|auto>] [--depth <n|auto>] [--loop [<max-rounds>]] [--fix] [--output <file>]'
 allowed-tools:
-  - Bash(git remote:*)
-  - Bash(git rev-parse:*)
-  - Bash(git switch:*)
   - Bash(git branch:*)
   - Bash(git cherry-pick:*)
   - Bash(git log:*)
+  - Bash(git remote:*)
+  - Bash(git rev-parse:*)
+  - Bash(git switch:*)
   - Workflow
   - Write
 ---
@@ -46,14 +46,14 @@ The arguments to this command are: `$ARGUMENTS`. Parse them as follows:
   `--breadth` and `--depth` are orthogonal to `--effort`: they scale how many agents run and how many times findings are
   challenged, whereas `--effort` scales how hard each individual agent thinks.
 
-- `--loop [<max-rounds>]` turns on multi-round *loop-until-dry* reviewing. The script repeats its review-and-dedupe pass,
-  accumulating de-duplicated findings and steering later rounds toward what earlier ones missed, and stops as soon as a
-  round surfaces nothing new (or when it reaches the cap). Bare `--loop` uses the script's default cap; an explicit
+- `--loop [<max-rounds>]` turns on multi-round *loop-until-dry* reviewing. The script repeats its review-and-dedupe
+  pass, accumulating de-duplicated findings and steering later rounds toward what earlier ones missed, and stops as soon
+  as a round surfaces nothing new (or when it reaches the cap). Bare `--loop` uses the script's default cap; an explicit
   positive integer overrides that cap. Must be a positive integer when given; reject any other value and stop with an
-  error rather than guessing. If omitted, the script runs a single pass — today's behaviour. Pass it as `loop`: `true`
-  for a bare flag, or the integer when one is given. `--loop` is a third, orthogonal axis: `--effort` scales how hard
-  each agent thinks, `--breadth`/`--depth` scale how many agents run and how often findings are challenged, and `--loop`
-  scales how many times the whole review repeats.
+  error rather than guessing. If omitted, the script runs a single pass. Pass it as `loop`: `true` for a bare flag, or
+  the integer when one is given. `--loop` is a third, orthogonal axis: `--effort` scales how hard each agent thinks,
+  `--breadth`/`--depth` scale how many agents run and how often findings are challenged, and `--loop` scales how many
+  times the whole review repeats.
 
 - `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix and Reconcile phases
   — one isolated agent per validated finding attempts a clean, verified fix and commits it, and a reconciliation agent
@@ -88,7 +88,7 @@ which you may re-run, watching progress in `/workflows`, optionally at a lower `
 The result is `{ findings, exclusions, gaps }`:
 
 - `findings` — validated issues. Each has `description`, `severity` (`critical`/`high`/`medium`/`low`), `category`,
-  `file`, `lines` (may be empty), `otherSites` (other affected file:line or modules, may be empty), and `reason`.
+  `file`, `lines` (may be empty), `otherSites` (other affected `file:line` or modules, may be empty), and `reason`.
 - `exclusions` — `{ path, reason }` entries for everything the partitioner left out (vendored/third-party code,
   generated code, lock files, binaries).
 - `gaps` — strings naming any reviewer, lens, or validation that did not complete, plus (when `--loop` is used) a note
