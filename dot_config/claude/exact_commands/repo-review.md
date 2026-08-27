@@ -11,10 +11,13 @@ argument-hint: >-
   [--output <file>]
 allowed-tools:
   - Bash(git branch:*)
+  - Bash(git checkout:*)
   - Bash(git cherry-pick:*)
   - Bash(git log:*)
   - Bash(git remote:*)
   - Bash(git rev-parse:*)
+  - Bash(git show:*)
+  - Bash(git status:*)
   - Bash(git switch:*)
   - Bash(git worktree:*)
   - Workflow
@@ -76,10 +79,10 @@ not make it optional.
 - `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix, Review Fix, and
   Reconcile phases — one isolated agent per validated finding attempts a clean, verified fix and commits it, those fixes
   are independently reviewed (see `--reviewers`), and a reconciliation agent merges any surviving fixes that collide on
-  a shared file — and returns a conflict-free list of commits plus a per-finding outcome. This command then lands those
-  commits on a dedicated branch (see [Apply fixes](#apply-fixes)). If omitted, the review is strictly read-only, as
-  before. Pass it as `fix`: `true` when present; omit it otherwise. `--fix` is independent of the other flags (it fixes
-  whatever the review, at whatever breadth/depth/effort/loop, validated).
+  a shared file — and returns a list of commits plus a per-finding outcome. This command then verifies those commits
+  against git and lands the ones that check out, on a dedicated branch (see [Apply fixes](#apply-fixes)). If omitted,
+  the review is strictly read-only, as before. Pass it as `fix`: `true` when present; omit it otherwise. `--fix` is
+  independent of the other flags (it fixes whatever the review, at whatever breadth/depth/effort/loop, validated).
 
 - `--reviewers <n>` sets how many independent reviewers judge each fix in the Review Fix phase (only meaningful with
   `--fix`). Must be a non-negative integer; reject any other value and stop with an error rather than guessing. If
@@ -143,10 +146,18 @@ The result is `{ findings, exclusions, gaps }`:
   generated code, lock files, binaries).
 - `gaps` — strings naming any reviewer, lens, or validation that did not complete, plus (when `--loop` is used) a note
   if the loop hit its round cap without going dry — a signal that more findings may exist.
-- `fix` — present **only when `--fix` was requested** and there were findings. It is `{ commits, outcomes }`:
-  - `commits` — a conflict-free, ordered list of `{ sha, changedFiles, findingCount }` to cherry-pick. Every commit
-    touches a disjoint set of files and is based on the review's `HEAD`, so the cherry-picks below cannot conflict.
-  - `outcomes` — one entry per finding: `{ description, category, severity, file, lines, status, sha, reason }`, where
+- `fix` — present **only when `--fix` was requested** and there were findings. It is
+  `{ base, sandboxBranches, commits, outcomes }`:
+  - `base` — the commit SHA every commit in `commits` should be parented on: the `HEAD` the review actually read. You
+    verify this rather than assume it (see [Apply fixes](#apply-fixes)).
+  - `sandboxBranches` — every branch the run's fix and reconcile agents reported creating, successful or not. This is
+    the teardown list; it exists because those branches, not a naming glob, are what this run is responsible for.
+  - `commits` — an ordered list of `{ sha, branch, changedFiles, findingCount }` to cherry-pick. The script intends
+    these to be pairwise-disjoint in their files and all parented on `base`, and it drops any commit it can prove
+    otherwise — but it has no git access, so every check it made ran on the agents' *self-reported* file lists. Treat
+    the list as a proposal to verify, not a guarantee to rely on.
+  - `outcomes` — one entry per finding:
+    `{ description, category, severity, file, lines, status, sha, branch, reason }`, where
     `status` is `applied` (fixed and committed), `conflict-resolved` (merged with other fixes into one commit),
     `declined` (not a safe, localized fix), `verify-failed` (the fix broke the build/tests in its sandbox),
     `review-rejected` (reviewers rejected the fix and revisions were exhausted), or `conflict-skipped` (collided and
@@ -234,28 +245,62 @@ If `--output <file>` was provided, write the same report to that file.
 
 Only when a `fix` object was returned. The commits already exist as objects in the repository (each Fix/Reconcile
 agent committed on its own branch in an isolated worktree); your job is only to land them on a review branch — you do
-**not** edit files or resolve conflicts, because `fix.commits` is already conflict-free.
+**not** edit files, resolve conflicts, or amend commits.
 
-1. Create a dedicated branch off the current `HEAD` and switch to it: `git switch -c repo-review-fixes` (if it already
-   exists, use a numbered suffix, e.g. `repo-review-fixes-2`, rather than clobbering it).
-2. Cherry-pick each `sha` in `fix.commits`, in order: `git cherry-pick <sha>`. These cannot conflict by construction;
-   if one unexpectedly does, `git cherry-pick --abort`, stop landing further commits, and report the remaining ones as
-   **not applied** rather than forcing a resolution.
-3. Switch back to the original branch (`git switch -`) so the user's working checkout is left as it was, with the
-   fixes isolated on `repo-review-fixes` for them to review and merge.
-4. Clean up the run's sandboxes, but **only if every `sha` in `fix.commits` landed**. Those branches and worktrees are
-   the only other copy of the work, so if step 2 aborted or you reported any commit as **not applied**, skip this step
-   entirely and say the sandboxes were left in place. When it is safe:
+**Verify before you land, and land only what verifies.** The script cannot check its own output: it has no git access,
+so "disjoint files, common base" is only ever what the fix agents *told* it. Both halves of that have failed in a real
+run — see [Notes](#notes) — so the invariant is re-established here, against git, before the first cherry-pick. Do the
+whole pre-flight first: discovering a bad commit at pick 3 of 15 means you have already half-landed the branch and
+stranded the twelve behind it.
+
+1. **Pre-flight.** With no branch created and nothing checked out yet:
+   - Confirm the working checkout is clean (`git status --porcelain` prints nothing) and note the current branch. If it
+     is dirty, land nothing, say so, and stop — you must not commit or stash someone else's uncommitted work.
+   - Confirm `git rev-parse HEAD` equals `fix.base`. If `HEAD` has moved since the review, every commit's diff was
+     authored against different text; land nothing and say the repository moved under the run.
+   - For each `sha` in `fix.commits`, check its parent is the reviewed commit:
+     `git rev-parse <sha>^` must equal `fix.base`. A commit that fails this was built on a **stale base** — reject it.
+   - For each `sha`, read its real file set with `git show --name-only --format= <sha>` and check it against the
+     accumulated set from the commits you have already accepted. Any commit sharing a path with an accepted one is
+     rejected. Use the file set git reports, not `changedFiles` — the latter is what a fix agent claimed.
+2. **Report the pre-flight** before landing: how many commits passed, and for each rejection which check it failed and
+   why (`parent <sha> != base <sha>`, or the overlapping paths and the commit that claimed them). Any commit rejected
+   here is a **defect in the run**, not an unfixable finding — say so plainly, and count its findings as not fixed.
+3. If nothing passed, land nothing and stop after the report. Otherwise create a dedicated branch off the current
+   `HEAD` and switch to it: `git switch -c repo-review-fixes` (if it already exists, use a numbered suffix, e.g.
+   `repo-review-fixes-2`, rather than clobbering it).
+4. Cherry-pick the accepted `sha`s in order: `git cherry-pick <sha>`. Pre-flight has established these cannot conflict.
+   If one still does, `git cherry-pick --abort`, stop landing further commits, and report the remaining ones as **not
+   applied** — never resolve a conflict by hand. Treat it as a pre-flight bug worth reporting: it means git disagreed
+   with a check you had already run against git.
+5. Switch back to the original branch (`git switch -`) so the user's working checkout is left as it was, with the
+   fixes isolated on `repo-review-fixes` for them to review and merge. Then confirm you actually left it as it was:
+   `git status --porcelain` must again print nothing. A cherry-pick that changes a tracked file's **mode** can leave
+   that mode behind on the original branch even when the content is identical, which is a modified working checkout —
+   exactly what this command promises not to do. If anything is dirty, restore those paths
+   (`git checkout -- <paths>`) and report that you did.
+6. Clean up the run's sandboxes, but **only if every accepted commit landed**. Those branches and worktrees hold the
+   only other copy of the work, so if step 4 aborted, skip this entirely and say the sandboxes were left in place.
+   Commits *rejected in pre-flight* do not block cleanup by themselves — they are unlandable wherever they sit, so
+   note them as discarded and say which branches held them, so the user can salvage one if they want.
+   - Work from `fix.sandboxBranches`, the branches the agents reported creating. Derive the run prefix from them (they
+     are `rrfix/<run-id>/<n>` and `rrmerge/<run-id>/<n>`) and confine every deletion to that one `<run-id>`: it scopes
+     the teardown to *this* run, so a concurrent `--fix` run in the same repository is never collateral damage.
    - Worktrees first — a branch checked out somewhere cannot be deleted. For each entry in
-     `git worktree list --porcelain` whose `branch` is under `refs/heads/rrfix/` or `refs/heads/rrmerge/`, run
-     `git worktree remove <path>`, adding `--force` if it refuses: the commit is what you landed, and anything else
-     left in the sandbox is scratch.
-   - Then `git branch -D` those same `rrfix/*` and `rrmerge/*` refs. It has to be `-D`, not `-d` — cherry-picking
-     rewrote the SHAs, so git cannot see the originals as merged and a safe delete would refuse every one of them.
-   - Finish with `git worktree prune` to drop the stale administrative files.
+     `git worktree list --porcelain` whose `branch` is one of those refs, run `git worktree remove <path>`, adding
+     `--force` if it refuses: the commit is what you landed, and anything else left in the sandbox is scratch.
+   - Then `git branch -D` those same refs. It has to be `-D`, not `-d` — cherry-picking rewrote the SHAs, so git cannot
+     see the originals as merged and a safe delete would refuse every one of them.
+   - The harness also leaves a `worktree-<run-id>-<n>` branch per sandbox — the ref the worktree was created on, and
+     what the fix branches were cut from. It does not reap those itself once an agent has switched away from one, so
+     delete the ones for this `<run-id>`, then finish with `git worktree prune` to drop the stale administrative files.
+     **Never glob `worktree-*`.** That namespace belongs to every worktree-isolated agent in the session, not just this
+     run, so an unscoped delete destroys unrelated work; match on this run's `<run-id>` and nothing else.
 
-   Touch nothing outside those two branch prefixes. The fixers restart their numbering at `0` every run, so leaving
-   them behind is not merely untidy: the next `--fix` run's `git switch -c rrfix/0` fails against a leftover `rrfix/0`.
+   Touch nothing outside this run's `<run-id>`. Branch names are per-run precisely so that a leftover cannot break the
+   next run — the fixers used to restart at `rrfix/0` every time, and a run that ended without teardown made the next
+   run's `git switch -c rrfix/0` fail outright. The run id is a path component of the reported branch names
+   (`rrfix/<run-id>/<n>`), so read it from `fix.sandboxBranches` rather than reconstructing it.
 
 Do not push, and do not open a pull request — landing the commits on the local branch is where this stops.
 
@@ -289,7 +334,33 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   only a clear, safe, localized change that still passes; otherwise it declines or reports a verify failure, and that
   finding is reported unfixed. In-sandbox verification silently degrades to "commit the edit" when the repository has
   no runnable test suite, so the `repo-review-fixes` branch plus your own review is the real safety net. Fixes land on
-  that branch only; nothing touches your working checkout or is pushed.
+  that branch only, and nothing is pushed. The working checkout is meant to be left exactly as it was — but that is a
+  promise the landing sequence has broken before (a cherry-picked mode change survived the switch back), so step 5 of
+  [Apply fixes](#apply-fixes) verifies it rather than assuming it.
+- **A fix sandbox is not checked out at your `HEAD`.** `isolation: 'worktree'` creates the worktree on a branch
+  `worktree-<run-id>-<n>` pointing at the **remote default branch** — `refs/remotes/origin/master` — not at local
+  `HEAD`. In one observed run every one of 81 sandboxes was based 126 commits behind the `HEAD` the reviewers had read.
+  Two things followed, and both broke the landing sequence:
+
+  - The fixers read and edited 126-commit-stale source while the findings described current source. No downstream step
+    can repair that: a change reasoned about against text that no longer exists is not rebaseable, only discardable.
+  - The bases diverged *unpredictably*. Pinning was left to agent initiative, so some fixers noticed the mismatch and
+    re-based onto local `master` themselves while most committed straight onto the stale base — four distinct bases
+    across one run. "Same base" plus "disjoint files" is what makes the cherry-picks commutative, so scattered bases
+    silently void the guarantee.
+
+  The script now pins every sandbox explicitly: the survey captures `git rev-parse HEAD` as `headSha` before any
+  worktree exists, and each fix/reconcile agent's first instruction is to `git switch -c <branch> <headSha>` and verify
+  the pin took before reading a file. It refuses to run the Fix phase at all if that SHA is unavailable — an unpinned
+  fix phase produces confident-looking commits built on the wrong code. The pre-flight in
+  [Apply fixes](#apply-fixes) then re-checks the parent of every commit against git, because the script only has the
+  agents' word for it. Do not weaken either half: the failure is silent, and it reads as success.
+- **Fixes must not commit regenerated build output.** A fix whose verification step rebuilds a tracked artifact and
+  stages it collides with every other fix that rebuilt the same artifact. In the run above, four fixes each rebuilt
+  `dist/server.cjs`; union-find collapsed all of them into a single reconciliation group whose merged commit then
+  touched 25 files, overlapped three unrelated commits, and aborted the landing. The script names the partitioner's
+  generated/excluded paths to the fixers as unstageable and refuses any commit that staged one anyway. That mode of
+  failure is also where a `100755 → 100644` mode change on `dist/server.cjs` reached the user's working checkout.
 - The Review Fix phase (unless `--reviewers 0`) adds, per applied fix, `--reviewers` read-only reviewers that judge the
   diff for correctness and quality — the thing the in-sandbox tests can't. A fix rejected by a majority is handed back
   to a fresh fixer with the objection and re-reviewed, up to an internal cap of two revisions, then reported
@@ -301,9 +372,12 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   — not the subagents the workflow launches. Those carry their own default tool pool, so reviewers and validators can
   `Read`, `Grep`, `Glob`, and `git ls-files`, and the `--fix` agents can `Edit` and commit in their own worktrees,
   regardless of this list; you neither need to nor can provision their tools from here. This list is therefore minimal:
-  `Workflow` to run the review, `Write` for `--output`, the two read-only `git` commands used to build permalinks, and
-  the `git switch`/`branch`/`cherry-pick`/`log`/`worktree` commands used to land `--fix` commits on the review branch
-  and then tear down the sandboxes they were built in.
+  `Workflow` to run the review, `Write` for `--output`, the two read-only `git` commands used to build permalinks, the
+  `git rev-parse`/`show`/`status` commands used to pre-flight the `--fix` commits against git, and the
+  `git switch`/`branch`/`cherry-pick`/`log`/`worktree`/`checkout` commands used to land them on the review branch, leave
+  the working checkout as it was, and tear down the sandboxes they were built in. `git checkout` is there for exactly
+  one purpose — restoring a path the landing sequence dirtied (step 5 of [Apply fixes](#apply-fixes)) — and is not a
+  licence to edit files or resolve a conflict.
 - Cite each finding with a file path and line range, and link it if the repository has a GitHub remote. Follow this
   format precisely, otherwise the Markdown preview won't render correctly:
   https://github.com/anthropics/claude-code/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15
