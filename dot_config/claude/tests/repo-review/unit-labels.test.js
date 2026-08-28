@@ -130,7 +130,7 @@ describe('labels built from a unit', () => {
     const run = await runFix({ issues, units });
 
     expect(run.called(/^review:/).map((call) => call.label)).toContain('review:wire-protocol:code-quality');
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:wire-protocol']);
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:wire-protocol:high']);
     expect(run.called(/^review:Wire/)).toHaveLength(0);
   });
 

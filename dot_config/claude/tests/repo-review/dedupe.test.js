@@ -250,7 +250,7 @@ describe('dedupe stall', () => {
       },
     });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core', 'dedupe:core:medium']);
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high', 'dedupe:core:medium']);
   });
 
   it('survives a stall on every rung instead of discarding the whole review', async () => {
@@ -273,6 +273,65 @@ describe('dedupe stall', () => {
     const run = await runFix({ issues: pair, dedupe: () => null });
 
     expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+  });
+});
+
+describe('dedupe rung ceilings', () => {
+  // Stepping down works, but discovering that a rung will stall costs six attempts at 180s — 18 minutes in which the
+  // run shows no progress and reads as hung. Digest size predicts the stall, so a rung the digest is known to overwhelm
+  // is skipped rather than paid for.
+  it('tries the whole ladder for a digest a rung has been observed to answer', async () => {
+    const { dedupeRungs, dedupeEfforts } = await internals();
+
+    expect(dedupeRungs(2)).toEqual(dedupeEfforts);
+    expect(dedupeRungs(163)).toEqual(dedupeEfforts);
+  });
+
+  it('skips a rung whose ceiling the digest clears', async () => {
+    const { dedupeRungs, DEDUPE_RUNG_CEILING } = await internals();
+
+    expect(dedupeRungs(DEDUPE_RUNG_CEILING.high + 1)).toEqual(['medium']);
+  });
+
+  it('keeps a rung the digest exactly reaches, since the ceiling is what it answered for', async () => {
+    // An off-by-one here throws away a rung that works, which is the same waste in the other direction.
+    const { dedupeRungs, DEDUPE_RUNG_CEILING, dedupeEfforts } = await internals();
+
+    expect(dedupeRungs(DEDUPE_RUNG_CEILING.high)).toEqual(dedupeEfforts);
+  });
+
+  it('sets the ceiling between the largest digest that answered and the smallest that stalled', async () => {
+    // Ties the number to the measurements it came from: `high` answered 163 findings and was killed at 209. A ceiling
+    // outside that interval contradicts the evidence rather than summarising it.
+    const { DEDUPE_RUNG_CEILING } = await internals();
+
+    expect(DEDUPE_RUNG_CEILING.high).toBeGreaterThan(163);
+    expect(DEDUPE_RUNG_CEILING.high).toBeLessThanOrEqual(209);
+  });
+
+  it('never returns an empty ladder, however large the digest', async () => {
+    // Defensive today — only `high` has a ceiling, so the lowest rung is always viable. It guards a later edit that
+    // gives every rung one: refusing to try costs the merge outright, which is worse than a stall.
+    const { dedupeRungs } = await internals();
+
+    expect(dedupeRungs(100_000)).toHaveLength(1);
+  });
+
+  it('starts an over-ceiling round at the lower rung and says why', async () => {
+    const { DEDUPE_RUNG_CEILING } = await internals();
+    const many = Array.from({ length: DEDUPE_RUNG_CEILING.high + 1 }, (_, i) => issue({ file: `src/f${i}.ts` }));
+    const run = await runFix({ issues: many, args: { fix: false }, dedupe: () => ({ groups: [] }) });
+
+    expect(run.called(/^dedupe/).map((call) => call.opts.effort)).toEqual(['medium']);
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:medium']);
+    expect(run.logged('is over the ceiling for high')).toBe(true);
+  });
+
+  it('leaves a round under the ceiling starting at the top rung, with nothing logged', async () => {
+    const run = await runFix({ issues: pair, dedupe: () => ({ groups: [] }) });
+
+    expect(run.called(/^dedupe/).map((call) => call.opts.effort)).toEqual(['high']);
+    expect(run.logged('is over the ceiling')).toBe(false);
   });
 });
 
@@ -344,7 +403,11 @@ describe('dedupe scopes', () => {
   it('runs one agent per unit and then a single pass over the survivors', async () => {
     const run = await runFix({ issues: spread, units, dedupe: () => ({ groups: [] }) });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:api', 'dedupe:core', 'dedupe:cross']);
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual([
+      'dedupe:api:high',
+      'dedupe:core:high',
+      'dedupe:cross:high',
+    ]);
     expect(run.result.findings).toHaveLength(spread.length);
   });
 
@@ -353,14 +416,14 @@ describe('dedupe scopes', () => {
     // of the effort ladder — and the watchdog window that goes with it — on a settled question.
     const run = await runFix({ issues: pair });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core']);
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high']);
   });
 
   it('sizes each scope to its unit rather than to the whole round', async () => {
     // The point of the split, stated as an assertion: no agent sees all four findings.
     const run = await runFix({ issues: spread, units, dedupe: () => ({ groups: [] }) });
 
-    expect(run.called(/^dedupe:(api|core)$/).map((call) => /Findings \((\d+)\)/.exec(call.prompt)[1])).toEqual([
+    expect(run.called(/^dedupe:(api|core):high$/).map((call) => /Findings \((\d+)\)/.exec(call.prompt)[1])).toEqual([
       '2',
       '2',
     ]);
@@ -373,10 +436,10 @@ describe('dedupe scopes', () => {
     const run = await runFix({
       issues: spread,
       units,
-      dedupe: (call) => ({ groups: call.label === 'dedupe:core' ? [[0, 1]] : [] }),
+      dedupe: (call) => ({ groups: call.label === 'dedupe:core:high' ? [[0, 1]] : [] }),
     });
 
-    const [cross] = run.called('dedupe:cross');
+    const [cross] = run.called('dedupe:cross:high');
 
     expect(/Findings \((\d+)\)/.exec(cross.prompt)[1]).toBe('3');
     expect(cross.prompt).not.toContain('core/frame.py');
@@ -429,8 +492,8 @@ describe('dedupe scopes', () => {
       issues: spread,
       units,
       dedupe: (call) => {
-        if (call.label === 'dedupe:core') return { groups: [[0, 1]] };
-        if (call.label === 'dedupe:cross') return { groups: [[0, 2]] };
+        if (call.label === 'dedupe:core:high') return { groups: [[0, 1]] };
+        if (call.label === 'dedupe:cross:high') return { groups: [[0, 2]] };
 
         return { groups: [] };
       },
@@ -456,8 +519,8 @@ describe('round labels', () => {
     const run = await runFix({ issues: pair, args: { loop: 2 }, dedupe: convergeOnRound2 });
 
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual([
-      'dedupe:core round 1/2',
-      'dedupe:core round 2/2',
+      'dedupe:core:high round 1/2',
+      'dedupe:core:high round 2/2',
     ]);
     expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual([
       'review:core:bug round 1/2',
@@ -477,9 +540,9 @@ describe('round labels', () => {
     });
 
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual([
-      'dedupe:core round 1/2',
+      'dedupe:core:high round 1/2',
       'dedupe:core:medium round 1/2',
-      'dedupe:core round 2/2',
+      'dedupe:core:high round 2/2',
       'dedupe:core:medium round 2/2',
     ]);
   });
@@ -487,7 +550,7 @@ describe('round labels', () => {
   it('leaves a single pass unmarked, where there is no other round to tell it apart from', async () => {
     const run = await runFix({ issues: pair });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core']);
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high']);
     expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual(['review:core:bug']);
   });
 });

@@ -25,6 +25,8 @@ const INTERNALS = [
     'capLeaf',
     'DEDUPE_EFFORT_LADDER',
     'dedupeEfforts',
+    'DEDUPE_RUNG_CEILING',
+    'dedupeRungs',
     'effort',
     'EFFORT_ORDER',                                                                                                     
     'fix',                                                                                                              

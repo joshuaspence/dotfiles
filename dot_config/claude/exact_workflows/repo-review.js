@@ -158,6 +158,23 @@ const leafEffort = capLeaf(effort);
 const DEDUPE_EFFORT_LADDER = ['high', 'medium'];
 const dedupeEfforts = [...new Set(DEDUPE_EFFORT_LADDER.map((e) => capEffort(e, effort)))];
 
+// How large a digest each rung has been observed to answer for. Exhausting a rung is not free: six attempts at 180s is
+// 18 minutes of wall clock spent discovering what `issues.length` already predicted, and the run looks hung for all of
+// it. So a rung whose ceiling the digest clears is skipped rather than tried. Measured on Opus, `high` answered 116
+// findings in 96s and 163 in ~2 minutes, and was killed on all six attempts at both 209 and 253; `medium` answered 209
+// in 140s and 253 in ~150s. The ceiling goes between the largest digest that worked and the smallest that did not,
+// which is four measurements holding up one number — so it is a schedule, not a guarantee, and the ladder below still
+// catches a rung that stalls under its own ceiling.
+const DEDUPE_RUNG_CEILING = { high: 180 };
+
+// The rungs worth trying for a digest of `count` findings, in ladder order. Never empty: when every ceiling is exceeded
+// the lowest rung is still tried, because stalling there costs time whereas refusing to try costs the merge outright.
+const dedupeRungs = (count) => {
+  const viable = dedupeEfforts.filter((rung) => count <= (DEDUPE_RUNG_CEILING[rung] ?? Infinity));
+
+  return viable.length ? viable : dedupeEfforts.slice(-1);
+};
+
 
 // --- Schemas -----------------------------------------------------------------------------------------------------
 const STRING_ARRAY = { type: 'array', items: { type: 'string' } };
@@ -731,12 +748,26 @@ const globalizeGroups = (groups, indices) =>
 // callers additionally sit inside `parallel()`, where a rejection resolves to `null`: one unit going un-deduped must
 // not cost the round the work every other unit already did.
 const dedupeAgent = async (issues, { label, roundTag, round }) => {
-  for (const dedupeEffort of dedupeEfforts) {
+  const rungs = dedupeRungs(issues.length);
+  const skipped = dedupeEfforts.filter((rung) => !rungs.includes(rung));
+
+  // Never silently: a rung not attempted is a decision the reader should see, the same as a rung that failed.
+  if (skipped.length) {
+    log(
+      `${label} in round ${round}: ${issues.length} findings is over the ceiling for ${skipped.join(', ')}, so it ` +
+        `starts at ${rungs[0]} instead of spending ~18 minutes per rung finding that out.`,
+    );
+  }
+
+  for (const dedupeEffort of rungs) {
     try {
       const dd = await agent(dedupePrompt(issues), {
-        // Fallback rungs name their effort, so a step-down is visible in `/workflows` rather than silent. It goes
-        // before the round tag: the rung is part of the agent's identity, and the round counter comes last, as always.
-        label: `${label}${dedupeEffort === dedupeEfforts[0] ? '' : `:${dedupeEffort}`}${roundTag}`,
+        // Every rung names its effort, the first one included. A step-down leaves the failed rung on screen in
+        // `/workflows` permanently with nothing tying it to the row that recovered, so `dedupe:cross (retry 5) FAILED`
+        // sitting above `dedupe:cross:medium` reads as a lost review rather than as a ladder working — it has misread
+        // that way in practice. Naming both makes the pair legible. The effort goes before the round tag: the rung is
+        // part of the agent's identity, and the round counter comes last, as always.
+        label: `${label}:${dedupeEffort}${roundTag}`,
         phase: 'Dedupe',
         model: 'opus',
         effort: dedupeEffort,

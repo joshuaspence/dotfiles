@@ -343,8 +343,19 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   `max` that killed all six attempts of a 155-finding round — and a stalled agent *throws*, so it failed a run that was
   42 of 43 agents done. The script now starts dedupe at `high` (107s to first token on that same round), steps down to
   `medium` on a stall, and catches the throw. Deciding *which* findings collide is shallow work — it returns indices and
-  the script does the merging — so the lower rung costs little. A step-down is visible in `/workflows` as
-  `dedupe:core:medium`.
+  the script does the merging — so the lower rung costs little.
+- **A `dedupe:…:high … (retry 5) FAILED` row is normal and is not a failed review.** Every rung names its effort, so a
+  step-down appears as two rows: the exhausted `dedupe:cross:high` stays on screen permanently, marked FAILED, and
+  `dedupe:cross:medium` beneath it is the one that answered. `/workflows` draws nothing connecting them. Before calling
+  a run lost, check for a lower rung and check `gaps` — the script only gives up on a merge after every rung fails, and
+  it says so there. Losing a rung costs deduplication, never findings.
+- Rungs a digest is known to overwhelm are skipped rather than attempted, because exhausting one costs six attempts at
+  180s — 18 minutes in which the run emits nothing and looks hung. `high` was measured answering 116 findings in 96s
+  and 163 in ~2 minutes, then killed on all six attempts at 209 and at 253; `medium` answered both, in ~140s. So above
+  180 findings the cross pass starts at `medium`, and the script logs that it did. Note what this does *not* fix: the
+  cross pass sees every survivor accumulated so far, so under `--loop` its digest grows every round regardless of how
+  well units are scoped. A long loop on a large repository can still walk past `medium`, and then dedupe degrades to a
+  `gaps` entry.
 - Dedupe also runs in two stages, because think time tracks how many findings one agent was handed and the ladder only
   buys one rung: a 163-finding round answered at `high`, a 253-finding round exhausted all six attempts and only landed
   at `medium`. So stage one runs an agent per unit in parallel (`dedupe:<unit>`, plus `dedupe:cross-cutting` for the
