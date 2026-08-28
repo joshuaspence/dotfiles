@@ -55,13 +55,19 @@ const INTERNALS = [
     'autoUnitTarget',
     'fileInUnit',
     'groupByFileCollision',
+    'issueSite',
+    'mergeIssueGroups',
+    'SEVERITY_ORDER',
+    'worstSeverity',
   ],
 
   // Prompt builders.
   ...[
     'architecturalLensPrompt',                                                                                          
     'bulletList',                                                                                                       
-    'claudeMdPrompt',                                                                                                   
+    'claudeMdPrompt',
+    'DEDUPE_DESCRIPTION_BUDGET',
+    'dedupeDigest',
     'dedupePrompt',                                                                                                     
     'fixerPrompt',                                                                                                      
     'fixReviewPrompt',                                                                                                  
@@ -78,6 +84,7 @@ const INTERNALS = [
   // Agent rosters and schemas.
   ...[
     'ARCHITECTURAL_LENSES',                                                                                             
+    'DEDUPE_SCHEMA',
     'FIX_RESULT_SCHEMA',                                                                                                
     'ISSUES_SCHEMA',
     'PARTITION_SCHEMA',                                                                                                 
@@ -244,10 +251,11 @@ export function fixScenario({
       case 'review':
         return { issues: issues.filter((subject) => subject.category === label.category) };
 
-      // Standing in for a real dedupe: collapse the six reviewers' overlapping reports back to the canonical set, which
-      // also fixes the finding order the per-finding labels index into.
+      // Standing in for a real dedupe. The agent only reports which findings collide, so "no duplicates" is the whole
+      // answer here: the script keeps the union in the order the reviewers produced it, which is the order the
+      // per-finding labels index into.
       case 'dedupe':
-        return { issues };
+        return { groups: [] };
 
       case 'validate':
         return (validate ?? (() => ({ confirmed: true, rationale: 'confirmed' })))(issues[label.idx], label);

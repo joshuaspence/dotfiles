@@ -189,6 +189,22 @@ const ISSUES_SCHEMA = {
   required: ['issues'],
 };
 
+// What the dedupe agent returns: which findings are duplicates, as indices — never the findings themselves. See
+// `dedupePrompt` for why echoing them back is not an option.
+const DEDUPE_SCHEMA = {
+  type: 'object',
+  properties: {
+    groups: {
+      type: 'array',
+      description:
+        'One entry per set of duplicates, each an array of two or more indices from the numbered list. Leave out ' +
+        'findings that have no duplicate, and never list an index in more than one group.',
+      items: { type: 'array', items: { type: 'integer' } },
+    },
+  },
+  required: ['groups'],
+};
+
 const SURVEY_SCHEMA = {
   type: 'object',
   properties: {
@@ -516,12 +532,87 @@ const claudeMdPrompt = () =>
   'List the repo-relative paths of every `CLAUDE.md` file in the repository (enumerate with `git ls-files`). Return ' +
   'only the paths — not their contents.';
 
+// --- Dedupe: the agent judges, the script copies -------------------------------------------------------------------
+// This phase used to hand the agent the whole union as JSON and ask it to return the merged findings. That made it
+// reproduce every finding verbatim, and `description` + `reason` are the bulk of a finding's text: on a 178-finding
+// round the required response was ~50k output tokens in a single generation. It never landed. Across two observed runs
+// (at `max` and at `xhigh`, so effort was never the cause) all nine attempts were cut off mid-generation having emitted
+// nothing at all — not one reached its structured-output call — and each retry re-sent a byte-identical prompt, so the
+// failure was deterministic. Deciding *which* findings collide is judgement; restating them is a copy, which is both
+// the expensive part and the part a model can silently get wrong. So the agent returns indices only and
+// `mergeIssueGroups` does the copying below, where a merge cannot reword, truncate, or drop a finding.
+
+// How much of each description the agent sees. Enough to recognise the same defect described twice; short enough that
+// the prompt does not grow without bound in the finding count.
+const DEDUPE_DESCRIPTION_BUDGET = 300;
+
+const issueSite = (issue) => (issue?.lines ? `${issue.file}:${issue.lines}` : issue?.file || '');
+
+const dedupeDigest = (issues) =>
+  issues
+    .map((issue, i) => {
+      const description = (issue?.description || '').replace(/\s+/g, ' ').slice(0, DEDUPE_DESCRIPTION_BUDGET);
+
+      return `${i}. [${issue?.severity}/${issue?.category}] ${issueSite(issue)} — ${description}`;
+    })
+    .join('\n');
+
 const dedupePrompt = (issues) =>
-  'Deduplicate the following review findings before validation. Merge only genuine duplicates — findings that share ' +
-  'a root cause, or the same file, line, and category — into one issue with a primary location and a list of the ' +
-  'other affected sites (`otherSites`), giving the merged issue the highest severity among those merged. When in ' +
-  "doubt, keep findings separate. Preserve each issue's description, severity, category, file, lines, and reason.\n\n" +
-  `Findings (${issues.length}):\n${JSON.stringify(issues, null, 2)}`;
+  'Identify the genuine duplicates among the following review findings. Two findings are duplicates when they share ' +
+  'a root cause, or name the same file, line, and category. When in doubt, keep them separate — a false merge hides ' +
+  'a real defect behind an unrelated one.\n\n' +
+  'Return `groups`: one array of indices per set of duplicates, using the numbers in the list below. Every index in ' +
+  'a group must refer to the same underlying defect. Give a group only when it has two or more members, never list ' +
+  'an index in more than one group, and leave out every finding that has no duplicate — a finding you do not ' +
+  'mention is kept exactly as it is. Do not restate the findings themselves; the indices are the whole answer.\n\n' +
+  'Answer from the list alone: do not read files and do not run any commands, since everything you need is below.\n\n' +
+  `Findings (${issues.length}):\n${dedupeDigest(issues)}`;
+
+// Severity is merged upward, so a duplicate reported once as `critical` and once as `low` survives as `critical`.
+const SEVERITY_ORDER = ['low', 'medium', 'high', 'critical'];
+
+const worstSeverity = (a, b) => (SEVERITY_ORDER.indexOf(b) > SEVERITY_ORDER.indexOf(a) ? b : a);
+
+// Apply the agent's groups to the findings it was shown. Every field is copied from the originals; the agent's answer
+// only decides *which* findings collapse. Malformed groups degrade to "not merged" rather than corrupting the set: an
+// out-of-range, non-integer, or already-claimed index is dropped, and a group left with fewer than two members is
+// ignored. First group to claim an index wins, so overlapping groups cannot delete a finding twice.
+const mergeIssueGroups = (issues, groups) => {
+  const claimed = new Set();
+  const primaries = new Map();
+
+  for (const group of Array.isArray(groups) ? groups : []) {
+    const members = [
+      ...new Set(
+        (Array.isArray(group) ? group : []).filter(
+          (i) => Number.isInteger(i) && i >= 0 && i < issues.length && !claimed.has(i),
+        ),
+      ),
+    ].sort((a, b) => a - b);
+
+    if (members.length < 2) continue;
+
+    members.forEach((i) => claimed.add(i));
+    primaries.set(members[0], members);
+  }
+
+  // Rebuilt in the original order: the primary keeps its place, so a dropped group changes nothing but the merge.
+  return issues.flatMap((issue, i) => {
+    if (!primaries.has(i)) return claimed.has(i) ? [] : [issue];
+
+    const members = primaries.get(i);
+    const others = members.slice(1).map((j) => issues[j]);
+    const primarySite = issueSite(issue);
+    const otherSites = [
+      ...new Set([
+        ...(issue.otherSites || []),
+        ...others.flatMap((other) => [issueSite(other), ...(other.otherSites || [])]),
+      ]),
+    ].filter((site) => site && site !== primarySite);
+
+    return [{ ...issue, severity: members.map((j) => issues[j].severity).reduce(worstSeverity), otherSites }];
+  });
+};
 
 const surveyPrompt = () =>
   `Survey ${scope} to orient a code review. Use \`${lsFiles}\` to enumerate the files in scope (do not walk the ` +
@@ -991,11 +1082,12 @@ for (let round = 1; round <= maxRounds; round++) {
     phase: 'Dedupe',
     model: 'opus',
     effort,
-    schema: ISSUES_SCHEMA,
+    schema: DEDUPE_SCHEMA,
   });
 
-  if (dd?.issues) {
-    deduped = dd.issues;
+  // `groups: []` is a real answer — "nothing collided" — so test for the key, not its truthiness.
+  if (dd?.groups) {
+    deduped = mergeIssueGroups(union, dd.groups);
     log(`Deduped round ${round}: ${union.length} -> ${deduped.length} finding(s) (${prevCount} before this round).`);
   } else {
     gaps.push(`Dedupe agent did not return in round ${round} — kept the raw, un-deduplicated findings for this round.`);
