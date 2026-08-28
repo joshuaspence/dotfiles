@@ -133,14 +133,27 @@ const reviewers = nonNegativeIntOr(input?.reviewers, 1);
 const FIX_REVISION_CAP = 2; // up to 2 revisions (3 total fix attempts) before a rejected fix is dropped.
 
 
-// --- Effort cap for the high-fan-out (leaf) agents ---------------------------------------------------------------
+// --- Effort caps -----------------------------------------------------------------------------------------------------
+// Clamp a requested effort down to a ceiling, never up: asking for `low` gets `low` everywhere.
+const capEffort = (e, ceiling) => (EFFORT_ORDER.indexOf(e) > EFFORT_ORDER.indexOf(ceiling) ? ceiling : e);
+
 // The per-unit reviewers (Review phase) and the validators (Validate phase) run at high multiplicity; launching many
 // concurrent `max` Opus inferences has been observed to intermittently stall, and the Review phase is a barrier, so a
-// single hung agent can wedge the run. Cap those leaf agents at `xhigh` (clamp only `max` down). The few surveyors,
-// the partitioner, the dedup agent, and the three architecture lenses keep the requested effort.
-const capLeaf = (e) =>
-  EFFORT_ORDER.indexOf(e) > EFFORT_ORDER.indexOf('xhigh') ? 'xhigh' : e;
+// single hung agent can wedge the run. Cap those leaf agents at `xhigh`. The surveyors, the partitioner and the three
+// architecture lenses keep the requested effort.
+const capLeaf = (e) => capEffort(e, 'xhigh');
 const leafEffort = capLeaf(effort);
+
+// Dedupe gets a tighter ceiling still, for a different reason. The harness kills any agent that makes no progress for
+// 180s, and dedupe is a single fan-in agent with no tools to call, so it streams nothing at all until its first token —
+// there is no progress to report while it thinks. A 155-finding round at `max` hit that watchdog on all six attempts
+// (`agent stalled on all 6 attempts (no progress for 180000ms each)`), while a reviewer in the same run spent 296s on a
+// 32k-character thinking block and was fine, because its tool calls kept reporting progress. The same prompt at `high`
+// reached its first token in 107s. So start at `high` and step down on a stall, never exceeding what was requested:
+// under the indices-only contract this is shallow judgement ("is finding i the same defect as finding j?"), so the
+// lower rung costs little.
+const DEDUPE_EFFORT_LADDER = ['high', 'medium'];
+const dedupeEfforts = [...new Set(DEDUPE_EFFORT_LADDER.map((e) => capEffort(e, effort)))];
 
 
 // --- Schemas -----------------------------------------------------------------------------------------------------
@@ -1077,13 +1090,29 @@ for (let round = 1; round <= maxRounds; round++) {
   phase('Dedupe');
   const prevCount = deduped.length;
   const union = [...deduped, ...roundIssues];
-  const dd = await agent(dedupePrompt(union), {
-    label: `dedupe${suffix}`,
-    phase: 'Dedupe',
-    model: 'opus',
-    effort,
-    schema: DEDUPE_SCHEMA,
-  });
+  // A stalled agent *throws*; it does not resolve to `null`. Because this call is a bare `await` rather than one arm of
+  // a `parallel()`, an unguarded throw propagates out of the script and fails the whole workflow — which is how a
+  // 155-finding round that was 42/43 agents done got discarded entirely, and which makes the `gaps` fallback below dead
+  // code for the one failure mode most likely to reach it. So catch, and step the effort down before giving up.
+  let dd = null;
+
+  for (const dedupeEffort of dedupeEfforts) {
+    try {
+      dd = await agent(dedupePrompt(union), {
+        // The fallback rungs name their effort so a step-down is visible in `/workflows` rather than silent.
+        label: `dedupe${suffix}${dedupeEffort === dedupeEfforts[0] ? '' : `:${dedupeEffort}`}`,
+        phase: 'Dedupe',
+        model: 'opus',
+        effort: dedupeEffort,
+        schema: DEDUPE_SCHEMA,
+      });
+    } catch (err) {
+      log(`Dedupe round ${round} stalled at effort ${dedupeEffort}: ${err?.message || err}`);
+      dd = null;
+    }
+
+    if (dd?.groups) break;
+  }
 
   // `groups: []` is a real answer — "nothing collided" — so test for the key, not its truthiness.
   if (dd?.groups) {

@@ -21,8 +21,11 @@ const INTERNALS = [
 
   // Argument handling and the config knobs derived from it.
   ...[
-    'capLeaf',                                                                                                          
-    'effort',                                                                                                           
+    'capEffort',
+    'capLeaf',
+    'DEDUPE_EFFORT_LADDER',
+    'dedupeEfforts',
+    'effort',
     'EFFORT_ORDER',                                                                                                     
     'fix',                                                                                                              
     'FIX_REVISION_CAP',                                                                                                 
@@ -187,6 +190,7 @@ export function fixScenario({
   survey = {},
   claudeMd = { paths: [] },
   headOnly,
+  dedupe,
   fix,
   reviewFix,
   reconcile,
@@ -253,9 +257,10 @@ export function fixScenario({
 
       // Standing in for a real dedupe. The agent only reports which findings collide, so "no duplicates" is the whole
       // answer here: the script keeps the union in the order the reviewers produced it, which is the order the
-      // per-finding labels index into.
+      // per-finding labels index into. An override receives the `call`, whose `opts.effort` names the ladder rung — and
+      // it may throw, which is how the real harness surfaces an agent killed by the no-progress watchdog.
       case 'dedupe':
-        return { groups: [] };
+        return (dedupe ?? (() => ({ groups: [] })))(call);
 
       case 'validate':
         return (validate ?? (() => ({ confirmed: true, rationale: 'confirmed' })))(issues[label.idx], label);
