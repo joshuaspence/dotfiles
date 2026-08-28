@@ -14,7 +14,6 @@ allowed-tools:
   - Bash(git branch:*)
   - Bash(git checkout:*)
   - Bash(git cherry-pick:*)
-  - Bash(git log:*)
   - Bash(git remote:*)
   - Bash(git rev-parse:*)
   - Bash(git show:*)
@@ -377,7 +376,7 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   regardless of this list; you neither need to nor can provision their tools from here. This list is therefore minimal:
   `Workflow` to run the review, `Write` for `--output`, the two read-only `git` commands used to build permalinks, the
   `git rev-parse`/`show`/`status` commands used to pre-flight the `--fix` commits against git, and the
-  `git switch`/`branch`/`cherry-pick`/`log`/`worktree`/`checkout` commands used to land them on the review branch, leave
+  `git switch`/`branch`/`cherry-pick`/`worktree`/`checkout` commands used to land them on the review branch, leave
   the working checkout as it was, and tear down the sandboxes they were built in. `git checkout` is there for exactly
   one purpose — restoring a path the landing sequence dirtied (step 5 of [Apply fixes](#apply-fixes)) — and is not a
   licence to edit files or resolve a conflict.
