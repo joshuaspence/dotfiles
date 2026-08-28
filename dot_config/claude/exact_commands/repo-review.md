@@ -12,14 +12,17 @@ argument-hint: >-
   [path ...]
 allowed-tools:
   - Bash(git branch:*)
-  - Bash(git checkout:*)
+  - Bash(git checkout --:*)
   - Bash(git cherry-pick:*)
-  - Bash(git remote:*)
+  - Bash(git remote get-url:*)
   - Bash(git rev-parse:*)
   - Bash(git show:*)
   - Bash(git status:*)
-  - Bash(git switch:*)
-  - Bash(git worktree:*)
+  - Bash(git switch -)
+  - Bash(git switch -c:*)
+  - Bash(git worktree list:*)
+  - Bash(git worktree prune:*)
+  - Bash(git worktree remove:*)
   - Workflow
   - Write
 ---
@@ -436,12 +439,22 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   — not the subagents the workflow launches. Those carry their own default tool pool, so reviewers and validators can
   `Read`, `Grep`, `Glob`, and `git ls-files`, and the `--fix` agents can `Edit` and commit in their own worktrees,
   regardless of this list; you neither need to nor can provision their tools from here. This list is therefore minimal:
-  `Workflow` to run the review, `Write` for `--output`, the two read-only `git` commands used to build permalinks, the
-  `git rev-parse`/`show`/`status` commands used to pre-flight the `--fix` commits against git, and the
-  `git switch`/`branch`/`cherry-pick`/`worktree`/`checkout` commands used to land them on the review branch, leave
-  the working checkout as it was, and tear down the sandboxes they were built in. `git checkout` is there for exactly
-  one purpose — restoring a path the landing sequence dirtied (step 5 of [Apply fixes](#apply-fixes)) — and is not a
-  licence to edit files or resolve a conflict.
+  `Workflow` to run the review, `Write` for `--output`, the two read-only commands `git rev-parse` and
+  `git remote get-url` used to build permalinks, the `git rev-parse`/`show`/`status` commands used to pre-flight the
+  `--fix` commits against git, and the `git switch`/`branch`/`cherry-pick`/`worktree`/`checkout` commands used to land
+  them on the review branch, leave the working checkout as it was, and tear down the sandboxes they were built in.
+  `git checkout` is there for exactly one purpose — restoring a path the landing sequence dirtied (step 5 of
+  [Apply fixes](#apply-fixes)) — and is not a licence to edit files or resolve a conflict.
+- Each entry is narrowed to the step that needs it, because prose and a permission pattern are two enforcement layers
+  and the pattern wins silently when they disagree: `Bash(git checkout:*)` pre-approved `--ours`/`--theirs`, which is
+  resolving a conflict by hand, and `Bash(git remote:*)` pre-approved `set-url`, neither of which the bullet above
+  claims to allow. Hence `git checkout --:*`, `git remote get-url:*`, `git switch -c:*` *and* `git switch -`, and one
+  entry each for `git worktree list`/`remove`/`prune`. `branch`, `cherry-pick`, `rev-parse`, `show` and `status` take
+  arguments computed at run time and cannot be usefully narrowed. A prefix rule matches only the exact string or the
+  string followed by a space, which is why bare `git switch -` needs a rule of its own — `git switch -c:*` does not
+  cover it — and why `git checkout --:*` still permits `git checkout -- .`, so the narrowing is partial. It is also
+  hygiene rather than a safety boundary: `allowed-tools` is allow-only, so a pattern that stops matching restores a
+  confirmation prompt and never removes a capability.
 - Cite each finding with a file path and line range, and link it if the repository has a GitHub remote. Follow this
   format precisely, otherwise the Markdown preview won't render correctly:
   https://github.com/anthropics/claude-code/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15
