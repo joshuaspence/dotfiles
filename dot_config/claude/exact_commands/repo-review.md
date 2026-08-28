@@ -26,11 +26,11 @@ allowed-tools:
 
 Provide a code review for an entire repository.
 
-The review runs as a committed **workflow** — `${CLAUDE_CONFIG_DIR}/workflows/repo-review.js` — which fans it out
-across subagents (survey → partition → review → dedup → validate) and returns validated findings. This command is a thin
-wrapper: parse the arguments below, run that script via the `Workflow` tool, and format what it returns. The algorithm
-itself — the phases, the per-step model tiers, the effort cap, the strict-majority rule, and the reviewer instructions —
-lives in the script; do not re-implement it here, and do not launch review subagents any other way.
+The review runs as a committed **workflow** — `repo-review`, referenced by name — which fans it out across subagents
+(survey → partition → review → dedup → validate) and returns validated findings. This command is a thin wrapper: parse
+the arguments below, run that workflow via the `Workflow` tool, and format what it returns. The algorithm itself — the
+phases, the per-step model tiers, the effort cap, the strict-majority rule, and the reviewer instructions — lives in the
+script; do not re-implement it here, and do not launch review subagents any other way.
 
 ## Parse arguments
 
@@ -111,9 +111,10 @@ collect each one as you scan the tokens instead of expecting a single run at eit
 
 Call the `Workflow` tool with:
 
-- `scriptPath` — the absolute path of `${CLAUDE_CONFIG_DIR}/workflows/repo-review.js`, with
-  `${CLAUDE_CONFIG_DIR}` expanded (the tool needs an absolute path, and the script lives under your config dir, not in
-  the repository being reviewed).
+- `name` — the string `repo-review`, and nothing else. Reference the workflow by name rather than by path: the harness
+  resolves a named workflow out of your Claude config directory itself, honouring `CLAUDE_CONFIG_DIR` and falling back
+  to `~/.claude`, so a hardcoded path would be wrong on any machine that does not set that variable the same way. Do
+  not substitute `scriptPath` — some sessions restrict this tool to named workflows and refuse a path outright.
 - `args` — aim for an **actual JSON object**: `args: { "paths": ["src"] }`, not `args: "{\"paths\": [\"src\"]}"`. In
   practice this call site has been observed to deliver the object JSON-encoded as a string every time, so the script
   parses that form rather than trusting the shape. You therefore do not need to work around it: build the object, pass
