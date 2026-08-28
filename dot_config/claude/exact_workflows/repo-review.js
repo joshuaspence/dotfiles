@@ -546,14 +546,17 @@ const claudeMdPrompt = () =>
   'only the paths — not their contents.';
 
 // --- Dedupe: the agent judges, the script copies -------------------------------------------------------------------
-// This phase used to hand the agent the whole union as JSON and ask it to return the merged findings. That made it
-// reproduce every finding verbatim, and `description` + `reason` are the bulk of a finding's text: on a 178-finding
-// round the required response was ~50k output tokens in a single generation. It never landed. Across two observed runs
-// (at `max` and at `xhigh`, so effort was never the cause) all nine attempts were cut off mid-generation having emitted
-// nothing at all — not one reached its structured-output call — and each retry re-sent a byte-identical prompt, so the
-// failure was deterministic. Deciding *which* findings collide is judgement; restating them is a copy, which is both
-// the expensive part and the part a model can silently get wrong. So the agent returns indices only and
-// `mergeIssueGroups` does the copying below, where a merge cannot reword, truncate, or drop a finding.
+// This phase used to hand the agent the whole union as JSON and ask it to return the merged findings, which made it
+// reproduce every finding verbatim — ~50k output tokens for a 178-finding round, from a 162k-character prompt where the
+// digest below needs 53k for a comparable round.
+//
+// That was NOT what kept killing the phase: the 180s no-progress watchdog was, at both contracts and every high effort
+// tier (see the effort ladder above). The split is kept because it is right on its own terms. Deciding *which* findings
+// collide is judgement; restating them is a copy — the expensive part, and the part a model can silently get wrong by
+// rewording, truncating, dropping, or reordering. Order matters especially: the per-finding validator and fixer labels
+// index into this array, and the old contract let the agent choose it. So the agent returns indices only and
+// `mergeIssueGroups` does the copying below, where none of that is possible. Leaving ~3x less input to reason over is
+// margin against that same watchdog, but margin is all it is — the effort ladder is the actual fix.
 
 // How much of each description the agent sees. Enough to recognise the same defect described twice; short enough that
 // the prompt does not grow without bound in the finding count.

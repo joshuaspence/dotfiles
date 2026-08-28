@@ -1,10 +1,11 @@
 /**
  * The dedupe contract: the agent reports which findings collide, the script does the merging.
  *
- * This split exists because the old contract — return the merged findings — required the agent to reproduce every
- * finding verbatim, which on a 178-finding round meant ~50k output tokens in one generation and failed on every one of
- * nine observed attempts without emitting anything. So these tests guard two things: that the merge itself is correct
- * and total (no finding invented, reworded, or silently dropped), and that the prompt keeps asking for indices rather
+ * The old contract — return the merged findings — made the agent reproduce every finding verbatim: ~50k output tokens
+ * on a 178-finding round, from a prompt 3x the size of the digest that replaced it. That was not why the phase kept
+ * failing (a 180s no-progress watchdog was, covered by `dedupe effort` and `dedupe stall` below), but restating
+ * findings is a copy a model can silently get wrong. So these tests guard two things: that the merge is correct and
+ * total — no finding invented, reworded, reordered, or dropped — and that the prompt keeps asking for indices rather
  * than drifting back to asking for findings.
  */
 
@@ -123,8 +124,9 @@ describe('dedupe merge', () => {
 
 describe('dedupe prompt', () => {
   it('asks for indices and explicitly not for the findings themselves', async () => {
-    // Asking for the findings back is the exact regression that broke this phase. The agent must be told the indices
-    // are the entire answer, or it will helpfully restate all of them and be cut off mid-generation.
+    // Drifting back to "return the merged findings" would restore every failure mode the script-side merge removes, and
+    // silently — a reworded finding still looks like a finding. The agent has to be told the indices are the entire
+    // answer, since restating them is the more natural thing for it to do.
     const { dedupePrompt } = await internals();
 
     const prompt = dedupePrompt(findings);
@@ -135,8 +137,8 @@ describe('dedupe prompt', () => {
   });
 
   it('tells the agent not to read files, since it wasted turns doing so', async () => {
-    // Observed in both failing runs: the agent opened with `ls -la` before stalling. It has no files to read — the
-    // digest is self-contained — so every tool call is spent against the window it then failed to finish in.
+    // Observed under the old contract: the agent opened with a `Bash` call, then stalled 183s after its result and was
+    // killed. The digest is self-contained, so exploring the repo only spends the window it has to answer in.
     const { dedupePrompt } = await internals();
 
     expect(dedupePrompt(findings)).toMatch(/do not read files and do not run any commands/i);
