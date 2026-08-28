@@ -4,6 +4,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+{{ include "shell/environment/_path.sh" -}}
+
 # Configuration
 # ~/.config/mise/config.toml: {{ include "dot_config/exact_mise/config.toml" | sha256sum }}
 {{- $destDir := .chezmoi.destDir -}}
