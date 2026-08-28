@@ -44,3 +44,30 @@ jobs:
         run: 'chezmoi init --promptBool "Enable personal profile=${{ matrix.personal }},Enable work profile=${{ matrix.work }}" .'
       - name: 'Run Chezmoi'
         run: 'chezmoi apply --keep-going'
+
+  unit:
+    name: 'Unit Tests (${{ matrix.directory }})'
+    runs-on: 'ubuntu-latest'
+    defaults:
+      run:
+        working-directory: '${{ matrix.directory }}'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: 'dot_config/claude'
+            provider: 'pnpm'
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v6'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/setup@v2.0.2'
+        if: "matrix.provider == 'pnpm'"
+        with:
+          cache: true
+      - name: 'Run tests'
+        run: 'pnpm run test'
+        if: "matrix.provider == 'pnpm'"
