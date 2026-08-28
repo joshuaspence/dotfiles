@@ -56,7 +56,9 @@ const INTERNALS = [
   // Grouping and sizing.
   ...[
     'autoUnitTarget',
+    'dedupeScopes',
     'fileInUnit',
+    'globalizeGroups',
     'groupByFileCollision',
     'issueSite',
     'mergeIssueGroups',
@@ -193,6 +195,7 @@ export function fixScenario({
   issues = [issue()],
   exclusions = [],
   unitPaths,
+  units,
   survey = {},
   claudeMd = { paths: [] },
   headOnly,
@@ -207,6 +210,17 @@ export function fixScenario({
   const handedOut = new Map();
   const unmatched = [];
   let reconcileCount = 0;
+
+  // The partition the whole run is shaped by: one unit holding every finding unless a test says otherwise. Reviewers
+  // are labelled per unit and dedupe is now scoped per unit, so both have to read the same roster.
+  const roster = units ?? [{ name: 'core', summary: 'the code', paths: unitPaths ?? filesOf(issues) }];
+
+  const inUnit = (subject, name) => {
+    const unit = roster.find((candidate) => candidate.name === name);
+
+    // No match means an architecture lens (`review:arch:<lens>`), which reads the whole repository rather than a unit.
+    return !unit || (unit.paths || []).some((path) => subject.file === path || subject.file.startsWith(`${path}/`));
+  };
 
   const defaultFix = (subject, { idx, attempt }) => ({
     status: 'applied',
@@ -247,19 +261,14 @@ export function fixScenario({
         return headOnly ?? null;
 
       case 'partition':
-        return {
-          units: [
-            {
-              name: 'core',
-              summary: 'the code',
-              paths: unitPaths ?? filesOf(issues),
-            },
-          ],
-          exclusions,
-        };
+        return { units: roster, exclusions };
 
+      // A reviewer only ever sees its own unit's files, so a finding in another unit is not its to report — handing it
+      // back from every unit would make one defect look like several and put it in more than one dedupe scope.
       case 'review':
-        return { issues: issues.filter((subject) => subject.category === label.category) };
+        return {
+          issues: issues.filter((subject) => subject.category === label.category && inUnit(subject, label.unit)),
+        };
 
       // Standing in for a real dedupe. The agent only reports which findings collide, so "no duplicates" is the whole
       // answer here: the script keeps the union in the order the reviewers produced it, which is the order the

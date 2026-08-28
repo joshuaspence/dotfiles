@@ -338,13 +338,21 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   review phase is a `parallel()` barrier, one hung agent can wedge the run; the cap keeps the many leaf agents off
   `max`, the only level observed to stall. A *silent* hang has no timeout to recover from — hence watching `/workflows`
   above.
-- The dedupe agent is capped harder still, and never runs at `max`, for a related but distinct reason. The harness kills
-  an agent that reports no progress for 180s, and dedupe calls no tools, so it reports nothing while it thinks. At
+- The dedupe agents are capped harder still, and never run at `max`, for a related but distinct reason. The harness
+  kills an agent that reports no progress for 180s, and dedupe calls no tools, so it reports nothing while it thinks. At
   `max` that killed all six attempts of a 155-finding round — and a stalled agent *throws*, so it failed a run that was
   42 of 43 agents done. The script now starts dedupe at `high` (107s to first token on that same round), steps down to
-  `medium` on a stall, and catches the throw so the worst case is un-deduplicated findings plus a `gaps` entry rather
-  than a lost review. Deciding *which* findings collide is shallow work — it returns indices and the script does the
-  merging — so the lower rung costs little. A step-down is visible in `/workflows` as `dedupe:medium`.
+  `medium` on a stall, and catches the throw. Deciding *which* findings collide is shallow work — it returns indices and
+  the script does the merging — so the lower rung costs little. A step-down is visible in `/workflows` as
+  `dedupe:core:medium`.
+- Dedupe also runs in two stages, because think time tracks how many findings one agent was handed and the ladder only
+  buys one rung: a 163-finding round answered at `high`, a 253-finding round exhausted all six attempts and only landed
+  at `medium`. So stage one runs an agent per unit in parallel (`dedupe:<unit>`, plus `dedupe:cross-cutting` for the
+  repo-wide findings no unit claims), and stage two runs one pass over the survivors (`dedupe:cross`) to catch a defect
+  reported under two different units. Stage one is a `parallel()` fan-out, so a stalled unit costs only that unit's
+  merges. Each partial failure is its own `gaps` entry, and they mean different things — a lost unit repeats a defect
+  *within* one unit, a lost cross pass repeats one *across* two. The worst case is still un-deduplicated findings plus a
+  gap rather than a lost review, and the cross pass is skipped when a single unit already held everything.
 - The Review phase costs roughly `units × 6 reviewers`, plus 3 architecture lenses, per round — so the unit count is
   the dominant cost lever. The script sizes it from the survey's file counts (see `--partitions`) and, on a scope of two
   files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like

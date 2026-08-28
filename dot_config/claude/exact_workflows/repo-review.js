@@ -145,13 +145,16 @@ const capLeaf = (e) => capEffort(e, 'xhigh');
 const leafEffort = capLeaf(effort);
 
 // Dedupe gets a tighter ceiling still, for a different reason. The harness kills any agent that makes no progress for
-// 180s, and dedupe is a single fan-in agent with no tools to call, so it streams nothing at all until its first token —
-// there is no progress to report while it thinks. A 155-finding round at `max` hit that watchdog on all six attempts
-// (`agent stalled on all 6 attempts (no progress for 180000ms each)`), while a reviewer in the same run spent 296s on a
+// 180s, and a dedupe agent has no tools to call, so it streams nothing at all until its first token — there is no
+// progress to report while it thinks. A 155-finding round at `max` hit that watchdog on all six attempts (`agent
+// stalled on all 6 attempts (no progress for 180000ms each)`), while a reviewer in the same run spent 296s on a
 // 32k-character thinking block and was fine, because its tool calls kept reporting progress. The same prompt at `high`
 // reached its first token in 107s. So start at `high` and step down on a stall, never exceeding what was requested:
 // under the indices-only contract this is shallow judgement ("is finding i the same defect as finding j?"), so the
 // lower rung costs little.
+//
+// The ladder is only half the defence, and the cheaper half. It buys one rung; think time keeps growing with the number
+// of findings handed over, so a big enough round exhausts both rungs. `dedupeScopes` below bounds that input instead.
 const DEDUPE_EFFORT_LADDER = ['high', 'medium'];
 const dedupeEfforts = [...new Set(DEDUPE_EFFORT_LADDER.map((e) => capEffort(e, effort)))];
 
@@ -556,7 +559,7 @@ const claudeMdPrompt = () =>
 // rewording, truncating, dropping, or reordering. Order matters especially: the per-finding validator and fixer labels
 // index into this array, and the old contract let the agent choose it. So the agent returns indices only and
 // `mergeIssueGroups` does the copying below, where none of that is possible. Leaving ~3x less input to reason over is
-// margin against that same watchdog, but margin is all it is — the effort ladder is the actual fix.
+// margin against that same watchdog, but margin is all it is — `dedupeScopes` is what bounds the input for real.
 
 // How much of each description the agent sees. Enough to recognise the same defect described twice; short enough that
 // the prompt does not grow without bound in the finding count.
@@ -628,6 +631,75 @@ const mergeIssueGroups = (issues, groups) => {
 
     return [{ ...issue, severity: members.map((j) => issues[j].severity).reduce(worstSeverity), otherSites }];
   });
+};
+
+// Split the union into the scopes dedupe runs over, so no single agent has to reason about every finding at once. One
+// fan-in agent over the whole round is what the watchdog keeps killing, and the effort ladder above only buys one rung:
+// measured on Opus at `high`, a 163-finding round answered in ~2 minutes and a 253-finding round was killed on all six
+// attempts, then answered at `medium`. Think time tracks the digest, so the durable fix is to shrink the digest.
+//
+// Units are the split already available: file-disjoint by construction, and most duplicates live inside one, because
+// the six reviewers all read the same code from different angles, so one defect can come back six times from a unit.
+// Cross-unit duplicates exist too, so a second pass over the survivors still runs — but it starts from a smaller set.
+//
+// A finding is scoped by its primary file, the same relation `fileInUnit` already uses to tell a reviewer which
+// findings are known. Overlapping unit paths would place one finding in two scopes; `mergeIssueGroups` awards an
+// index to the first group that claims it, so that degrades to "not merged twice", never to a lost finding.
+const dedupeScopes = (issues, units) => {
+  const scoped = (units || []).map((unit) => ({
+    name: unit.name,
+    indices: issues.flatMap((issue, i) => (fileInUnit(issue?.file, unit) ? [i] : [])),
+  }));
+
+  // Whatever the partition does not claim: the repo-wide architecture findings, plus anything naming a file the
+  // partitioner excluded or a reviewer misspelled. One shared bucket, so those are deduped against each other rather
+  // than skipped — they are the findings most likely to be reported three times, once per architectural lens.
+  const claimed = new Set(scoped.flatMap((scope) => scope.indices));
+  const unclaimed = issues.flatMap((issue, i) => (claimed.has(i) ? [] : [i]));
+
+  // A scope holding one finding has nothing to compare it against, so an agent there could only answer `groups: []`.
+  return [...scoped, ...(unclaimed.length ? [{ name: 'cross-cutting', indices: unclaimed }] : [])].filter(
+    (scope) => scope.indices.length > 1,
+  );
+};
+
+// Translate a scope's answer back into indices into the union. The agent numbers what it was shown from 0, so its
+// groups mean nothing without this. An index outside what it was shown is dropped here, because `mergeIssueGroups`
+// could not catch it: every scope-local index is also a valid union index, so the merge would collapse a stranger.
+const globalizeGroups = (groups, indices) =>
+  (Array.isArray(groups) ? groups : []).map((group) =>
+    (Array.isArray(group) ? group : [])
+      .filter((i) => Number.isInteger(i) && i >= 0 && i < indices.length)
+      .map((i) => indices[i]),
+  );
+
+// One dedupe agent, run down the effort ladder; returns its groups, or `null` once every rung has failed.
+//
+// A stalled agent *throws* rather than resolving to `null`, and an unguarded throw out of a bare `await` is how a round
+// that was 42 of 43 agents done got discarded whole. So each rung is wrapped, at both stages. Note that the stage-1
+// callers additionally sit inside `parallel()`, where a rejection resolves to `null`: one unit going un-deduped must
+// not cost the round the work every other unit already did.
+const dedupeAgent = async (issues, { label, roundTag, round }) => {
+  for (const dedupeEffort of dedupeEfforts) {
+    try {
+      const dd = await agent(dedupePrompt(issues), {
+        // Fallback rungs name their effort, so a step-down is visible in `/workflows` rather than silent. It goes
+        // before the round tag: the rung is part of the agent's identity, and the round counter comes last, as always.
+        label: `${label}${dedupeEffort === dedupeEfforts[0] ? '' : `:${dedupeEffort}`}${roundTag}`,
+        phase: 'Dedupe',
+        model: 'opus',
+        effort: dedupeEffort,
+        schema: DEDUPE_SCHEMA,
+      });
+
+      // `groups: []` is a real answer — "nothing collided" — so test for the key, not for a truthy array.
+      if (dd?.groups) return dd.groups;
+    } catch (err) {
+      log(`${label} in round ${round} stalled at effort ${dedupeEffort}: ${err?.message || err}`);
+    }
+  }
+
+  return null;
 };
 
 const surveyPrompt = () =>
@@ -1094,44 +1166,61 @@ for (let round = 1; round <= maxRounds; round++) {
     break;
   }
 
-  // Dedupe (Opus, one agent). A deterministic script cannot reason over findings, so this is delegated. Merge this
-  // round's raw findings into everything accumulated so far; the change in count is the round's novelty signal.
+  // Dedupe (Opus). A deterministic script cannot reason over findings, so this is delegated. Merge this round's raw
+  // findings into everything accumulated so far; the change in count is the round's novelty signal.
+  //
+  // Two stages: one agent per unit in parallel, then a single pass over what survives. See `dedupeScopes` for why the
+  // union is split rather than handed over whole — in short, one agent's share of the work has to stop growing with the
+  // size of the review, or the no-progress watchdog eventually wins whatever effort it is asked for.
   phase('Dedupe');
   const prevCount = deduped.length;
   const union = [...deduped, ...roundIssues];
-  // A stalled agent *throws*; it does not resolve to `null`. Because this call is a bare `await` rather than one arm of
-  // a `parallel()`, an unguarded throw propagates out of the script and fails the whole workflow — which is how a
-  // 155-finding round that was 42/43 agents done got discarded entirely, and which makes the `gaps` fallback below dead
-  // code for the one failure mode most likely to reach it. So catch, and step the effort down before giving up.
-  let dd = null;
 
-  for (const dedupeEffort of dedupeEfforts) {
-    try {
-      dd = await agent(dedupePrompt(union), {
-        // The fallback rungs name their effort so a step-down is visible in `/workflows` rather than silent. It goes
-        // before the round tag: which rung is part of the agent's identity, the round is the counter after it.
-        label: `dedupe${dedupeEffort === dedupeEfforts[0] ? '' : `:${dedupeEffort}`}${roundTag}`,
-        phase: 'Dedupe',
-        model: 'opus',
-        effort: dedupeEffort,
-        schema: DEDUPE_SCHEMA,
-      });
-    } catch (err) {
-      log(`Dedupe round ${round} stalled at effort ${dedupeEffort}: ${err?.message || err}`);
-      dd = null;
-    }
+  const scopes = dedupeScopes(union, units);
+  const scopeGroups = await parallel(
+    scopes.map(
+      (scope) => () =>
+        dedupeAgent(
+          scope.indices.map((i) => union[i]),
+          { label: `dedupe:${scope.name}`, roundTag, round },
+        ).then((groups) => (groups ? globalizeGroups(groups, scope.indices) : null)),
+    ),
+  );
 
-    if (dd?.groups) break;
+  const stalledScopes = scopes.filter((_, i) => !scopeGroups[i]).map((scope) => scope.name);
+
+  if (stalledScopes.length) {
+    gaps.push(
+      `Dedupe did not return for ${stalledScopes.length} of ${scopes.length} unit(s) in round ${round} ` +
+        `(${stalledScopes.join(', ')}) — those findings were kept raw, so one defect may be reported more than once.`,
+    );
   }
 
-  // `groups: []` is a real answer — "nothing collided" — so test for the key, not its truthiness.
-  if (dd?.groups) {
-    deduped = mergeIssueGroups(union, dd.groups);
-    log(`Deduped round ${round}: ${union.length} -> ${deduped.length} finding(s) (${prevCount} before this round).`);
-  } else {
-    gaps.push(`Dedupe agent did not return in round ${round} — kept the raw, un-deduplicated findings for this round.`);
-    deduped = union;
+  // Both stages merge against the list the agents were shown, so `afterUnits` is the union minus the intra-unit
+  // duplicates, still in reviewer order — which is the order the per-finding validator and fixer labels index into.
+  const afterUnits = mergeIssueGroups(union, scopeGroups.filter(Boolean).flat());
+
+  // The second stage exists to catch one defect reported under two different units, so it has nothing to add when a
+  // single scope already compared everything: re-asking would only spend a rung of the ladder on a settled question.
+  const wholeUnionScoped = scopes.length === 1 && scopes[0].indices.length === union.length;
+  const crossGroups =
+    wholeUnionScoped || afterUnits.length < 2
+      ? []
+      : await dedupeAgent(afterUnits, { label: 'dedupe:cross', roundTag, round });
+
+  if (crossGroups === null) {
+    gaps.push(
+      `The cross-unit dedupe pass did not return in round ${round} — duplicates inside a unit were still merged, but ` +
+        'one defect reported under two different units may appear twice.',
+    );
   }
+
+  deduped = crossGroups ? mergeIssueGroups(afterUnits, crossGroups) : afterUnits;
+
+  log(
+    `Deduped round ${round}: ${union.length} -> ${deduped.length} finding(s) over ${scopes.length} unit scope(s) ` +
+      `(${prevCount} before this round).`,
+  );
 
   // "Dry" = this round added no net-new findings after dedup. Only evaluated when looping; a single pass never checks
   // it. If we exhaust `maxRounds` while a round was still net-positive, the review did not converge.
