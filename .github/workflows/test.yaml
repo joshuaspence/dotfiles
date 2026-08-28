@@ -68,6 +68,12 @@ jobs:
         if: "matrix.provider == 'pnpm'"
         with:
           cache: true
+          cache-dependency-path: '${{ matrix.directory }}/pnpm-lock.yaml'
+          install: false
+          package-json-file: '${{ matrix.directory }}/package.json'
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+        if: "matrix.provider == 'pnpm'"
       - name: 'Run tests'
         run: 'pnpm run test'
         if: "matrix.provider == 'pnpm'"
