@@ -4,7 +4,7 @@
  * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
  * access.
  *
- * Inputs arrive on `args` as `{ path, effort, breadth, depth, loop, fix, reviewers }`, normalized through
+ * Inputs arrive on `args` as `{ path, effort, partitions, validators, loop, fix, reviewers }`, normalized through
  * `normalizeArgs` below because this call site delivers that object JSON-encoded as a string. The return value is
  * `{ findings, exclusions, gaps }`, plus a `fix` object (`{ base, sandboxBranches, commits, outcomes }`) when `--fix`
  * was requested.
@@ -78,8 +78,8 @@ const lsFiles = path ? `git ls-files -- ${path}` : 'git ls-files';
 
 
 // --- Configuration knobs ------------------------------------------------------------------------------------------
-// Each knob tolerates missing or malformed input. `effort` gates every agent (clamped to a known level). `breadth`
-// (partition-unit count) and `depth` (validators per finding) accept the sentinel 'auto' or a positive integer.
+// Each knob tolerates missing or malformed input. `effort` gates every agent (clamped to a known level). `partitions`
+// (review units) and `validators` (validators per finding) accept the sentinel 'auto' or a positive integer.
 const EFFORT_ORDER = ['low', 'medium', 'high', 'xhigh', 'max'];
 const effort = EFFORT_ORDER.includes(input?.effort) ? input.effort : 'high';
 
@@ -88,8 +88,8 @@ function positiveIntOr(value, fallback) {
   return Number.isNaN(n) || n < 1 ? fallback : n;
 }
 
-const breadth = input?.breadth === 'auto' ? 'auto' : positiveIntOr(input?.breadth, 'auto');
-const depth = input?.depth === 'auto' ? 'auto' : positiveIntOr(input?.depth, 1);
+const partitions = input?.partitions === 'auto' ? 'auto' : positiveIntOr(input?.partitions, 'auto');
+const validators = input?.validators === 'auto' ? 'auto' : positiveIntOr(input?.validators, 1);
 
 // `--loop` turns on multi-round "loop-until-dry" reviewing. The wrapper sends `loop: true` for a bare `--loop` and an
 // integer for `--loop <n>`; anything absent means a single pass. `maxRounds` caps how many times the Review+Dedupe body
@@ -737,7 +737,7 @@ function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
   );
 }
 
-// With `--breadth auto`, scale the unit count to how much code is actually in scope. A fixed 4-8 range suits a whole
+// With `--partitions auto`, scale the unit count to how much code is actually in scope. A fixed 4-8 range suits a whole
 // repository but is pathological for a narrow `path` scope: told to find at least four units in a single file, the
 // partitioner splits that file into conceptual slices, and since the Review phase is `units × REVIEWERS`, every
 // invented slice costs six more reviewers all re-reading the same file. A count of 0 means the survey returned no
@@ -751,9 +751,9 @@ const autoUnitTarget = (fileCount) =>
 
 function partitionPrompt(survey, fileCount) {
   const target =
-    breadth === 'auto'
+    partitions === 'auto'
       ? `Choose the number of units that best fits the scope, in ${autoUnitTarget(fileCount)}.`
-      : `Partition into exactly ${breadth} units.`;
+      : `Partition into exactly ${partitions} units.`;
 
   return (
     `Partition ${scope} into coherent review units, using the survey below. ${target} Each unit should be a module, ` +
@@ -791,7 +791,7 @@ function reviewerPrompt(reviewer, unit, survey, claudeMdPaths, roundCtx = {}) {
 const gaps = [];
 
 log(
-  `Config — effort: ${effort}, breadth: ${breadth}, depth: ${depth}, maxRounds: ${maxRounds}, ` +
+  `Config — effort: ${effort}, partitions: ${partitions}, validators: ${validators}, maxRounds: ${maxRounds}, ` +
     `fix: ${fix ? 'on' : 'off'}, reviewers: ${reviewers}, scope: ${path || 'whole repo'}.`,
 );
 
@@ -838,7 +838,7 @@ if (reviewHead) {
   log(`Reviewing at ${reviewHead.slice(0, 10)}.`);
 }
 
-// How much code is in scope, used below to scale the `auto` breadth range — a range right-sized for a repository is
+// How much code is in scope, used below to scale the `auto` partitions range — a range right-sized for a repository is
 // pathological for a `path` scope of a file or two. This must come from the survey's dedicated in-scope count and not
 // from summing `structure`: `structure` describes the whole repository whatever the scope, so summing it reported ~170
 // files for a single-file review and the range never narrowed. 0 means no usable count — treated as unknown, keeping
@@ -1005,7 +1005,7 @@ if (!converged) {
   );
 }
 
-// Phase 5 — Validate (barrier). Per issue, run `--depth` independent validators; keep on a strict majority of those
+// Phase 5 — Validate (barrier). Per issue, run `--validators` independent validators; keep on a strict majority of those
 // that return. High-risk categories validate with Opus, the rest with Sonnet; both at capped leaf effort.
 phase('Validate');
 const HIGH_RISK = ['architecture', 'bug', 'consistency', 'security'];
@@ -1018,17 +1018,17 @@ const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 const findingTag = (issue, idx) => `${issue.category}#${idx}`;
 
 // Name a member of a redundant group only when the group has more than one member. `vote 1/1` is noise, and under the
-// default `--depth 1` / `--reviewers 1` every label would carry it — which is how `validate:bug:3:0` came to end in a
+// default `--validators 1` / `--reviewers 1` every label would carry it — which is how `validate:bug:3:0` came to end in a
 // constant `:0` that looked like it meant something.
 const voteTag = (k, count) => (count > 1 ? ` vote ${k + 1}/${count}` : '');
 
 // Attempt 0 is the original fix; only the revisions need saying, counted from 1 as attempts rather than from 0.
 const attemptTag = (attempt) => (attempt > 0 ? ` attempt ${attempt + 1}` : '');
 
-// With `--depth auto`, high-risk categories get 3 independent validators and the rest get 1; an explicit depth
-// applies uniformly. `depth` was normalized to 'auto' or a positive integer at the top, so no parsing here.
+// With `--validators auto`, high-risk categories get 3 independent validators and the rest get 1; an explicit count
+// applies uniformly. `validators` was normalized to 'auto' or a positive integer at the top, so no parsing here.
 const validatorCount = (issue) =>
-  depth === 'auto' ? (isHighRisk(issue) ? 3 : 1) : depth;
+  validators === 'auto' ? (isHighRisk(issue) ? 3 : 1) : validators;
 
 const verdicts = await parallel(
   deduped.map((issue, idx) => async () => {

@@ -21,9 +21,7 @@ const INTERNALS = [
 
   // Argument handling and the config knobs derived from it.
   ...[
-    'breadth',                                                                                                          
     'capLeaf',                                                                                                          
-    'depth',                                                                                                            
     'effort',                                                                                                           
     'EFFORT_ORDER',                                                                                                     
     'fix',                                                                                                              
@@ -36,10 +34,12 @@ const INTERNALS = [
     'maxRounds',                                                                                                        
     'nonNegativeIntOr',                                                                                                 
     'normalizeArgs',                                                                                                    
+    'partitions',
     'path',                                                                                                             
     'positiveIntOr',                                                                                                    
     'reviewers',                                                                                                        
     'scope',
+    'validators',
   ],
 
   // Untrusted-input guards.
@@ -289,17 +289,17 @@ export function fixScenario({
 const filesOf = (issues) => [...new Set(issues.map((subject) => subject.file))];
 
 /**
- * Run a `--fix` review end to end. `depth` and `reviewers` are pinned to 1 so the number of validators and fix
- * reviewers is fixed rather than following the `auto` heuristics, which vary by category.
+ * Run a `--fix` review end to end. `validators` and `reviewers` are pinned to 1 so each finding gets one validator and
+ * each fix one reviewer, rather than following the `auto` heuristics, which vary by category.
  */
 export async function runFix({ args = {}, ...config } = {}) {
   const scenario = fixScenario(config);
   const run = await runWorkflow({
     scriptPath: SCRIPT,
     args: {
-      depth: 1,
       fix: true,
       reviewers: 1,
+      validators: 1,
       ...args,
     },
     agent: scenario.agent,

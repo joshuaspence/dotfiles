@@ -4,7 +4,7 @@ description: Review an entire repository
 argument-hint: >-
   [path]
   [--effort <low|medium|high|xhigh|max>]
-  [--breadth <n|auto>] [--depth <n|auto>]
+  [--partitions <n|auto>] [--validators <n|auto>]
   [--loop [<max-rounds>]
   [--fix]
   [--reviewers <n>]
@@ -52,20 +52,20 @@ not make it optional.
   the script uses `high`. Reject any other value and stop with an error rather than guessing. When given, pass it
   through unchanged — the script itself caps the high-fan-out agents at `xhigh` (see [Notes](#notes)); you do not clamp
   it here.
-- `--breadth <n|auto>` sets how many coherent review units the repository is partitioned into. Must be a positive
+- `--partitions <n|auto>` sets how many coherent review units the repository is partitioned into. Must be a positive
   integer or `auto`; reject any other value and stop with an error rather than guessing. If omitted, the script defaults
   it to `auto`, which lets the partitioner choose within a range the script scales to how many files are actually in
   scope — so a narrow `path` argument does not fan out as though it were the whole repository. Pass an explicit `n` to
   override that sizing in either direction.
-- `--depth <n|auto>` sets how many independent validators run per issue. Must be a positive integer or `auto`; reject
-  any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` — do not pass
-  `auto` yourself; `auto` applies only when the user explicitly asks for it. A fixed `n > 1` keeps an issue only on a
-  strict majority of its validators (≥2 of 3, ≥3 of 5); `auto` scales the count by risk (more for bugs, security,
+- `--validators <n|auto>` sets how many independent validators run per issue. Must be a positive integer or `auto`;
+  reject any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` — do not
+  pass `auto` yourself; `auto` applies only when the user explicitly asks for it. A fixed `n > 1` keeps an issue only on
+  a strict majority of its validators (≥2 of 3, ≥3 of 5); `auto` scales the count by risk (more for bugs, security,
   consistency, and architecture; a single validator for code-quality, test-critique, and `CLAUDE.md`). The script
   applies this rule — you only pass the value through.
 
-  `--breadth` and `--depth` are orthogonal to `--effort`: they scale how many agents run and how many times findings are
-  challenged, whereas `--effort` scales how hard each individual agent thinks.
+  `--partitions` and `--validators` are orthogonal to `--effort`: they scale how many agents run and how many times
+  findings are challenged, whereas `--effort` scales how hard each individual agent thinks.
 
 - `--loop [<max-rounds>]` turns on multi-round *loop-until-dry* reviewing. The script repeats its review-and-dedupe
   pass, accumulating de-duplicated findings and steering later rounds toward what earlier ones missed, and stops as soon
@@ -73,8 +73,8 @@ not make it optional.
   positive integer overrides that cap. Must be a positive integer when given; reject any other value and stop with an
   error rather than guessing. If omitted, the script runs a single pass. Pass it as `loop`: `true` for a bare flag, or
   the integer when one is given. `--loop` is a third, orthogonal axis: `--effort` scales how hard each agent thinks,
-  `--breadth`/`--depth` scale how many agents run and how often findings are challenged, and `--loop` scales how many
-  times the whole review repeats.
+  `--partitions`/`--validators` scale how many agents run and how often findings are challenged, and `--loop` scales how
+  many times the whole review repeats.
 
 - `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix, Review Fix, and
   Reconcile phases — one isolated agent per validated finding attempts a clean, verified fix and commits it, those fixes
@@ -82,7 +82,8 @@ not make it optional.
   a shared file — and returns a list of commits plus a per-finding outcome. This command then verifies those commits
   against git and lands the ones that check out, on a dedicated branch (see [Apply fixes](#apply-fixes)). If omitted,
   the review is strictly read-only, as before. Pass it as `fix`: `true` when present; omit it otherwise. `--fix` is
-  independent of the other flags (it fixes whatever the review, at whatever breadth/depth/effort/loop, validated).
+  independent of the other flags (it fixes whatever the review, at whatever partitions/validators/effort/loop,
+  validated).
 
 - `--reviewers <n>` sets how many independent reviewers judge each fix in the Review Fix phase (only meaningful with
   `--fix`). Must be a non-negative integer; reject any other value and stop with an error rather than guessing. If
@@ -90,7 +91,7 @@ not make it optional.
   is sent back to the fixer with the objection and re-reviewed, up to an internal revision cap, before being reported
   unfixed. **`--reviewers 0` disables the Review Fix phase entirely** — applied fixes go straight to reconciliation, as
   they did before this phase existed. Pass it through as `reviewers` when given; omit it otherwise. This is to *fixes*
-  what `--depth` is to *findings*.
+  what `--validators` is to *findings*.
 
 - `--output <file>` writes the report to that file in addition to the terminal. This command handles it; do **not** pass
   it to the script. It is the only flag you parse and then deliberately withhold — every other flag is either passed
@@ -110,15 +111,15 @@ Call the `Workflow` tool with:
   you built the right keys is not the same as checking you passed them as an object; only the second check was failing.
 
   Build it from **only the flags the user actually supplied**: add a key for each flag the user gave, and omit the rest.
-  The script fills in the documented defaults for anything omitted (whole repository, `--effort high`, `--breadth auto`,
-  `--depth 1`, a single review pass), so do not synthesise default values here, and never include `--output`. Worked
-  examples — note that a `path` survives every flag combination, and that the two path-less rows are path-less only
-  because the user gave no path:
+  The script fills in the documented defaults for anything omitted (whole repository, `--effort high`,
+  `--partitions auto`, `--validators 1`, a single review pass), so do not synthesise default values here, and never
+  include `--output`. Worked examples — note that a `path` survives every flag combination, and that the two path-less
+  rows are path-less only because the user gave no path:
 
   | Invocation                                            | `args`                                              |
   |-------------------------------------------------------|-----------------------------------------------------|
   | `/repo-review`                                        | `{}`                                                |
-  | `/repo-review src --breadth 6`                        | `{ "path": "src", "breadth": 6 }`                   |
+  | `/repo-review src --partitions 6`                     | `{ "path": "src", "partitions": 6 }`                |
   | `/repo-review --loop`                                 | `{ "loop": true }`                                  |
   | `/repo-review src --loop 3`                           | `{ "path": "src", "loop": 3 }`                      |
   | `/repo-review --fix`                                  | `{ "fix": true }`                                   |
@@ -226,8 +227,8 @@ of it — so the all-in figure has tended to land within roughly a factor of two
 order-of-magnitude expectation, not a second number to add — it is a rule of thumb, not measured.
 
 A worked example, from a 32-agent single-file `--fix` run — note that Opus is 79% of the tokens and 88% of the cost, so
-the per-tier split is the useful part of this summary, and the reviewer count (`--breadth` × 6, see [Notes](#notes)) is
-where it is actually spent:
+the per-tier split is the useful part of this summary, and the reviewer count (`--partitions` × 6, see
+[Notes](#notes)) is where it is actually spent:
 
 | Tier          | Agents | Tokens        | Output rate ($/1M) | Cost   |
 |---------------|--------|---------------|--------------------|--------|
@@ -312,13 +313,14 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
 
 - The script enforces what this command depends on, so you do not manage it here: it sets each agent's `model` tier
   (`haiku`/`sonnet`/`opus`) and its `effort`, and it caps the high-fan-out reviewers and validators at `xhigh`, clamping
-  `max` down. That cap is a deliberate reliability tradeoff — those agents run at high multiplicity (roughly `--breadth`
-  × 6 reviewers, plus validators per issue), and launching that many concurrent `max` Opus inferences has been observed
-  to intermittently stall (an agent gets its tool result and its next turn never arrives). Because the review phase is a
-  `parallel()` barrier, one hung agent can wedge the run; the cap keeps the many leaf agents off `max`, the only level
-  observed to stall. A *silent* hang has no timeout to recover from — hence watching `/workflows` above.
+  `max` down. That cap is a deliberate reliability tradeoff — those agents run at high multiplicity (roughly
+  `--partitions` × 6 reviewers, plus validators per issue), and launching that many concurrent `max` Opus inferences has
+  been observed to intermittently stall (an agent gets its tool result and its next turn never arrives). Because the
+  review phase is a `parallel()` barrier, one hung agent can wedge the run; the cap keeps the many leaf agents off
+  `max`, the only level observed to stall. A *silent* hang has no timeout to recover from — hence watching `/workflows`
+  above.
 - The Review phase costs roughly `units × 6 reviewers`, plus 3 architecture lenses, per round — so the unit count is
-  the dominant cost lever. The script sizes it from the survey's file counts (see `--breadth`) and, on a scope of two
+  the dominant cost lever. The script sizes it from the survey's file counts (see `--partitions`) and, on a scope of two
   files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like
   any other gap: architecture was **not reviewed**, not "clean".
 - The script resolves failures it can see: each fan-out runs under `parallel()`, which resolves a failed agent to

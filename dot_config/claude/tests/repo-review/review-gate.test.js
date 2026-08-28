@@ -11,7 +11,7 @@ import { issue, outcomeAt, runFix } from './scenario.js';
 describe('validation', () => {
   it('drops a finding that only half its validators confirm', async () => {
     // 1-of-2 is not a majority. Keeping it would put an unconfirmed finding in front of a fix agent.
-    const run = await runFix({ args: { depth: 2 }, validate: (subject, { vote }) => ({
+    const run = await runFix({ args: { validators: 2 }, validate: (subject, { vote }) => ({
       confirmed: vote === 0,
       rationale: 'split',
     }) });
@@ -22,7 +22,7 @@ describe('validation', () => {
   });
 
   it('keeps a finding two of three validators confirm', async () => {
-    const run = await runFix({ args: { depth: 3 }, validate: (subject, { vote }) => ({
+    const run = await runFix({ args: { validators: 3 }, validate: (subject, { vote }) => ({
       confirmed: vote !== 2,
       rationale: 'mostly agreed',
     }) });

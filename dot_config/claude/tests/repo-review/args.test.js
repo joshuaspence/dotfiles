@@ -15,7 +15,7 @@ describe('args arriving as a JSON string', () => {
     const scenario = fixScenario();
     const run = await runWorkflow({
       scriptPath: SCRIPT,
-      args: JSON.stringify({ fix: true, depth: 1, reviewers: 1, path: 'src' }),
+      args: JSON.stringify({ fix: true, validators: 1, reviewers: 1, path: 'src' }),
       agent: scenario.agent,
     });
 
