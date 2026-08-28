@@ -2,13 +2,14 @@
 name: Repo Review
 description: Review an entire repository
 argument-hint: >-
-  [path]
   [--effort <low|medium|high|xhigh|max>]
-  [--partitions <n|auto>] [--validators <n|auto>]
-  [--loop [<max-rounds>]
   [--fix]
-  [--reviewers <n>]
+  [--loop [<max-rounds>]]
   [--output <file>]
+  [--partitions <n|auto>]
+  [--reviewers <n>]
+  [--validators <n|auto>]
+  [path]
 allowed-tools:
   - Bash(git branch:*)
   - Bash(git checkout:*)
