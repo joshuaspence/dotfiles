@@ -9,7 +9,7 @@ argument-hint: >-
   [--partitions <n|auto>]
   [--reviewers <n>]
   [--validators <n|auto>]
-  [path]
+  [path ...]
 allowed-tools:
   - Bash(git branch:*)
   - Bash(git checkout:*)
@@ -37,17 +37,26 @@ lives in the script; do not re-implement it here, and do not launch review subag
 The arguments to this command are: `$ARGUMENTS`. Parse them as follows.
 
 **Invariant — account for every token.** Every token in `$ARGUMENTS` is exactly one of three things: a `--flag`, a value
-belonging to the `--flag` immediately before it, or the `path`. There is no fourth category and there is no token you
-may ignore. So: if a token is not a flag and not a preceding flag's value, it **is** the `path` — carry it through to
-`args`. Dropping it is not a harmless omission; it silently widens the review from one subtree to the entire repository,
-every phase then behaves correctly for that wider scope, and nothing downstream can detect the mistake. Adding a flag
-never removes the `path`: `path` is independent of `--fix`, `--output`, and every other flag, and combining them does
-not make it optional.
+belonging to the `--flag` immediately before it, or a `path`. There is no fourth category and there is no token you
+may ignore. So: if a token is not a flag and not a preceding flag's value, it **is** a path — carry it through to
+`args`, and carry through **every** such token rather than only the first. Dropping one is not a harmless omission: drop
+the only path and the review silently widens from one subtree to the entire repository; drop one of several and it
+silently narrows, so a subtree the user asked about is never opened. Either way every phase then behaves correctly for
+that wrong scope, and nothing downstream can detect the mistake. Adding a flag never removes a path: the paths are
+independent of `--fix`, `--output`, and every other flag, and combining them does not make any of them optional.
 
-- A bare `path` argument is an optional path that scopes the review to a subtree. If absent, review the whole
-  repository. When given, it applies throughout the script (survey, partition, and the per-unit reviewers cover only
-  that subtree; the architecture lenses still read the whole repo but report only defects involving it). Include it as
-  `path` when given; omit it when absent (the script then reviews the whole repository).
+Paths are not required to be contiguous or to come last — `/repo-review src --fix lib` supplies two of them — so
+collect each one as you scan the tokens instead of expecting a single run at either end.
+
+- Bare `path` arguments are optional and scope the review to the subtrees they name. Any number may be given: none
+  (review the whole repository), one, or several. When given they apply throughout the script (survey, partition, and
+  the per-unit reviewers cover only those subtrees; the architecture lenses still read the whole repo but report only
+  defects involving them). Pass them as `paths`, an **array of strings** in the order they appeared, e.g.
+  `["src", "lib"]` — and use the array form even for a single path (`["src"]`). Omit the key entirely when no path was
+  given; the script then reviews the whole repository. Each path may name a directory or a single file, and the two may
+  be mixed. The script drops blank entries and collapses exact duplicates, so `src src` scopes to `src` once; it cannot
+  tell that `src` and `src/a.js` overlap, though, and passing both merely makes the narrower one redundant — pass what
+  the user wrote and do not try to prune the list yourself.
 - `--effort <low|medium|high|xhigh|max>` sets the requested reasoning effort for the workflow's subagents. If omitted,
   the script uses `high`. Reject any other value and stop with an error rather than guessing. When given, pass it
   through unchanged — the script itself caps the high-fan-out agents at `xhigh` (see [Notes](#notes)); you do not clamp
@@ -55,7 +64,7 @@ not make it optional.
 - `--partitions <n|auto>` sets how many coherent review units the repository is partitioned into. Must be a positive
   integer or `auto`; reject any other value and stop with an error rather than guessing. If omitted, the script defaults
   it to `auto`, which lets the partitioner choose within a range the script scales to how many files are actually in
-  scope — so a narrow `path` argument does not fan out as though it were the whole repository. Pass an explicit `n` to
+  scope — so a narrow set of paths does not fan out as though it were the whole repository. Pass an explicit `n` to
   override that sizing in either direction.
 - `--validators <n|auto>` sets how many independent validators run per issue. Must be a positive integer or `auto`;
   reject any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` — do not
@@ -95,7 +104,8 @@ not make it optional.
 
 - `--output <file>` writes the report to that file in addition to the terminal. This command handles it; do **not** pass
   it to the script. It is the only flag you parse and then deliberately withhold — every other flag is either passed
-  through or absent — so take care that consuming `--output` and its filename does not also consume the `path`.
+  through or absent — so take care that consuming `--output` and its filename does not also consume a `path`. Its
+  filename is the value of the flag before it and is therefore never one of the `paths`, however path-like it looks.
 
 ## Run the workflow
 
@@ -104,41 +114,48 @@ Call the `Workflow` tool with:
 - `scriptPath` — the absolute path of `${CLAUDE_CONFIG_DIR}/workflows/repo-review.js`, with
   `${CLAUDE_CONFIG_DIR}` expanded (the tool needs an absolute path, and the script lives under your config dir, not in
   the repository being reviewed).
-- `args` — aim for an **actual JSON object**: `args: { "path": "src" }`, not `args: "{\"path\": \"src\"}"`. In practice
-  this call site has been observed to deliver the object JSON-encoded as a string every time, so the script parses that
-  form rather than trusting the shape. You therefore do not need to work around it: build the object, pass it, and move
-  on. In particular do **not** write a shim workflow to route past it, and do not deliberately send a string — one that
-  is not valid JSON cannot be recovered, and the script then reviews nothing and reports a gap. Note also that checking
-  you built the right keys is not the same as checking you passed them as an object; only the second check was failing.
+- `args` — aim for an **actual JSON object**: `args: { "paths": ["src"] }`, not `args: "{\"paths\": [\"src\"]}"`. In
+  practice this call site has been observed to deliver the object JSON-encoded as a string every time, so the script
+  parses that form rather than trusting the shape. You therefore do not need to work around it: build the object, pass
+  it, and move on. In particular do **not** write a shim workflow to route past it, and do not deliberately send a
+  string — one that is not valid JSON cannot be recovered, and the script then reviews nothing and reports a gap. Note
+  also that checking you built the right keys is not the same as checking you passed them as an object; only the second
+  check was failing.
 
   Build it from **only the flags the user actually supplied**: add a key for each flag the user gave, and omit the rest.
   The script fills in the documented defaults for anything omitted (whole repository, `--effort high`,
   `--partitions auto`, `--validators 1`, a single review pass), so do not synthesise default values here, and never
-  include `--output`. Worked examples — note that a `path` survives every flag combination, and that the two path-less
+  include `--output`. Worked examples — note that every `path` survives every flag combination, and that the path-less
   rows are path-less only because the user gave no path:
 
-  | Invocation                                            | `args`                                              |
-  |-------------------------------------------------------|-----------------------------------------------------|
-  | `/repo-review`                                        | `{}`                                                |
-  | `/repo-review src --partitions 6`                     | `{ "path": "src", "partitions": 6 }`                |
-  | `/repo-review --loop`                                 | `{ "loop": true }`                                  |
-  | `/repo-review src --loop 3`                           | `{ "path": "src", "loop": 3 }`                      |
-  | `/repo-review --fix`                                  | `{ "fix": true }`                                   |
-  | `/repo-review --fix --reviewers 2`                    | `{ "fix": true, "reviewers": 2 }`                   |
-  | `/repo-review src/a.js --fix`                         | `{ "path": "src/a.js", "fix": true }`               |
-  | `/repo-review src/a.js --output report.md`            | `{ "path": "src/a.js" }`                            |
-  | `/repo-review src/a.js --fix --output report.md`      | `{ "path": "src/a.js", "fix": true }`               |
-  | `/repo-review pkg --effort xhigh --fix --output r.md` | `{ "path": "pkg", "effort": "xhigh", "fix": true }` |
+  | Invocation                                            | `args`                                                 |
+  |-------------------------------------------------------|--------------------------------------------------------|
+  | `/repo-review`                                        | `{}`                                                   |
+  | `/repo-review src --partitions 6`                     | `{ "paths": ["src"], "partitions": 6 }`                |
+  | `/repo-review src lib`                                | `{ "paths": ["src", "lib"] }`                          |
+  | `/repo-review --loop`                                 | `{ "loop": true }`                                     |
+  | `/repo-review src --loop 3`                           | `{ "paths": ["src"], "loop": 3 }`                      |
+  | `/repo-review src lib --loop 3`                       | `{ "paths": ["src", "lib"], "loop": 3 }`               |
+  | `/repo-review --fix`                                  | `{ "fix": true }`                                      |
+  | `/repo-review --fix --reviewers 2`                    | `{ "fix": true, "reviewers": 2 }`                      |
+  | `/repo-review src/a.js --fix`                         | `{ "paths": ["src/a.js"], "fix": true }`               |
+  | `/repo-review src --fix lib`                          | `{ "paths": ["src", "lib"], "fix": true }`             |
+  | `/repo-review src/a.js src/b.js --fix`                | `{ "paths": ["src/a.js", "src/b.js"], "fix": true }`   |
+  | `/repo-review src/a.js --output report.md`            | `{ "paths": ["src/a.js"] }`                            |
+  | `/repo-review src/a.js --fix --output report.md`      | `{ "paths": ["src/a.js"], "fix": true }`               |
+  | `/repo-review pkg docs --fix --output r.md`           | `{ "paths": ["pkg", "docs"], "fix": true }`            |
+  | `/repo-review pkg --effort xhigh --fix --output r.md` | `{ "paths": ["pkg"], "effort": "xhigh", "fix": true }` |
 
-Before you call `Workflow`, state in one line the `args` object you built and the scope it implies — e.g. "Reviewing
-`src/a.js` (scoped) with `--fix`." — then check it against `$ARGUMENTS`: every non-flag token must appear as `path`. If
-you wrote "whole repository" but the user gave a path, you have dropped it; fix `args` before launching. Finalise every
-argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs in the background and
-returns a structured result when it finishes. Do not launch review subagents outside it, do not re-run it while it is in
-flight, and — importantly — do not stop and restart it merely to change a default or an argument you could have set at
-launch (a run already under way is not wrong just because you could have passed, or omitted, a value explicitly). The
-only reason to stop a run is a genuine wedge — most agents done, a few idle for many minutes — after which you may
-re-run, watching progress in `/workflows`, optionally at a lower `--effort`.
+Before you call `Workflow`, state in one line the `args` object you built and the scope it implies — naming every path,
+e.g. "Reviewing `src` and `lib` (scoped) with `--fix`." — then check it against `$ARGUMENTS`: every non-flag token must
+appear in `paths`, and `paths` must hold exactly as many entries as there were such tokens. If you wrote "whole
+repository" when the user gave a path, or named one subtree when they gave two, you have dropped one; fix `args` before
+launching. Finalise every argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs
+in the background and returns a structured result when it finishes. Do not launch review subagents outside it, do not
+re-run it while it is in flight, and — importantly — do not stop and restart it merely to change a default or an
+argument you could have set at launch (a run already under way is not wrong just because you could have passed, or
+omitted, a value explicitly). The only reason to stop a run is a genuine wedge — most agents done, a few idle for many
+minutes — after which you may re-run, watching progress in `/workflows`, optionally at a lower `--effort`.
 
 The result is `{ findings, exclusions, gaps }`:
 

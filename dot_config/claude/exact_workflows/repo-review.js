@@ -4,7 +4,7 @@
  * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
  * access.
  *
- * Inputs arrive on `args` as `{ path, effort, partitions, validators, loop, fix, reviewers }`, normalized through
+ * Inputs arrive on `args` as `{ paths, effort, partitions, validators, loop, fix, reviewers }`, normalized through
  * `normalizeArgs` below because this call site delivers that object JSON-encoded as a string. The return value is
  * `{ findings, exclusions, gaps }`, plus a `fix` object (`{ base, sandboxBranches, commits, outcomes }`) when `--fix`
  * was requested.
@@ -72,9 +72,28 @@ if (typeof args === 'string' && (!input || typeof input !== 'object')) {
   };
 }
 
-const path = input?.path;
-const scope = path ? `the subtree \`${path}\`` : 'the whole repository';
-const lsFiles = path ? `git ls-files -- ${path}` : 'git ls-files';
+// `paths` scopes the review to one or more subtrees. The wrapper sends an array, but a lone string and the older
+// singular `path` key are both accepted: a shape mismatch here does not fail loudly, it silently reviews the whole
+// repository while every later phase behaves correctly for that wider scope, so there is nothing downstream to catch
+// it. Blank entries are dropped and duplicates collapsed, since `git ls-files -- src src` double-counts nothing but a
+// duplicate still reaches the agents as prose implying two distinct scopes.
+function normalizePaths(value) {
+  const list = Array.isArray(value) ? value : [value];
+
+  return [...new Set(list.filter((p) => typeof p === 'string' && p.trim() !== '').map((p) => p.trim()))];
+}
+
+const paths = normalizePaths(input?.paths ?? input?.path);
+
+// The scope rendered three ways: as a backticked list for prose, as the phrase naming it, and as the pathspec the
+// agents enumerate with. Each path is quoted in the pathspec — with several of them, an unquoted path containing a
+// space would split into two pathspecs and widen the scope rather than fail.
+const pathList = paths.map((p) => `\`${p}\``).join(', ');
+const scope =
+  paths.length === 0 ? 'the whole repository'
+  : paths.length === 1 ? `the subtree ${pathList}`
+  : `the subtrees ${pathList}`;
+const lsFiles = paths.length ? `git ls-files -- ${paths.map((p) => `'${p}'`).join(' ')}` : 'git ls-files';
 
 
 // --- Configuration knobs ------------------------------------------------------------------------------------------
@@ -722,8 +741,9 @@ function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
     }
   }
 
-  const scopeNote = path
-    ? ` A path scope is in effect (\`${path}\`): examine the whole repository but report only defects that involve that subtree.`
+  const scopeNote = paths.length
+    ? ` A path scope is in effect (${pathList}): examine the whole repository but report only defects that involve ` +
+      `${paths.length > 1 ? 'those subtrees' : 'that subtree'}.`
     : '';
 
   return (
@@ -792,7 +812,7 @@ const gaps = [];
 
 log(
   `Config — effort: ${effort}, partitions: ${partitions}, validators: ${validators}, maxRounds: ${maxRounds}, ` +
-    `fix: ${fix ? 'on' : 'off'}, reviewers: ${reviewers}, scope: ${path || 'whole repo'}.`,
+    `fix: ${fix ? 'on' : 'off'}, reviewers: ${reviewers}, scope: ${paths.join(', ') || 'whole repo'}.`,
 );
 
 // Phase 1 — Survey: the repository survey and the CLAUDE.md scan, concurrently (both Haiku, full requested effort).

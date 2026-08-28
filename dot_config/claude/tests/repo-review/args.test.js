@@ -73,6 +73,51 @@ describe('knobs', () => {
   });
 });
 
+describe('path scope', () => {
+  it('scopes the review to several subtrees at once', async () => {
+    const { paths, scope, lsFiles } = await internals({ paths: ['src', 'lib'] });
+
+    expect(paths).toEqual(['src', 'lib']);
+    expect(scope).toBe('the subtrees `src`, `lib`');
+    expect(lsFiles).toBe("git ls-files -- 'src' 'lib'");
+  });
+
+  it('accepts a lone string and the singular key, so a scope is never dropped on a shape mismatch', async () => {
+    // A dropped scope does not fail: it reviews the whole repository while every later phase behaves correctly for
+    // that wider scope, so nothing downstream can detect it.
+    expect((await internals({ paths: 'src' })).scope).toBe('the subtree `src`');
+    expect((await internals({ path: 'src' })).scope).toBe('the subtree `src`');
+    expect((await internals({ path: ['src', 'lib'] })).paths).toEqual(['src', 'lib']);
+  });
+
+  it('drops blank entries and collapses duplicates', async () => {
+    // A duplicate costs nothing in the pathspec but reaches the agents as prose implying two distinct scopes.
+    expect((await internals({ paths: ['src', ' ', 'src', ' lib ', null] })).paths).toEqual(['src', 'lib']);
+  });
+
+  it('reviews the whole repository when no path is given', async () => {
+    const { paths, scope, lsFiles } = await internals({});
+
+    expect(paths).toEqual([]);
+    expect(scope).toBe('the whole repository');
+    expect(lsFiles).toBe('git ls-files');
+  });
+
+  it('names every subtree to the architecture lenses, which still read the whole repository', async () => {
+    const { architecturalLensPrompt, ARCHITECTURAL_LENSES } = await internals({ paths: ['src', 'lib'] });
+    const prompt = architecturalLensPrompt(ARCHITECTURAL_LENSES[0], { languages: ['TypeScript'] }, []);
+
+    expect(prompt).toContain('A path scope is in effect (`src`, `lib`)');
+    expect(prompt).toContain('report only defects that involve those subtrees');
+  });
+
+  it('logs the scope it is running with', async () => {
+    const run = await runFix({ args: { paths: ['src', 'lib'] } });
+
+    expect(run.logs[0]).toContain('scope: src, lib');
+  });
+});
+
 describe('without --fix', () => {
   it('returns a read-only result and runs no fix agents', async () => {
     const run = await runFix({ args: { fix: false } });
