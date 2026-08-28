@@ -280,15 +280,33 @@ describe('round labels', () => {
   // Converge on the second round: round 1's finding is novel, round 2 re-reports it and dedupe collapses the pair.
   const convergeOnRound2 = (call) => ({ groups: unionSize(call) > 1 ? [[0, 1]] : [] });
 
-  it('marks every round of a looped run, including the first', async () => {
+  it('counts every round of a looped run, including the first', async () => {
     // `dedupe` then `dedupe:r2` labelled the same agent two ways inside one run, and read as though round 1 were the
-    // odd one out rather than simply the first.
+    // odd one out rather than simply the first. The counter names the cap too, like `vote k/n`.
     const run = await runFix({ args: { loop: 2 }, dedupe: convergeOnRound2 });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:r1', 'dedupe:r2']);
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe round 1/2', 'dedupe round 2/2']);
     expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual([
-      'review:core:bug:r1',
-      'review:core:bug:r2',
+      'review:core:bug round 1/2',
+      'review:core:bug round 2/2',
+    ]);
+  });
+
+  it('puts a stepped-down dedupe rung before the round, keeping colons for identity', async () => {
+    const run = await runFix({
+      args: { loop: 2 },
+      dedupe: (call) => {
+        if (call.opts.effort === 'high') throw new Error('agent stalled');
+
+        return convergeOnRound2(call);
+      },
+    });
+
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual([
+      'dedupe round 1/2',
+      'dedupe:medium round 1/2',
+      'dedupe round 2/2',
+      'dedupe:medium round 2/2',
     ]);
   });
 

@@ -107,7 +107,13 @@ export const internals = (args = {}) => loadInternals(SCRIPT, { names: INTERNALS
 // answer per-finding from the label alone. Mirrors `findingTag` / `attemptTag` / `voteTag`.
 const PER_FINDING = /^(fix|revise|review-fix|validate):(.+?)#(\d+)(?: attempt (\d+))?(?: vote (\d+)\/(\d+))?$/;
 
-export function parseLabel(label = '') {
+// A `--loop` round appends ` round k/n` to every label in the round. Strip it first: no scenario answers differently by
+// round, and left on it would land inside the last colon segment a review label is split into — silently reading as the
+// category `bug round 2/4`, which matches no finding.
+const ROUND_TAG = / round \d+\/\d+$/;
+
+export function parseLabel(rawLabel = '') {
+  const label = rawLabel.replace(ROUND_TAG, '');
   const perFinding = PER_FINDING.exec(label);
 
   if (perFinding) {

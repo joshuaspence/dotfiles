@@ -1026,11 +1026,13 @@ if (!runLenses) {
 }
 
 for (let round = 1; round <= maxRounds; round++) {
-  // Round marker on every agent label in the round, keyed on whether looping was asked for rather than on the round
-  // number: `round > 1` would label round 1 `dedupe` and round 2 `dedupe:r2`, so within one looped run the same agent
-  // appears under two naming schemes and round 1 reads as "the un-rounded one". A single pass keeps bare labels —
-  // there is only ever one round to name, and label is part of the resume cache key.
-  const suffix = loopEnabled ? `:r${round}` : '';
+  // Round marker on every agent label in the round, in the shape the per-finding phases below already use for a
+  // which-of-many counter: a space-delimited ` round k/n` after the colon-delimited identity, suppressed when there is
+  // only one — the rule `voteTag` applies to `vote 1/1`. So a single pass keeps bare labels (which also keeps them out
+  // of the resume cache key, part of which is the label) and a looped run reads `dedupe round 1/4`, saying what
+  // `dedupe:r2` did not: that rounds are counted, how many there may be, and that round 1 is one of them rather than
+  // the un-suffixed default. `n` is the cap, not a promise — the loop stops early once a round comes back dry.
+  const roundTag = maxRounds > 1 ? ` round ${round}/${maxRounds}` : '';
 
   // Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full effort.
   // This must complete before dedup, which reasons over every finding, so it runs as a single `parallel()` barrier.
@@ -1038,7 +1040,7 @@ for (let round = 1; round <= maxRounds; round++) {
   const reviewSpecs = [
     ...units.flatMap((unit) =>
       REVIEWERS.map((reviewer) => ({
-        label: `review:${unit.name}:${reviewer.key}${suffix}`,
+        label: `review:${unit.name}:${reviewer.key}${roundTag}`,
         model: reviewer.model,
         effort: leafEffort,
         category: reviewer.key,
@@ -1050,7 +1052,7 @@ for (let round = 1; round <= maxRounds; round++) {
     ),
     ...(runLenses
       ? ARCHITECTURAL_LENSES.map((lens) => ({
-          label: `review:arch:${lens.key}${suffix}`,
+          label: `review:arch:${lens.key}${roundTag}`,
           model: 'opus',
           effort,
           category: 'architecture',
@@ -1106,8 +1108,9 @@ for (let round = 1; round <= maxRounds; round++) {
   for (const dedupeEffort of dedupeEfforts) {
     try {
       dd = await agent(dedupePrompt(union), {
-        // The fallback rungs name their effort so a step-down is visible in `/workflows` rather than silent.
-        label: `dedupe${suffix}${dedupeEffort === dedupeEfforts[0] ? '' : `:${dedupeEffort}`}`,
+        // The fallback rungs name their effort so a step-down is visible in `/workflows` rather than silent. It goes
+        // before the round tag: which rung is part of the agent's identity, the round is the counter after it.
+        label: `dedupe${dedupeEffort === dedupeEfforts[0] ? '' : `:${dedupeEffort}`}${roundTag}`,
         phase: 'Dedupe',
         model: 'opus',
         effort: dedupeEffort,
