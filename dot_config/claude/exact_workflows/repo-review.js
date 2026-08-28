@@ -1026,7 +1026,11 @@ if (!runLenses) {
 }
 
 for (let round = 1; round <= maxRounds; round++) {
-  const suffix = round > 1 ? `:r${round}` : '';
+  // Round marker on every agent label in the round, keyed on whether looping was asked for rather than on the round
+  // number: `round > 1` would label round 1 `dedupe` and round 2 `dedupe:r2`, so within one looped run the same agent
+  // appears under two naming schemes and round 1 reads as "the un-rounded one". A single pass keeps bare labels —
+  // there is only ever one round to name, and label is part of the resume cache key.
+  const suffix = loopEnabled ? `:r${round}` : '';
 
   // Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full effort.
   // This must complete before dedup, which reasons over every finding, so it runs as a single `parallel()` barrier.

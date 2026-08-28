@@ -272,6 +272,34 @@ describe('dedupe stall', () => {
   });
 });
 
+describe('round labels', () => {
+  // Every agent in a round carries the same round marker, so the two rules below are one convention. The round is read
+  // out of the prompt rather than the label, since the label is what is under test.
+  const unionSize = (call) => Number(/Findings \((\d+)\)/.exec(call.prompt)[1]);
+
+  // Converge on the second round: round 1's finding is novel, round 2 re-reports it and dedupe collapses the pair.
+  const convergeOnRound2 = (call) => ({ groups: unionSize(call) > 1 ? [[0, 1]] : [] });
+
+  it('marks every round of a looped run, including the first', async () => {
+    // `dedupe` then `dedupe:r2` labelled the same agent two ways inside one run, and read as though round 1 were the
+    // odd one out rather than simply the first.
+    const run = await runFix({ args: { loop: 2 }, dedupe: convergeOnRound2 });
+
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:r1', 'dedupe:r2']);
+    expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual([
+      'review:core:bug:r1',
+      'review:core:bug:r2',
+    ]);
+  });
+
+  it('leaves a single pass unmarked, where there is no other round to tell it apart from', async () => {
+    const run = await runFix();
+
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe']);
+    expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual(['review:core:bug']);
+  });
+});
+
 describe('dedupe schema', () => {
   it('requires groups, so a silent omission cannot read as a clean round', async () => {
     const { DEDUPE_SCHEMA } = await internals();
