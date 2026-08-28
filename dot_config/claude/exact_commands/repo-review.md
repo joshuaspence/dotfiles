@@ -353,6 +353,13 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   merges. Each partial failure is its own `gaps` entry, and they mean different things — a lost unit repeats a defect
   *within* one unit, a lost cross pass repeats one *across* two. The worst case is still un-deduplicated findings plus a
   gap rather than a lost review, and the cross pass is skipped when a single unit already held everything.
+- Both phases label a unit by a short slug rather than the prose name the partition agent chose, so a unit named "Wire
+  Protocol Layer" appears as `review:wire-protocol:bug` and `dedupe:wire-protocol`. `/workflows` clips a label at around
+  40 columns from the right, and with a title-cased name it was clipping the *category* — the one segment saying which
+  of six reviewers a row is. The script caps the slug at 16 characters so `review:` plus the slug plus the longest
+  category still fits, leaving only the `--loop` round tag to overflow, and it numbers slugs that collide
+  (`wire-protocol-2`) so two units are never one indistinguishable row. Reviewers are still told the prose name, so use
+  that when you describe a unit in the output — the slug is for reading the progress tree, not for the report.
 - The Review phase costs roughly `units × 6 reviewers`, plus 3 architecture lenses, per round — so the unit count is
   the dominant cost lever. The script sizes it from the survey's file counts (see `--partitions`) and, on a scope of two
   files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like

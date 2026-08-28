@@ -63,6 +63,9 @@ const INTERNALS = [
     'issueSite',
     'mergeIssueGroups',
     'SEVERITY_ORDER',
+    'UNIT_SLUG_CAP',
+    'unitSlug',
+    'withUnitSlugs',
     'worstSeverity',
   ],
 
@@ -215,8 +218,18 @@ export function fixScenario({
   // are labelled per unit and dedupe is now scoped per unit, so both have to read the same roster.
   const roster = units ?? [{ name: 'core', summary: 'the code', paths: unitPaths ?? filesOf(issues) }];
 
-  const inUnit = (subject, name) => {
-    const unit = roster.find((candidate) => candidate.name === name);
+  // A label carries the unit's *slug*, not the name the partition returned, and the script derives that slug by
+  // lower-casing, kebab-casing and then cutting to a cap — so a prose name arrives here shortened. Matching on a prefix
+  // of the same normalization recovers the unit without this fixture reimplementing `unitSlug`'s cap and word-boundary
+  // rules, which would be a mirror free to drift.
+  const labelish = (name) =>
+    String(name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+  const inUnit = (subject, slug) => {
+    const unit = roster.find((candidate) => labelish(candidate.name).startsWith(slug));
 
     // No match means an architecture lens (`review:arch:<lens>`), which reads the whole repository rather than a unit.
     return !unit || (unit.paths || []).some((path) => subject.file === path || subject.file.startsWith(`${path}/`));

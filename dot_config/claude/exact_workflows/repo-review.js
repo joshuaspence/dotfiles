@@ -456,6 +456,57 @@ const knownFindingsBlock = (known) =>
 const fileInUnit = (file, unit) =>
   !!file && (unit.paths || []).some((p) => file === p || file.startsWith(p.endsWith('/') ? p : `${p}/`));
 
+// A unit's name is prose the partition agent wrote, and it lands inside two agent labels: `review:<unit>:<category>`
+// and `dedupe:<unit>`. `/workflows` clips a label to about 40 columns from the right, so a title-cased name spends the
+// budget the category needs — `review:Wire Protocol Layer:code-quality` was observed truncated to `…code-quality…`,
+// losing which reviewer the row even was. The runtime does not truncate a label it is handed (it only collapses
+// whitespace), so the whole budget is ours to spend.
+//
+// Hence a slug, sized so the parts that identify an agent always survive: `review:` plus a cap plus the longest
+// category (`test-critique`) has to stay under that budget, which puts the cap at 16. What overflows is then the round
+// tag, the one segment a reader can infer from context. A prose name is still what the reviewer is told to review.
+const UNIT_SLUG_CAP = 16;
+
+const unitSlug = (name) => {
+  const slug = String(name || '')
+    // Split camel case before lower-casing throws the boundary away, so `AuthenticationMiddleware` and `Authentication
+    // Middleware` name the same unit the same way instead of one 24-character word and two shorter ones.
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  if (slug.length <= UNIT_SLUG_CAP) return slug;
+
+  const clipped = slug.slice(0, UNIT_SLUG_CAP);
+
+  // A cut landing exactly on a boundary already ends a word, so there is no partial segment to drop.
+  if (slug[UNIT_SLUG_CAP] === '-') return clipped;
+
+  // Otherwise cut back to the previous boundary, so `wire-protocol-layer` reads as `wire-protocol` and not as
+  // `wire-protocol-la` — which reads as a bug. Only while enough survives to still identify the unit, though: cutting
+  // `a-superlongwordhere` back to `a` trades a name that looks broken for one that says nothing.
+  const boundary = clipped.lastIndexOf('-');
+
+  return boundary >= UNIT_SLUG_CAP / 2 ? clipped.slice(0, boundary) : clipped;
+};
+
+// Stamp each unit with the slug its agents are labelled by. Slugging maps distinct names onto the same slug — "Wire
+// Protocol Layer" and "Wire Protocol Framing" both reach `wire-protocol` — and two units answering to one label would
+// be two indistinguishable rows in `/workflows` and, in the dedupe phase, two scopes reported under one name. So
+// number the repeats. A name that slugs away to nothing at all still needs something to be called.
+const withUnitSlugs = (units) => {
+  const used = new Map();
+
+  return (units || []).map((unit, i) => {
+    const base = unitSlug(unit?.name) || `unit-${i + 1}`;
+    const seen = (used.get(base) || 0) + 1;
+
+    used.set(base, seen);
+
+    return { ...unit, slug: seen > 1 ? `${base}-${seen}` : base };
+  });
+};
 
 // --- Per-unit reviewers (Agents 1-6) -----------------------------------------------------------------------------
 const REVIEWERS = [
@@ -647,7 +698,7 @@ const mergeIssueGroups = (issues, groups) => {
 // index to the first group that claims it, so that degrades to "not merged twice", never to a lost finding.
 const dedupeScopes = (issues, units) => {
   const scoped = (units || []).map((unit) => ({
-    name: unit.name,
+    name: unit.slug,
     indices: issues.flatMap((issue, i) => (fileInUnit(issue?.file, unit) ? [i] : [])),
   }));
 
@@ -956,7 +1007,11 @@ function partitionPrompt(survey, fileCount) {
 
   return (
     `Partition ${scope} into coherent review units, using the survey below. ${target} Each unit should be a module, ` +
-    'package, or directory group that can be understood on its own; give it a short name and the list of ' +
+    // The script slugs whatever comes back, but a name chosen short reads better than one cut short: asking for it
+    // yields `wire-protocol` where truncating a title yields `wire-protocol` from `Wire Protocol Layer` and, less
+    // happily, `authentication` from `AuthenticationMiddleware`.
+    'package, or directory group that can be understood on its own; give it a lower-case `kebab-case` name of at ' +
+    `most ${UNIT_SLUG_CAP} characters (\`wire-protocol\`, not \`Wire Protocol Layer\`) and the list of ` +
     `repo-relative paths it covers (enumerate with \`${lsFiles}\`). Never split a single file across units — a unit is ` +
     'a set of whole files, and each file belongs to exactly one unit. Also return an explicit list of everything you ' +
     'excluded and why — exclude vendored/third-party dependencies, generated code, lock files, and binary files.\n\n' +
@@ -1069,7 +1124,8 @@ if (!partition?.units?.length) {
   };
 }
 
-const units = partition.units;
+// Slugged here, once, so `review:` and `dedupe:` labels cannot disagree about what a unit is called.
+const units = withUnitSlugs(partition.units);
 const exclusions = partition.exclusions || [];
 
 // The distinct files the reviewers will actually open. This, not the survey's count, is what the lens gate below keys
@@ -1112,7 +1168,7 @@ for (let round = 1; round <= maxRounds; round++) {
   const reviewSpecs = [
     ...units.flatMap((unit) =>
       REVIEWERS.map((reviewer) => ({
-        label: `review:${unit.name}:${reviewer.key}${roundTag}`,
+        label: `review:${unit.slug}:${reviewer.key}${roundTag}`,
         model: reviewer.model,
         effort: leafEffort,
         category: reviewer.key,

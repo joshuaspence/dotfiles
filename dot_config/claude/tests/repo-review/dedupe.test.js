@@ -288,9 +288,11 @@ describe('dedupe scopes', () => {
     issue({ file: 'core/frame.py' }),
   ];
 
+  // `slug` is what a scope is named by, since that is what reaches a label. The orchestration derives it from `name`
+  // (see `unit-labels.test.js`); these two are already slug-shaped, so it is spelled out rather than computed.
   const units = [
-    { name: 'api', summary: 'the request surface', paths: ['api'] },
-    { name: 'core', summary: 'the protocol', paths: ['core'] },
+    { name: 'api', slug: 'api', summary: 'the request surface', paths: ['api'] },
+    { name: 'core', slug: 'core', summary: 'the protocol', paths: ['core'] },
   ];
 
   it('gives each unit its own scope', async () => {
