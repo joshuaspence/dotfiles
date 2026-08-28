@@ -563,3 +563,152 @@ describe('dedupe schema', () => {
     expect(DEDUPE_SCHEMA.properties.groups.items.items.type).toBe('integer');
   });
 });
+
+describe('cross-pass chunking', () => {
+  // Stage 1 bounds each agent by unit size; stage 2 sees every survivor accumulated so far, which on one measured
+  // `--loop` run went 116 -> 209 -> 262 while the largest unit scope stayed at 68. These chunks bound stage 2 too.
+  it('leaves a set that fits the cap as one unnamed chunk', async () => {
+    const { crossChunks, DEDUPE_CHUNK_CAP } = await internals();
+
+    expect(crossChunks(DEDUPE_CHUNK_CAP)).toEqual([
+      { name: '', indices: Array.from({ length: DEDUPE_CHUNK_CAP }, (_, i) => i) },
+    ]);
+  });
+
+  it('keeps every chunk inside the cap once the set exceeds it', async () => {
+    // The whole point: no agent is handed more than a digest size the top rung has been measured answering for.
+    const { crossChunks, DEDUPE_CHUNK_CAP } = await internals();
+
+    for (const count of [DEDUPE_CHUNK_CAP + 1, 209, 262, 337, 1000]) {
+      const chunks = crossChunks(count);
+
+      expect(chunks.length).toBeGreaterThan(1);
+      expect(Math.max(...chunks.map((chunk) => chunk.indices.length))).toBeLessThanOrEqual(DEDUPE_CHUNK_CAP);
+    }
+  });
+
+  it('puts every pair of findings in some chunk, so nothing goes uncompared', async () => {
+    // The property that makes chunking equivalent to the single fan-in agent rather than a sampling of it. Without it
+    // a cross-unit duplicate could sit in two chunks that never meet and be reported twice for ever.
+    const { crossChunks } = await internals();
+    const count = 262;
+    const seen = new Set();
+
+    for (const chunk of crossChunks(count)) {
+      chunk.indices.forEach((a, i) => chunk.indices.slice(i + 1).forEach((b) => seen.add(`${a}:${b}`)));
+    }
+
+    expect(seen.size).toBe((count * (count - 1)) / 2);
+  });
+
+  it('never lets one chunk be the whole set, which would defeat the cap', async () => {
+    // Blocks are half a chunk, so `count > cap` always yields three or more of them. Two blocks would put everything
+    // back in a single over-cap chunk.
+    const { crossChunks, DEDUPE_CHUNK_CAP } = await internals();
+
+    for (const count of [DEDUPE_CHUNK_CAP + 1, 200, 262]) {
+      expect(crossChunks(count).every((chunk) => chunk.indices.length < count)).toBe(true);
+    }
+  });
+
+  it('names each chunk by the pair of blocks it joins', async () => {
+    const { crossChunks } = await internals();
+
+    expect(crossChunks(160).map((chunk) => chunk.name)).toEqual(['1+2', '1+3', '2+3']);
+  });
+
+  it('covers every finding, so none is dropped by the split', async () => {
+    const { crossChunks } = await internals();
+    const covered = new Set(crossChunks(262).flatMap((chunk) => chunk.indices));
+
+    expect(covered.size).toBe(262);
+  });
+});
+
+describe('cross-pass convergence', () => {
+  // A round large enough to chunk, split across two units so the cross pass runs at all — a single unit holding
+  // everything already compared every pair, and the script skips stage 2 for it.
+  const spanning = (perUnit) => ({
+    issues: [
+      ...Array.from({ length: perUnit }, (_, i) => issue({ file: `api/f${i}.py` })),
+      ...Array.from({ length: perUnit }, (_, i) => issue({ file: `core/f${i}.py` })),
+    ],
+    units: [
+      { name: 'api', slug: 'api', summary: 'the request surface', paths: ['api'] },
+      { name: 'core', slug: 'core', summary: 'the protocol', paths: ['core'] },
+    ],
+    args: { fix: false },
+  });
+
+  const crossLabels = (run) => run.called(/^dedupe:cross/).map((call) => call.label);
+
+  it('splits an over-cap round into chunked cross-pass agents', async () => {
+    const run = await runFix({ ...spanning(80), dedupe: () => ({ groups: [] }) });
+
+    expect(crossLabels(run)).toEqual(['dedupe:cross:1+2:high', 'dedupe:cross:1+3:high', 'dedupe:cross:2+3:high']);
+  });
+
+  it('stops after a pass that merges nothing', async () => {
+    // Complete pair coverage plus no merges is a real answer, so a second pass could only repeat the first.
+    const run = await runFix({ ...spanning(80), dedupe: () => ({ groups: [] }) });
+
+    expect(crossLabels(run).some((label) => label.includes(':p2:'))).toBe(false);
+  });
+
+  it('runs another pass when the last one merged, because merging is first-claim-wins', async () => {
+    // Chunks reporting {A,B} and {B,C} leave C unmerged, so a chain needs one pass per link. Merging on pass 1 only.
+    const run = await runFix({
+      ...spanning(80),
+      dedupe: (call) => ({ groups: call.label.startsWith('dedupe:cross:1+2:') ? [[0, 1]] : [] }),
+    });
+
+    expect(crossLabels(run).filter((label) => label.includes(':p2:'))).toHaveLength(3);
+    expect(crossLabels(run).some((label) => label.includes(':p3:'))).toBe(false);
+    expect(run.result.findings).toHaveLength(159);
+  });
+
+  it('records a gap when it is still merging after the last pass', async () => {
+    const { DEDUPE_CHUNK_PASSES } = await internals();
+    const run = await runFix({
+      ...spanning(80),
+      dedupe: (call) => ({ groups: call.label.includes(':1+2:') ? [[0, 1]] : [] }),
+    });
+
+    const expected = `still merging findings after ${DEDUPE_CHUNK_PASSES} passes`;
+
+    expect(crossLabels(run).filter((label) => label.includes(':1+2:'))).toHaveLength(DEDUPE_CHUNK_PASSES);
+    expect(run.result.gaps.some((gap) => gap.includes(expected))).toBe(true);
+  });
+
+  it('keeps the merges from the chunks that answered when one chunk stalls', async () => {
+    const run = await runFix({
+      ...spanning(80),
+      dedupe: (call) => {
+        if (call.label.startsWith('dedupe:cross:1+3')) throw new Error('agent stalled on all 6 attempts');
+
+        return { groups: call.label.startsWith('dedupe:cross:1+2') ? [[0, 1]] : [] };
+      },
+    });
+
+    expect(run.result.findings).toHaveLength(159);
+    expect(run.result.gaps.some((gap) => gap.includes('1 chunk(s) of the cross-unit dedupe pass'))).toBe(true);
+  });
+
+  it('leaves a round that fits one chunk on the plain label it always had', async () => {
+    const run = await runFix({ ...spanning(20), dedupe: () => ({ groups: [] }) });
+
+    expect(crossLabels(run)).toEqual(['dedupe:cross:high']);
+  });
+
+  it('does not re-run a single chunk that merged, since one agent saw every pair and every chain', async () => {
+    // The reason for terminating on chunk count as well as on a dry pass: a merge is what keeps the loop going, so a
+    // small review with any duplicate at all would otherwise pay for a second full pass that can find nothing new.
+    const run = await runFix({
+      ...spanning(20),
+      dedupe: (call) => ({ groups: call.label.startsWith('dedupe:cross') ? [[0, 1]] : [] }),
+    });
+
+    expect(crossLabels(run)).toEqual(['dedupe:cross:high']);
+    expect(run.result.findings).toHaveLength(39);
+  });
+});

@@ -352,18 +352,28 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
 - Rungs a digest is known to overwhelm are skipped rather than attempted, because exhausting one costs six attempts at
   180s — 18 minutes in which the run emits nothing and looks hung. `high` was measured answering 116 findings in 96s
   and 163 in ~2 minutes, then killed on all six attempts at 209 and at 253; `medium` answered both, in ~140s. So above
-  180 findings the cross pass starts at `medium`, and the script logs that it did. Note what this does *not* fix: the
-  cross pass sees every survivor accumulated so far, so under `--loop` its digest grows every round regardless of how
-  well units are scoped. A long loop on a large repository can still walk past `medium`, and then dedupe degrades to a
-  `gaps` entry.
-- Dedupe also runs in two stages, because think time tracks how many findings one agent was handed and the ladder only
-  buys one rung: a 163-finding round answered at `high`, a 253-finding round exhausted all six attempts and only landed
-  at `medium`. So stage one runs an agent per unit in parallel (`dedupe:<unit>`, plus `dedupe:cross-cutting` for the
-  repo-wide findings no unit claims), and stage two runs one pass over the survivors (`dedupe:cross`) to catch a defect
-  reported under two different units. Stage one is a `parallel()` fan-out, so a stalled unit costs only that unit's
-  merges. Each partial failure is its own `gaps` entry, and they mean different things — a lost unit repeats a defect
-  *within* one unit, a lost cross pass repeats one *across* two. The worst case is still un-deduplicated findings plus a
-  gap rather than a lost review, and the cross pass is skipped when a single unit already held everything.
+  180 findings the cross pass starts at `medium`, and the script logs that it did.
+- Dedupe runs in two stages, because think time tracks how many findings one agent was handed. Stage one runs an agent
+  per unit in parallel (`dedupe:<unit>`, plus `dedupe:cross-cutting` for the repo-wide findings no unit claims), which
+  catches the common case: six reviewers reading one unit from different angles report the same defect six times. Stage
+  two then compares what survived, to catch a defect reported under two different units. Both are `parallel()` fan-outs,
+  so a stalled agent costs only its own merges, and each partial failure is its own `gaps` entry — a lost unit repeats a
+  defect *within* one unit, a lost cross chunk repeats one *across* two. Stage two is skipped entirely when a single
+  unit already held everything.
+- **Stage two is chunked, which is what actually bounds this phase.** Unit scoping bounds stage one and does nothing for
+  stage two, which sees every survivor accumulated so far: on one measured `--loop` run the cross pass was handed 116
+  findings in round 1, 209 in round 2 and 262 in round 3, while the largest single unit scope in that entire run was 68.
+  The fan-in grows with the round count however well the units are split. So it is split into chunks of at most 150 —
+  under the 163 the top rung was measured answering — and, because a contiguous slice of the union is mostly one unit's
+  findings (the ones stage one already merged) while cross-unit pairs sit far apart in that order, the chunks are built
+  as every unordered *pair* of half-chunk blocks. That way any two findings share at least one chunk, so the pass sees
+  every pair a single agent would have, at `C(m,2)` calls instead of `m`. Chunks appear as `dedupe:cross:1+2`.
+- The chunked pass repeats until it converges, because merging is first-claim-wins rather than transitive: chunks
+  reporting `{A,B}` and `{B,C}` leave C unmerged, since B is already claimed by the time the second group is read. Each
+  pass closes one link of such a chain, so later passes are marked `dedupe:cross:p2:1+2`, and the loop stops as soon as
+  a pass merges nothing — or when one chunk held everything, since then a single agent already saw every chain. Three
+  passes is the budget; still merging after that records a `gaps` entry, which means a defect reported under three or
+  more units may appear twice. That is the only remaining degradation, and it is bounded and reported.
 - Both phases label a unit by a short slug rather than the prose name the partition agent chose, so a unit named "Wire
   Protocol Layer" appears as `review:wire-protocol:bug` and `dedupe:wire-protocol`. `/workflows` clips a label at around
   40 columns from the right, and with a title-cased name it was clipping the *category* — the one segment saying which

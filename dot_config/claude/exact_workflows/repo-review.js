@@ -784,6 +784,88 @@ const dedupeAgent = async (issues, { label, roundTag, round }) => {
   return null;
 };
 
+// --- Stage 2: the cross-unit pass, chunked -------------------------------------------------------------------------
+// `dedupeScopes` bounds stage 1 by unit size and does nothing for stage 2, which sees every survivor accumulated so
+// far. Measured on one `--loop` run: the cross pass was handed 116 findings in round 1, 209 in round 2 and 262 in round
+// 3, while the largest single unit scope in that whole run was 68. So the fan-in grows with the round count however
+// well the units are split, and the effort ladder just delays the wall — 209 exhausted `high`, and `medium` has no rung
+// below it. Chunking is what actually bounds it.
+//
+// Chunking naively would be worse than not chunking. The union is built unit-major, so a contiguous slice of it is
+// mostly one unit's findings — the duplicates stage 1 already merged — while the cross-unit pairs this stage exists to
+// find sit far apart in that order. A slice-and-hope scheme would therefore spend its budget re-checking pairs that
+// were already checked.
+//
+// So the chunks cover every pair instead: blocks of half a chunk, then one chunk per unordered pair of blocks. Any two
+// findings share the chunk built from their two blocks, so the pass sees every pair that a single fan-in agent would
+// have, at `C(m, 2)` calls rather than `m`. At 262 findings that is 6 calls of at most 150 instead of 4 of 66.
+const DEDUPE_CHUNK_CAP = 150;
+
+// Passes before the loop gives up and says so. A pass is repeated because `mergeIssueGroups` is first-claim-wins rather
+// than transitive: chunks reporting {A,B} and {B,C} leave C unmerged, since B is already claimed when the second group
+// is read. Re-running over the survivors closes one link of such a chain per pass, so three passes resolve a chain of
+// four findings, and a pass that merges nothing means the set is genuinely converged.
+const DEDUPE_CHUNK_PASSES = 3;
+
+// The chunks one pass runs, as `{ name, indices }` — the same shape `dedupeScopes` returns, so both stages label and
+// globalize the same way. `name` is empty for the single chunk that holds everything, which is the common case and
+// keeps the plain `dedupe:cross` label it has always had.
+const crossChunks = (count, cap = DEDUPE_CHUNK_CAP) => {
+  const all = Array.from({ length: Math.max(count, 0) }, (_, i) => i);
+
+  if (all.length <= cap) return [{ name: '', indices: all }];
+
+  // Half a chunk each, so any two blocks fit in one chunk together. `count > cap` gives at least three blocks, so
+  // there is always more than one pair and the single-chunk case above is the only way to see the whole set at once.
+  const half = Math.floor(cap / 2);
+  const blocks = Array.from({ length: Math.ceil(all.length / half) }, (_, b) => all.slice(b * half, (b + 1) * half));
+
+  return blocks.flatMap((block, a) =>
+    blocks.slice(a + 1).map((other, b) => ({ name: `${a + 1}+${a + b + 2}`, indices: [...block, ...other] })),
+  );
+};
+
+// Run the cross-unit pass to convergence. Returns the surviving findings plus what the caller needs to report: how
+// many chunks never came back, and whether the loop converged or ran out of passes.
+const crossDedupe = async (issues, { roundTag, round }) => {
+  let survivors = issues;
+  let stalled = 0;
+
+  for (let pass = 1; pass <= DEDUPE_CHUNK_PASSES; pass += 1) {
+    const chunks = crossChunks(survivors.length);
+    const before = survivors.length;
+
+    // Each chunk is its own `dedupeAgent`, so it gets the effort ladder and the rung ceiling, and `parallel()` keeps
+    // one stalled chunk from costing the merges every other chunk found.
+    const results = await parallel(
+      chunks.map((chunk) => () => {
+        // The pass number joins the label only once there is more than one pass to tell apart, so a review small
+        // enough for a single chunk still shows the plain `dedupe:cross` it always did.
+        const label = ['dedupe:cross', pass > 1 ? `p${pass}` : '', chunk.name].filter(Boolean).join(':');
+        const digest = chunk.indices.map((i) => survivors[i]);
+
+        return dedupeAgent(digest, { label, roundTag, round }).then((groups) =>
+          groups ? globalizeGroups(groups, chunk.indices) : null,
+        );
+      }),
+    );
+
+    stalled += results.filter((groups) => !groups).length;
+    survivors = mergeIssueGroups(survivors, results.filter(Boolean).flat());
+
+    log(
+      `Cross-dedupe round ${round} pass ${pass}: ${before} finding(s) over ${chunks.length} chunk(s) of at most ` +
+        `${Math.max(...chunks.map((chunk) => chunk.indices.length))} -> ${survivors.length}.`,
+    );
+
+    // One chunk means one agent saw everything, chains included, so there is nothing a further pass could add. No
+    // merge means the same conclusion by measurement rather than by construction.
+    if (chunks.length === 1 || survivors.length === before) return { issues: survivors, stalled, converged: true };
+  }
+
+  return { issues: survivors, stalled, converged: false };
+};
+
 const surveyPrompt = () =>
   `Survey ${scope} to orient a code review. Use \`${lsFiles}\` to enumerate the files in scope (do not walk the ` +
   'filesystem, so ignored files stay out). Return: the primary programming languages; the build and test tooling; ' +
@@ -1290,19 +1372,28 @@ for (let round = 1; round <= maxRounds; round++) {
   // The second stage exists to catch one defect reported under two different units, so it has nothing to add when a
   // single scope already compared everything: re-asking would only spend a rung of the ladder on a settled question.
   const wholeUnionScoped = scopes.length === 1 && scopes[0].indices.length === union.length;
-  const crossGroups =
+  const cross =
     wholeUnionScoped || afterUnits.length < 2
-      ? []
-      : await dedupeAgent(afterUnits, { label: 'dedupe:cross', roundTag, round });
+      ? { issues: afterUnits, stalled: 0, converged: true }
+      : await crossDedupe(afterUnits, { roundTag, round });
 
-  if (crossGroups === null) {
+  if (cross.stalled) {
     gaps.push(
-      `The cross-unit dedupe pass did not return in round ${round} — duplicates inside a unit were still merged, but ` +
-        'one defect reported under two different units may appear twice.',
+      `${cross.stalled} chunk(s) of the cross-unit dedupe pass did not return in round ${round} — duplicates inside ` +
+        'a unit were still merged, but one defect reported under two different units may appear twice.',
     );
   }
 
-  deduped = crossGroups ? mergeIssueGroups(afterUnits, crossGroups) : afterUnits;
+  // Running out of passes is not the same as a stall: every chunk answered, but a chain of duplicates may still be
+  // partly unmerged, because one pass closes one link of it.
+  if (!cross.converged) {
+    gaps.push(
+      `The cross-unit dedupe pass was still merging findings after ${DEDUPE_CHUNK_PASSES} passes in round ${round} — ` +
+        'a defect reported under three or more units may appear twice.',
+    );
+  }
+
+  deduped = cross.issues;
 
   log(
     `Deduped round ${round}: ${union.length} -> ${deduped.length} finding(s) over ${scopes.length} unit scope(s) ` +
