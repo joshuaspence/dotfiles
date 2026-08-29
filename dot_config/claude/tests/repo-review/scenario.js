@@ -9,91 +9,109 @@
  * can answer per-finding without the test having to know the order agents happen to run in.
  */
 
+import { onTestFinished } from 'vitest';
+
 import { loadInternals, runWorkflow, workflowScript } from '../harness.js';
 
 // Resolved by name from the workflow source directory, so this is the only place the script under test is identified.
 export const SCRIPT = workflowScript('repo-review');
 
 // The internals these tests examine. Named explicitly rather than discovered: renaming one should fail here loudly
-// instead of quietly dropping whatever it used to cover.
+// instead of quietly dropping whatever it used to cover. Only internals a test actually reads belong here — a name no
+// test touches is covering nothing, so listing it would just make renaming a private helper fail every suite that
+// imports this fixture.
 const INTERNALS = [
-  'meta',
-
   // Argument handling and the config knobs derived from it.
   ...[
     'capEffort',
-    'capLeaf',
-    'DEDUPE_EFFORT_LADDER',
     'dedupeEfforts',
     'DEDUPE_RUNG_CEILING',
     'dedupeRungs',
     'DEDUPE_CHUNK_CAP',
     'DEDUPE_CHUNK_PASSES',
     'crossChunks',
+    'chunkScopes',
     'effort',
     'EFFORT_ORDER',                                                                                                     
     'fix',                                                                                                              
-    'FIX_REVISION_CAP',                                                                                                 
     'input',                                                                                                            
-    'leafEffort',                                                                                                       
-    'LOOP_DEFAULT_ROUNDS',
-    'loopEnabled',                                                                                                      
-    'lsFiles',                                                                                                          
+    'leafEffort',
+    'loopEnabled',
+    'lsFiles',
     'maxRounds',                                                                                                        
-    'nonNegativeIntOr',
-    'normalizeArgs',
-    'normalizePaths',
-    'partitions',
-    'pathList',
+    'narrowToScope',
     'paths',
-    'positiveIntOr',
     'reviewers',                                                                                                        
     'scope',
     'validators',
   ],
 
+  // The risk model `--validators auto` resolves through, and the label grammar every per-finding agent is keyed off.
+  ...[
+    'attemptTag',
+    'findingTag',
+    'HIGH_RISK',
+    'isHighRisk',
+    'validatorCount',
+    'voteTag',
+  ],
+
   // Untrusted-input guards.
   ...[
     'isCommitSha',
+    'isRepoRelativePath',
     'isSafeBranchName',
+    'isSafeRepoPath',
+    'isSandboxBranch',
   ],
 
   // Grouping and sizing.
   ...[
     'autoUnitTarget',
+    'DEDUPE_CROSS_SLUG',
     'dedupeScopes',
+    'DEDUPE_UNCLAIMED_SLUG',
     'fileInUnit',
     'globalizeGroups',
     'groupByFileCollision',
     'issueSite',
     'mergeIssueGroups',
     'SEVERITY_ORDER',
+
+    // Which member of a duplicate group survives is a risk decision, so the merge reads `HIGH_RISK` / `isHighRisk` —
+    // named with the risk model above, which is where they are declared.
+    'survivingMember',
     'UNIT_SLUG_CAP',
     'unitSlug',
     'withUnitSlugs',
-    'worstSeverity',
   ],
 
   // Prompt builders.
   ...[
-    'architecturalLensPrompt',                                                                                          
-    'bulletList',                                                                                                       
+    'architecturalLensPrompt',
+    'bulletList',
     'claudeMdPrompt',
     'DEDUPE_DESCRIPTION_BUDGET',
     'dedupeDigest',
-    'dedupePrompt',                                                                                                     
-    'fixerPrompt',                                                                                                      
-    'fixReviewPrompt',                                                                                                  
+    'dedupePrompt',
+    'emphasisBlock',
+    'FALSE_POSITIVES',
+    'fixerPrompt',
+    'fixReviewPrompt',
     'generatedPathsBlock',
     'KNOWN_OTHER_BUDGET',
     'KNOWN_OWN_BUDGET',
-    'knownFindingsBlock',                                                                                              
-    'partitionPrompt',                                                                                                  
-    'pinToReviewHead',                                                                                                  
-    'reconcilePrompt',                                                                                                  
-    'reviewerPrompt',                                                                                                   
+    'knownFindingsBlock',
+    'partitionPrompt',
+    'pinToReviewHead',
+    'reconcilePrompt',
+    'REVIEW_RULES',
+    'reviewerPrompt',
+    'ROUND_EMPHASIS',
+    'roundEmphasis',
+    'SEVERITY_RUBRIC',
     'surveyBlock',
-    'surveyPrompt',                                                                                                     
+    'surveyPrompt',
     'validatorPrompt',
   ],
 
@@ -102,18 +120,19 @@ const INTERNALS = [
     'ARCHITECTURAL_LENSES',                                                                                             
     'DEDUPE_SCHEMA',
     'FIX_RESULT_SCHEMA',                                                                                                
-    'ISSUES_SCHEMA',
-    'PARTITION_SCHEMA',                                                                                                 
-    'RECONCILE_RESULT_SCHEMA',                                                                                          
-    'REVIEWERS',                                                                                                        
-    'REVIEW_RESULT_SCHEMA',                                                                                             
-    'SURVEY_SCHEMA',                                                                                                    
-    'VERDICT_SCHEMA',
+    'RECONCILE_RESULT_SCHEMA',
+    'REVIEWERS',
+    'SURVEY_SCHEMA',
   ],
 ];
 
 // The script's declarations, evaluated against `args` — the config knobs are themselves derived from it.
 export const internals = (args = {}) => loadInternals(SCRIPT, { names: INTERNALS, args });
+
+// How a unit is named in a label and which files belong to it are the script's rules, and a fixture that re-derives
+// them is a mirror free to drift — so borrow the two functions themselves. Loaded once, at module scope, because the
+// fake agent answers synchronously.
+const { fileInUnit, withUnitSlugs } = await internals();
 
 // --- Label parsing --------------------------------------------------------------------------------------------------
 // The script encodes which finding, revision attempt and vote an agent belongs to in its label, so a fake agent can
@@ -150,8 +169,10 @@ export function parseLabel(rawLabel = '') {
     return { kind: 'review', unit, key, category: unit === 'arch' ? 'architecture' : key };
   }
 
+  // A reconcile label names the findings being merged, but only the first three: the script abbreviates the rest to
+  // `+N more`, so the label cannot be used to recover the group. The `reconcile` case below reads it from the prompt.
   if (label.startsWith('reconcile:')) {
-    return { kind: 'reconcile', merging: label.slice('reconcile:'.length) };
+    return { kind: 'reconcile' };
   }
 
   if (label.startsWith('dedupe')) {
@@ -161,9 +182,20 @@ export function parseLabel(rawLabel = '') {
   return { kind: label };
 }
 
-// A plausible reviewed HEAD and the remote default branch a sandbox is really created at.
+// --- The finding a per-finding agent was actually asked about --------------------------------------------------------
+// The label's index numbers the script's *own* list — the union after `mergeIssueGroups`, then after validation — so it
+// is not an index into the `issues` a scenario supplied: one merge collapses two findings into one and shifts every
+// later index left, and a rejected validator does the same again. Resolving `issues[idx]` therefore answers about the
+// wrong finding, silently, in exactly the tests that exercise merging.
+//
+// Every per-finding prompt embeds its subject as `Issue:\n<JSON>` (`validatorPrompt`, `fixerPrompt` and
+// `fixReviewPrompt` all do), so reading it back out of the prompt is authoritative: an override sees the finding the
+// script is really working on, merged severity and absorbed `otherSites` included. The closing brace anchors the match
+// because `JSON.stringify(…, null, 2)` indents everything nested, leaving the top-level `}` the only one at column 0.
+const ISSUE_BLOCK = /^Issue:\n(\{[\s\S]*?^\})$/m;
+
+// A plausible reviewed HEAD, i.e. what the survey reports and every pin instruction has to carry.
 export const HEAD = 'cd976db1f0a94c2f9b7e5d3a8c1e6f40b2d75a93';
-export const STALE = 'b5427db9e1c8f7a6d5b4c3e2f1a0987654321abc';
 
 // Deterministic 40-character hex object names. `Math.random` is unavailable to workflow scripts and would make failures
 // irreproducible here too, so commit SHAs are derived from a seed.
@@ -179,10 +211,11 @@ export const issue = (over = {}) => ({
   ...over,
 });
 
-// The six per-unit reviewer keys, so a scenario can hand each reviewer the findings that belong to it. A reviewer's
+// The per-unit reviewer keys, so a scenario can hand each reviewer the findings that belong to it. A reviewer's
 // category is stamped onto whatever it returns, so returning a 'security' issue from the 'bug' reviewer would silently
-// relabel it and break every category-dependent expectation.
-export const REVIEWER_KEYS = ['bug', 'claude-md', 'code-quality', 'consistency', 'security', 'test-critique'];
+// relabel it and break every category-dependent expectation. Read off the script's own roster rather than copied, so a
+// reviewer added or renamed there cannot leave a stale list here that quietly covers a reviewer that no longer exists.
+export const REVIEWER_KEYS = (await internals()).REVIEWERS.map((reviewer) => reviewer.key);
 
 const DEFAULT_SURVEY = {
   languages: ['TypeScript'],
@@ -194,7 +227,9 @@ const DEFAULT_SURVEY = {
 /**
  * Build a fake agent for a `--fix` run.
  *
- * Overridable behaviours, each receiving the parsed label so it can answer per-finding:
+ * Overridable behaviours, each receiving the parsed label so it can answer per-finding. `issue` is read back out of the
+ * prompt (see `ISSUE_BLOCK`), so it is the finding the script is working on and not `issues[idx]`, which the label's
+ * index only agrees with while nothing has been merged or dropped:
  *
  *   fix(issue, { idx, attempt, call })        → FIX_RESULT_SCHEMA shape, or null for an agent that never returned
  *   reviewFix(issue, { idx, attempt, vote })  → REVIEW_RESULT_SCHEMA shape
@@ -208,7 +243,10 @@ export function fixScenario({
   unitPaths,
   units,
   survey = {},
-  claudeMd = { paths: [] },
+  // A repository that has a rulebook, since that is the ordinary case and the one the compliance reviewer is for. An
+  // empty list is not a neutral default: it is the specific "no `CLAUDE.md` anywhere" case that drops that reviewer and
+  // records a gap, which every unrelated test would then be asserting around.
+  claudeMd = { paths: ['CLAUDE.md'] },
   headOnly,
   dedupe,
   fix,
@@ -220,27 +258,69 @@ export function fixScenario({
   // the real reconciler would, and so tests can assert against what the fixers actually claimed.
   const handedOut = new Map();
   const unmatched = [];
+
+  // Prompts no `Issue:` block could be read out of. Collected rather than thrown, because a throw here reads as an
+  // agent that died — `parallel()` resolves it to null — and would surface as a puzzling outcome rather than as the
+  // prompt-shape change it is. `runFix` reports it once the run is over.
+  const unreadable = [];
   let reconcileCount = 0;
+
+  // The check lives with the state it guards, so every way of driving this fixture gets it: `runFix`, and a test that
+  // composes `agent` with `runWorkflow` itself to pass args no wrapper can express. Registered on the test rather than
+  // performed by a wrapper, because a wrapper can be bypassed — which is how this check used to be forfeited. Building
+  // a scenario outside a test throws here instead of quietly skipping it.
+  onTestFinished(() => {
+    if (unmatched.length) {
+      throw new Error(
+        `The scenario had no answer for agent label(s): ${[...new Set(unmatched)].join(', ')}. Teach ` +
+          'fixScenario about them — an unanswered agent returns null, which quietly exercises a failure path.',
+      );
+    }
+  });
 
   // The partition the whole run is shaped by: one unit holding every finding unless a test says otherwise. Reviewers
   // are labelled per unit and dedupe is now scoped per unit, so both have to read the same roster.
   const roster = units ?? [{ name: 'core', summary: 'the code', paths: unitPaths ?? filesOf(issues) }];
 
-  // A label carries the unit's *slug*, not the name the partition returned, and the script derives that slug by
-  // lower-casing, kebab-casing and then cutting to a cap — so a prose name arrives here shortened. Matching on a prefix
-  // of the same normalization recovers the unit without this fixture reimplementing `unitSlug`'s cap and word-boundary
-  // rules, which would be a mirror free to drift.
-  const labelish = (name) =>
-    String(name || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+  // A label carries the unit's *slug*, not the name the partition returned, so the roster is indexed by the slug the
+  // script itself stamps on. A re-normalization matched on a prefix instead, which resolved `review:core:bug` to a
+  // `core-utils` unit and missed both `unitSlug`'s camel-case split (`AuthMiddleware`) and `withUnitSlugs`' collision
+  // suffixes (`wire-protocol-2`) — and a miss then read as "whole repository", handing every unit's findings back.
+  const bySlug = new Map(withUnitSlugs(roster).map((unit) => [unit.slug, unit]));
+
+  // An unrecognised slug is a broken fixture, not a wider scope, so say so. Recorded as well as thrown because a
+  // reviewer runs under `parallel()`, where a throw resolves to `null` — which would read as a unit that found nothing.
+  const unroutable = [];
 
   const inUnit = (subject, slug) => {
-    const unit = roster.find((candidate) => labelish(candidate.name).startsWith(slug));
+    // The architecture lenses are labelled `review:arch:<lens>`, and a lens reads the whole repository, not a unit.
+    if (slug === 'arch') return true;
 
-    // No match means an architecture lens (`review:arch:<lens>`), which reads the whole repository rather than a unit.
-    return !unit || (unit.paths || []).some((path) => subject.file === path || subject.file.startsWith(`${path}/`));
+    const unit = bySlug.get(slug);
+
+    if (!unit) {
+      const problem =
+        `No unit on this scenario's roster is slugged '${slug}', so the fixture cannot tell which files the agent ` +
+        `labelled with it was given. Slugs on the roster: ${[...bySlug.keys()].join(', ') || '(none)'}.`;
+
+      unroutable.push(problem);
+
+      throw new Error(problem);
+    }
+
+    return fileInUnit(subject.file, unit);
+  };
+
+  const subjectOf = (call) => {
+    const [, json] = ISSUE_BLOCK.exec(call.prompt) || [];
+
+    try {
+      return JSON.parse(json);
+    } catch {
+      unreadable.push(call.label);
+
+      return null;
+    }
   };
 
   const defaultFix = (subject, { idx, attempt }) => ({
@@ -266,12 +346,14 @@ export function fixScenario({
 
     switch (label.kind) {
       case 'survey':
-        return {
-          ...DEFAULT_SURVEY,
-          inScopeFileCount: (unitPaths ?? filesOf(issues)).length,
-          headSha,
-          ...survey,
-        };
+        return survey === null
+          ? null
+          : {
+              ...DEFAULT_SURVEY,
+              inScopeFileCount: (unitPaths ?? filesOf(issues)).length,
+              headSha,
+              ...survey,
+            };
 
       case 'claude-md-scan':
         return claudeMd;
@@ -299,22 +381,43 @@ export function fixScenario({
         return (dedupe ?? (() => ({ groups: [] })))(call);
 
       case 'validate':
-        return (validate ?? (() => ({ confirmed: true, rationale: 'confirmed' })))(issues[label.idx], label);
+        return (validate ?? (() => ({ confirmed: true, rationale: 'confirmed' })))(subjectOf(call), label);
 
       case 'fix':
       case 'revise': {
-        const result = (fix ?? defaultFix)(issues[label.idx], { ...label, call });
+        const result = (fix ?? defaultFix)(subjectOf(call), { ...label, call });
         handedOut.set(label.idx, result);
 
         return result;
       }
 
       case 'review-fix':
-        return (reviewFix ?? (() => ({ approved: true, objection: '' })))(issues[label.idx], label);
+        return (reviewFix ?? (() => ({ approved: true, objection: '' })))(subjectOf(call), label);
 
       case 'reconcile': {
-        // The label names the findings being merged (`reconcile:bug#0+bug#1`), which is enough to recover the group.
-        const indices = [...label.merging.matchAll(/#(\d+)/g)].map((match) => Number(match[1]));
+        // Which findings are being merged comes from the prompt, not from the label: the label is abbreviated after
+        // three (`reconcile:bug#0+bug#1+bug#2+1 more`), and a group recovered from it would be missing members — the
+        // union of a subset of the fixes is smaller than the one the script bounds the merge against, so the fixture
+        // would model a commit claiming fewer files than it touched, which the real reconciler could not produce. The
+        // prompt lists every fix in the group the way `reconcilePrompt` renders it, which is how the real reconciler
+        // learns its group too, so match those lines against the results actually handed out.
+        const inGroup = (result) =>
+          Boolean(result?.sha) && call.prompt.includes(`\n- ${result.sha} (${result.branch}) `);
+        const indices = [...handedOut.keys()]
+          .filter((idx) => inGroup(handedOut.get(idx)))
+          .sort((left, right) => left - right);
+
+        // Only colliding fixes are reconciled, so a group always has at least two members. Recovering fewer means
+        // `reconcilePrompt` no longer renders its fix list the way the match above expects — say so, rather than
+        // answering for a group this cannot see and silently modelling an impossible merge.
+        if (indices.length < 2) {
+          throw new Error(
+            `The reconcile fixture recovered ${indices.length} of its group's fixes from the prompt, but a group ` +
+              "always holds at least two. `reconcilePrompt`'s fix list ('- <sha> (<branch>) — files: …') must have " +
+              'changed; update fixScenario to match it.',
+          );
+        }
+
         const groupIdx = reconcileCount++;
 
         return (reconcile ?? defaultReconcile)({
@@ -327,14 +430,14 @@ export function fixScenario({
 
       default:
         // Returning null keeps the run going, but an unanswered agent almost always means a new phase this scenario has
-        // not been taught about — `runFix` turns a non-empty list into a failure once the run is over.
+        // not been taught about — the post-condition registered above fails the test once the run is over.
         unmatched.push(call.label);
 
         return null;
     }
   };
 
-  return { agent, unmatched, handedOut };
+  return { agent, unmatched, unroutable, unreadable, handedOut };
 }
 
 const filesOf = (issues) => [...new Set(issues.map((subject) => subject.file))];
@@ -356,15 +459,26 @@ export async function runFix({ args = {}, ...config } = {}) {
     agent: scenario.agent,
   });
 
-  if (scenario.unmatched.length) {
+  // Thrown from here rather than left to the `unmatched` post-condition `fixScenario` registers, so that it is reported
+  // first: a reviewer whose scope could not be resolved returned null for that reason, and the unanswered label it also
+  // leaves behind is the symptom rather than the cause.
+  if (scenario.unroutable.length) {
+    throw new Error([...new Set(scenario.unroutable)].join(' '));
+  }
+
+  if (scenario.unreadable.length) {
     throw new Error(
-      `The scenario had no answer for agent label(s): ${[...new Set(scenario.unmatched)].join(', ')}. Teach ` +
-        'fixScenario about them — an unanswered agent returns null, which quietly exercises a failure path.',
+      `Could not read the \`Issue:\` block out of the prompt for: ${[...new Set(scenario.unreadable)].join(', ')}. A ` +
+        'per-finding prompt no longer embeds its subject the way `ISSUE_BLOCK` expects, so the scenario cannot tell ' +
+        'which finding it is being asked about — update the pattern to match the prompt.',
     );
   }
 
   return { ...run, scenario };
 }
 
-// The per-finding outcome for finding `idx`, which is what most fix assertions are really about.
+// The per-finding outcome for finding `idx`, which is what most fix assertions are really about. `idx` is the script's
+// numbering — the same one the labels carry, so it agrees with a `fix`/`reviewFix` override's `idx` — and not an index
+// into the `issues` the scenario was given, which it parts ways with as soon as dedupe merges anything. An outcome
+// carries its finding's `file` / `description`, so assert on those when a test needs to say *which* finding it is.
 export const outcomeAt = (run, idx) => run.result.fix.outcomes[idx];

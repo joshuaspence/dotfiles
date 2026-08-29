@@ -11,7 +11,8 @@ argument-hint: >-
   [--validators <n|auto>]
   [path ...]
 allowed-tools:
-  - Bash(git branch:*)
+  - Bash(git branch --show-current)
+  - Bash(git branch -D:*)
   - Bash(git checkout --:*)
   - Bash(git cherry-pick:*)
   - Bash(git remote get-url:*)
@@ -161,20 +162,34 @@ argument you could have set at launch (a run already under way is not wrong just
 omitted, a value explicitly). The only reason to stop a run is a genuine wedge — most agents done, a few idle for many
 minutes — after which you may re-run, watching progress in `/workflows`, optionally at a lower `--effort`.
 
-The result is `{ findings, exclusions, gaps }`:
+The result is `{ reviewedCommit, findings, exclusions, gaps }`:
 
+- `reviewedCommit` — the commit SHA the review was defined against: the `HEAD` the survey read before any agent ran.
+  Cite this in permalinks (see the format below) rather than asking git for `HEAD` yourself — a long run can outlive the
+  `HEAD` it started on, and links built from a moved `HEAD` point at text no reviewer saw. It is `null` only when the
+  survey never reported it, which is the one case where you fall back to `git rev-parse HEAD`.
 - `findings` — validated issues. Each has `description`, `severity` (`critical`/`high`/`medium`/`low`), `category`,
   `file`, `lines` (may be empty), `otherSites` (other affected `file:line` or modules, may be empty), and `reason`.
 - `exclusions` — `{ path, reason }` entries for everything the partitioner left out (vendored/third-party code,
   generated code, lock files, binaries).
-- `gaps` — strings naming any reviewer, lens, or validation that did not complete, plus (when `--loop` is used) a note
-  if the loop hit its round cap without going dry — a signal that more findings may exist.
+- `gaps` — strings recording every way the run fell short of a complete, clean pass. They come in three kinds, and each
+  entry states in prose which it is:
+  - **coverage** — a reviewer, lens, or validation that did not complete, or (with `--loop`) the loop hitting its round
+    cap without going dry. Findings may be *missing*.
+  - **dedupe** — a dedupe stage that stalled or did not converge. Every finding here *was* reviewed and validated; one
+    defect may simply be listed twice.
+  - **fix** — present only with `--fix`: a fix that could not be produced, reviewed, verified or landed. This is about
+    landing work, not review coverage.
 - `fix` — present **only when `--fix` was requested** and there were findings. It is
   `{ base, sandboxBranches, commits, outcomes }`:
-  - `base` — the commit SHA every commit in `commits` should be parented on: the `HEAD` the review actually read. You
-    verify this rather than assume it (see [Apply fixes](#apply-fixes)).
-  - `sandboxBranches` — every branch the run's fix and reconcile agents reported creating, successful or not. This is
-    the teardown list; it exists because those branches, not a naming glob, are what this run is responsible for.
+  - `base` — the commit SHA every commit in `commits` should be parented on: `reviewedCommit` again, under the name the
+    pre-flight checks it by. You verify this rather than assume it (see [Apply fixes](#apply-fixes)).
+  - `sandboxBranches` — every branch the run's fix and reconcile agents reported creating, successful or not, plus the
+    branch each agent that never reported back was told to create: one killed mid-run had already cut its branch as its
+    first step, and an unrecorded branch is one teardown cannot remove. This is the teardown list; it exists because
+    those branches, not a naming glob, are what this run is responsible for. A reconstructed entry may name a branch
+    that was never actually created (the agent died before creating it), so a "not found" while deleting one is expected
+    and not a failure.
   - `commits` — an ordered list of `{ sha, branch, changedFiles, findingCount }` to cherry-pick. The script intends
     these to be pairwise-disjoint in their files and all parented on `base`, and it drops any commit it can prove
     otherwise — but it has no git access, so every check it made ran on the agents' *self-reported* file lists. Treat
@@ -197,9 +212,12 @@ findings):
   and modules involved, for repository-wide findings), and why it was flagged. Link each to its source with the
   permalink format below, and note any `otherSites`.
 - If none were returned, state: "No issues found. Checked for bugs, security, consistency, code quality, architecture,
-  and `CLAUDE.md` compliance."
-- In both cases, state which parts of the repository were excluded (`exclusions`), and report every entry in `gaps` as
-  **not reviewed / not validated** — a dropped reviewer, lens, or validation must not read as "clean".
+  test coverage and quality, and `CLAUDE.md` compliance."
+- In both cases, state which parts of the repository were excluded (`exclusions`), and report every entry in `gaps` —
+  no gap may read as "clean". Label each one by its kind (above), which the entry's own wording tells you: a **coverage**
+  gap is **not reviewed / not validated**; a **dedupe** gap was reviewed and validated but may be **reported twice**; a
+  **fix** gap is a finding **not fixed** and not verified as unfixable. Do not report a dedupe or fix gap as missing
+  review coverage — mislabelling one hides a real gap behind a false alarm.
 - When a `fix` object is present, annotate each finding with its outcome from `fix.outcomes` (fixed, or the reason it
   was not), and after applying the commits (below) report the branch name and a tally: how many findings were fixed
   (`applied` + `conflict-resolved`) versus left unfixed (`declined` / `verify-failed` / `review-rejected` /
@@ -289,9 +307,12 @@ stranded the twelve behind it.
 2. **Report the pre-flight** before landing: how many commits passed, and for each rejection which check it failed and
    why (`parent <sha> != base <sha>`, or the overlapping paths and the commit that claimed them). Any commit rejected
    here is a **defect in the run**, not an unfixable finding — say so plainly, and count its findings as not fixed.
-3. If nothing passed, land nothing and stop after the report. Otherwise create a dedicated branch off the current
-   `HEAD` and switch to it: `git switch -c repo-review-fixes` (if it already exists, use a numbered suffix, e.g.
-   `repo-review-fixes-2`, rather than clobbering it).
+3. If nothing passed — no commit was produced at all, or every one was rejected — land nothing, but do **not** stop
+   here: skip steps 4 and 5 (there is nothing to pick) and go straight to the cleanup in step 6. The sandboxes exist
+   whenever `fix.sandboxBranches` is non-empty, which includes runs where every finding came back unfixed, and stopping
+   after the report is what leaks them. Otherwise create a dedicated branch off the current `HEAD` and switch to it:
+   `git switch -c repo-review-fixes` (if it already exists, use a numbered suffix, e.g. `repo-review-fixes-2`, rather
+   than clobbering it).
 4. Cherry-pick the accepted `sha`s in order: `git cherry-pick <sha>`. Pre-flight has established these cannot conflict.
    If one still does, `git cherry-pick --abort`, stop landing further commits, and report the remaining ones as **not
    applied** — never resolve a conflict by hand. Treat it as a pre-flight bug worth reporting: it means git disagreed
@@ -305,15 +326,18 @@ stranded the twelve behind it.
 6. Clean up the run's sandboxes, but **only if every accepted commit landed**. Those branches and worktrees hold the
    only other copy of the work, so if step 4 aborted, skip this entirely and say the sandboxes were left in place.
    Commits *rejected in pre-flight* do not block cleanup by themselves — they are unlandable wherever they sit, so
-   note them as discarded and say which branches held them, so the user can salvage one if they want.
-   - Work from `fix.sandboxBranches`, the branches the agents reported creating. Derive the run prefix from them (they
+   note them as discarded and say which branches held them, so the user can salvage one if they want. Accepting
+   *nothing* satisfies the condition rather than failing it: run this step even when step 3 sent you straight here.
+   - Work from `fix.sandboxBranches`, the branches this run created. Derive the run prefix from them (they
      are `rrfix/<run-id>/<n>` and `rrmerge/<run-id>/<n>`) and confine every deletion to that one `<run-id>`: it scopes
      the teardown to *this* run, so a concurrent `--fix` run in the same repository is never collateral damage.
    - Worktrees first — a branch checked out somewhere cannot be deleted. For each entry in
      `git worktree list --porcelain` whose `branch` is one of those refs, run `git worktree remove <path>`, adding
      `--force` if it refuses: the commit is what you landed, and anything else left in the sandbox is scratch.
    - Then `git branch -D` those same refs. It has to be `-D`, not `-d` — cherry-picking rewrote the SHAs, so git cannot
-     see the originals as merged and a safe delete would refuse every one of them.
+     see the originals as merged and a safe delete would refuse every one of them. A ref git reports as not found is not
+     an error: the list includes the branch an agent that never reported back was told to create, and it may have died
+     before creating it. Skip that one and keep going through the rest.
    - The harness also leaves a `worktree-<run-id>-<n>` branch per sandbox — the ref the worktree was created on, and
      what the fix branches were cut from. It does not reap those itself once an agent has switched away from one, so
      delete the ones for this `<run-id>`, then finish with `git worktree prune` to drop the stale administrative files.
@@ -322,7 +346,7 @@ stranded the twelve behind it.
 
    Touch nothing outside this run's `<run-id>`. Branch names are per-run precisely so that a leftover cannot break the
    next run — the fixers used to restart at `rrfix/0` every time, and a run that ended without teardown made the next
-   run's `git switch -c rrfix/0` fail outright. The run id is a path component of the reported branch names
+   run's `git switch -c rrfix/0` fail outright. The run id is a path component of the branch names
    (`rrfix/<run-id>/<n>`), so read it from `fix.sandboxBranches` rather than reconstructing it.
 
 Do not push, and do not open a pull request — landing the commits on the local branch is where this stops.
@@ -354,23 +378,30 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   it says so there. Losing a rung costs deduplication, never findings.
 - Rungs a digest is known to overwhelm are skipped rather than attempted, because exhausting one costs six attempts at
   180s — 18 minutes in which the run emits nothing and looks hung. `high` was measured answering 116 findings in 96s
-  and 163 in ~2 minutes, then killed on all six attempts at 209 and at 253; `medium` answered both, in ~140s. So above
-  180 findings the cross pass starts at `medium`, and the script logs that it did.
+  and 163 in ~2 minutes, then killed on all six attempts at 209 and at 253; `medium` answered both, in ~140s. So a
+  digest above 180 findings starts at `medium`, and the script logs that it did — a guard the 150-finding chunk cap
+  below now keeps out of reach, since `chunkScopes` applies that cap to stage one's scopes as well and no agent is
+  handed more than one chunk. So do not go looking for that skip log to explain a wedged run: a step-down at any label,
+  `dedupe:<unit>` or a chunked `dedupe:cross:1+2` alike, is an agent that stalled *under* its rung's own ceiling rather
+  than one skipped over it. A skip log at all would mean a scope escaped chunking.
 - Dedupe runs in two stages, because think time tracks how many findings one agent was handed. Stage one runs an agent
   per unit in parallel (`dedupe:<unit>`, plus `dedupe:cross-cutting` for the repo-wide findings no unit claims), which
   catches the common case: six reviewers reading one unit from different angles report the same defect six times. Stage
   two then compares what survived, to catch a defect reported under two different units. Both are `parallel()` fan-outs,
   so a stalled agent costs only its own merges, and each partial failure is its own `gaps` entry — a lost unit repeats a
   defect *within* one unit, a lost cross chunk repeats one *across* two. Stage two is skipped entirely when a single
-  unit already held everything.
-- **Stage two is chunked, which is what actually bounds this phase.** Unit scoping bounds stage one and does nothing for
-  stage two, which sees every survivor accumulated so far: on one measured `--loop` run the cross pass was handed 116
-  findings in round 1, 209 in round 2 and 262 in round 3, while the largest single unit scope in that entire run was 68.
-  The fan-in grows with the round count however well the units are split. So it is split into chunks of at most 150 —
-  under the 163 the top rung was measured answering — and, because a contiguous slice of the union is mostly one unit's
-  findings (the ones stage one already merged) while cross-unit pairs sit far apart in that order, the chunks are built
-  as every unordered *pair* of half-chunk blocks. That way any two findings share at least one chunk, so the pass sees
-  every pair a single agent would have, at `C(m,2)` calls instead of `m`. Chunks appear as `dedupe:cross:1+2`.
+  scope held everything *and* fitted in one chunk, since then one agent already compared every pair; a unit too big for
+  one chunk always reaches stage two instead, whose passes close the chains splitting a scope costs stage one.
+- **Chunking is what actually bounds this phase, and it bounds both stages.** Splitting the union by unit is a partition,
+  not a bound: unit sizes are the partitioner's choice, so a repository whose code sits mostly in one unit would hand
+  that whole scope to one agent. Stage two has no partition at all and sees every survivor accumulated so far — on one
+  measured `--loop` run the cross pass was handed 116 findings in round 1, 209 in round 2 and 262 in round 3, while the
+  largest single unit scope in that entire run was 68, so the fan-in grows with the round count however well the units
+  are split. So any scope over 150 findings — under the 163 the top rung was measured answering — is chunked, at either
+  stage. Because a contiguous slice of the union is mostly one unit's findings (the ones stage one already merged) while
+  cross-unit pairs sit far apart in that order, the chunks are built as every unordered *pair* of half-chunk blocks. That
+  way any two findings share at least one chunk, so a chunked stage sees every pair a single agent would have, at
+  `C(m,2)` calls instead of `m`. Chunks appear as `dedupe:cross:1+2`, and a split unit as `dedupe:<unit>:1+2`.
 - The chunked pass repeats until it converges, because merging is first-claim-wins rather than transitive: chunks
   reporting `{A,B}` and `{B,C}` leave C unmerged, since B is already claimed by the time the second group is read. Each
   pass closes one link of such a chain, so later passes are marked `dedupe:cross:p2:1+2`, and the loop stops as soon as
@@ -387,10 +418,11 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
 - The Review phase costs roughly `units × 6 reviewers`, plus 3 architecture lenses, per round — so the unit count is
   the dominant cost lever. The script sizes it from the survey's file counts (see `--partitions`) and, on a scope of two
   files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like
-  any other gap: architecture was **not reviewed**, not "clean".
+  any other coverage gap: architecture was **not reviewed**, not "clean".
 - The script resolves failures it can see: each fan-out runs under `parallel()`, which resolves a failed agent to
-  `null` rather than rejecting the batch, and every dropped reviewer, lens, or validation is recorded in `gaps`. Surface
-  those gaps in the output.
+  `null` rather than rejecting the batch, and every dropped reviewer, lens, validation, dedupe stage or fix pipeline is
+  recorded in `gaps`. Surface those gaps in the output, each under its own kind — only the dropped reviewers, lenses and
+  validations are lost *review coverage*.
 - With `--loop`, only the review-and-dedupe phases repeat; the survey and partition run once (stable context — and
   re-partitioning between rounds would move findings and defeat cross-round dedup), and validation runs once at the end
   over the accumulated set. Later rounds are told which findings are already known and are pushed to look elsewhere, so
@@ -449,26 +481,31 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   `Read`, `Grep`, `Glob`, and `git ls-files`, and the `--fix` agents can `Edit` and commit in their own worktrees,
   regardless of this list; you neither need to nor can provision their tools from here. This list is therefore minimal:
   `Workflow` to run the review, `Write` for `--output`, the two read-only commands `git rev-parse` and
-  `git remote get-url` used to build permalinks, the `git rev-parse`/`show`/`status` commands used to pre-flight the
-  `--fix` commits against git, and the `git switch`/`branch`/`cherry-pick`/`worktree`/`checkout` commands used to land
-  them on the review branch, leave the working checkout as it was, and tear down the sandboxes they were built in.
-  `git checkout` is there for exactly one purpose — restoring a path the landing sequence dirtied (step 5 of
-  [Apply fixes](#apply-fixes)) — and is not a licence to edit files or resolve a conflict.
+  `git remote get-url` used to build permalinks, the `git rev-parse`/`show`/`status`/`branch --show-current` commands
+  used to pre-flight the `--fix` commits against git, and the `git switch`/`branch -D`/`cherry-pick`/`worktree`/`checkout`
+  commands used to land them on the review branch, leave the working checkout as it was, and tear down the sandboxes
+  they were built in. `git checkout` is there for exactly one purpose — restoring a path the landing sequence dirtied
+  (step 5 of [Apply fixes](#apply-fixes)) — and is not a licence to edit files or resolve a conflict.
 - Each entry is narrowed to the step that needs it, because prose and a permission pattern are two enforcement layers
   and the pattern wins silently when they disagree: `Bash(git checkout:*)` pre-approved `--ours`/`--theirs`, which is
-  resolving a conflict by hand, and `Bash(git remote:*)` pre-approved `set-url`, neither of which the bullet above
-  claims to allow. Hence `git checkout --:*`, `git remote get-url:*`, `git switch -c:*` *and* `git switch -`, and one
-  entry each for `git worktree list`/`remove`/`prune`. `branch`, `cherry-pick`, `rev-parse`, `show` and `status` take
-  arguments computed at run time and cannot be usefully narrowed. A prefix rule matches only the exact string or the
-  string followed by a space, which is why bare `git switch -` needs a rule of its own — `git switch -c:*` does not
-  cover it — and why `git checkout --:*` still permits `git checkout -- .`, so the narrowing is partial. It is also
+  resolving a conflict by hand, `Bash(git remote:*)` pre-approved `set-url`, and `Bash(git branch:*)` pre-approved
+  `--force` (which silently moves a branch and can orphan commits) and `-m`, none of which the bullet above claims to
+  allow. Hence `git checkout --:*`, `git remote get-url:*`, `git switch -c:*` *and* `git switch -`, `git branch -D:*`
+  *and* `git branch --show-current`, and one entry each for `git worktree list`/`remove`/`prune`. Only the *refs* the
+  teardown deletes are computed at run time, so pinning the subcommand flag costs nothing; `cherry-pick`, `rev-parse`,
+  `show` and `status` are the ones whose arguments are all computed and cannot be usefully narrowed. A prefix rule
+  matches only the exact string or the string followed by a space, which is why bare `git switch -` and
+  `git branch --show-current` each need a rule of their own — `git switch -c:*` and `git branch -D:*` do not cover
+  them — and why `git checkout --:*` still permits `git checkout -- .`, so the narrowing is partial. It is also
   hygiene rather than a safety boundary: `allowed-tools` is allow-only, so a pattern that stops matching restores a
   confirmation prompt and never removes a capability.
 - Cite each finding with a file path and line range, and link it if the repository has a GitHub remote. Follow this
   format precisely, otherwise the Markdown preview won't render correctly:
   https://github.com/anthropics/claude-code/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15
 
-  - Requires the full commit SHA; obtain it with `git rev-parse HEAD`.
+  - Requires the full commit SHA of the reviewed tree: use `reviewedCommit` from the result, which is the `HEAD` the
+    review was actually read at. Ask git for it (`git rev-parse HEAD`) only if `reviewedCommit` is `null`, and say in
+    the report that the links are anchored to current `HEAD` rather than to the reviewed commit.
   - Repo name must match the repo you're reviewing. Get the remote with `git remote get-url origin`; it may be in SSH
     form (`git@github.com:owner/repo.git`), which you must convert to `https://github.com/owner/repo`.
   - `#` sign after the file name.

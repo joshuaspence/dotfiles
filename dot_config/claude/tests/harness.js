@@ -126,13 +126,19 @@ export async function loadInternals(scriptPath, { names, args = {}, marker = ORC
     );
   }
 
-  const body = `${stripExport(source.slice(0, cut))}\nreturn { ${names.join(', ')} };`;
+  // The appended `return` is branded, because it is not the only `return` the slice can reach: a declaration section may
+  // hold a top-level abort — `repo-review.js` bails out there when `args` is a string that is not JSON — and one of
+  // those short-circuits before this one runs. Unbranded, its payload comes back looking like the internals, with every
+  // requested name `undefined` and no ReferenceError for the diagnostic below to catch.
+  const brand = '__loadInternals__';
+  const body = `${stripExport(source.slice(0, cut))}\nreturn { '${brand}': true, ${names.join(', ')} };`;
+  let loaded;
 
   try {
     const workflow = compile(body);
 
-    return await workflow(
-      args, 
+    loaded = await workflow(
+      args,
       unusable('agent'),
       unusable('parallel'),
       unusable('pipeline'),
@@ -142,7 +148,12 @@ export async function loadInternals(scriptPath, { names, args = {}, marker = ORC
       unusable('workflow'),
     );
   } catch (error) {
-    if (error instanceof ReferenceError) {
+    // Only a name the caller asked for can be diagnosed as a stale `names` list. Every other `ReferenceError` comes
+    // from the script's own declarations — a typo, or a free variable the runtime injects that `WORKFLOW_GLOBALS` does
+    // not list — and blaming `names` for those would send the reader to the wrong file entirely.
+    const undeclared = error instanceof ReferenceError && /^(\S+) is not defined$/.exec(error.message)?.[1];
+
+    if (undeclared && names.includes(undeclared)) {
       throw new Error(
         `An internal the caller asked for is missing from ${scriptPath}: ${error.message}. It was probably renamed — ` +
           'update the `names` list to match.',
@@ -152,14 +163,31 @@ export async function loadInternals(scriptPath, { names, args = {}, marker = ORC
 
     throw error;
   }
+
+  const { [brand]: branded, ...internals } = loaded ?? {};
+
+  if (!branded) {
+    throw new Error(
+      `The declaration section of ${scriptPath} returned before the internals could be collected, so what came back ` +
+        `is that early \`return\`'s value (${describe(loaded)}) rather than the names asked for. Those early returns ` +
+        'are abort paths guarding against unusable input, so the `args` passed here most likely trip one: pass args ' +
+        'that get past the guard, or move the guard below the marker.',
+    );
+  }
+
+  return internals;
 }
+
+// Enough of a returned value to recognize which abort produced it, without assuming it is serializable.
+const describe = (value) =>
+  value && typeof value === 'object' ? `an object with keys ${Object.keys(value).join(', ')}` : `a ${typeof value}`;
 
 // Declarations must not reach for the runtime; if one starts to, say so rather than letting it read as a mystery.
 const unusable = (name) => () => {
   throw new Error(`${name}() was called while loading declarations only — it is not available there.`);
 };
 
-const stubBudget = () => ({ total: null, spent: () => 0, remaining: () => Infinity });
+export const stubBudget = () => ({ total: null, spent: () => 0, remaining: () => Infinity });
 
 // --- Running a whole script -----------------------------------------------------------------------------------------
 
@@ -175,7 +203,7 @@ const parallelImpl = (thunks) =>
  * No script uses `pipeline` yet, but a divergent stub would be a trap for whatever does next: each item runs every
  * stage independently with no barrier, and a stage that throws drops that item to `null`.
  */
-const pipelineImpl = (items, ...stages) =>
+export const pipelineImpl = (items, ...stages) =>
   Promise.all(
     items.map(async (item, index) => {
       let value = item;
@@ -199,16 +227,37 @@ const pipelineImpl = (items, ...stages) =>
  * subagent would have (or `null` to simulate one that never returned, or throws to simulate a dead agent).
  *
  * Returns the script's own return value plus everything observable from outside it: every agent call in order (with
- * prompts, so the instructions sent can be asserted), the `log` lines, and the phases entered.
+ * prompts, so the instructions sent can be asserted), the `log` lines, and the phases entered — each once, in the
+ * order it was first entered, by either of the two routes into a phase.
  */
 export async function runWorkflow({ scriptPath, args = {}, agent } = {}) {
+  if (typeof agent !== 'function') {
+    throw new Error(
+      'runWorkflow needs an `agent` function to answer the agent calls the script makes. Without one every call ' +
+        "throws, and `parallel`'s catch-all turns that into a plausible-looking early bail — so the test would pass " +
+        'for the wrong reason.',
+    );
+  }
+
   const calls = [];
   const logs = [];
   const phases = [];
 
+  // A phase group is created either by a `phase('X')` call or by an agent's `phase: 'X'` option, and the runtime enters
+  // it just the same — `/repo-review`'s 'Review Fix' arrives *only* the second way. Recording just the calls would
+  // leave a phase the run really entered invisible from out here, which is worse than absent: the negative assertion
+  // `expect(run.phases).not.toContain(…)` would pass vacuously for every option-only phase. Titles are matched exactly
+  // and one title is one group, so a repeat (a `phase()` in a loop, or every agent in a group naming it) adds nothing.
+  const enterPhase = (title) => {
+    if (title && !phases.includes(title)) {
+      phases.push(title);
+    }
+  };
+
   const agentImpl = async (prompt, opts = {}) => {
     const call = { label: opts.label, prompt, opts };
     calls.push(call);
+    enterPhase(opts.phase);
     call.result = await agent(call);
 
     return call.result;
@@ -220,7 +269,7 @@ export async function runWorkflow({ scriptPath, args = {}, agent } = {}) {
     agentImpl,
     parallelImpl,
     pipelineImpl,
-    (title) => phases.push(title),
+    enterPhase,
     (message) => logs.push(message),
     stubBudget(),
     () => {
@@ -235,8 +284,13 @@ export async function runWorkflow({ scriptPath, args = {}, agent } = {}) {
     phases,
 
     // Convenience accessors, since almost every assertion is "what did the agents with this label get asked / say".
+    // Both return the matches rather than a boolean, so a test can assert how many there were and in what order, and a
+    // failure names the lines that were there instead of just `false`. A RegExp is tested against each candidate; a
+    // string matches a label whole — a label is a closed vocabulary this suite writes out in full — but matches a log
+    // line as a substring, since a log line is prose carrying interpolated counts and SHAs no assertion wants to repeat.
     called: (pattern) => calls.filter((call) => matches(pattern, call.label)),
-    logged: (substring) => logs.some((line) => line.includes(substring)),
+    logged: (pattern) =>
+      logs.filter((line) => (pattern instanceof RegExp ? pattern.test(line) : line.includes(pattern))),
   };
 }
 

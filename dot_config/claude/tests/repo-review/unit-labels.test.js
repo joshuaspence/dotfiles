@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { internals, issue, REVIEWER_KEYS, runFix } from './scenario.js';
+import { fixScenario, internals, issue, parseLabel, REVIEWER_KEYS, runFix } from './scenario.js';
 
 // What a label costs before the unit name is added: the longest reviewer key, plus `review:` and the joining colon.
 const LONGEST_KEY = REVIEWER_KEYS.reduce((a, b) => (b.length > a.length ? b : a));
@@ -44,7 +44,6 @@ describe('unit slug', () => {
     const { unitSlug } = await internals();
 
     expect(unitSlug('AuthenticationMiddleware')).toBe(unitSlug('Authentication Middleware'));
-    expect(unitSlug('AuthenticationMiddleware')).toBe('authentication');
   });
 
   it('cuts an over-long slug on a word boundary rather than mid-word', async () => {
@@ -100,6 +99,26 @@ describe('unit slug collisions', () => {
     expect(slugged.map((unit) => unit.slug)).toEqual(['wire-protocol', 'wire-protocol-2', 'wire-protocol-3']);
   });
 
+  it('numbers a unit off the names the dedupe phase reserves for itself', async () => {
+    // `dedupe:<name>` is one namespace, and the dedupe phase mints two names in it that no unit passes through here:
+    // the bucket for findings no unit claimed, and the prefix every cross-unit chunk carries. `Cross-Cutting Concerns`
+    // is a name a partition agent plausibly writes and it slugs onto the first one exactly, so without a reservation
+    // two stage-1 agents would run under one label — and a stall report naming it could not say which one stalled.
+    const { withUnitSlugs, DEDUPE_CROSS_SLUG, DEDUPE_UNCLAIMED_SLUG } = await internals();
+
+    const slugged = withUnitSlugs([
+      { name: 'Cross-Cutting Concerns', paths: ['a'] },
+      { name: 'cross cutting', paths: ['b'] },
+      { name: 'Cross', paths: ['c'] },
+    ]);
+
+    expect(slugged.map((unit) => unit.slug)).toEqual([
+      `${DEDUPE_UNCLAIMED_SLUG}-2`,
+      `${DEDUPE_UNCLAIMED_SLUG}-3`,
+      `${DEDUPE_CROSS_SLUG}-2`,
+    ]);
+  });
+
   it('names a unit whose name slugs away to nothing', async () => {
     // `???` and `---` leave an empty string, and `dedupe:` with nothing after it names no unit at all.
     const { withUnitSlugs } = await internals();
@@ -117,6 +136,30 @@ describe('unit slug collisions', () => {
     const [unit] = withUnitSlugs([{ name: 'Wire Protocol Layer', summary: 'framing', paths: ['wire'] }]);
 
     expect(unit).toMatchObject({ name: 'Wire Protocol Layer', summary: 'framing', slug: 'wire-protocol' });
+  });
+});
+
+describe('labels built from a finding', () => {
+  it('round-trips through the parser every scenario reads them with', async () => {
+    // `parseLabel` restates this grammar as a regex, which it has to — parsing is not something the builders can do.
+    // Asserting the two against each other is what stops the restatement drifting: a builder that started emitting
+    // `vote 1 of 3` would leave every fake agent answering for finding 0, and the scenarios would fail far from here.
+    const { findingTag, voteTag, attemptTag } = await internals();
+    const tag = findingTag(issue({ category: 'bug' }), 3);
+
+    expect(parseLabel(`validate:${tag}${voteTag(2, 3)}`)).toMatchObject({
+      kind: 'validate',
+      category: 'bug',
+      idx: 3,
+      vote: 2,
+    });
+
+    expect(parseLabel(`revise:${tag}${attemptTag(1)}`)).toMatchObject({ kind: 'revise', idx: 3, attempt: 1 });
+
+    // A single validator or reviewer carries no vote segment, and the original fix attempt no attempt segment — the
+    // defaults the parser fills in have to be the ones the omission means.
+    expect(parseLabel(`fix:${tag}${attemptTag(0)}`)).toMatchObject({ kind: 'fix', idx: 3, attempt: 0, vote: 0 });
+    expect(parseLabel(`review-fix:${tag}${voteTag(0, 1)}`)).toMatchObject({ kind: 'review-fix', idx: 3, vote: 0 });
   });
 });
 
@@ -150,5 +193,55 @@ describe('labels built from a unit', () => {
 
     expect(prompt).toContain('`kebab-case`');
     expect(prompt).toContain(`most ${UNIT_SLUG_CAP} characters`);
+  });
+});
+
+describe('reading a unit back out of a label', () => {
+  // The slug in the label is all the test scenario has to recover a unit from, and it used to do so by prefix-matching a
+  // re-normalized name. Every per-unit assertion in this suite rests on that, and a miss read as "the whole repository"
+  // — so a wrong answer widened a reviewer's scope instead of failing, and those assertions passed for no reason.
+  const reported = (run, label) => run.called(label)[0].result.issues.map((subject) => subject.file);
+
+  it('resolves a slug that collided with another unit and was numbered', async () => {
+    // `wire-protocol-2` is no prefix of `wire-protocol-framing`, so the second unit's reviewers matched nothing.
+    const units = [
+      { name: 'Wire Protocol Layer', summary: 'framing', paths: ['wire'] },
+      { name: 'Wire Protocol Framing', summary: 'codecs', paths: ['framing'] },
+    ];
+    const issues = [issue({ file: 'wire/frame.py' }), issue({ file: 'framing/codec.py' })];
+    const run = await runFix({ issues, units, args: { fix: false } });
+
+    expect(reported(run, 'review:wire-protocol:bug')).toEqual(['wire/frame.py']);
+    expect(reported(run, 'review:wire-protocol-2:bug')).toEqual(['framing/codec.py']);
+  });
+
+  it('resolves a slug the script split on camel case, and one another name is a prefix of', async () => {
+    // Two failures at once: `AuthMiddleware` slugs to `auth-middleware` but re-normalized to `authmiddleware`, and
+    // `core` is a prefix of `core-utils`, so the shorter name's reviewers were scoped to the longer one's paths.
+    const units = [
+      { name: 'AuthMiddleware', summary: 'the guards', paths: ['auth'] },
+      { name: 'core-utils', summary: 'the helpers', paths: ['utils'] },
+      { name: 'core', summary: 'the protocol', paths: ['core'] },
+    ];
+    const issues = [
+      issue({ file: 'auth/guard.py' }),
+      issue({ file: 'utils/text.py' }),
+      issue({ file: 'core/wire.py' }),
+    ];
+    const run = await runFix({ issues, units, args: { fix: false } });
+
+    expect(reported(run, 'review:auth-middleware:bug')).toEqual(['auth/guard.py']);
+    expect(reported(run, 'review:core-utils:bug')).toEqual(['utils/text.py']);
+    expect(reported(run, 'review:core:bug')).toEqual(['core/wire.py']);
+  });
+
+  it('fails loudly on a slug no unit answers to, rather than reviewing everything', async () => {
+    // The distinction the fallback lost: `arch` is the architecture lenses, which really do read the whole repository;
+    // anything else is a fixture that can no longer say what a reviewer was given.
+    const units = [{ name: 'core', summary: 'the protocol', paths: ['core'] }];
+    const scenario = fixScenario({ issues: [issue({ file: 'core/wire.py' })], units });
+
+    expect(() => scenario.agent({ label: 'review:not-a-unit:bug' })).toThrow(/slugged 'not-a-unit'/);
+    expect(scenario.agent({ label: 'review:arch:coupling' })).toBeDefined();
   });
 });

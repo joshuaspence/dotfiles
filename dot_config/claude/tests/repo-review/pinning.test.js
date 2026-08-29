@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { HEAD, STALE, commitSha, internals, issue, runFix } from './scenario.js';
+import { HEAD, commitSha, internals, issue, runFix } from './scenario.js';
 
 describe('the pin instruction', () => {
   it('tells the fixer to branch at the reviewed commit and to verify it took', async () => {
@@ -67,12 +67,59 @@ describe('the pin instruction', () => {
   });
 });
 
+describe('the sandbox the pin is applied inside', () => {
+  // `isolation: 'worktree'` is the entire containment story for the agents that hold Edit and run `git switch -c` /
+  // `git add` / `git commit`. Deleting it would turn N concurrent fixers loose on the user's live checkout, branching
+  // and committing in it — and every prompt assertion above reads identically either way, so without these two tests
+  // nothing in the suite would notice.
+  const COMMITTING = /^(fix|revise|reconcile):/;
+
+  // One run that reaches all three kinds: two findings in the same file collide, so they are reconciled after being
+  // fixed, and rejecting finding 0's first attempt adds a reviser.
+  const busy = () =>
+    runFix({
+      issues: [issue({ file: 'src/a.ts' }), issue({ file: 'src/a.ts', description: 'a second finding there' })],
+      reviewFix: (_subject, { idx, attempt }) =>
+        idx === 0 && attempt === 0
+          ? { approved: false, objection: 'misses a case' }
+          : { approved: true, objection: '' },
+    });
+
+  it('is requested by every fixer, reviser and reconciler', async () => {
+    const run = await busy();
+    const committing = run.called(COMMITTING);
+
+    // Count them first: a renamed label would otherwise leave the loop below iterating an empty list and passing.
+    expect(run.called(/^fix:/)).toHaveLength(2);
+    expect(run.called(/^revise:/)).toHaveLength(1);
+    expect(run.called(/^reconcile:/)).toHaveLength(1);
+    expect(committing).toHaveLength(4);
+
+    for (const call of committing) {
+      expect(call.opts.isolation).toBe('worktree');
+    }
+  });
+
+  it('is requested by nothing else in that run, every other agent being read-only', async () => {
+    const run = await busy();
+    const stray = run.calls.filter((call) => !COMMITTING.test(call.label) && call.opts.isolation !== undefined);
+
+    expect(stray.map((call) => call.label)).toEqual([]);
+  });
+
+  it('is not requested anywhere by a review that cannot commit', async () => {
+    const run = await runFix({ args: { fix: false } });
+
+    expect(run.calls.length).toBeGreaterThan(0);
+    expect(run.calls.filter((call) => call.opts.isolation !== undefined).map((call) => call.label)).toEqual([]);
+  });
+});
+
 describe('capturing the reviewed commit', () => {
   it('reports the surveyed commit as the base the wrapper must cherry-pick onto', async () => {
     const run = await runFix();
 
     expect(run.result.fix.base).toBe(HEAD);
-    expect(run.logged('Reviewing at cd976db1f0')).toBe(true);
   });
 
   it('re-asks a single question when the survey drops the SHA', async () => {
@@ -90,19 +137,59 @@ describe('capturing the reviewed commit', () => {
     ['a shell injection', 'HEAD; rm -rf /'],
     ['an empty string', ''],
     ['a non-hex string', 'not-a-sha-at-all'],
+    ['an abbreviated object name', 'cd976db'],
   ])('rejects %s and falls back to the direct question', async (_label, headSha) => {
-    // The SHA is interpolated into the `git switch` line of every downstream prompt, so it is untrusted input.
+    // The SHA is interpolated into the `git switch` line of every downstream prompt, so it is untrusted input. An
+    // abbreviation is rejected for a second reason: every agent verifies its pin by comparing `git rev-parse HEAD`
+    // against this string, and the wrapper's pre-flight compares it to `fix.base`, so a 7-character base pins the
+    // branch correctly and then fails that comparison forever — every fixer declines at step 0 and the phase produces
+    // nothing. Re-asking costs one Haiku call; accepting it costs the whole `--fix` phase.
     const run = await runFix({ survey: { headSha }, headOnly: { headSha: HEAD } });
 
     expect(run.called('review-head')).toHaveLength(1);
     expect(run.result.fix.base).toBe(HEAD);
+    expect(run.logged('Reviewing at')).toHaveLength(0);
   });
 
-  it('accepts a short object name', async () => {
-    const run = await runFix({ survey: { headSha: 'cd976db' } });
+  it('canonicalises the case `git rev-parse` prints, rather than re-asking', async () => {
+    // A full-length answer in upper case is the SHA, just not spelled the way git echoes it. Lower-casing it keeps the
+    // string comparison in the pin instruction meaningful without spending a re-ask that could come back the same way.
+    const run = await runFix({ survey: { headSha: HEAD.toUpperCase() } });
 
     expect(run.called('review-head')).toHaveLength(0);
-    expect(run.result.fix.base).toBe('cd976db');
+    expect(run.result.fix.base).toBe(HEAD);
+  });
+});
+
+describe('reporting the reviewed commit to the wrapper', () => {
+  // The wrapper cites every finding as a permalink into the reviewed tree. It used to be told to obtain that SHA with
+  // its own `git rev-parse HEAD`, which is a second source of truth for a fact this script already holds and validates
+  // — and one free to disagree, since a long run can outlive the `HEAD` it started on.
+  it('returns it on the read-only path, where there is no `fix` object to carry it', async () => {
+    const run = await runFix({ args: { fix: false } });
+
+    expect(run.result.reviewedCommit).toBe(HEAD);
+    expect(run.result.fix).toBeUndefined();
+  });
+
+  it('returns it alongside `fix.base`, which is the same commit', async () => {
+    const run = await runFix();
+
+    expect(run.result.reviewedCommit).toBe(HEAD);
+    expect(run.result.fix.base).toBe(run.result.reviewedCommit);
+  });
+
+  it('returns it from an aborted run too, so the field is on every exit the wrapper can see', async () => {
+    const run = await runFix({ units: [] });
+
+    expect(run.result.reviewedCommit).toBe(HEAD);
+    expect(run.result.gaps.some((entry) => entry.includes('Partition agent did not return'))).toBe(true);
+  });
+
+  it('is null when the script never learned it, so the wrapper knows to ask git itself', async () => {
+    const run = await runFix({ survey: { headSha: '' }, headOnly: null });
+
+    expect(run.result.reviewedCommit).toBeNull();
   });
 });
 
@@ -127,12 +214,31 @@ describe('when the reviewed commit cannot be determined at all', () => {
     expect(gap).toBeDefined();
     expect(gap).toContain('not** verified as unfixable');
   });
+
+  it.each([
+    ['a branch name', 'master'],
+    ['a shell injection', 'HEAD; rm -rf /'],
+    ['an empty string', ''],
+    ['a non-hex string', 'not-a-sha-at-all'],
+  ])('refuses just the same when the re-ask answers with %s', async (_label, headSha) => {
+    // The re-ask is the second, independent source of the SHA interpolated into the `git switch` line of every sandbox
+    // prompt, and the one likeliest to answer badly: a Haiku agent at low effort whose prompt has to spell out "do not
+    // substitute a branch name". Its answer is untrusted for the same reason the survey's is, so it is guarded the same
+    // way — a bad answer here is a run that cannot be pinned, not a value to pass on.
+    const run = await runFix({ survey: { headSha: '' }, headOnly: { headSha } });
+
+    expect(run.called('review-head')).toHaveLength(1);
+    expect(run.called(/^fix:/)).toHaveLength(0);
+    expect(run.result.fix).toBeUndefined();
+  });
 });
 
 describe('the reviewed commit reaches every prompt that needs it', () => {
-  it('never leaks the stale base into an instruction', async () => {
-    // A cheap whole-run guard: STALE stands in for the remote default branch. Nothing the script composes should ever
-    // name it, since it only ever learns the surveyed SHA.
+  it('pins the branch of every agent that commits, not just the first of each kind', async () => {
+    // The tests above check one fixer and one reconciler; this checks that nothing composing a `git switch` line is
+    // left out — the second fixer included. Both halves have to be falsifiable to be worth having: the expected calls
+    // are named so a filtered assertion cannot pass by matching nothing, and the pin is matched on the `git switch`
+    // line rather than on a bare mention of the SHA, which the survey block appended to every prompt carries anyway.
     const run = await runFix({
       issues: [issue({ file: 'src/a.ts' }), issue({ file: 'src/a.ts', description: 'a second finding there' })],
       fix: (subject, { idx }) => ({
@@ -143,8 +249,10 @@ describe('the reviewed commit reaches every prompt that needs it', () => {
         reason: 'fixed',
       }),
     });
+    const branching = run.called(/^(fix|reconcile):/);
+    const pinned = new RegExp(`git switch -c \\S+ ${HEAD}\``);
 
-    expect(run.calls.filter((call) => call.prompt.includes(STALE))).toEqual([]);
-    expect(run.called(/^(fix|reconcile):/).every((call) => call.prompt.includes(HEAD))).toBe(true);
+    expect(branching.map((call) => call.label)).toEqual(['fix:bug#0', 'fix:bug#1', 'reconcile:bug#0+bug#1']);
+    expect(branching.filter((call) => !pinned.test(call.prompt)).map((call) => call.label)).toEqual([]);
   });
 });

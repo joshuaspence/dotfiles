@@ -5,9 +5,30 @@
  * they are checked for every script in the source directory, including ones added after this file was written.
  */
 
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { compile, loadMeta, readScript, stripExport, workflowScripts } from './harness.js';
+import { basename } from 'node:path';
+
+import {
+  compile,
+  loadMeta,
+  readScript,
+  runWorkflow,
+  stripExport,
+  workflowScript,
+  workflowScripts,
+} from './harness.js';
+
+describe('workflowScript', () => {
+  it('throws when workflow name is not found', () => {
+    expect(() => workflowScript('nonexistent-workflow')).toThrow(
+      /No workflow script named 'nonexistent-workflow'/,
+    );
+  });
+});
 
 describe.each(workflowScripts())('$name', ({ path }) => {
   it('parses as an async function body', () => {
@@ -25,19 +46,70 @@ describe.each(workflowScripts())('$name', ({ path }) => {
     expect(value).toEqual(JSON.parse(JSON.stringify(value)));
   });
 
-  it('declares every phase the body actually enters, and no others', () => {
-    const source = readScript(path);
+  it('declares every phase the body actually enters, and no others', async () => {
+    // Run the workflow to capture which phases are entered at runtime, not just which phase calls appear in the
+    // source. A phase in a never-executed conditional would be found by regex but never entered; a typo or
+    // conditional bug in the phase name would pass static analysis but fail here.
 
-    // A phase group is created either by a `phase('X')` call or by an agent's `phase: 'X'` option — `/repo-review`'s
-    // 'Review Fix' only ever arrives the second way. Titles are matched exactly, so a title used but not declared gets
-    // an unnamed box, and one declared but never used gets an empty one.
-    const used = new Set([
-      ...[...source.matchAll(/\bphase\('([^']+)'\)/g)].map(([, title]) => title),
-      ...[...source.matchAll(/\bphase: '([^']+)'/g)].map(([, title]) => title),
-    ]);
+    // Build an agent mock and args appropriate for this workflow.
+    let agent, args;
+    const workflowName = basename(path, '.js');
+
+    if (workflowName === 'repo-review') {
+      // Import the scenario builder for repo-review to get a working agent mock.
+      const { fixScenario } = await import('./repo-review/scenario.js');
+      ({ agent } = fixScenario());
+      // Enable fix mode and set minimal counts to exercise all phases.
+      args = { fix: true, validators: 1, reviewers: 1 };
+    } else {
+      // For other workflows, use a minimal agent that returns empty objects.
+      agent = async () => ({});
+      args = {};
+    }
+
+    const { phases } = await runWorkflow({
+      scriptPath: path,
+      args,
+      agent,
+    });
 
     const declared = loadMeta(path).value.phases.map((phase) => phase.title);
+    const entered = [...new Set(phases)].sort();
 
-    expect([...used].sort()).toEqual([...declared].sort());
+    // Every phase entered at runtime must be declared (strict check for typos and runtime bugs).
+    for (const phase of entered) {
+      expect(declared, `Phase '${phase}' was entered but not declared in meta.phases`).toContain(phase);
+    }
+
+    // Every declared phase should be entered at least once (catches unused declarations and conditional logic bugs).
+    expect(entered).toEqual(declared.sort());
+  });
+});
+
+describe('loadMeta error handling', () => {
+  it('throws when script has no meta block', () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), 'workflow-test-'));
+    const scriptPath = join(tmpDir, 'no-meta.js');
+
+    try {
+      writeFileSync(scriptPath, 'const foo = 42;\n');
+
+      expect(() => loadMeta(scriptPath)).toThrow(/has no `export const meta = { … };` block/);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('throws when meta block closing brace is not on its own line', () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), 'workflow-test-'));
+    const scriptPath = join(tmpDir, 'malformed-meta.js');
+
+    try {
+      writeFileSync(scriptPath, 'export const meta = { name: "test" };\n');
+
+      expect(() => loadMeta(scriptPath)).toThrow(/has no `export const meta = { … };` block/);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });
