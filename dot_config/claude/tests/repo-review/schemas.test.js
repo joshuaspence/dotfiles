@@ -26,4 +26,57 @@ describe('schemas', () => {
       expect(schema.properties.branch.description).toMatch(/whatever the outcome/);
     }
   });
+
+  it('enforces required fields critical to the pipeline', async () => {
+    // Schemas are the only mechanism making agents return required fields. A field dropped from a schema arrives as
+    // `undefined` several phases later, causing silent failures.
+    const {
+      ISSUES_SCHEMA,
+      SURVEY_SCHEMA,
+      PARTITION_SCHEMA,
+      VERDICT_SCHEMA,
+      DEDUPE_SCHEMA,
+      FIX_RESULT_SCHEMA,
+      RECONCILE_RESULT_SCHEMA,
+      REVIEW_RESULT_SCHEMA,
+    } = await internals();
+
+    // ISSUES_SCHEMA must require the issues array, and each issue must require its core fields
+    expect(ISSUES_SCHEMA.required).toContain('issues');
+    const issueSchema = ISSUES_SCHEMA.properties.issues.items;
+    expect(issueSchema.required).toEqual(['description', 'severity', 'category', 'file', 'reason']);
+
+    // SURVEY_SCHEMA must require all fields the downstream phases depend on
+    expect(SURVEY_SCHEMA.required).toEqual([
+      'languages',
+      'tooling',
+      'entryPoints',
+      'inScopeFileCount',
+      'structure',
+      'headSha',
+    ]);
+    // Each structure item must have path and fileCount
+    const structureSchema = SURVEY_SCHEMA.properties.structure.items;
+    expect(structureSchema.required).toEqual(['path', 'fileCount']);
+
+    // PARTITION_SCHEMA must require units and exclusions, and their nested items must have their required fields
+    expect(PARTITION_SCHEMA.required).toEqual(['units', 'exclusions']);
+    const unitSchema = PARTITION_SCHEMA.properties.units.items;
+    expect(unitSchema.required).toEqual(['name', 'paths']);
+    const exclusionSchema = PARTITION_SCHEMA.properties.exclusions.items;
+    expect(exclusionSchema.required).toEqual(['path', 'reason']);
+
+    // VERDICT_SCHEMA must require both fields validators return
+    expect(VERDICT_SCHEMA.required).toEqual(['confirmed', 'rationale']);
+
+    // DEDUPE_SCHEMA must require the groups array
+    expect(DEDUPE_SCHEMA.required).toEqual(['groups']);
+
+    // FIX_RESULT_SCHEMA and RECONCILE_RESULT_SCHEMA must require status and reason
+    expect(FIX_RESULT_SCHEMA.required).toEqual(['status', 'reason']);
+    expect(RECONCILE_RESULT_SCHEMA.required).toEqual(['status', 'reason']);
+
+    // REVIEW_RESULT_SCHEMA must require approved and objection
+    expect(REVIEW_RESULT_SCHEMA.required).toEqual(['approved', 'objection']);
+  });
 });
