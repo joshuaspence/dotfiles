@@ -183,7 +183,7 @@ describe('reporting the reviewed commit to the wrapper', () => {
     const run = await runFix({ units: [] });
 
     expect(run.result.reviewedCommit).toBe(HEAD);
-    expect(run.result.gaps.some((entry) => entry.includes('Partition agent did not return'))).toBe(true);
+    expect(run.result.gaps.join(' ')).toContain('Partition agent did not return');
   });
 
   it('is null when the script never learned it, so the wrapper knows to ask git itself', async () => {
