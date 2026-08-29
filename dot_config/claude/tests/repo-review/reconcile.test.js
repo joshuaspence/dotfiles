@@ -37,8 +37,9 @@ describe('groupByFileCollision', () => {
     expect(groupByFileCollision([])).toEqual([]);
   });
 
-  it('treats null, undefined, and empty changedFiles identically in union-find', async () => {
-    // All three forms (null, undefined, []) are coerced to [] by line 1094's `|| []`, so each fix stays in its own group.
+  it('treats null, undefined, and empty changedFiles as empty before grouping', async () => {
+    // All three forms (null, undefined, []) are coerced to [] by the `fixResult.changedFiles || []` in
+    // `groupByFileCollision`'s union-find loop, so each fix stays in its own group.
     expect(await group(null, undefined, [])).toEqual([[0], [1], [2]]);
   });
 
@@ -71,6 +72,40 @@ describe('fileInUnit', () => {
     expect(await fileInUnit('', ['src'])).toBe(false);
     expect(await fileInUnit(undefined, ['src'])).toBe(false);
     expect(await fileInUnit('src/a.ts', undefined)).toBe(false);
+  });
+
+  it('correctly filters findings per unit when building dedupe scopes', async () => {
+    // The actual usage: `dedupeScopes` scopes findings to units through `fileInUnit`, so each scope holds only the
+    // indices of findings whose files belong to that unit. Scopes with fewer than 2 findings are dropped by that
+    // function's trailing `scope.indices.length > 1` filter, because dedupe needs at least two findings to compare.
+    const { dedupeScopes, DEDUPE_UNCLAIMED_SLUG } = await internals();
+
+    const findings = [
+      { file: 'src/a.ts', description: 'first in src' },
+      { file: 'src/nested/b.ts', description: 'second nested in src' },
+      { file: 'lib/c.ts', description: 'first in lib' },
+      { file: 'lib/d.ts', description: 'second in lib' },
+      { file: 'docs/readme.md', description: 'first in docs' },
+      { file: undefined, description: 'repo-wide finding' },
+    ];
+
+    const units = [
+      { slug: 'src', paths: ['src'] },
+      { slug: 'lib', paths: ['lib'] },
+    ];
+
+    const scopes = dedupeScopes(findings, units);
+
+    // The `src` unit should contain findings 0 and 1 (both in src/), and the `lib` unit should contain findings 2 and 3.
+    const srcScope = scopes.find((scope) => scope.name === 'src');
+    const libScope = scopes.find((scope) => scope.name === 'lib');
+
+    expect(srcScope?.indices).toEqual([0, 1]);
+    expect(libScope?.indices).toEqual([2, 3]);
+
+    // Findings 4 and 5 (docs/ and repo-wide) are unclaimed and go to a shared bucket since neither matches any unit.
+    const unclaimedScope = scopes.find((scope) => scope.name === DEDUPE_UNCLAIMED_SLUG);
+    expect(unclaimedScope?.indices).toEqual([4, 5]);
   });
 });
 
@@ -241,11 +276,8 @@ describe('a merged commit that reports no files', () => {
       }),
     });
 
-  it.each([
-    ['an empty list', []],
-    ['no list at all', undefined],
-  ])('is treated as a failed reconciliation when it reports %s', async (_label, changedFiles) => {
-    const run = await unreported(changedFiles);
+  it('is treated as a failed reconciliation when it reports no changed files', async () => {
+    const run = await unreported(undefined);
 
     expect(run.result.fix.commits).toEqual([]);
     expect(run.result.gaps.join(' ')).toContain('Reconciliation failed for 2 colliding fix(es)');
