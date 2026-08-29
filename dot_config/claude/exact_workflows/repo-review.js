@@ -466,15 +466,47 @@ const emphasisBlock = (round) => {
 // finding named in this list is recognisable as the same finding wherever else the run mentions it — the dedupe digest
 // most of all. Descriptions are free reviewer prose and routinely contain newlines; left in, one finding would read as
 // several and the bullet list would stop being a list.
-const knownLine = (issue) =>
-  `- [${issue?.category}] ${issueSite(issue)} — ${(issue?.description || '').replace(/\s+/g, ' ')}`;
+//
+// `deduped` holds that prose untruncated, and by the last round of the measured run the largest unit was carrying 84
+// findings — rendered in full, the list would outweigh the instructions it is attached to. So the caller passes a
+// budget rather than one being fixed here, because the two lists below can afford different amounts of it.
+const knownLine = (issue, budget) =>
+  `- [${issue?.category}] ${issueSite(issue)} — ${(issue?.description || '').replace(/\s+/g, ' ').slice(0, budget)}`;
 
 // Render the "already reported, look elsewhere" feedback list; empty when there is nothing accumulated yet.
-const knownFindingsBlock = (known) =>
-  known?.length
-    ? '\n\nAlready reported by earlier passes — do NOT re-report these; find what they missed:\n' +
-      known.map(knownLine).join('\n')
-    : '';
+//
+// A reviewer is shown every finding held for its unit, not only the ones in its own category. Filtering this list by
+// category is what let a single defect be reported under four categories at once: the Bug reviewer was never told that
+// Security had already flagged the same missing length check, so it flagged it too, and dedupe merged them afterwards
+// at full review cost. Measured over one four-round run, 68% of the duplicates dedupe merged away sat in groups
+// spanning more than one category — 40% of everything the reviewers produced.
+//
+// The two lists are worded differently because they carry different instructions. A finding in the reviewer's own
+// category is a floor to look past. A finding from another reviewer only has to be recognised, so that this reviewer
+// does not restate it from its own angle — while still leaving room for a genuinely different defect at the same site,
+// which is the one thing showing the second list could otherwise suppress. Recognising a defect takes less text than
+// looking past one, which is why the second budget is the smaller of the two.
+const KNOWN_OWN_BUDGET = 220;
+
+const KNOWN_OTHER_BUDGET = 110;
+
+const knownFindingsBlock = (known, ownCategory) => {
+  const own = (known || []).filter((issue) => issue?.category === ownCategory);
+  const other = (known || []).filter((issue) => issue?.category !== ownCategory);
+
+  return (
+    (own.length
+      ? '\n\nAlready reported in your category by earlier passes — do NOT re-report these; find what they missed:\n' +
+        own.map((issue) => knownLine(issue, KNOWN_OWN_BUDGET)).join('\n')
+      : '') +
+    (other.length
+      ? '\n\nAlready reported by another reviewer, in a category that is not yours to report. These defects are ' +
+        'known — do not restate one from your own angle and do not re-report it under your category. Flag something ' +
+        'at one of these sites only if it is a genuinely different defect:\n' +
+        other.map((issue) => knownLine(issue, KNOWN_OTHER_BUDGET)).join('\n')
+      : '')
+  );
+};
 
 // A finding belongs to a unit when its primary file is one of the unit's paths or sits beneath one of them.
 const fileInUnit = (file, unit) =>
@@ -1103,7 +1135,8 @@ function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
     `${SEVERITY_RUBRIC}\n\n` +
     'Flag only concrete, demonstrable structural defects, and cite the specific modules or files involved. Do not flag ' +
     'subjective preferences or "this would be cleaner as X" rewrites. Return issues with category "architecture". ' +
-    `${REVIEW_RULES}${extra}${emphasisBlock(roundCtx.round)}${knownFindingsBlock(roundCtx.known)}\n\n${surveyBlock(survey)}`
+    `${REVIEW_RULES}${extra}${emphasisBlock(roundCtx.round)}${knownFindingsBlock(roundCtx.known, 'architecture')}` +
+    `\n\n${surveyBlock(survey)}`
   );
 }
 
@@ -1155,7 +1188,7 @@ function reviewerPrompt(reviewer, unit, survey, claudeMdPaths, roundCtx = {}) {
     `Return a list of issues. For each: a description, a severity, the category "${reviewer.key}", the primary ` +
     'file and line/range (or the set of files/modules for repo-wide findings), and the reason it was flagged. ' +
     `${REVIEW_RULES}\n\n${FALSE_POSITIVES}${extra}`+
-    `${emphasisBlock(roundCtx.round)}${knownFindingsBlock(roundCtx.known)}` +
+    `${emphasisBlock(roundCtx.round)}${knownFindingsBlock(roundCtx.known, reviewer.key)}` +
     `\n\n${surveyBlock(survey)}`
   );
 }
@@ -1294,7 +1327,10 @@ for (let round = 1; round <= maxRounds; round++) {
         category: reviewer.key,
         prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths, {
           round,
-          known: deduped.filter((f) => f.category === reviewer.key && fileInUnit(f.file, unit)),
+
+          // Scoped by unit, not by category: a reviewer that cannot see the other five reviewers' findings for its own
+          // unit re-reports them, and `mergeIssueGroups` then pays for that at full review cost.
+          known: deduped.filter((f) => fileInUnit(f.file, unit)),
         }),
       })),
     ),
@@ -1306,7 +1342,11 @@ for (let round = 1; round <= maxRounds; round++) {
           category: 'architecture',
           prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
             round,
-            known: deduped.filter((f) => f.category === 'architecture'),
+
+            // A lens reads the whole repository, so there is no unit to scope by and it sees everything held. That is
+            // the largest known-findings block the run produces, and deliberately so: the measured architecture
+            // duplicates were against `code-quality`, `consistency` and `bug`, none of which a category filter shows.
+            known: deduped,
           }),
         }))
       : []),

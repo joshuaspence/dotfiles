@@ -85,6 +85,8 @@ const INTERNALS = [
     'fixerPrompt',                                                                                                      
     'fixReviewPrompt',                                                                                                  
     'generatedPathsBlock',
+    'KNOWN_OTHER_BUDGET',
+    'KNOWN_OWN_BUDGET',
     'knownFindingsBlock',                                                                                              
     'partitionPrompt',                                                                                                  
     'pinToReviewHead',                                                                                                  

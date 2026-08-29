@@ -396,6 +396,15 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   over the accumulated set. Later rounds are told which findings are already known and are pushed to look elsewhere, so
   cost grows roughly per round until the run goes dry or hits the cap. Because looping multiplies the high-fan-out
   review phase, watch `/workflows` as with any long run.
+- That "already known" list is scoped by **unit, not by category**, and this matters more than it sounds. When it was
+  category-scoped, the Bug reviewer could not see that Security had already reported the same defect on the same lines,
+  so it reported it again and dedupe paid for the duplicate afterwards at full review cost. Across one measured
+  four-round run, 68% of the duplicates dedupe merged sat in groups spanning more than one category — 40% of everything
+  the reviewers produced — and four separate findings for a single missing length check survived even that, because the
+  dedupe prompt is deliberately reluctant to merge across categories and cannot be made eager without hiding real
+  defects behind unrelated ones. So a reviewer now sees every finding held for its unit, in two lists: its own
+  category's, to look past, and the other reviewers', to recognise and not restate. The architecture lenses read the
+  whole repository and so have no unit to scope by; they see everything, which is the largest such list a run builds.
 - With `--fix`, the Fix phase adds one worktree-isolated agent **per validated finding**, each of which edits and then
   runs the repository's typecheck/tests in its sandbox before committing — the expensive-and-slow part. A fixer commits
   only a clear, safe, localized change that still passes; otherwise it declines or reports a verify failure, and that
