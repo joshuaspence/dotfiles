@@ -462,11 +462,18 @@ const emphasisBlock = (round) => {
   return text ? `\n\n${text}` : '';
 };
 
+// One finding, as a reviewer is shown it. The site comes from `issueSite` rather than being formatted again here, so a
+// finding named in this list is recognisable as the same finding wherever else the run mentions it — the dedupe digest
+// most of all. Descriptions are free reviewer prose and routinely contain newlines; left in, one finding would read as
+// several and the bullet list would stop being a list.
+const knownLine = (issue) =>
+  `- [${issue?.category}] ${issueSite(issue)} — ${(issue?.description || '').replace(/\s+/g, ' ')}`;
+
 // Render the "already reported, look elsewhere" feedback list; empty when there is nothing accumulated yet.
 const knownFindingsBlock = (known) =>
   known?.length
     ? '\n\nAlready reported by earlier passes — do NOT re-report these; find what they missed:\n' +
-      known.map((f) => `- [${f.category}] ${f.file}${f.lines ? `:${f.lines}` : ''} — ${f.description}`).join('\n')
+      known.map(knownLine).join('\n')
     : '';
 
 // A finding belongs to a unit when its primary file is one of the unit's paths or sits beneath one of them.
