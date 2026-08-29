@@ -12,7 +12,7 @@ argument-hint: >-
   [path ...]
 allowed-tools:
   - Bash(git branch --show-current)
-  - Bash(git branch -D:*)
+  - Bash(git branch --delete --force:*)
   - Bash(git checkout --:*)
   - Bash(git cherry-pick:*)
   - Bash(git remote get-url:*)
@@ -20,7 +20,7 @@ allowed-tools:
   - Bash(git show:*)
   - Bash(git status:*)
   - Bash(git switch -)
-  - Bash(git switch -c:*)
+  - Bash(git switch --create:*)
   - Bash(git worktree list:*)
   - Bash(git worktree prune:*)
   - Bash(git worktree remove:*)
@@ -174,6 +174,7 @@ The result is `{ reviewedCommit, findings, exclusions, gaps }`:
   generated code, lock files, binaries).
 - `gaps` — strings recording every way the run fell short of a complete, clean pass. They come in three kinds, and each
   entry states in prose which it is:
+
   - **coverage** — a reviewer, lens, or validation that did not complete, or (with `--loop`) the loop hitting its round
     cap without going dry. Findings may be *missing*.
   - **dedupe** — a dedupe stage that stalled or did not converge. Every finding here *was* reviewed and validated; one
@@ -270,12 +271,12 @@ A worked example, from a 32-agent single-file `--fix` run — note that Opus is 
 the per-tier split is the useful part of this summary, and the reviewer count (`--partitions` × 6, see
 [Notes](#notes)) is where it is actually spent:
 
-| Tier          | Agents | Tokens        | Output rate ($/1M) | Cost   |
-|---------------|--------|---------------|--------------------|--------|
-| Opus 5        | 25     | 806,803       | $25.00             | $20.17 |
-| Sonnet 4.5    | 5      | 168,826       | $15.00             | $2.53  |
-| Haiku 4.5     | 2      | 39,896        | $5.00              | $0.20  |
-| **Total**     | **32** | **1,015,525** |                    | **≈$22.90** |
+| Tier          | Agents | Tokens        | Output rate ($/1M) | Cost       |
+|---------------|--------|---------------|--------------------|------------|
+| Opus 5        | 25     | 806,803       | $25.00             | $20.17     |
+| Sonnet 4.5    | 5      | 168,826       | $15.00             | $2.53      |
+| Haiku 4.5     | 2      | 39,896        | $5.00              | $0.20      |
+| **Total**     | **32** | **1,015,525** |                    | **$22.90** |
 
 If `workflowProgress` is missing or carries no per-agent `model`, still report `totalTokens` and the scale line, and say
 the per-tier cost breakdown was unavailable — an unpriceable run is not a free one.
@@ -311,8 +312,8 @@ stranded the twelve behind it.
    here: skip steps 4 and 5 (there is nothing to pick) and go straight to the cleanup in step 6. The sandboxes exist
    whenever `fix.sandboxBranches` is non-empty, which includes runs where every finding came back unfixed, and stopping
    after the report is what leaks them. Otherwise create a dedicated branch off the current `HEAD` and switch to it:
-   `git switch -c repo-review-fixes` (if it already exists, use a numbered suffix, e.g. `repo-review-fixes-2`, rather
-   than clobbering it).
+   `git switch --create repo-review-fixes` (if it already exists, use a numbered suffix, e.g. `repo-review-fixes-2`,
+   rather than clobbering it).
 4. Cherry-pick the accepted `sha`s in order: `git cherry-pick <sha>`. Pre-flight has established these cannot conflict.
    If one still does, `git cherry-pick --abort`, stop landing further commits, and report the remaining ones as **not
    applied** — never resolve a conflict by hand. Treat it as a pre-flight bug worth reporting: it means git disagreed
@@ -346,7 +347,7 @@ stranded the twelve behind it.
 
    Touch nothing outside this run's `<run-id>`. Branch names are per-run precisely so that a leftover cannot break the
    next run — the fixers used to restart at `rrfix/0` every time, and a run that ended without teardown made the next
-   run's `git switch -c rrfix/0` fail outright. The run id is a path component of the branch names
+   run's `git switch --create rrfix/0` fail outright. The run id is a path component of the branch names
    (`rrfix/<run-id>/<n>`), so read it from `fix.sandboxBranches` rather than reconstructing it.
 
 Do not push, and do not open a pull request — landing the commits on the local branch is where this stops.
@@ -482,23 +483,23 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   regardless of this list; you neither need to nor can provision their tools from here. This list is therefore minimal:
   `Workflow` to run the review, `Write` for `--output`, the two read-only commands `git rev-parse` and
   `git remote get-url` used to build permalinks, the `git rev-parse`/`show`/`status`/`branch --show-current` commands
-  used to pre-flight the `--fix` commits against git, and the `git switch`/`branch -D`/`cherry-pick`/`worktree`/`checkout`
-  commands used to land them on the review branch, leave the working checkout as it was, and tear down the sandboxes
-  they were built in. `git checkout` is there for exactly one purpose — restoring a path the landing sequence dirtied
-  (step 5 of [Apply fixes](#apply-fixes)) — and is not a licence to edit files or resolve a conflict.
+  used to pre-flight the `--fix` commits against git, and the `git switch`/`branch --delete --force`/`cherry-pick`/
+  `worktree`/`checkout` commands used to land them on the review branch, leave the working checkout as it was, and tear
+  down the sandboxes they were built in. `git checkout` is there for exactly one purpose — restoring a path the landing
+  sequence dirtied (step 5 of [Apply fixes](#apply-fixes)) — and is not a licence to edit files or resolve a conflict.
 - Each entry is narrowed to the step that needs it, because prose and a permission pattern are two enforcement layers
   and the pattern wins silently when they disagree: `Bash(git checkout:*)` pre-approved `--ours`/`--theirs`, which is
   resolving a conflict by hand, `Bash(git remote:*)` pre-approved `set-url`, and `Bash(git branch:*)` pre-approved
   `--force` (which silently moves a branch and can orphan commits) and `-m`, none of which the bullet above claims to
-  allow. Hence `git checkout --:*`, `git remote get-url:*`, `git switch -c:*` *and* `git switch -`, `git branch -D:*`
-  *and* `git branch --show-current`, and one entry each for `git worktree list`/`remove`/`prune`. Only the *refs* the
-  teardown deletes are computed at run time, so pinning the subcommand flag costs nothing; `cherry-pick`, `rev-parse`,
-  `show` and `status` are the ones whose arguments are all computed and cannot be usefully narrowed. A prefix rule
-  matches only the exact string or the string followed by a space, which is why bare `git switch -` and
-  `git branch --show-current` each need a rule of their own — `git switch -c:*` and `git branch -D:*` do not cover
-  them — and why `git checkout --:*` still permits `git checkout -- .`, so the narrowing is partial. It is also
-  hygiene rather than a safety boundary: `allowed-tools` is allow-only, so a pattern that stops matching restores a
-  confirmation prompt and never removes a capability.
+  allow. Hence `git checkout --:*`, `git remote get-url:*`, `git switch -c:*` *and* `git switch -`,
+  `git branch --delete --force`:*` *and* `git branch --show-current`, and one entry each for `git worktree list`/
+  `remove`/`prune`. Only the *refs* the teardown deletes are computed at run time, so pinning the subcommand flag costs
+  nothing; `cherry-pick`, `rev-parse`, `show` and `status` are the ones whose arguments are all computed and cannot be
+  usefully narrowed. A prefix rule matches only the exact string or the string followed by a space, which is why bare
+  `git switch -` and `git branch --show-current` each need a rule of their own — `git switch -c:*` and
+  `git branch --delete --force:*` do not cover them — and why `git checkout --:*` still permits `git checkout -- .`, so
+  the narrowing is partial. It is also hygiene rather than a safety boundary: `allowed-tools` is allow-only, so a
+  pattern that stops matching restores a confirmation prompt and never removes a capability.
 - Cite each finding with a file path and line range, and link it if the repository has a GitHub remote. Follow this
   format precisely, otherwise the Markdown preview won't render correctly:
   https://github.com/anthropics/claude-code/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15
