@@ -5,9 +5,6 @@
  * they are checked for every script in the source directory, including ones added after this file was written.
  */
 
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { basename } from 'node:path';
@@ -18,17 +15,8 @@ import {
   readScript,
   runWorkflow,
   stripExport,
-  workflowScript,
   workflowScripts,
 } from './harness.js';
-
-describe('workflowScript', () => {
-  it('throws when workflow name is not found', () => {
-    expect(() => workflowScript('nonexistent-workflow')).toThrow(
-      /No workflow script named 'nonexistent-workflow'/,
-    );
-  });
-});
 
 describe.each(workflowScripts())('$name', ({ path }) => {
   it('parses as an async function body', () => {
@@ -83,33 +71,5 @@ describe.each(workflowScripts())('$name', ({ path }) => {
 
     // Every declared phase should be entered at least once (catches unused declarations and conditional logic bugs).
     expect(entered).toEqual(declared.sort());
-  });
-});
-
-describe('loadMeta error handling', () => {
-  it('throws when script has no meta block', () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), 'workflow-test-'));
-    const scriptPath = join(tmpDir, 'no-meta.js');
-
-    try {
-      writeFileSync(scriptPath, 'const foo = 42;\n');
-
-      expect(() => loadMeta(scriptPath)).toThrow(/has no `export const meta = { … };` block/);
-    } finally {
-      rmSync(tmpDir, { recursive: true, force: true });
-    }
-  });
-
-  it('throws when meta block closing brace is not on its own line', () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), 'workflow-test-'));
-    const scriptPath = join(tmpDir, 'malformed-meta.js');
-
-    try {
-      writeFileSync(scriptPath, 'export const meta = { name: "test" };\n');
-
-      expect(() => loadMeta(scriptPath)).toThrow(/has no `export const meta = { … };` block/);
-    } finally {
-      rmSync(tmpDir, { recursive: true, force: true });
-    }
   });
 });

@@ -7,7 +7,7 @@
  * makes every test built on it vacuous.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { writeFileSync, mkdirSync, mkdtempSync, rmSync, readFileSync } from 'node:fs';
@@ -15,6 +15,7 @@ import { writeFileSync, mkdirSync, mkdtempSync, rmSync, readFileSync } from 'nod
 import {
   compile,
   loadInternals,
+  loadMeta,
   ORCHESTRATION_MARKER,
   pipelineImpl,
   runWorkflow,
@@ -37,28 +38,57 @@ phase('Test Phase');
 return { done: true, value: result };
 `;
 
-// Create a temporary workflow for testing
-const TEST_WORKFLOWS_DIR = join(import.meta.dirname, '.tmp-test-workflows');
+// Create a temporary workflow for testing. This lives under the OS temp dir, not the source tree: a fixture written
+// beside the tests would show up as untracked in the chezmoi source directory if it ever outlived the run.
+const TEST_WORKFLOWS_DIR = mkdtempSync(join(tmpdir(), 'harness-workflows-'));
 const TEST_SCRIPT_PATH = join(TEST_WORKFLOWS_DIR, 'test-workflow.js');
 
 function setupTestWorkflow(source = minimalWorkflow) {
-  try {
-    mkdirSync(TEST_WORKFLOWS_DIR, { recursive: true });
-  } catch {
-    // Directory already exists
-  }
+  mkdirSync(TEST_WORKFLOWS_DIR, { recursive: true });
   writeFileSync(TEST_SCRIPT_PATH, source, 'utf8');
+  // Registered here rather than called at the end of each test body, so that a failing assertion — which skips the rest
+  // of the body — still tears the fixture down.
+  onTestFinished(cleanupTestWorkflow);
 }
 
 function cleanupTestWorkflow() {
-  try {
-    rmSync(TEST_WORKFLOWS_DIR, { recursive: true, force: true });
-  } catch {
-    // Already cleaned up
-  }
+  rmSync(TEST_WORKFLOWS_DIR, { recursive: true, force: true });
 }
 
 describe('runWorkflow', () => {
+  describe('validation', () => {
+    it('throws when agent is not a function', async () => {
+      setupTestWorkflow(`
+export const meta = { title: 'Test', phases: [] };
+
+return { done: true };
+`);
+
+      await expect(runWorkflow({
+        scriptPath: TEST_SCRIPT_PATH,
+        agent: 'not a function',
+      })).rejects.toThrow(
+        'runWorkflow needs an `agent` function to answer the agent calls the script makes. Without one every call ' +
+          "throws, and `parallel`'s catch-all turns that into a plausible-looking early bail — so the test would pass " +
+          'for the wrong reason.',
+      );
+    });
+
+    it('throws when agent is missing', async () => {
+      setupTestWorkflow(`
+export const meta = { title: 'Test', phases: [] };
+
+return { done: true };
+`);
+
+      await expect(runWorkflow({
+        scriptPath: TEST_SCRIPT_PATH,
+      })).rejects.toThrow(
+        'runWorkflow needs an `agent` function to answer the agent calls the script makes.',
+      );
+    });
+  });
+
   describe('agent mocking', () => {
     it('captures all agent calls in order with prompts and options', async () => {
       setupTestWorkflow(`
@@ -81,8 +111,6 @@ return { done: true };
       expect(run.calls[1].prompt).toBe('second prompt');
       expect(run.calls[1].label).toBe('agent-2');
       expect(run.calls[1].opts.model).toBe('opus');
-
-      cleanupTestWorkflow();
     });
 
     it('attaches each agent result to its call record', async () => {
@@ -104,8 +132,6 @@ return { r1, r2 };
       expect(run.calls[1].result).toEqual({ echo: 'second' });
       expect(run.result.r1).toEqual({ echo: 'first' });
       expect(run.result.r2).toEqual({ echo: 'second' });
-
-      cleanupTestWorkflow();
     });
 
     it('propagates null from a dead agent without failing the workflow', async () => {
@@ -124,8 +150,6 @@ return { result };
 
       expect(run.calls[0].result).toBeNull();
       expect(run.result.result).toBeNull();
-
-      cleanupTestWorkflow();
     });
 
     it('lets the workflow handle a throwing agent', async () => {
@@ -150,8 +174,6 @@ return { caught };
       });
 
       expect(run.result.caught).toBe(true);
-
-      cleanupTestWorkflow();
     });
   });
 
@@ -173,8 +195,6 @@ return { done: true };
       });
 
       expect(run.logs).toEqual(['first message', 'second message', 'third message']);
-
-      cleanupTestWorkflow();
     });
   });
 
@@ -198,8 +218,35 @@ return { done: true };
       });
 
       expect(run.phases).toEqual(['First', 'Second']);
+    });
 
-      cleanupTestWorkflow();
+    it('records a repeated phase once, in the order it was first entered', async () => {
+      // One title is one phase group, so re-entering it adds nothing — whether that is a `phase()` in a loop, several
+      // agents in a group each naming the phase, or an agent option naming a phase a `phase()` call already opened.
+      // Without this, `expect(run.phases).toEqual([…])` in the workflow tests would be order-and-count sensitive to
+      // how often a script happens to re-announce a phase rather than to which phases it entered.
+      setupTestWorkflow(`
+export const meta = { title: 'Test', phases: [
+  { title: 'First' },
+  { title: 'Second' },
+] };
+
+phase('Second');
+phase('First');
+phase('First');
+await agent('a', { label: 'a', phase: 'First' });
+await agent('b', { label: 'b', phase: 'Second' });
+await agent('c', { label: 'c', phase: 'Second' });
+
+return { done: true };
+`);
+
+      const run = await runWorkflow({
+        scriptPath: TEST_SCRIPT_PATH,
+        agent: () => null,
+      });
+
+      expect(run.phases).toEqual(['Second', 'First']);
     });
   });
 
@@ -217,8 +264,6 @@ return { findings: [1, 2, 3], summary: 'done' };
       });
 
       expect(run.result).toEqual({ findings: [1, 2, 3], summary: 'done' });
-
-      cleanupTestWorkflow();
     });
   });
 
@@ -242,8 +287,6 @@ return {};
       expect(run.called('validator')).toHaveLength(2);
       expect(run.called('reviewer')).toHaveLength(1);
       expect(run.called('unknown')).toHaveLength(0);
-
-      cleanupTestWorkflow();
     });
 
     it('filters calls by regex pattern', async () => {
@@ -265,8 +308,6 @@ return {};
       expect(run.called(/^fix:/)).toHaveLength(2);
       expect(run.called(/review/)).toHaveLength(1);
       expect(run.called(/^survey/)).toHaveLength(0);
-
-      cleanupTestWorkflow();
     });
 
     it('handles agents with no label', async () => {
@@ -286,8 +327,6 @@ return {};
 
       expect(run.called('test')).toHaveLength(1);
       expect(run.called('')).toHaveLength(1);
-
-      cleanupTestWorkflow();
     });
   });
 
@@ -308,11 +347,9 @@ return {};
         agent: () => null,
       });
 
-      expect(run.logged('Starting').length).toBeGreaterThan(0);
-      expect(run.logged('Processing').length).toBeGreaterThan(0);
-      expect(run.logged('complete').length).toBeGreaterThan(0);
-
-      cleanupTestWorkflow();
+      expect(run.logged('Starting').length).toBe(1);
+      expect(run.logged('Processing').length).toBe(1);
+      expect(run.logged('complete').length).toBe(1);
     });
 
     it('returns nothing when no log contains the substring', async () => {
@@ -332,8 +369,6 @@ return {};
 
       expect(run.logged('third')).toHaveLength(0);
       expect(run.logged('unknown')).toHaveLength(0);
-
-      cleanupTestWorkflow();
     });
 
     it('performs case-sensitive matching', async () => {
@@ -350,10 +385,8 @@ return {};
         agent: () => null,
       });
 
-      expect(run.logged('Test').length).toBeGreaterThan(0);
+      expect(run.logged('Test').length).toBe(1);
       expect(run.logged('test')).toHaveLength(0);
-
-      cleanupTestWorkflow();
     });
 
     it('matches a RegExp against each line, and returns them in the order they were logged', async () => {
@@ -379,8 +412,6 @@ return {};
         'Round 2 produced 1 findings',
       ]);
       expect(run.logged(/^Round 3/)).toHaveLength(0);
-
-      cleanupTestWorkflow();
     });
   });
 
@@ -399,8 +430,6 @@ return { receivedArgs: args };
       });
 
       expect(run.result.receivedArgs).toEqual({ foo: 'bar', count: 42 });
-
-      cleanupTestWorkflow();
     });
   });
 });
@@ -439,6 +468,33 @@ describe('loadInternals', () => {
   });
 });
 
+describe('loadMeta', () => {
+  it('throws when script has no meta block', () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), 'harness-test-'));
+    const scriptPath = join(tmpDir, 'no-meta.js');
+
+    try {
+      writeFileSync(scriptPath, 'const foo = 42;\n');
+
+      expect(() => loadMeta(scriptPath)).toThrow(/has no `export const meta = { … };` block/);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('throws when meta block closing brace is not on its own line', () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), 'harness-test-'));
+    const scriptPath = join(tmpDir, 'malformed-meta.js');
+
+    try {
+      writeFileSync(scriptPath, 'export const meta = { name: "test" };\n');
+
+      expect(() => loadMeta(scriptPath)).toThrow(/has no `export const meta = { … };` block/);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+});
 
 describe('WORKFLOW_GLOBALS order', () => {
   // `WORKFLOW_GLOBALS` defines the parameter order `compile` binds, and both `loadInternals` and `runWorkflow` supply
@@ -533,7 +589,11 @@ describe('WORKFLOW_GLOBALS order', () => {
 
   it('binds each global into the slot runWorkflow means it to have', async () => {
     // The arity check above cannot tell a swap of two adjacent slots from a correct call, so drive the real thing: each
-    // global is exercised through the observable the harness attaches it to.
+    // global is *called* and its result asserted, rather than merely type-checked: all four of `parallel`, `pipeline`,
+    // `phase` and `workflow` are functions, so `typeof` alone would accept any permutation of them. `parallel` takes
+    // thunks and swallows a thrower into `null`; `pipeline` takes plain values and threads them through its stages;
+    // `workflow` refuses to nest. Each call's shape is wrong for the other implementations, so a swapped slot cannot
+    // produce these results.
     setupTestWorkflow(`
 export const meta = { title: 'Test', phases: [] };
 
@@ -541,15 +601,24 @@ phase('Slot check');
 log('logged');
 const answered = await agent('asked', { label: 'slot' });
 
+const parallelled = await parallel([() => 'first', () => { throw new Error('thrown'); }]);
+const pipelined = await pipeline([1, 2], (value) => value * 2, (value) => value + 1);
+
+let nested = 'workflow() resolved instead of refusing to nest';
+
+try {
+  await workflow('nested');
+} catch (error) {
+  nested = error.message;
+}
+
 return {
   answered,
   seenArgs: args,
-  kinds: {
-    parallel: typeof parallel,
-    pipeline: typeof pipeline,
-    budget: typeof budget?.remaining,
-    workflow: typeof workflow,
-  },
+  parallelled,
+  pipelined,
+  nested,
+  budgetRemaining: budget.remaining(),
 };
 `);
 
@@ -564,14 +633,10 @@ return {
     expect(run.calls[0].prompt).toBe('asked');
     expect(run.result.answered).toBe('answer');
     expect(run.result.seenArgs).toEqual({ sentinel: 'args' });
-    expect(run.result.kinds).toEqual({
-      parallel: 'function',
-      pipeline: 'function',
-      budget: 'function',
-      workflow: 'function',
-    });
-
-    cleanupTestWorkflow();
+    expect(run.result.parallelled).toEqual(['first', null]);
+    expect(run.result.pipelined).toEqual([3, 5]);
+    expect(run.result.nested).toBe('workflow() is not available to a nested workflow.');
+    expect(run.result.budgetRemaining).toBe(Infinity);
   });
 });
 
@@ -704,58 +769,44 @@ describe('pipelineImpl', () => {
 });
 
 describe('unusable() helper', () => {
-  it('throws when a declaration calls agent()', async () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), 'harness-test-'));
-    const scriptPath = join(tmpDir, 'test-workflow.js');
-
-    try {
-      // A minimal workflow whose declaration tries to call agent().
-      writeFileSync(
-        scriptPath,
-        `export const meta = { name: 'test' };
-
-const result = agent('test prompt');
-
-${ORCHESTRATION_MARKER}
-
-return {};
-`,
-      );
-
-      await expect(
-        loadInternals(scriptPath, { names: ['result'] }),
-      ).rejects.toThrow('agent() was called while loading declarations only — it is not available there.');
-    } finally {
-      rmSync(tmpDir, { recursive: true });
-    }
-  });
-
-  it('throws when a declaration calls parallel()', async () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), 'harness-test-'));
-    const scriptPath = join(tmpDir, 'test-workflow.js');
-
-    try {
-      writeFileSync(
-        scriptPath,
-        `export const meta = { name: 'test' };
-
-const result = parallel([() => 'test']);
-
-${ORCHESTRATION_MARKER}
-
-return {};
-`,
-      );
-
-      await expect(
-        loadInternals(scriptPath, { names: ['result'] }),
-      ).rejects.toThrow('parallel() was called while loading declarations only — it is not available there.');
-    } finally {
-      rmSync(tmpDir, { recursive: true });
-    }
-  });
-
-  it('throws when a declaration calls pipeline()', async () => {
+  it.each([
+    {
+      name: 'agent',
+      code: "const result = agent('test prompt');",
+      loadNames: ['result'],
+      expectedError: 'agent() was called while loading declarations only — it is not available there.',
+    },
+    {
+      name: 'parallel',
+      code: "const result = parallel([() => 'test']);",
+      loadNames: ['result'],
+      expectedError: 'parallel() was called while loading declarations only — it is not available there.',
+    },
+    {
+      name: 'pipeline',
+      code: 'const result = pipeline([], (x) => x);',
+      loadNames: ['result'],
+      expectedError: 'pipeline() was called while loading declarations only — it is not available there.',
+    },
+    {
+      name: 'phase',
+      code: "phase('Test Phase');\nconst dummy = 'value';",
+      loadNames: ['dummy'],
+      expectedError: 'phase() was called while loading declarations only — it is not available there.',
+    },
+    {
+      name: 'log',
+      code: "log('test message');\nconst dummy = 'value';",
+      loadNames: ['dummy'],
+      expectedError: 'log() was called while loading declarations only — it is not available there.',
+    },
+    {
+      name: 'workflow',
+      code: "workflow({ scriptPath: 'test' });\nconst dummy = 'value';",
+      loadNames: ['dummy'],
+      expectedError: 'workflow() was called while loading declarations only — it is not available there.',
+    },
+  ])('throws when a declaration calls $name()', async ({ code, loadNames, expectedError }) => {
     const tmpDir = mkdtempSync(join(tmpdir(), 'harness-test-'));
     const scriptPath = join(tmpDir, 'test-workflow.js');
 
@@ -764,7 +815,7 @@ return {};
         scriptPath,
         `export const meta = { name: 'test' };
 
-const result = pipeline([], (x) => x);
+${code}
 
 ${ORCHESTRATION_MARKER}
 
@@ -773,86 +824,8 @@ return {};
       );
 
       await expect(
-        loadInternals(scriptPath, { names: ['result'] }),
-      ).rejects.toThrow('pipeline() was called while loading declarations only — it is not available there.');
-    } finally {
-      rmSync(tmpDir, { recursive: true });
-    }
-  });
-
-  it('throws when a declaration calls phase()', async () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), 'harness-test-'));
-    const scriptPath = join(tmpDir, 'test-workflow.js');
-
-    try {
-      writeFileSync(
-        scriptPath,
-        `export const meta = { name: 'test' };
-
-phase('Test Phase');
-const dummy = 'value';
-
-${ORCHESTRATION_MARKER}
-
-return {};
-`,
-      );
-
-      await expect(
-        loadInternals(scriptPath, { names: ['dummy'] }),
-      ).rejects.toThrow('phase() was called while loading declarations only — it is not available there.');
-    } finally {
-      rmSync(tmpDir, { recursive: true });
-    }
-  });
-
-  it('throws when a declaration calls log()', async () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), 'harness-test-'));
-    const scriptPath = join(tmpDir, 'test-workflow.js');
-
-    try {
-      writeFileSync(
-        scriptPath,
-        `export const meta = { name: 'test' };
-
-log('test message');
-const dummy = 'value';
-
-${ORCHESTRATION_MARKER}
-
-return {};
-`,
-      );
-
-      await expect(
-        loadInternals(scriptPath, { names: ['dummy'] }),
-      ).rejects.toThrow('log() was called while loading declarations only — it is not available there.');
-    } finally {
-      rmSync(tmpDir, { recursive: true });
-    }
-  });
-
-  it('throws when a declaration calls workflow()', async () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), 'harness-test-'));
-    const scriptPath = join(tmpDir, 'test-workflow.js');
-
-    try {
-      writeFileSync(
-        scriptPath,
-        `export const meta = { name: 'test' };
-
-workflow({ scriptPath: 'test' });
-const dummy = 'value';
-
-${ORCHESTRATION_MARKER}
-
-return {};
-`,
-      );
-
-      await expect(
-        loadInternals(scriptPath, { names: ['dummy'] }),
-      ).rejects.toThrow('workflow() was called while loading declarations only — it is not available there.');
+        loadInternals(scriptPath, { names: loadNames }),
+      ).rejects.toThrow(expectedError);
     } finally {
       rmSync(tmpDir, { recursive: true });
     }
@@ -1034,8 +1007,23 @@ describe('stubBudget', () => {
   });
 });
 
+describe('workflowScript', () => {
+  it('throws when workflow name is not found', () => {
+    expect(() => workflowScript('nonexistent-workflow')).toThrow(
+      /No workflow script named 'nonexistent-workflow'/,
+    );
+  });
+});
+
 describe('workflowScripts', () => {
   beforeEach(() => {
+    vi.resetModules();
+  });
+
+  // `vi.resetModules()` clears the module registry but not the mock registry, so an un-removed `doMock('node:fs')` would
+  // leak into every later dynamic import in this file. Drop the registration and re-reset so the leak cannot happen.
+  afterEach(() => {
+    vi.doUnmock('node:fs');
     vi.resetModules();
   });
 
@@ -1054,6 +1042,20 @@ describe('workflowScripts', () => {
 
     expect(() => workflowScripts()).toThrow(
       new RegExp(`Could not read the workflow source directory ${WORKFLOWS_DIR.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+    );
+  });
+
+  it('throws a descriptive error when the workflows directory is empty', async () => {
+    // Mock readdirSync to return an empty array simulating a directory with no .js files
+    vi.doMock('node:fs', () => ({
+      readdirSync: vi.fn(() => []),
+      readFileSync: vi.fn(),
+    }));
+
+    const { workflowScripts, WORKFLOWS_DIR } = await import('./harness.js');
+
+    expect(() => workflowScripts()).toThrow(
+      new RegExp(`${WORKFLOWS_DIR.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} contains no workflow scripts`),
     );
   });
 });
