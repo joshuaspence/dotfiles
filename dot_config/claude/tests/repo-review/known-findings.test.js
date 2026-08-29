@@ -117,13 +117,62 @@ describe('known findings block', () => {
       'bug',
     );
 
-    expect(block).toContain('x'.repeat(KNOWN_OWN_BUDGET));
-    expect(block).not.toContain('x'.repeat(KNOWN_OWN_BUDGET + 1));
+    // Extract the actual description from the bullet line (after "file:line — ")
+    const ownLine = block.split('\n').find((line) => line.includes('[bug]'));
+    const ownDesc = ownLine.split(' — ')[1];
+    expect(ownDesc).toHaveLength(KNOWN_OWN_BUDGET);
+    expect(ownDesc).toBe('x'.repeat(KNOWN_OWN_BUDGET));
 
     const otherSection = block.slice(block.indexOf(OTHER));
+    const otherLine = otherSection.split('\n').find((line) => line.includes('[security]'));
+    const otherDesc = otherLine.split(' — ')[1];
+    expect(otherDesc).toHaveLength(KNOWN_OTHER_BUDGET);
+    expect(otherDesc).toBe('x'.repeat(KNOWN_OTHER_BUDGET));
+  });
 
-    expect(otherSection).toContain('x'.repeat(KNOWN_OTHER_BUDGET));
-    expect(otherSection).not.toContain('x'.repeat(KNOWN_OTHER_BUDGET + 1));
+  it('truncates at exact budget boundary and preserves text up to that point', async () => {
+    // Truncation must happen at precisely the budget character, and everything before it must survive.
+    const { knownFindingsBlock, KNOWN_OWN_BUDGET, KNOWN_OTHER_BUDGET } = await internals();
+
+    // Text with identifiable positions: each 10-char segment ends with its position
+    const marked = Array.from({ length: 50 }, (_, i) => `word${i}`.padEnd(10, 'x')).join('');
+    expect(marked.length).toBeGreaterThan(KNOWN_OWN_BUDGET);
+
+    const block = knownFindingsBlock(
+      [issue({ category: 'bug', description: marked }), issue({ category: 'security', description: marked })],
+      'bug',
+    );
+
+    const ownLine = block.split('\n').find((line) => line.includes('[bug]'));
+    const ownDesc = ownLine.split(' — ')[1];
+    expect(ownDesc).toBe(marked.slice(0, KNOWN_OWN_BUDGET));
+    expect(ownDesc).toHaveLength(KNOWN_OWN_BUDGET);
+
+    const otherSection = block.slice(block.indexOf(OTHER));
+    const otherLine = otherSection.split('\n').find((line) => line.includes('[security]'));
+    const otherDesc = otherLine.split(' — ')[1];
+    expect(otherDesc).toBe(marked.slice(0, KNOWN_OTHER_BUDGET));
+    expect(otherDesc).toHaveLength(KNOWN_OTHER_BUDGET);
+  });
+
+  it('leaves descriptions shorter than the budget unchanged', async () => {
+    const { knownFindingsBlock, KNOWN_OWN_BUDGET, KNOWN_OTHER_BUDGET } = await internals();
+
+    const short = 'This is a short description';
+    expect(short.length).toBeLessThan(KNOWN_OTHER_BUDGET);
+
+    const block = knownFindingsBlock(
+      [issue({ category: 'bug', description: short }), issue({ category: 'security', description: short })],
+      'bug',
+    );
+
+    expect(block).toContain(short);
+    const ownLine = block.split('\n').find((line) => line.includes('[bug]'));
+    expect(ownLine).toContain(short);
+
+    const otherSection = block.slice(block.indexOf(OTHER));
+    const otherLine = otherSection.split('\n').find((line) => line.includes('[security]'));
+    expect(otherLine).toContain(short);
   });
 });
 
