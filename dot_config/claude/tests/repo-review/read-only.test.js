@@ -8,23 +8,31 @@
  * the one prompt with no execution guard at all, invisibly.
  *
  * So the table below is where that invariant lives. It must name a guard for every un-isolated agent a run produces, so
- * deleting a guard, or adding an un-isolated phase without one, fails here rather than waiting for a review.
+ * deleting a guard, or adding an un-isolated phase without one, fails here rather than waiting for a review. "A run"
+ * has to mean more than one configuration for that to hold: a phase that only fires on a degraded path is invisible to
+ * a table scoped to one happy-path fixture, which is exactly how the `review-head` re-ask came to be un-isolated and
+ * unguarded. So the checks below read the union of every fixture listed here, and each fixture is a configuration that
+ * reaches a phase the others cannot.
  */
 
 import { describe, expect, it } from 'vitest';
 
-import { issue, runFix } from './scenario.js';
+import { HEAD, issue, runFix } from './scenario.js';
 
 // One phrase per un-isolated phase, quoted from the prompt that carries it. Substrings, not shapes: the point is that
-// the words reach the agent, which is the only enforcement that exists.
+// the words reach the agent, which is the only enforcement that exists. Each phrase has to forbid an action, too — the
+// first three rows once quoted "do not walk the filesystem" and "enumerate with `git ls-files`", which say how to list
+// files and nothing about touching them, so those phases read as guarded here while their prompts named no prohibition
+// a later edit could remove.
 const GUARDS = [
-  { phase: 'survey', label: /^survey\b/, guard: 'do not walk the filesystem' },
-  { phase: 'CLAUDE.md scan', label: /^claude-md-scan\b/, guard: 'enumerate with `git ls-files`' },
-  { phase: 'partition', label: /^partition\b/, guard: 'enumerate with `git ls-files`' },
+  { phase: 'survey', label: /^survey\b/, guard: 'do not modify, create, or delete any file' },
+  { phase: 'CLAUDE.md scan', label: /^claude-md-scan\b/, guard: 'do not modify, create, or delete any file' },
+  { phase: 'partition', label: /^partition\b/, guard: 'do not modify, create, or delete any file' },
   { phase: 'review', label: /^review:/, guard: 'Do not build, typecheck, lint, or test the repository' },
   { phase: 'dedupe', label: /^dedupe\b/, guard: 'do not read files and do not run any commands' },
   { phase: 'validate', label: /^validate:/, guard: 'do not build, typecheck, lint, or test the repository' },
   { phase: 'review fix', label: /^review-fix:/, guard: 'do not modify anything, do not run the tests' },
+  { phase: 'head re-ask', label: /^review-head$/, guard: 'do not modify, create, or delete any file' },
 ];
 
 // A run wide enough to reach every un-isolated phase at once: two units, so the per-unit and the cross-unit dedupe
@@ -43,14 +51,21 @@ const wideRun = () =>
     unitPaths: ['src/a.ts', 'src/b.ts', 'lib/c.ts', 'lib/d.ts'],
   });
 
+// The run above cannot reach the `headSha` re-ask: the script only asks that question when the survey failed to answer
+// it, so it takes a survey with the field dropped, plus a recovery so the Fix phase still runs afterwards. Width alone
+// does not reach a phase gated behind a failure.
+const reaskRun = () => runFix({ survey: { headSha: '' }, headOnly: { headSha: HEAD } });
+
 // Read from what the script actually asked for, not from a list of labels kept here: an agent that loses its isolation
 // is exactly the case this file exists to catch.
 const unisolated = (run) => run.calls.filter((call) => call.opts?.isolation !== 'worktree');
 
+// Every un-isolated agent across every configuration the table claims to cover.
+const liveAgents = async () => (await Promise.all([wideRun(), reaskRun()])).flatMap(unisolated);
+
 describe('every un-isolated agent is told not to write to the checkout', () => {
   it.each(GUARDS)('tells the $phase agents: $guard', async ({ label, guard }) => {
-    const run = await wideRun();
-    const guarded = unisolated(run).filter((call) => label.test(call.label));
+    const guarded = (await liveAgents()).filter((call) => label.test(call.label));
 
     // No matching agent means the phase is gone, renamed, or now sandboxed — any of which makes the assertion below
     // vacuously true, so fail instead and make someone re-read the table.
@@ -59,11 +74,14 @@ describe('every un-isolated agent is told not to write to the checkout', () => {
     for (const call of guarded) expect(call.prompt, `${call.label} carries no read-only guard`).toContain(guard);
   });
 
-  it('has an entry for every un-isolated agent the run produced', async () => {
-    const run = await wideRun();
-    const unlisted = unisolated(run)
-      .filter((call) => !GUARDS.some(({ label }) => label.test(call.label)))
-      .map((call) => call.label);
+  it('has an entry for every un-isolated agent the runs produced', async () => {
+    const unlisted = [
+      ...new Set(
+        (await liveAgents())
+          .filter((call) => !GUARDS.some(({ label }) => label.test(call.label)))
+          .map((call) => call.label),
+      ),
+    ];
 
     // A new phase that runs in the live checkout has to state its own guard and be listed above. Nothing else in the
     // script owns this, so an unlisted label is an unguarded agent until proven otherwise.

@@ -20,7 +20,7 @@ allowed-tools:
   - Bash(git show:*)
   - Bash(git status:*)
   - Bash(git switch -)
-  - Bash(git switch --create:*)
+  - Bash(git switch --create repo-review-fixes)
   - Bash(git worktree list:*)
   - Bash(git worktree prune:*)
   - Bash(git worktree remove:*)
@@ -83,9 +83,14 @@ collect each one as you scan the tokens instead of expecting a single run at eit
 - `--loop [<max-rounds>]` turns on multi-round *loop-until-dry* reviewing. The script repeats its review-and-dedupe
   pass, accumulating de-duplicated findings and steering later rounds toward what earlier ones missed, and stops as soon
   as a round surfaces nothing new (or when it reaches the cap). Bare `--loop` uses the script's default cap; an explicit
-  positive integer overrides that cap. Must be a positive integer when given; reject any other value and stop with an
-  error rather than guessing. If omitted, the script runs a single pass. Pass it as `loop`: `true` for a bare flag, or
-  the integer when one is given. `--loop` is a third, orthogonal axis: `--effort` scales how hard each agent thinks,
+  positive integer overrides that cap. It is the only flag whose value is optional, so it needs its own rule for telling
+  that value from a `path`: **`--loop` consumes the token after it only when that token begins with a digit.** Otherwise
+  `--loop` is bare and that token is parsed on its own terms — as a flag, or, per the invariant above, as a path. So
+  `/repo-review --loop src` is `{ "loop": true, "paths": ["src"] }`: neither a parse error nor a dropped path. A token it
+  does consume must be a positive integer; reject anything else (`--loop 0`, `--loop 2.5`) and stop with an error rather
+  than guessing. That is also why a path whose name begins with a digit cannot follow a bare `--loop` — write it before
+  the flag instead. If omitted, the script runs a single pass. Pass it as `loop`: `true` for a bare flag, or the integer
+  when one is given. `--loop` is a third, orthogonal axis: `--effort` scales how hard each agent thinks,
   `--partitions`/`--validators` scale how many agents run and how often findings are challenged, and `--loop` scales how
   many times the whole review repeats.
 
@@ -254,12 +259,14 @@ re-fetching rather than trusting this copy):
 | Fable 5                          | $50.00        | $10.00       | $1.00             |
 | Opus 5 / 4.8 / 4.7 / 4.6 / 4.5   | $25.00        | $5.00        | $0.50             |
 | Sonnet 4.6 / 4.5                 | $15.00        | $3.00        | $0.30             |
-| Sonnet 5                         | $10.00        | $2.00        | $0.20             |
+| Sonnet 5 (from 2026-09-01)       | $15.00        | $3.00        | $0.30             |
+| Sonnet 5 (intro, to 2026-08-31)  | $10.00        | $2.00        | $0.20             |
 | Haiku 4.5                        | $5.00         | $1.00        | $0.10             |
 
-Match the **version**, not just the tier: Sonnet 5 is 33% cheaper on output than Sonnet 4.5/4.6, so collapsing them into
-one "Sonnet" rate misprices the run. If an agent's `model` names a version that is not in this table, say so and leave
-it out of the total rather than guessing a rate.
+Match the **version** and the run's date, not just the tier: through 2026-08-31 Sonnet 5 is 33% cheaper on output than
+Sonnet 4.5/4.6, so collapsing them into one "Sonnet" rate misprices the run — once that introductory rate lapses the two
+bill alike. If an agent's `model` names a version that is not in this table, say so and leave it out of the total rather
+than guessing a rate.
 
 State the figure as approximate and say why, in one line — do not present it as a bill. Because input and cache-read
 tokens are unreported, the computed number is a **floor**. Input tokens are far more numerous than output tokens on a
@@ -297,9 +304,12 @@ stranded the twelve behind it.
 
 1. **Pre-flight.** With no branch created and nothing checked out yet:
    - Confirm the working checkout is clean (`git status --porcelain` prints nothing) and note the current branch. If it
-     is dirty, land nothing, say so, and stop — you must not commit or stash someone else's uncommitted work.
+     is dirty, land nothing and say so — you must not commit or stash someone else's uncommitted work — then skip
+     steps 4 and 5 and go to step 6 rather than stopping here, so the sandboxes are accounted for and not silently left
+     behind.
    - Confirm `git rev-parse HEAD` equals `fix.base`. If `HEAD` has moved since the review, every commit's diff was
-     authored against different text; land nothing and say the repository moved under the run.
+     authored against different text; land nothing, say the repository moved under the run, and go to step 6 the same
+     way.
    - For each `sha` in `fix.commits`, check its parent is the reviewed commit:
      `git rev-parse <sha>^` must equal `fix.base`. A commit that fails this was built on a **stale base** — reject it.
    - For each `sha`, read its real file set with `git show --name-only --format= <sha>` and check it against the
@@ -325,7 +335,10 @@ stranded the twelve behind it.
    exactly what this command promises not to do. If anything is dirty, restore those paths
    (`git checkout -- <paths>`) and report that you did.
 6. Clean up the run's sandboxes, but **only if every accepted commit landed**. Those branches and worktrees hold the
-   only other copy of the work, so if step 4 aborted, skip this entirely and say the sandboxes were left in place.
+   only other copy of the work, so if step 4 aborted, skip this entirely and say the sandboxes were left in place. The
+   two step-1 exits do the same: they abort over the state of the *repository*, not of the commits, which stay landable
+   once the checkout is clean or `fix.base` is checked out again — so delete nothing, and name the branches holding the
+   unlanded work so the user can pick them up by hand. That report is the point of routing those exits here.
    Commits *rejected in pre-flight* do not block cleanup by themselves — they are unlandable wherever they sit, so
    note them as discarded and say which branches held them, so the user can salvage one if they want. Accepting
    *nothing* satisfies the condition rather than failing it: run this step even when step 3 sent you straight here.
@@ -333,15 +346,24 @@ stranded the twelve behind it.
      are `rrfix/<run-id>/<n>` and `rrmerge/<run-id>/<n>`) and confine every deletion to that one `<run-id>`: it scopes
      the teardown to *this* run, so a concurrent `--fix` run in the same repository is never collateral damage.
    - Worktrees first — a branch checked out somewhere cannot be deleted. For each entry in
-     `git worktree list --porcelain` whose `branch` is one of those refs, run `git worktree remove <path>`, adding
-     `--force` if it refuses: the commit is what you landed, and anything else left in the sandbox is scratch.
-   - Then `git branch -D` those same refs. It has to be `-D`, not `-d` — cherry-picking rewrote the SHAs, so git cannot
-     see the originals as merged and a safe delete would refuse every one of them. A ref git reports as not found is not
-     an error: the list includes the branch an agent that never reported back was told to create, and it may have died
-     before creating it. Skip that one and keep going through the rest.
+     `git worktree list --porcelain` whose `branch` is one of those refs *or* is a `worktree-<run-id>-<n>` branch for
+     this `<run-id>`, run `git worktree remove <path>`, adding `--force` if it refuses: the commit is what you landed,
+     and anything else left in the sandbox is scratch. Match both forms, because a fixer only moves onto its `rrfix/*`
+     ref once it has run its own `git switch --create`: one that died before that leaves a sandbox still checked out on
+     the `worktree-<run-id>-<n>` ref the harness made it on, which the `rrfix`/`rrmerge` refs alone never match. Miss it
+     and both the worktree and that branch leak — the branch delete below cannot touch a ref that is checked out, and
+     `git worktree prune` only drops administrative files for worktrees whose directory is already gone.
+   - Then `git branch --delete --force` those same refs. It has to be `--force`, not a safe delete — cherry-picking
+     rewrote the SHAs, so git cannot see the originals as merged and `--delete` alone would refuse every one of them.
+     Spell both flags out long-form: the `allowed-tools` rule is a literal prefix match on
+     `git branch --delete --force`, with no flag aliasing, so the `-D` shorthand misses it and costs you a confirmation
+     prompt mid-teardown. A ref git reports as not found is not an error: the list includes the branch an agent that
+     never reported back was told to create, and it may have died before creating it. Skip that one and keep going
+     through the rest.
    - The harness also leaves a `worktree-<run-id>-<n>` branch per sandbox — the ref the worktree was created on, and
-     what the fix branches were cut from. It does not reap those itself once an agent has switched away from one, so
-     delete the ones for this `<run-id>`, then finish with `git worktree prune` to drop the stale administrative files.
+     what the fix branches were cut from. It does not reap those itself, so delete the ones for this `<run-id>` (the
+     worktree step above has already released any sandbox still checked out on one), then finish with
+     `git worktree prune` to drop the stale administrative files.
      **Never glob `worktree-*`.** That namespace belongs to every worktree-isolated agent in the session, not just this
      run, so an unscoped delete destroys unrelated work; match on this run's `<run-id>` and nothing else.
 
@@ -489,17 +511,25 @@ of the `rrfix/*` and `rrmerge/*` sandboxes it created — it still does not push
   sequence dirtied (step 5 of [Apply fixes](#apply-fixes)) — and is not a licence to edit files or resolve a conflict.
 - Each entry is narrowed to the step that needs it, because prose and a permission pattern are two enforcement layers
   and the pattern wins silently when they disagree: `Bash(git checkout:*)` pre-approved `--ours`/`--theirs`, which is
-  resolving a conflict by hand, `Bash(git remote:*)` pre-approved `set-url`, and `Bash(git branch:*)` pre-approved
-  `--force` (which silently moves a branch and can orphan commits) and `-m`, none of which the bullet above claims to
-  allow. Hence `git checkout --:*`, `git remote get-url:*`, `git switch -c:*` *and* `git switch -`,
-  `git branch --delete --force`:*` *and* `git branch --show-current`, and one entry each for `git worktree list`/
+  resolving a conflict by hand, `Bash(git remote:*)` pre-approved `set-url`, `Bash(git branch:*)` pre-approved
+  `--force` (which silently moves a branch and can orphan commits) and `-m`, and `Bash(git switch --create:*)`
+  pre-approved a start-point plus `--force` — upstream an alias for `--discard-changes` — so
+  `git switch --create repo-review-fixes HEAD~1 --force` exits 0 on a dirty tree and throws the uncommitted work away,
+  the one thing step 1 of [Apply fixes](#apply-fixes) stops the whole landing to avoid. None of that is something the
+  bullet above claims to allow. Hence `git checkout --:*`, `git remote get-url:*`,
+  `git switch --create repo-review-fixes` *and* `git switch -`,
+  `git branch --delete --force:*` *and* `git branch --show-current`, and one entry each for `git worktree list`/
   `remove`/`prune`. Only the *refs* the teardown deletes are computed at run time, so pinning the subcommand flag costs
   nothing; `cherry-pick`, `rev-parse`, `show` and `status` are the ones whose arguments are all computed and cannot be
   usefully narrowed. A prefix rule matches only the exact string or the string followed by a space, which is why bare
-  `git switch -` and `git branch --show-current` each need a rule of their own — `git switch -c:*` and
-  `git branch --delete --force:*` do not cover them — and why `git checkout --:*` still permits `git checkout -- .`, so
-  the narrowing is partial. It is also hygiene rather than a safety boundary: `allowed-tools` is allow-only, so a
-  pattern that stops matching restores a confirmation prompt and never removes a capability.
+  `git switch -` and `git branch --show-current` each need a rule of their own —
+  `git switch --create repo-review-fixes` and `git branch --delete --force:*` do not cover them — and why
+  `git checkout --:*` still permits `git checkout -- .`, so the narrowing is partial. The `git switch --create` rule
+  carries no `:*` at all, because a wildcard *anywhere* after `--create` re-admits the `--force` above: the branch name
+  is the only argument the command needs, and step 3's numbered-suffix fallback (`repo-review-fixes-2`) consequently
+  falls outside the rule and asks once, which is the cheaper half of that trade. It is also hygiene rather than a safety
+  boundary: `allowed-tools` is allow-only, so a pattern that stops matching restores a confirmation prompt and never
+  removes a capability.
 - Cite each finding with a file path and line range, and link it if the repository has a GitHub remote. Follow this
   format precisely, otherwise the Markdown preview won't render correctly:
   https://github.com/anthropics/claude-code/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15

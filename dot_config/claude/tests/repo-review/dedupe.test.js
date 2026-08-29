@@ -131,6 +131,48 @@ describe('dedupe merge', () => {
     expect(merged[0].otherSites).toEqual(['run.js:4']);
   });
 
+  it('takes a merged group’s symbol marks from its lowest index, not from the member that survives', async () => {
+    // How `--loop` knows a round went dry: it marks the round's own findings with a symbol and counts the marks still
+    // standing after dedupe (see `foundThisRound`). A mark answers "is this a defect the review did not already hold?",
+    // which only position can answer — the union puts everything accumulated ahead of this round's reports. So on a
+    // group spanning risk tiers, the mark has to come from the lowest index even though the high-risk member is the one
+    // kept. Taken from the survivor instead, a round that merely re-reported a known defect through a higher tier reads
+    // as net-positive: the loop burns every remaining round on a converged review and then reports it as unconverged.
+    const { mergeIssueGroups } = await internals();
+    const foundThisRound = Symbol('found in this round');
+
+    const spanning = [
+      issue({ category: 'code-quality', description: 'a.ts:10 escapes the query by hand', file: 'src/a.ts' }),
+      {
+        ...issue({ category: 'bug', description: 'a.ts:10 mis-escapes the query', file: 'src/a.ts' }),
+        [foundThisRound]: true,
+      },
+    ];
+
+    const merged = mergeIssueGroups(spanning, [[0, 1]]);
+
+    expect(merged).toHaveLength(1);
+
+    // The risk decision itself is unchanged: the `bug` member is still what survives.
+    expect(merged[0].category).toBe('bug');
+    expect(merged[0][foundThisRound]).toBeUndefined();
+  });
+
+  it('keeps the mark when every member of a merged group was found this round', async () => {
+    // The other half of the contract: two reviewers reporting one defect the review did not hold is still one new
+    // defect, so the merged finding stays marked. Stripping the mark here would read as convergence and stop a `--loop`
+    // run on its first productive round.
+    const { mergeIssueGroups } = await internals();
+    const foundThisRound = Symbol('found in this round');
+
+    const bothNew = [
+      { ...issue({ category: 'code-quality', file: 'src/a.ts' }), [foundThisRound]: true },
+      { ...issue({ category: 'bug', file: 'src/b.ts' }), [foundThisRound]: true },
+    ];
+
+    expect(mergeIssueGroups(bothNew, [[0, 1]])[0][foundThisRound]).toBe(true);
+  });
+
   it('keeps the lowest-indexed member when every member sits in the same risk tier', async () => {
     // Only risk reorders the choice. Two members the validate/fix tier cannot tell apart leave the original primary in
     // place, so the merge stays predictable rather than shuffling on an incidental field.
@@ -404,7 +446,7 @@ describe('dedupe stall', () => {
 
     expect(run.result.findings).toHaveLength(pair.length);
     expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
-    expect(run.logged(/stalled at effort high/).length).toBeGreaterThan(0);
+    expect(run.logged(/stalled at effort high/).length).toBe(1);
   });
 
   it('still degrades gracefully when the agent merely returns nothing', async () => {
@@ -418,7 +460,7 @@ describe('dedupe stall', () => {
 describe('dedupe malformed responses', () => {
   // The agent's structured output is untrusted. It can return partial data, wrong types, or schema violations without
   // throwing or returning null. These intermediate failure modes must degrade to "no merge" instead of crashing or
-  // corrupting findings, since mergeIssueGroups treats malformed groups as invalid (per lines 88-106).
+  // corrupting findings, since `mergeIssueGroups` treats malformed groups as invalid.
   const pair = [issue({ file: 'a.py' }), issue({ file: 'b.py' })];
 
   // The findings as the run reports them. Each round marks its own findings with a symbol-keyed property so the
@@ -841,7 +883,7 @@ describe('round labels', () => {
   });
 
   it('applies the round tag conditional (maxRounds > 1) at the exact threshold', async () => {
-    // Directly tests the condition at repo-review.js:1316: `const roundTag = maxRounds > 1 ? ... : '';`
+    // Directly tests the `roundTag` condition at the top of the `--loop` round loop: `maxRounds > 1 ? ... : ''`.
     // A bug changing > to >=, or > 1 to > 0, would fail here rather than merely look odd in labels.
 
     // maxRounds === 1: condition is false, tag suppressed
@@ -876,7 +918,7 @@ describe('loop termination', () => {
     expect(run.called(/^review:/).map((call) => call.label).filter((label) => label.includes('round 3'))).toHaveLength(
       0,
     );
-    expect(run.logged('added no new findings — converged, stopping').length).toBeGreaterThan(0);
+    expect(run.logged('added no new findings — converged, stopping').length).toBe(1);
   });
 
   it('does not record a gap when the loop converges naturally', async () => {
@@ -988,7 +1030,7 @@ describe('cross-pass chunking', () => {
 
 describe('loop convergence', () => {
   it('records a gap when the loop hits maxRounds while still finding new issues', async () => {
-    // Lines 1460-1462 set `converged = false` when round === maxRounds and the last round was net-positive. This is
+    // The round loop sets `converged = false` when round === maxRounds and the last round was net-positive. This is
     // distinct from early convergence (tested above): the review exhausted its budget before running dry, signaling that
     // more findings likely exist. The gap tells the user to re-run with a higher cap.
     const run = await runFix({
@@ -1000,12 +1042,21 @@ describe('loop convergence', () => {
         const round = roundMatch ? Number(roundMatch[1]) : 1;
 
         return {
-          issues: round === 1
-            ? [issue({ description: 'round 1 finding', file: 'a.py' })]
-            : [issue({ description: 'round 2 finding', file: 'b.py' })],
+          issues:
+            round === 1
+              ? [issue({ description: 'round 1 finding', file: 'a.py' })]
+              : [issue({ description: 'round 2 finding', file: 'b.py' })],
         };
       },
     });
+
+    // The premise, asserted rather than assumed: round 2 reported something round 1 did not, so the cap was hit by a
+    // review that was still finding new things. Without this the test passes on the *other* route to non-convergence —
+    // reviewers re-reporting one finding that dedupe never merges, which the `loop: 2` case above already covers — and
+    // would go on passing if the `review` override were dropped again, which is how it came to be inert.
+    const descriptions = new Set(run.result.findings.map((finding) => finding.description));
+
+    expect(descriptions).toEqual(new Set(['round 1 finding', 'round 2 finding']));
 
     expect(run.result.gaps.some((gap) => gap.includes('Loop hit the 2-round cap while still finding new issues'))).toBe(
       true,
@@ -1030,7 +1081,7 @@ describe('loop convergence', () => {
     });
 
     expect(run.result.gaps.some((gap) => gap.includes('did not converge'))).toBe(false);
-    expect(run.logged('Round 2 added no new findings — converged, stopping.').length).toBeGreaterThan(0);
+    expect(run.logged('Round 2 added no new findings — converged, stopping.').length).toBe(1);
   });
 });
 
@@ -1270,7 +1321,7 @@ describe('cross-pass convergence', () => {
   });
 
   it('omits pass number on pass 1 but labels pass 2+ when multiple passes run', async () => {
-    // The conditional at line 883 only adds pass numbers once there is more than one pass to tell apart.
+    // The label conditional in `crossDedupe` only adds pass numbers once there is more than one pass to tell apart.
     const run = await runFix({
       ...spanning(80),
       dedupe: (call) => ({ groups: call.label.startsWith('dedupe:cross:1+2:') ? [[0, 1]] : [] }),
@@ -1320,7 +1371,7 @@ describe('what makes a `--loop` round dry', () => {
     const run = await looped((call) => ({ groups: roundOf(call) === 1 ? [] : [[0, 3], [1, 4], [2, 5]] }));
 
     expect(dedupeLabels(run)).toEqual(['dedupe:core:high round 1/3', 'dedupe:core:high round 2/3']);
-    expect(run.logged('Round 2 added no new findings').length).toBeGreaterThan(0);
+    expect(run.logged('Round 2 added no new findings').length).toBe(1);
     expect(run.result.gaps.some((gap) => gap.includes('did not converge'))).toBe(false);
   });
 });

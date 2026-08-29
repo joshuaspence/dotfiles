@@ -65,6 +65,9 @@ const input = normalizeArgs(args);
 // truthiness test first.)
 if (typeof args === 'string' && (!input || typeof input !== 'object')) {
   return {
+    // Explicitly null, not absent: `reviewedCommit` is on every exit, and null is the documented signal for "the
+    // script never learned it, fall back to `git rev-parse HEAD`". This abort is before the survey, so it never could.
+    reviewedCommit: null,
     findings: [],
     exclusions: [],
     gaps: [
@@ -102,8 +105,8 @@ const scope =
 const lsFiles = paths.length ? `git ls-files -- ${paths.map(shellQuote).join(' ')}` : 'git ls-files';
 
 // Whether a repo-relative path lies within a subtree — the containment relation the pathspec above expresses to `git`,
-// and the one `fileInUnit` uses to place a finding in a unit. `p` alone is not a prefix test: `src` must not swallow
-// `srcgen/a.js`.
+// the one `fileInUnit` uses to place a finding in a unit, and the one `isGeneratedPath` uses to refuse a fix commit
+// that staged build output. `p` alone is not a prefix test: `src` must not swallow `srcgen/a.js`.
 const underPath = (file, p) => file === p || file.startsWith(p.endsWith('/') ? p : `${p}/`);
 
 // The scope, enforced rather than merely described. Everything above this point is prose bound for a prompt, but the
@@ -115,11 +118,15 @@ const underPath = (file, p) => file === p || file.startsWith(p.endsWith('/') ? p
 // neither contains the other. A unit path that *contains* a requested one is not out of scope but too wide, so it
 // narrows to the requested subtrees it covers rather than being dropped, which would lose their coverage entirely.
 const narrowToScope = (unitPaths) => {
-  if (!paths.length) return unitPaths || [];
-
   // A non-string or blank entry would throw inside `underPath` and take the whole run down; it is dropped here for the
-  // same reason `normalizePaths` drops one on the way in.
+  // same reason `normalizePaths` drops one on the way in. Sanitised *before* the unscoped early return below, not
+  // after: with no `--paths` there is no intersection to take, but `unit.paths` still reaches `underPath` through
+  // `fileInUnit` when the Dedupe phase buckets findings, and that call sits outside any `try`, so one `null` in a
+  // whole-repository partition would throw away the whole Review phase that had just finished. Trimming matters there
+  // too — a padded `' src'` matches no file at all, silently mis-scoping that unit's findings.
   const list = (unitPaths || []).filter((p) => typeof p === 'string' && p.trim() !== '').map((p) => p.trim());
+
+  if (!paths.length) return [...new Set(list)];
 
   return [
     ...new Set(
@@ -130,10 +137,28 @@ const narrowToScope = (unitPaths) => {
 
 
 // --- Configuration knobs ------------------------------------------------------------------------------------------
-// Each knob tolerates missing or malformed input. `effort` gates every agent (clamped to a known level). `partitions`
-// (review units) and `validators` (validators per finding) accept the sentinel 'auto' or a positive integer.
+// Each knob tolerates missing or malformed input. `partitions` (review units) and `validators` (validators per finding)
+// accept the sentinel 'auto' or a positive integer. `effort` must be a known level or absent (defaults to 'high').
 const EFFORT_ORDER = ['low', 'medium', 'high', 'xhigh', 'max'];
-const effort = EFFORT_ORDER.includes(input?.effort) ? input.effort : 'high';
+const effort = input?.effort
+  ? EFFORT_ORDER.includes(input.effort)
+    ? input.effort
+    : (() => {
+        return {
+          findings: [],
+          exclusions: [],
+          gaps: [
+            `\`--effort\` must be one of ${EFFORT_ORDER.join(', ')} but received '${input.effort}'. ` +
+              'Review aborted — re-run with a valid effort level.',
+          ],
+        };
+      })()
+  : 'high';
+
+// Early return if effort validation failed
+if (typeof effort === 'object' && effort.gaps) {
+  return effort;
+}
 
 function positiveIntOr(value, fallback) {
   const n = parseInt(value, 10);
@@ -608,9 +633,9 @@ const isSafeRepoPath = (value) =>
   !value.split('/').includes('..');
 
 // A branch that may go on the teardown list. `isSafeBranchName` only judges a name's *shape*, and every name the
-// wrapper is handed as `fix.sandboxBranches` becomes a `git branch -D` argument under a pre-authorized
-// `Bash(git branch:*)` — no confirmation prompt. `master` is a perfectly well-shaped branch name, so a fixer that
-// failed or skipped step 0 and reported whatever branch it happened to be on would hand the wrapper a delete
+// wrapper is handed as `fix.sandboxBranches` becomes a `git branch --delete --force` argument under a pre-authorized
+// `Bash(git branch --delete --force:*)` — no confirmation prompt. `master` is a perfectly well-shaped branch name, so a
+// fixer that failed or skipped step 0 and reported whatever branch it happened to be on would hand the wrapper a delete
 // instruction for a branch this run never created (recoverable via the reflog, but silent). So require the naming
 // convention step 0 actually asked for — `rrfix/<run-id>/<n>` and `rrmerge/<run-id>/<n>`, exactly three components —
 // which also keeps the wrapper's run-id derivation (it reads `<run-id>` out of these names to scope the teardown)
@@ -638,17 +663,36 @@ const isRepoRelativePath = (value) => {
   return path !== '' && !path.startsWith('/') && !path.startsWith('~') && !/(^|\/)\.\.(\/|$)/.test(path);
 };
 
-// An `otherSites` entry is prose around a path (`file:line (note)`, or a bare module name), so only its leading token
-// can be one — and that token is the part a fixer would open. Check that, and drop just the offending entry rather than
-// failing the finding: `file` defines the fix, `otherSites` only widens where it may reach.
-const sitePath = (site) => String(site ?? '').trim().split(/\s+/, 1)[0].replace(/:\d+(?:-\d+)?$/, '');
+// An `otherSites` entry is usually prose around a path (`file:line (note)`, or a bare module name), but *nothing*
+// enforces that shape — the schema is a bare `STRING_ARRAY`, and the text is written by a reviewer that has just read
+// repository content this file treats as untrusted. And the entry reaches the fixer whole: it is JSON-stringified into
+// the prompt, whose step 1 licenses the agent to edit "the cited site and anything in `otherSites`". So checking only
+// the leading token would leave the gate open — `src/a.ts:1 (fix /etc/hosts too)` leads with an in-tree path and
+// smuggles an out-of-tree one past it, aiming a write-capable agent exactly where `isRepoRelativePath` exists to stop
+// it. Hold every path-shaped run of characters in the entry to the containment rule instead of just the first, and drop
+// the whole entry when any of them escapes, rather than failing the finding: `file` defines the fix, `otherSites` only
+// widens where it may reach. Splitting on the characters a tracked path does not use also separates a trailing `:line`
+// from its path for free. Prose that merely looks path-like (`~40 call sites`, a `https://` URL) costs an entry's worth
+// of licence and no more — the same conservative direction `isSafeRepoPath` takes.
+const sitePaths = (site) => String(site ?? '').match(/[0-9A-Za-z._~/-]+/g) ?? [];
 const containedSites = (sites) =>
-  (Array.isArray(sites) ? sites : []).filter((site) => isRepoRelativePath(sitePath(site)));
+  (Array.isArray(sites) ? sites : []).filter((site) => {
+    const paths = sitePaths(site);
+
+    return paths.length > 0 && paths.every(isRepoRelativePath);
+  });
 
 
 // --- Shared prompt fragments -------------------------------------------------------------------------------------
-// Render a list of paths/sites as markdown bullets, falling back to `empty` when there is nothing to list.
-const bulletList = (items, empty) => items?.length ? items.map((p) => `- ${p}`).join('\n') : empty;
+// Render a list of paths/sites as markdown bullets, falling back to `empty` when there is nothing to list. Each item is
+// flattened to one line first, for the same reason `issueSite` below is: a bullet list is one item per line, so an item
+// carrying a newline forges extra bullets — or, worse, an extra instruction line — in the prompt of a write-capable,
+// commit-producing agent. Most of what is listed here is agent-supplied and constrained by nothing: `exclusions[].path`
+// and `unit.paths` from the partitioner, the claude-md scan's paths. It need not even take a misbehaving agent, either:
+// `git ls-files` — the enumeration those agents are told to use — can legitimately report a tracked filename containing
+// a newline. Flattened once, here, so no caller can format a bullet that spans lines.
+const bulletList = (items, empty) =>
+  items?.length ? items.map((p) => `- ${String(p ?? '').replace(/\s+/g, ' ').trim()}`).join('\n') : empty;
 const surveyBlock = (survey) =>
   `Repository survey (for context on the repo's purpose and conventions):\n${JSON.stringify(survey, null, 2)}`;
 
@@ -669,6 +713,18 @@ const agentNote = (text) => {
   return JSON.stringify(note.length > AGENT_NOTE_BUDGET ? `${note.slice(0, AGENT_NOTE_BUDGET)}…` : note);
 };
 
+// How much of each rejecting reviewer's objection is carried forward. Enough for an actionable objection; short enough
+// that the reviser's prompt and the report cannot be swamped by one reviewer's essay, since several objections are
+// concatenated below and the total is otherwise unbounded.
+const OBJECTION_BUDGET = 600;
+
+// One reviewer's objection, made safe to carry. It is free prose about a diff the reviewer read out of the repository,
+// and it travels to two places that both treat a newline as structure: the reviser's prompt, where it sits directly
+// above a numbered procedure it would otherwise merge into (see `fixerPrompt`), and `outcome.reason`, which is rendered
+// into the user-facing report. Flattening it to one bounded line at the single point where objections are built covers
+// every consumer at once.
+const objectionText = (text) => String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, OBJECTION_BUDGET);
+
 // The single wording of the "pre-existing" policy. It has to reach both ends of the pipeline: the reviewers, via
 // `FALSE_POSITIVES`, and the validator that judges what they report. Stated twice it drifted into two variants, so the
 // agent producing a finding and the agent vetting it were held to subtly different rules — hence one constant.
@@ -687,6 +743,19 @@ const REVIEW_RULES =
   'upstream documentation to confirm how an external API, library, or framework behaves, but every finding must cite a ' +
   'location in this repository. Prefer `git ls-files` over `find`. If you are not certain an issue is real, do not flag ' +
   'it — false positives erode trust. Cite each issue with a file path and, where applicable, a line or range.';
+
+// The read-only guard for the three phases whose own instructions only say *what* to enumerate: Survey, the
+// `CLAUDE.md` scan, and Partition. Like every phase before Fix they run in the user's live checkout —
+// `isolation: 'worktree'` is only ever set on the fixers/revisers and the reconcilers — holding the same tools a
+// sandboxed fixer holds, and yet each of those three prompts used to say nothing about the tree at all: "enumerate
+// with `git ls-files`" tells an agent how to list files, so quoting it as their guard named no prohibition a later
+// edit could remove. Phrased as forbidden *actions*, and paired with the same "otherwise unrestricted" release the
+// validators get, because enumerating widely is the entire job of these three. `read-only.test.js` holds this
+// invariant for every un-isolated phase.
+const READ_ONLY_RULE =
+  "You are working in the user's live checkout, not a sandbox: do not modify, create, or delete any file, and do " +
+  'not build, typecheck, lint, or test the repository. Read-only inspection is otherwise unrestricted — read and ' +
+  'enumerate as widely as the task needs.';
 
 const SEVERITY_RUBRIC =
   'Severity reflects the impact if the issue is left unfixed: "critical" (security hole, data loss, or a defect that ' +
@@ -826,17 +895,27 @@ const withUnitSlugs = (units) => {
 
   return (units || []).map((unit, i) => {
     const base = unitSlug(unit?.name) || `unit-${i + 1}`;
-    const seen = (used.get(base) || 0) + 1;
+    let seen = (used.get(base) || 0) + 1;
+
+    // The count is kept per base, but what a label carries is the numbered slug — and that slug is itself a name a unit
+    // can arrive under. A second `core` is minted `core-2`, and a unit actually named `core-2` has a base no count has
+    // ever been recorded for, so it would be minted `core-2` as well: the collision this whole function exists to
+    // prevent, one number over. So step past every slug already handed out and record the minted one as taken in its
+    // own right, which is also what keeps a fallback `unit-2` from being minted twice.
+    while (seen > 1 && used.has(`${base}-${seen}`)) seen += 1;
+
+    const slug = seen > 1 ? `${base}-${seen}` : base;
 
     used.set(base, seen);
+    if (slug !== base) used.set(slug, 1);
 
-    return { ...unit, slug: seen > 1 ? `${base}-${seen}` : base };
+    return { ...unit, slug };
   });
 };
 
 const claudeMdPrompt = () =>
   'List the repo-relative paths of every `CLAUDE.md` file in the repository (enumerate with `git ls-files`). Return ' +
-  'only the paths — not their contents.';
+  `only the paths — not their contents.\n\n${READ_ONLY_RULE}`;
 
 // --- Dedupe: the agent judges, the script copies -------------------------------------------------------------------
 // This phase used to hand the agent the whole union as JSON and ask it to return the merged findings, which made it
@@ -869,7 +948,17 @@ const issueSite = (issue) =>
 // newlines, while every list that restates a finding puts it on a single line — a bullet in `knownFindingsBlock`, a
 // numbered entry in the digest below, an item in `gaps`. Left in, one finding would read as several and the list would
 // stop being a list. The budget is the caller's because those lists can afford different amounts of it.
-const issueDescription = (issue, budget) => (issue?.description || '').replace(/\s+/g, ' ').slice(0, budget);
+//
+// `slice` counts UTF-16 code units, so a budget landing between the halves of a surrogate pair — any emoji or other
+// astral character straddling the cut — would keep the leading half on its own. A lone surrogate is not a character: it
+// survives inside this process but every way the truncated line leaves it, written into a prompt or reported as a gap,
+// encodes it as U+FFFD. So the orphan is dropped and the pair truncated whole.
+const issueDescription = (issue, budget) => {
+  const truncated = (issue?.description || '').replace(/\s+/g, ' ').slice(0, budget);
+  const last = truncated.charCodeAt(truncated.length - 1);
+
+  return last >= 0xd800 && last <= 0xdbff ? truncated.slice(0, -1) : truncated;
+};
 
 const dedupeDigest = (issues) =>
   issues
@@ -935,6 +1024,19 @@ const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 const survivingMember = (issues, members) =>
   members.reduce((keep, j) => (isHighRisk(issues[j]) && !isHighRisk(issues[keep]) ? j : keep));
 
+// Symbol-keyed marks describe a *position* in the list being merged, not the content of the finding sitting there, so
+// they come from the group's lowest-indexed member rather than from the member `survivingMember` kept. The only such
+// mark is the `--loop` novelty flag (`foundThisRound`), which answers "is this a defect the review did not already
+// hold?" — and only the lowest index can answer it, because the union puts everything accumulated ahead of this round's
+// reports. Left to `{ ...primary }`, a re-report that wins the risk decision over the copy it is absorbed into would
+// carry its own flag onto the merged finding, and a round that added nothing would still read as net-positive.
+const withMarksOf = (merged, source) => {
+  for (const mark of Object.getOwnPropertySymbols(merged)) delete merged[mark];
+  for (const mark of Object.getOwnPropertySymbols(source || {})) merged[mark] = source[mark];
+
+  return merged;
+};
+
 // Apply the agent's groups to the findings it was shown. Every field is copied from the originals; the agent's answer
 // only decides *which* findings collapse. Malformed groups degrade to "not merged" rather than corrupting the set: an
 // out-of-range, non-integer, or already-claimed index is dropped, and a group left with fewer than two members is
@@ -977,7 +1079,14 @@ const mergeIssueGroups = (issues, groups) => {
       ]),
     ].filter((site) => site && site !== primarySite);
 
-    return [{ ...primary, severity: members.map((j) => issues[j].severity).reduce(worstSeverity), otherSites }];
+    // `issue` is the group's lowest-indexed member — `primaries` is keyed by `members[0]` — which is where the marks
+    // come from, whichever member won the risk decision above. See `withMarksOf`.
+    return [
+      withMarksOf(
+        { ...primary, severity: members.map((j) => issues[j].severity).reduce(worstSeverity), otherSites },
+        issue,
+      ),
+    ];
   });
 };
 
@@ -1176,7 +1285,7 @@ const surveyPrompt = () =>
   "more; and, for orientation only, the whole repository's top-level directory structure with a file count per " +
   'directory. The last two are different numbers whenever a scope narrower than the repository is in effect. ' +
   'Finally, run `git rev-parse HEAD` and return its full 40-character output as `headSha` — the commit the rest of ' +
-  'this review is defined against.';
+  `this review is defined against.\n\n${READ_ONLY_RULE}`;
 
 // Like every phase before Fix, Validate runs in the user's live checkout — `isolation: 'worktree'` is only ever set on
 // the fixers/revisers and the reconcilers — so it needs the execution guard every other un-isolated prompt already
@@ -1463,6 +1572,7 @@ function partitionPrompt(survey, fileCount) {
     'output, bundles, compiled/transpiled output, lock files, installed or vendored dependencies) and false ' +
     'otherwise: a later phase forbids the fix agents from staging those paths, and it reads that flag, not your ' +
     '`reason` prose.\n\n' +
+    `${READ_ONLY_RULE}\n\n` +
     surveyBlock(survey)
   );
 }
@@ -1477,7 +1587,10 @@ function reviewerPrompt(reviewer, unit, survey, claudeMdPaths, roundCtx = {}) {
 
   return (
     `You are the ${reviewer.title} reviewer. ${reviewer.instruction}\n\n` +
-    `Review this unit: "${unit.name}".\n` +
+    // The unit's prose name, as the partition agent wrote it — untrusted for the same reason its paths are, and quoted
+    // on its own line directly above the file list. `agentNote` renders it exactly as the hand-written quotes did for
+    // any ordinary name, and flattens and escapes the one that would otherwise break out of them.
+    `Review this unit: ${agentNote(unit.name)}.\n` +
     `Files in scope:\n${files}\n\n` +
     `${SEVERITY_RUBRIC}\n\n` +
     `Return a list of issues. For each: a description, a severity, the category "${reviewer.key}", the primary ` +
@@ -1629,7 +1742,7 @@ if (!partition?.units?.length) {
 // The requested scope, enforced on the way out of the Partition phase — the one place it can be enforced, since from
 // here on `unit.paths` *is* the scope every phase works from (see `narrowToScope`). A unit the narrowing emptied is
 // dropped whole: six reviewers pointed at a file list of nothing they were asked about is pure cost. That drop is part
-// of enforcing a requested scope, so with no `--path` it does not apply: there, `narrowToScope` is the identity, and a
+// of enforcing a requested scope, so with no `--path` it does not apply: there, `narrowToScope` only sanitises, and a
 // unit arriving with no paths of its own is a partitioner describing a scope it did not enumerate, not one that fell
 // outside what was asked for. The phases below already read that as an unknown scope size and review it anyway, so
 // filtering unconditionally would abort the run instead. Narrowed before slugging, so the numbering of repeated slugs
@@ -1800,10 +1913,10 @@ for (let round = 1; round <= maxRounds; round++) {
   const prevCount = deduped.length;
 
   // A mark this round's findings carry through both stages, so the convergence test below can count them instead of
-  // inferring them from the total. A symbol-keyed own property survives `mergeIssueGroups` — it copies a merged primary
-  // with `{ ...issue }`, and spread copies symbol keys — while staying out of every prompt digest, out of the JSON the
-  // run returns, and out of reach of any field name a reviewer might use. Created per round, so the marks earlier rounds
-  // left on the accumulated findings are invisible here.
+  // inferring them from the total. A symbol-keyed own property survives `mergeIssueGroups`, which carries a merged
+  // group's marks over from its lowest-indexed member (`withMarksOf`), while staying out of every prompt digest, out of
+  // the JSON the run returns, and out of reach of any field name a reviewer might use. Created per round, so the marks
+  // earlier rounds left on the accumulated findings are invisible here.
   const foundThisRound = Symbol('found in this round');
   const union = [...deduped, ...roundIssues.map((issue) => ({ ...issue, [foundThisRound]: true }))];
 
@@ -1871,9 +1984,10 @@ for (let round = 1; round <= maxRounds; round++) {
   // merges two findings from *earlier* rounds — which the chunked cross pass above leaves for a later round by design,
   // since `DEDUPE_CHUNK_PASSES` bounds how much of a duplicate chain one round can close. Differenced, three such late
   // merges cancel two genuine new defects, and a productive round reads as convergence: the loop stops and the rounds
-  // the user asked for never run. A merged group keeps its lowest index as the primary, and this round's findings sit
-  // above everything accumulated, so a re-reported defect is absorbed by the copy already held and loses the mark —
-  // exactly as novelty requires.
+  // the user asked for never run. A merged group takes its marks from its lowest index — not from the member that won
+  // the risk decision, which may well be the re-report (`withMarksOf`) — and this round's findings sit above everything
+  // accumulated, so a re-reported defect is absorbed by the copy already held and loses the mark, exactly as novelty
+  // requires.
   if (maxRounds > 1) {
     const netNew = deduped.filter((issue) => issue[foundThisRound]).length;
 
@@ -1981,10 +2095,17 @@ if (!reviewHead) {
   // And a stall *throws* (see `dedupeAgent`), which unguarded would escape the workflow. By here Survey, Partition,
   // every Review/Dedupe round and Validate have all completed, and the block below already degrades gracefully — so a
   // throw out of this one-question Haiku agent would discard a finished review instead of returning it unfixed.
+  //
+  // Like every phase but Fix/Revise/Reconcile it runs in the user's live checkout — holding Bash, and asked for a git
+  // answer — so it carries the same execution guard the other un-isolated prompts do. This one reached production
+  // without one precisely because it only fires on the degraded path, which no default run takes: `read-only.test.js`
+  // now drives that path too, so the table there covers this label rather than never seeing it.
   try {
     headOnly = await agent(
       'Run `git rev-parse HEAD` in the repository root and return its full 40-character output as `headSha`. Return ' +
-        'nothing else — do not abbreviate it, and do not substitute a branch name.',
+        'nothing else — do not abbreviate it, and do not substitute a branch name. You are working in the live ' +
+        'checkout, not a sandbox, and that one command answers the whole question: do not modify, create, or delete ' +
+        'any file.',
       {
         label: 'review-head',
         phase: 'Fix',
@@ -2011,8 +2132,8 @@ if (!reviewHead) {
       'was actually reviewed. These findings are **not** fixed and are **not** verified as unfixable. Re-run `--fix`.',
   );
 
-  // `reviewedCommit` is null here by definition — this is the one exit where the script never learned it, so the
-  // wrapper has nothing to anchor permalinks to and has to fall back to its own `git rev-parse HEAD`.
+  // `reviewedCommit` is null here by definition — the script never learned it, so the wrapper has nothing to anchor
+  // permalinks to and has to fall back to its own `git rev-parse HEAD`.
   return { reviewedCommit: null, findings, exclusions, gaps };
 }
 
@@ -2030,9 +2151,10 @@ const generatedPaths = [
   ...new Set(exclusions.filter(isGeneratedExclusion).map((e) => e.path).filter(Boolean)),
 ];
 
-// A changed file is a generated artifact when it is one of those paths or sits beneath one of them.
-const isGeneratedPath = (file) =>
-  generatedPaths.some((p) => file === p || file.startsWith(p.endsWith('/') ? p : `${p}/`));
+// A changed file is a generated artifact when it is one of those paths or sits beneath one of them — the same
+// containment relation `underPath` defines, reused rather than restated so a correction there (a `./` prefix, a
+// separator, case folding) cannot fix unit placement and scope narrowing while leaving this gate on the old behaviour.
+const isGeneratedPath = (file) => generatedPaths.some((p) => underPath(file, p));
 
 if (generatedPaths.length) {
   log(`Fixers told to leave ${generatedPaths.length} generated path(s) unstaged.`);
@@ -2145,18 +2267,6 @@ const runFixer = async (issue, attempt, revisionCtx) => {
 
   return result;
 };
-
-// How much of each rejecting reviewer's objection is carried forward. Enough for an actionable objection; short enough
-// that the reviser's prompt and the report cannot be swamped by one reviewer's essay, since several objections are
-// concatenated below and the total is otherwise unbounded.
-const OBJECTION_BUDGET = 600;
-
-// One reviewer's objection, made safe to carry. It is free prose about a diff the reviewer read out of the repository,
-// and it travels to two places that both treat a newline as structure: the reviser's prompt, where it sits directly
-// above a numbered procedure it would otherwise merge into (see `fixerPrompt`), and `outcome.reason`, which is rendered
-// into the user-facing report. Flattening it to one bounded line at the single point where objections are built covers
-// every consumer at once.
-const objectionText = (text) => String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, OBJECTION_BUDGET);
 
 // Run `reviewers` read-only reviewers over one fix commit; approve on a strict majority of those that return. When no
 // reviewer returns at all, the gate could not run — signal that (completed: false) rather than silently approving.
@@ -2458,6 +2568,16 @@ const reconciled = await parallel(
     // would leave that copy unvalidated.
     if (rr?.status === 'resolved' && !(isCommitSha(rr.sha) && isSafeBranchName(rr.branch))) {
       rr = { ...rr, status: 'failed', reason: 'reconciliation reported no usable commit SHA / branch' };
+    }
+
+    // `changedFiles` is what every gate below keys on, and the schema's `string[]` is a request to the agent, not a
+    // guarantee — the same reason `sha` is re-checked above. A truthy non-array (`changedFiles: 'src/a.js'`) satisfies
+    // the non-empty refusal below by its character count and then throws at `.filter` in the stray check, escaping the
+    // thunk into exactly the outcome the comment at the top of this block guards against: `parallel` yields `null`, the
+    // group is dropped from `commits`, and its fixes stay `applied` with SHAs nothing cherry-picks. Coerce anything that
+    // is not an array to the empty list so the refusal below judges it as the unusable file list it is.
+    if (rr && !Array.isArray(rr.changedFiles)) {
+      rr = { ...rr, changedFiles: [] };
     }
 
     // The `unverifiable` gate above refuses a *fixer* commit that reports no files; a merged commit reporting none is

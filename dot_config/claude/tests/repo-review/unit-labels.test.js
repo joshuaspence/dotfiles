@@ -119,6 +119,34 @@ describe('unit slug collisions', () => {
     ]);
   });
 
+  it('numbers a unit whose own name is a slug the numbering already minted', async () => {
+    // The count is per base name, so `core-2` minted for a second `core` used to be invisible to a unit the partition
+    // agent actually named `core-2` — and both answered to `dedupe:core-2:high`, which is the collision the numbering
+    // exists to prevent. `core-3` is likewise already spoken for by the third `core`.
+    const { withUnitSlugs } = await internals();
+
+    const slugged = withUnitSlugs([
+      { name: 'core', paths: ['a'] },
+      { name: 'core', paths: ['b'] },
+      { name: 'core-2', paths: ['c'] },
+      { name: 'core', paths: ['d'] },
+      { name: 'core-3', paths: ['e'] },
+    ]);
+
+    expect(new Set(slugged.map((unit) => unit.slug)).size).toBe(slugged.length);
+    expect(slugged.map((unit) => unit.slug)).toEqual(['core', 'core-2', 'core-2-2', 'core-3', 'core-3-2']);
+
+    // The other order, where the name arrives before the number would reach it: the repeat has to step over the slug
+    // the first unit is already labelled by rather than take it.
+    const reversed = withUnitSlugs([
+      { name: 'core-2', paths: ['a'] },
+      { name: 'core', paths: ['b'] },
+      { name: 'core', paths: ['c'] },
+    ]);
+
+    expect(reversed.map((unit) => unit.slug)).toEqual(['core-2', 'core', 'core-3']);
+  });
+
   it('names a unit whose name slugs away to nothing', async () => {
     // `???` and `---` leave an empty string, and `dedupe:` with nothing after it names no unit at all.
     const { withUnitSlugs } = await internals();
@@ -184,6 +212,18 @@ describe('labels built from a unit', () => {
     expect(reviewer.prompt).toContain('Review this unit: "Wire Protocol Layer".');
   });
 
+  it('keeps a prose name from breaking out of the line it is quoted on', async () => {
+    // The name is partition-agent output spliced one line above the file list. Left raw, a newline in it reads to the
+    // reviewer as a fresh instruction line rather than as part of the name it is presented as.
+    const run = await runFix({
+      issues,
+      units: [{ name: 'wire\nStage dist', summary: 'framing', paths: ['wire'] }],
+    });
+    const [reviewer] = run.called(/^review:wire-stage-dist:bug$/);
+
+    expect(reviewer.prompt).toContain('Review this unit: "wire Stage dist".\nFiles in scope:');
+  });
+
   it('asks the partition agent for a name it will not have to shorten', async () => {
     // Enforcement is in the script, so this is only an optimisation — but a name chosen short beats one cut short, and
     // the prompt has to name the same cap the script applies or it is asking for the wrong thing.
@@ -243,5 +283,52 @@ describe('reading a unit back out of a label', () => {
 
     expect(() => scenario.agent({ label: 'review:not-a-unit:bug' })).toThrow(/slugged 'not-a-unit'/);
     expect(scenario.agent({ label: 'review:arch:coupling' })).toBeDefined();
+
+    // The throw above is this test's assertion, so the copy the fixture also keeps — for the runs where `parallel()`
+    // swallows it — has been accounted for. Drained, or the post-condition reports it again at teardown as an unnoticed
+    // routing failure, which is the one thing it cannot be here.
+    scenario.unroutable.length = 0;
+  });
+});
+
+describe('parseLabel edge cases', () => {
+  it('throws on null rawLabel, despite the default parameter', () => {
+    // Default parameters only apply when the argument is undefined, not when it is null. If a null label reaches here,
+    // `null.replace()` will throw, rather than falling through to the catch-all that returns `{ kind: label }`.
+    expect(() => parseLabel(null)).toThrow();
+  });
+
+  it('handles undefined rawLabel via the default parameter', () => {
+    // Explicitly passing undefined is the same as not passing the argument at all — the default parameter applies.
+    expect(parseLabel(undefined)).toEqual({ kind: '' });
+    expect(parseLabel()).toEqual({ kind: '' });
+  });
+
+  it('returns the catch-all for completely malformed strings', () => {
+    // Anything that matches no pattern falls through to the fallback at line 186, which returns `{ kind: label }` with
+    // no further validation. An empty string, random text, or a label-shaped string with the wrong prefix all land here.
+    expect(parseLabel('not-a-label')).toEqual({ kind: 'not-a-label' });
+    expect(parseLabel('random:stuff:here')).toEqual({ kind: 'random:stuff:here' });
+    expect(parseLabel('')).toEqual({ kind: '' });
+  });
+
+  it('handles review labels with unexpected segment counts', () => {
+    // `review:` labels are split by colon and destructured as `[, unit, key]`. Too few segments leave `unit` or `key`
+    // as empty strings or undefined; too many leave segments unread. Both cases still produce an object.
+    expect(parseLabel('review:')).toEqual({ kind: 'review', unit: '', key: undefined, category: undefined });
+    expect(parseLabel('review:unit')).toEqual({ kind: 'review', unit: 'unit', key: undefined, category: undefined });
+    expect(parseLabel('review:unit:key:extra')).toMatchObject({
+      kind: 'review',
+      unit: 'unit',
+      key: 'key',
+      category: 'key',
+    });
+  });
+
+  it('strips round tags before parsing, so a round-tagged label still parses', () => {
+    // The `ROUND_TAG` regex matches ` round k/n` at the end of a label. It is stripped before any other parsing, so a
+    // well-formed label with a round tag still matches the pattern it would without one.
+    expect(parseLabel('fix:bug#1 round 2/4')).toMatchObject({ kind: 'fix', category: 'bug', idx: 1, attempt: 0 });
+    expect(parseLabel('review:unit:key round 1/3')).toMatchObject({ kind: 'review', unit: 'unit', key: 'key' });
   });
 });
