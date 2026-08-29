@@ -64,7 +64,9 @@ describe('schemas', () => {
     const unitSchema = PARTITION_SCHEMA.properties.units.items;
     expect(unitSchema.required).toEqual(['name', 'paths']);
     const exclusionSchema = PARTITION_SCHEMA.properties.exclusions.items;
-    expect(exclusionSchema.required).toEqual(['path', 'reason']);
+    // `generated` is required, not optional: the Fix phase keys two safety mechanisms off it (fixers are told never to
+    // stage these paths, and a commit that staged one is refused), so a partitioner omitting it would disable both.
+    expect(exclusionSchema.required).toEqual(['path', 'reason', 'generated']);
 
     // VERDICT_SCHEMA must require both fields validators return
     expect(VERDICT_SCHEMA.required).toEqual(['confirmed', 'rationale']);

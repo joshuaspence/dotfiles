@@ -120,9 +120,13 @@ const INTERNALS = [
     'ARCHITECTURAL_LENSES',                                                                                             
     'DEDUPE_SCHEMA',
     'FIX_RESULT_SCHEMA',                                                                                                
+    'ISSUES_SCHEMA',
+    'PARTITION_SCHEMA',
     'RECONCILE_RESULT_SCHEMA',
     'REVIEWERS',
+    'REVIEW_RESULT_SCHEMA',
     'SURVEY_SCHEMA',
+    'VERDICT_SCHEMA',
   ],
 ];
 

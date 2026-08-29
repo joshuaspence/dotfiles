@@ -24,7 +24,7 @@ describe('dedupe phase failures', () => {
     });
 
     // Dedupe gap should be recorded with specific message about unit scope failure.
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('kept raw'))).toBe(true);
 
     // Findings should still validate and potentially fix (dedupe failure doesn't block downstream phases).
@@ -47,7 +47,7 @@ describe('dedupe failures cascading into validation', () => {
     });
 
     // Both gaps should be recorded.
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Validation did not complete'))).toBe(true);
 
     // The findings should be dropped (validation failed).
@@ -65,7 +65,7 @@ describe('dedupe failures cascading into validation', () => {
       dedupe: () => null,
     });
 
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('kept raw'))).toBe(true);
 
     // Both findings validated and kept (dedupe failure doesn't block validation).
@@ -128,7 +128,7 @@ describe('fix failures after multiple upstream gaps', () => {
     });
 
     // All three gap types should be present.
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Validation did not complete'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Fix agent did not return'))).toBe(true);
 
@@ -157,7 +157,7 @@ describe('fix failures after multiple upstream gaps', () => {
 
     // Multiple gap types accumulated.
     expect(run.result.gaps.length).toBeGreaterThan(1);
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Validation did not complete'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Fix agent did not return'))).toBe(true);
 
@@ -182,7 +182,7 @@ describe('fix review failures after upstream gaps', () => {
       reviewFix: () => null,
     });
 
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Fix review did not complete'))).toBe(true);
 
     // Only first finding validated but fix review failed.
@@ -207,7 +207,7 @@ describe('fix review failures after upstream gaps', () => {
     });
 
     // Gaps from dedupe, validation, and fix review.
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Validation did not complete'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Fix review did not complete'))).toBe(true);
 
@@ -250,7 +250,7 @@ describe('cross-unit dedupe failures', () => {
     });
 
     // Both types of dedupe gaps should be recorded.
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 2 unit(s)') && gap.includes('util'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 2 scope(s)') && gap.includes('util'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('cross-unit dedupe pass did not return'))).toBe(true);
 
     // Findings should still validate and potentially fix.
@@ -284,7 +284,7 @@ describe('early abort phases versus gap-accumulating phases', () => {
 
     // Multiple gaps, no abort.
     expect(run.result.gaps.length).toBeGreaterThan(1);
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 unit(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
     expect(run.result.gaps.some((gap) => gap.includes('Validation'))).toBe(true);
   });
 });
