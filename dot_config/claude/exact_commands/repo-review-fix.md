@@ -119,8 +119,11 @@ Then take three things from it, and pass them through **verbatim**:
   regenerated bundle buries the change it is supposed to be showing: in one run four independent fixes each rebuilt
   `dist/server.cjs`, and one of the resulting commits touched 25 files to express a one-line source change.
 - `reviewedCommit` — the commit the findings were written against. The script does *not* fix that commit; it fixes
-  current `HEAD`. This value is passed so each fixer can be told how far the tree has moved, and so the report can say
-  the same to you.
+  current `HEAD`. This value is passed so each fixer **and each fix reviewer** can be told how far the tree has moved,
+  and so the report can say the same to you. The two are told it for opposite reasons: the fixer weighs a possibly stale
+  description against live code and may answer `resolved-elsewhere`, while the reviewer is told not to *reject* a fix
+  over a detail — a line number, a name — that the drift explains rather than the fixer. Withhold it and the reviewer
+  reads an accurate fix as one that misses its target, which costs a revision cycle that cannot resolve the mismatch.
 
 ## Run the workflow
 

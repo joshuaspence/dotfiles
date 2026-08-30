@@ -121,7 +121,44 @@ describe('the drift note', () => {
     const [fixer] = fixCalls(run);
 
     expect(fixer.prompt).toContain(`reported against commit \`${REVIEWED}\``);
-    expect(fixer.prompt).toContain(`you are fixing \`${HEAD}\``);
+    expect(fixer.prompt).toContain(`the code you are looking at is based on \`${HEAD}\``);
+  });
+
+  it('reaches the fix reviewer too, and tells it the opposite thing', async () => {
+    // The fixer is told to trust the code over the description; the reviewer is told not to *reject* over the difference
+    // between them. Without this, the one agent that reads the diff reads it beside a description of an older tree, and a
+    // hunk whose line numbers no longer match is indistinguishable from a fixer that fixed the wrong thing. That
+    // rejection is the expensive kind: it buys a revision — an Opus fixer in a fresh worktree plus its own reviewers —
+    // which cannot remove the drift, so the second attempt is rejected for the same reason as the first.
+    const run = await runFix();
+    const [reviewer] = run.called(/^review-fix:/);
+
+    expect(reviewer.prompt).toContain(`reported against commit \`${REVIEWED}\``);
+    expect(reviewer.prompt).toContain(`the code you are looking at is based on \`${HEAD}\``);
+    expect(reviewer.prompt).toContain('do not reject on a stale detail alone');
+
+    // And it is the *reviewer's* guidance, not a copy of the fixer's: "judge the code, not the description" is an
+    // instruction to a writer, and read by a reviewer it argues for ignoring the finding it is checking the fix against.
+    expect(reviewer.prompt).not.toContain('Judge the code in front of you');
+  });
+
+  it('says drift excuses a stale detail and nothing further', async () => {
+    // The failure mode of telling a gate about drift at all: an approval reason of "the diff does not match the finding,
+    // but the tree has moved" would pass a fix that resolves nothing. Drift accounts for the finding's details being
+    // stale; it never accounts for the defect still being there afterwards.
+    const [reviewer] = (await runFix()).called(/^review-fix:/);
+
+    expect(reviewer.prompt).toContain('resolves the defect as the code actually stands');
+    expect(reviewer.prompt).toContain('a mismatch the drift does not account for is a fixer that fixed the wrong thing');
+  });
+
+  it('is absent from the fix reviewer when the tree has not moved', async () => {
+    // Same conditional, same reason as for the fixer: told when it is not true, the note is an invitation to discount an
+    // accurate description — here, to wave through a mismatch that has no drift to explain it.
+    const [reviewer] = (await runFix({ args: { reviewedCommit: HEAD } })).called(/^review-fix:/);
+
+    expect(reviewer.prompt).not.toContain('The tree has moved since the review');
+    expect(reviewer.prompt).not.toContain('do not reject on a stale detail alone');
   });
 
   it('is absent when the tree has not moved since the review', async () => {

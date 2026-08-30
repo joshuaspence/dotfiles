@@ -28,7 +28,10 @@
  * current code means a finding may no longer be there — hand-fixed, or refactored away — so step 1 of `fixerPrompt` has
  * every fixer re-confirm the defect at the commit it is actually looking at, and a fixer that cannot find it returns
  * `resolved-elsewhere`. That status is not a failure: it is the answer the ledger needs, and the wrapper drops such a
- * finding rather than offering it again next time.
+ * finding rather than offering it again next time. The fix *reviewer* is told the same drift for the opposite reason: it
+ * is the only agent that reads the diff, and it reads it beside a description of an older tree, so a hunk whose line
+ * numbers or surrounding code no longer match the finding reads as a fixer that fixed the wrong thing — and that
+ * rejection buys a revision cycle which cannot remove drift and is rejected again the same way.
  *
  * Fixes are strictly *additive*: each is an independent commit on its own branch and nothing is ever landed. Two fixes
  * may freely touch the same file, because no sequence of cherry-picks is ever attempted — if the user wants them merged,
@@ -629,18 +632,35 @@ const generatedPathsBlock = (generatedPaths) =>
       `\n${bulletList(generatedPaths, '')}`
     : '';
 
-// How far the tree has moved since the review that produced these findings, told to the fixer rather than only reported.
-// The fixer is the one agent in a position to act on it: it is looking at current source and holding a description
-// written against an older commit, and step 1 asks it to confirm the defect is still there. Saying *why* the two might
-// disagree is what makes `resolved-elsewhere` a considered answer instead of a puzzled one — and the count is the
-// difference between "the review was minutes ago, trust the description" and "this is weeks old, read carefully".
-const driftBlock = (base, reviewedCommit) =>
+// How far the tree has moved since the review that produced these findings, told to the two agents that hold a finding's
+// description while reading code from a different commit, rather than only reported at the end. They need different
+// things from the fact, so the shared half — which two commits, and that the finding's own details are the stale part —
+// is here and the instruction is the caller's. One block rather than two so that a commit SHA reaches a prompt from one
+// place, and so an edit to the shared sentence cannot land on one audience and miss the other.
+const driftBlock = (base, reviewedCommit, guidance) =>
   reviewedCommit && reviewedCommit !== base
     ? '\n\nNote: this finding was reported against commit `' +
-      `${reviewedCommit}\`, and you are fixing \`${base}\`. The tree has moved since the review, so the excerpt and ` +
-      'line numbers in the finding may be stale, and the defect may have been fixed already by someone else. Judge the ' +
-      'code in front of you, not the description.'
+      `${reviewedCommit}\`, and the code you are looking at is based on \`${base}\`. The tree has moved since the ` +
+      `review, so the excerpt and line numbers in the finding may be stale. ${guidance}`
     : '';
+
+// The fixer *acts* on the drift. It is looking at current source holding a description written against an older commit,
+// and step 1 asks it to confirm the defect is still there; saying why the two might disagree is what makes
+// `resolved-elsewhere` a considered answer instead of a puzzled one.
+const FIXER_DRIFT =
+  'The defect may have been fixed already by someone else. Judge the code in front of you, not the description.';
+
+// The reviewer *attributes* with it, and gets the opposite instruction. It is the one agent that reads the diff, and it
+// reads it beside a description of an older tree: without the note, a hunk whose line numbers or surrounding code do not
+// match the finding reads as a fixer that fixed the wrong thing. That rejection is not free — it buys a revision, an
+// Opus fixer in a fresh worktree plus its own reviewers, which cannot remove drift and so is rejected again the same way.
+// The second sentence is what stops the note becoming a licence to approve: drift explains a stale detail, never a change
+// that does not resolve the defect.
+const REVIEWER_DRIFT =
+  'Where the diff and the finding disagree over a detail — a line number, a name, the code around it — that may be the ' +
+  'drift and not the fixer, so do not reject on a stale detail alone. What you must still be confident of is that the ' +
+  'change resolves the defect as the code actually stands: a mismatch the drift does not account for is a fixer that ' +
+  'fixed the wrong thing, and the commit existing at all is its claim that the defect was still present.';
 
 const fixerPrompt = (issue, survey, base, reviewedCommit, branchSuffix, generatedPaths, revisionCtx = null) => {
   // The objection is free prose written by a fix reviewer *about a diff it read out of the repository*, and it lands
@@ -660,7 +680,7 @@ const fixerPrompt = (issue, survey, base, reviewedCommit, branchSuffix, generate
   return (
     'You are a Fix agent working in an isolated git worktree. Fix exactly ONE already-validated issue — and only if ' +
     'you can do so cleanly. A wrong "fix" is worse than none.\n\n' +
-    `Issue:\n${JSON.stringify(issue, null, 2)}${driftBlock(base, reviewedCommit)}${revisionBlock}\n\n` +
+    `Issue:\n${JSON.stringify(issue, null, 2)}${driftBlock(base, reviewedCommit, FIXER_DRIFT)}${revisionBlock}\n\n` +
     'Procedure:\n' +
     pinToBase(
       base,
@@ -704,7 +724,7 @@ const fixerPrompt = (issue, survey, base, reviewedCommit, branchSuffix, generate
   );
 };
 
-const fixReviewPrompt = (issue, fixResult, survey) =>
+const fixReviewPrompt = (issue, fixResult, survey, base, reviewedCommit) =>
   'You are a Fix reviewer. An automated Fix agent produced a commit intended to resolve the validated issue below. ' +
   'Judge that commit independently — do NOT trust the fixer. Inspect the change read-only with ' +
   `\`git show ${fixResult.sha}\`. Judge two things: (1) correctness — does the change actually resolve the issue as ` +
@@ -712,7 +732,7 @@ const fixReviewPrompt = (issue, fixResult, survey) =>
   'introduces no new bugs, regressions, or unsafe behaviour. Approve only if you are confident on both. If you ' +
   'reject, give a specific, actionable objection the fixer can act on in a revision.\n\n' +
   `${READ_ONLY_RULE} The fixer already ran the tests in its own sandbox; your job is to read the diff.\n\n` +
-  `Issue:\n${JSON.stringify(issue, null, 2)}\n\n` +
+  `Issue:\n${JSON.stringify(issue, null, 2)}${driftBlock(base, reviewedCommit, REVIEWER_DRIFT)}\n\n` +
   `Fix commit: ${fixResult.sha} — files: ${(fixResult.changedFiles || []).join(', ') || '(none reported)'}\n` +
   `Fixer's note: ${agentNote(fixResult.reason)}\n\n` +
   'Return `{ approved, objection }` — `objection` empty when approved.\n\n' +
@@ -1010,7 +1030,7 @@ const reviewFix = async (issue, current, rev) => {
   const model = isHighRisk(issue) ? 'opus' : 'sonnet';
   const votes = await parallel(
     Array.from({ length: reviewers }, (_, k) => () =>
-      agent(fixReviewPrompt(issue, current, survey), {
+      agent(fixReviewPrompt(issue, current, survey, base, reviewedCommit), {
         label: `review-fix:${tagOf(issue)}${attemptTag(rev)}${voteTag(k, reviewers)}`,
         phase: 'Review Fix',
         model,

@@ -26,10 +26,14 @@ const fixer = async (revisionCtx = null) => {
   return fixerPrompt(issue(), survey, HEAD, REVIEWED, '0', [], revisionCtx);
 };
 
+// `fixReviewPrompt(issue, fixResult, survey, base, reviewedCommit)`. The two commits are passed even though nothing here
+// reads the drift note they produce — `base-pinning.test.js` owns that — because a helper that builds a prompt the run
+// never builds is a helper that can go on passing after the real one has started throwing.
 const fixReview = async (over = {}) => {
   const { fixReviewPrompt } = await internals({});
+  const fixResult = { sha: commitSha(0), changedFiles: ['src/a.ts'], reason: 'fixed', ...over };
 
-  return fixReviewPrompt(issue(), { sha: commitSha(0), changedFiles: ['src/a.ts'], reason: 'fixed', ...over }, survey);
+  return fixReviewPrompt(issue(), fixResult, survey, HEAD, REVIEWED);
 };
 
 describe('what the fixer is told', () => {
