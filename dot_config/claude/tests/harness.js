@@ -44,6 +44,58 @@ export function workflowScripts() {
   return scripts;
 }
 
+export const COMMANDS_DIR = join(import.meta.dirname, '..', 'exact_commands');
+
+/**
+ * Every slash-command file, as `{ name, path }` sorted by name — `name` being what the user types after the slash.
+ *
+ * A command file is prose, so nothing about it can be compiled or unit-tested the way a script can. What *can* be
+ * checked is that it agrees with the script it drives and with itself, which is where its silent failures live: a flag
+ * documented under one spelling and passed under another, or a `meta.name` the wrapper mistypes, produces a command that
+ * runs and quietly ignores what it was asked for.
+ */
+export function commandFiles() {
+  let entries;
+
+  try {
+    entries = readdirSync(COMMANDS_DIR);
+  } catch (cause) {
+    throw new Error(
+      `Could not read the command source directory ${COMMANDS_DIR}. If it moved, update COMMANDS_DIR in this ` +
+        "harness — it is derived from the harness's own location, not configured anywhere else.",
+      { cause },
+    );
+  }
+
+  const commands = entries
+    .filter((entry) => entry.endsWith('.md'))
+    .sort()
+    .map((entry) => ({ name: basename(entry, '.md'), path: join(COMMANDS_DIR, entry) }));
+
+  if (commands.length === 0) {
+    throw new Error(`${COMMANDS_DIR} contains no command files, so these tests would silently cover nothing.`);
+  }
+
+  return commands;
+}
+
+/**
+ * A command file split into its YAML frontmatter block and its prose body. The frontmatter is returned as raw text
+ * rather than parsed: there is no YAML parser in this repository's dependencies, and the two things worth asserting
+ * about it (the keys present, and the flags listed in `argument-hint`) are more honestly read off the source than off a
+ * hand-rolled parse of it.
+ */
+export function readCommand(commandPath) {
+  const source = readFileSync(commandPath, 'utf8');
+  const [, frontmatter, body] = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(source) || [];
+
+  if (!frontmatter) {
+    throw new Error(`${commandPath} has no \`---\`-delimited YAML frontmatter, which every command file requires.`);
+  }
+
+  return { source, frontmatter, body };
+}
+
 /**
  * Resolve one workflow by the name it is invoked under, i.e. the basename the `Workflow` tool's `scriptPath` ends in.
  */
