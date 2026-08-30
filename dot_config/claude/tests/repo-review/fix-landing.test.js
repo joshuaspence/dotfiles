@@ -24,6 +24,16 @@ const twoFindings = [
   }),
 ];
 
+// Three findings in three files, for the run-id tests: they need one agent to report a good branch, one to report a
+// mis-derived one, and a third to stand in for the agent that never reports at all.
+const threeFindings = [
+  ...twoFindings,
+  issue({
+    file: 'src/c.ts',
+    description: 'the third finding',
+  }),
+];
+
 // A fixer that returns whatever file list the test dictates, keyed by finding index.
 const fixerClaiming = (byIdx) => (subject, { idx }) => ({
   status: 'applied',
@@ -525,6 +535,95 @@ describe('sandboxBranches', () => {
     expect([...run.result.fix.sandboxBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
   });
 
+  it('keeps a branch whose run id the agent failed to derive, because that branch exists too', async () => {
+    // The observed shape: an agent that could not read `<RUN>` out of its own worktree branch interpolated a missing
+    // value and reported `rrfix/undefined/<n>`. `isSandboxBranch` accepts it — `undefined` is a legal path segment — and
+    // it must, because `git switch -c` already ran and the branch and its worktree are sitting there. Dropping it from
+    // this list is the one outcome that actually leaks.
+    const run = await runFix({
+      issues: twoFindings,
+      fix: (subject, { idx }) =>
+        idx === 0
+          ? { status: 'declined', branch: 'rrfix/undefined/0', reason: 'could not read my branch name' }
+          : fixerClaiming({ 1: ['src/b.ts'] })(subject, { idx }),
+    });
+
+    expect([...run.result.fix.sandboxBranches].sort()).toEqual(['rrfix/undefined/0', 'rrfix/wf_test/1']);
+  });
+
+  it('reconstructs a dead agent’s branch from the run id the majority derived, not the first one reported', async () => {
+    // This is the bug the modal tally fixes. Reading the *first* reported segment let one mis-derivation define the run:
+    // every reconstructed name was then built on `undefined`, matching no ref that exists, while the branch the dead
+    // agent really left behind was never named. Teardown printed a row of "not found" and left the mess in place.
+    const run = await runFix({
+      issues: threeFindings,
+      fix: (subject, { idx }) => {
+        if (idx === 0) {
+          return { status: 'declined', branch: 'rrfix/undefined/0', reason: 'could not read my branch name' };
+        }
+
+        if (idx === 1) {
+          throw new Error('agent stalled with no progress for 180s');
+        }
+
+        return fixerClaiming({ 2: ['src/c.ts'] })(subject, { idx });
+      },
+    });
+
+    // `rrfix/wf_test/1` is the reconstruction: built on `wf_test` (which one agent demonstrably used) rather than on
+    // `undefined` (which was merely reported first).
+    expect([...run.result.fix.sandboxBranches].sort()).toEqual([
+      'rrfix/undefined/0',
+      'rrfix/wf_test/1',
+      'rrfix/wf_test/2',
+    ]);
+  });
+
+  it('records a teardown gap when a run id could not be derived, since its worktree ref is unreachable', async () => {
+    const run = await runFix({
+      issues: twoFindings,
+      fix: (subject, { idx }) =>
+        idx === 0
+          ? { status: 'declined', branch: 'rrfix/undefined/0', reason: 'could not read my branch name' }
+          : fixerClaiming({ 1: ['src/b.ts'] })(subject, { idx }),
+    });
+
+    const [gap] = run.result.gaps.filter((entry) => /unusable run id/.test(entry));
+
+    // The `rrfix` ref is deleted by exact name and is fine; the `worktree-<run-id>-<n>` ref behind it is matched by
+    // pattern and cannot be, so the gap has to say which shortfall this is rather than read as a review failure.
+    expect(gap).toContain('rrfix/undefined/0');
+    expect(gap).toContain('**teardown** shortfall');
+    expect(gap).toContain('affects no finding');
+  });
+
+  it('records a teardown gap when agents disagree about the run id, naming the one it scoped to', async () => {
+    // The second observed mis-derivation: an agent stripped only the `worktree-` prefix and kept the trailing agent
+    // number, inventing a run id no other agent shares. Unlike `undefined` it is a plausible-looking value, so the only
+    // signal that anything went wrong is that it disagrees with the majority.
+    const run = await runFix({
+      issues: threeFindings,
+      fix: (subject, { idx }) =>
+        idx === 1
+          ? { status: 'declined', branch: 'rrfix/wf_test-147/1', reason: 'mis-split its own branch name' }
+          : fixerClaiming({ 0: ['src/a.ts'], 2: ['src/c.ts'] })(subject, { idx }),
+    });
+
+    const [gap] = run.result.gaps.filter((entry) => /disagreed about this run's id/.test(entry));
+
+    // The id it scoped to, and the one it passed over — both named, so the user can go looking for the leftovers.
+    expect(gap).toContain('scoped to `wf_test` (2 branch(es))');
+    expect(gap).toContain('over `wf_test-147` (1)');
+    expect(gap).toContain('**teardown** shortfall');
+  });
+
+  it('reports no run-id gap at all when every agent derived the same one', async () => {
+    // The gaps above must not fire on a clean run: a gap that always appears is indistinguishable from no gap at all.
+    const run = await runFix({ issues: twoFindings, fix: fixerClaiming({ 0: ['src/a.ts'], 1: ['src/b.ts'] }) });
+
+    expect(run.result.gaps.filter((entry) => /run id|run's id/.test(entry))).toEqual([]);
+  });
+
   it('reconstructs nothing when no agent reported a branch, since the run id lives only in a sandbox', async () => {
     // The run id reaches this script through a returned branch name and nowhere else — it has no git access and no
     // handle on the workflow id. With every agent dead there is nothing to read it out of, and a guessed prefix could
@@ -537,6 +636,52 @@ describe('sandboxBranches', () => {
     });
 
     expect(run.result.fix.sandboxBranches).toEqual([]);
+  });
+});
+
+describe('runIdTally', () => {
+  it('ranks by how many agents used each id, so one mis-derivation cannot define the run', async () => {
+    const { runIdTally } = await internals();
+
+    expect(
+      runIdTally(['rrfix/wf_bad-147/0', 'rrfix/wf_good/1', 'rrmerge/wf_good/0', 'rrfix/wf_good/2']),
+    ).toEqual([
+      ['wf_good', 3],
+      ['wf_bad-147', 1],
+    ]);
+  });
+
+  it('ignores the placeholders a failed derivation leaves, however many agents reported them', async () => {
+    // 49 of 116 names in one run read `undefined`. A plain majority vote would be at the mercy of that count; these are
+    // not a run id at all, so they never get a vote — while staying on the teardown list, which is a separate question.
+    const { runIdTally } = await internals();
+    const names = ['rrfix/undefined/0', 'rrfix/undefined/1', 'rrfix/null/2', 'rrfix/NaN/3', 'rrfix/wf_real/4'];
+
+    expect(runIdTally(names)).toEqual([['wf_real', 1]]);
+  });
+
+  it('breaks an exact tie by first appearance, so a resumed run reaches the same answer', async () => {
+    // `Math.random`/`Date.now` are unavailable in a workflow script precisely because a resume replays cached agent
+    // results and must reproduce the run. `Map` insertion order plus a stable sort is what makes that hold here.
+    const { runIdTally } = await internals();
+    const names = ['rrfix/wf_first/0', 'rrfix/wf_second/1'];
+
+    expect(runIdTally(names)).toEqual([
+      ['wf_first', 1],
+      ['wf_second', 1],
+    ]);
+    expect(runIdTally([...names].reverse())).toEqual([
+      ['wf_second', 1],
+      ['wf_first', 1],
+    ]);
+  });
+
+  it('yields nothing when there is no usable id, so no prefix is guessed', async () => {
+    const { runIdTally } = await internals();
+
+    expect(runIdTally([])).toEqual([]);
+    expect(runIdTally(['rrfix/undefined/0'])).toEqual([]);
+    expect(runIdTally(['master', 'worktree-wf_test-250'])).toEqual([]);
   });
 });
 

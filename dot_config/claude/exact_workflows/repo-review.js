@@ -643,6 +643,40 @@ const isSafeRepoPath = (value) =>
 // way deletes the user's work.
 const isSandboxBranch = (value) => isSafeBranchName(value) && /^rr(?:fix|merge)\/[^/]+\/[^/]+$/.test(value);
 
+// Values that are never a real run id, however well-shaped the branch name carrying them. These are what a failed
+// *derivation* leaves behind rather than what a run is called: an agent that could not read `<RUN>` out of its own
+// worktree branch has been observed to interpolate the JavaScript rendering of a missing value and report
+// `rrfix/undefined/12`, which `isSandboxBranch` accepts because `undefined` is a perfectly good path segment. Excluded
+// from the tally below, never from teardown — the branch is real and still has to be deleted.
+const PLACEHOLDER_RUN_IDS = new Set(['undefined', 'null', 'NaN']);
+
+// Which run id a set of reported sandbox branch names actually agrees on, as `[id, count]` pairs, commonest first.
+//
+// Every agent derives `<RUN>` from its own worktree branch by one rule, so in principle the segment is identical across
+// all of them. In practice the derivation happens inside an agent, from prose, and it does go wrong: one observed run
+// came back with 49 names reading `rrfix/undefined/<n>`, plus one that kept the agent number and mis-split the id as
+// `wf_6c337c34-fb5-400`, against 66 correctly derived ones. Reading the *first* name's segment — which is what this used
+// to do — lets a single mis-derivation define the whole run, and the damage is asymmetric: the names reconstructed for
+// agents that never reported get built on the wrong id, so they match no ref that exists while the real leaked branches
+// are never named at all. Teardown then reports a tidy row of "not found" and leaves the actual mess in place.
+//
+// The modal segment is the id the majority of agents demonstrably used. `Map` iterates in insertion order and
+// `Array.prototype.sort` is specified stable, so an exact tie resolves to the first-seen segment and the answer stays
+// deterministic — which it must be, because a resumed run replays these names from cache and has to reach the same one.
+const runIdTally = (branchNames) => {
+  const counts = new Map();
+
+  branchNames.forEach((name) => {
+    const id = /^rr(?:fix|merge)\/([^/]+)\//.exec(name)?.[1];
+
+    if (id && !PLACEHOLDER_RUN_IDS.has(id)) {
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+  });
+
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+};
+
 
 // --- Untrusted paths -----------------------------------------------------------------------------------------------
 // The paths a finding cites are model-supplied too, and the Fix phase turns one into an *edit target*: the fixer is told
@@ -1342,6 +1376,17 @@ const pinToReviewHead = (reviewHead, kind, suffix, onFailure) =>
   'example). Follow that rule exactly — every agent in this run must derive the *same* `<RUN>`, so do not shorten it ' +
   'further or invent your own abbreviation. It scopes your branch to this run, so it cannot collide with a leftover ' +
   'branch from an earlier run, and it tells the orchestrator which branches to tear down afterwards.\n' +
+  '      Run the strip as a command rather than doing it in your head — both halves of it, in one go:\n' +
+  "      `git rev-parse --abbrev-ref HEAD | sed -E 's/^worktree-//; s/-[0-9]+$//'`\n" +
+  '      Then check what it printed before you use it. It must be non-empty and must still carry the `wf_` run id. ' +
+  'Two specific mistakes have been observed in real runs and are worth naming, because neither one fails loudly: an ' +
+  'agent that dropped only the prefix reported `rrfix/wf_4b3a8931-fda-147/3`, keeping the agent number and inventing a ' +
+  'run id no other agent shares; and 49 agents in one run reported `rrfix/undefined/<n>`, having substituted the text ' +
+  'of a value they never actually read. **Never put the word `undefined`, `null`, or an empty segment in a branch ' +
+  'name.** Both mistakes create a real branch that the orchestrator can only delete by exact name, and leave the ' +
+  'worktree behind it beyond the reach of teardown. If the command prints nothing, or prints `HEAD`, or prints your ' +
+  'branch name unchanged, do not guess a placeholder: make NO change and return `{ status: "declined", reason }` ' +
+  'quoting exactly what it printed.\n' +
   `   b. Create your working branch at the reviewed commit: \`git switch -c ${kind}/<RUN>/${suffix} ${reviewHead}\`.\n` +
   `   c. Verify the pin took: \`git rev-parse HEAD\` must print exactly \`${reviewHead}\`. Only once it does may you ` +
   `read or edit anything. If it does not, ${onFailure}\n` +
@@ -2722,7 +2767,8 @@ log(`Reconcile: ${commits.length} conflict-free commit(s) from ${applied.length}
 // any *one* reported name recovers it for all of them, and the missing names follow from `<kind>/<RUN>/<suffix>`. With
 // no reported name there is nothing to read it out of; the list is then whatever was reported (i.e. empty), and the
 // wrapper has no run id either way.
-const runId = createdBranches.map((name) => /^rr(?:fix|merge)\/([^/]+)\//.exec(name)?.[1]).find(Boolean);
+const runIds = runIdTally(createdBranches);
+const runId = runIds[0]?.[0];
 const unreportedBranches = runId
   ? attemptedBranches
       .filter((attempted) => !attempted.reported)
@@ -2733,6 +2779,43 @@ const sandboxBranches = [...new Set([...createdBranches, ...unreportedBranches])
 
 if (unreportedBranches.length) {
   log(`Teardown list includes ${unreportedBranches.length} branch(es) whose agent never reported back.`);
+}
+
+// Agents that disagree about `<RUN>` are a teardown hazard, not a review or fix one, and the distinction matters because
+// the wrapper reads this run's id back out of these names. The `rrfix`/`rrmerge` refs themselves survive the confusion —
+// they go to `git branch --delete --force` by exact name — but the harness's own `worktree-<run-id>-<n>` refs are *not*
+// on this list and can only be matched by pattern, so any belonging to a mis-derived id fall outside the scope the
+// wrapper computes and leak along with the worktree holding them. Say so, rather than let a run that left refs behind
+// read as clean.
+if (runIds.length > 1) {
+  const [[chosen, chosenCount], ...rest] = runIds;
+
+  gaps.push(
+    `Fix agents disagreed about this run's id: ${runIds.length} different values appear in the sandbox branch names ` +
+      `they reported. Teardown is scoped to \`${chosen}\` (${chosenCount} branch(es)), over ` +
+      `${rest.map(([id, n]) => `\`${id}\` (${n})`).join(', ')}. Every reported branch is still on the teardown list ` +
+      'and is deleted by exact name, but the matching `worktree-<run-id>-<n>` refs are found by pattern and those under ' +
+      'another id will survive, so check for leftovers by hand. This is a **teardown** shortfall: every finding was ' +
+      'reviewed and every fix landed or reported as usual.',
+  );
+}
+
+// A branch whose run-id segment is a placeholder is a derivation that failed outright — the agent reported something
+// like `rrfix/undefined/12`. It stays on the teardown list, because the branch and its worktree are real, but it is
+// worth naming: it is the visible symptom of an agent that could not read its own sandbox branch, and its
+// `worktree-<run-id>-<n>` sibling is unreachable by any pattern the wrapper can derive.
+const placeholderBranches = createdBranches.filter((name) =>
+  PLACEHOLDER_RUN_IDS.has(/^rr(?:fix|merge)\/([^/]+)\//.exec(name)?.[1]),
+);
+
+if (placeholderBranches.length) {
+  gaps.push(
+    `${placeholderBranches.length} sandbox branch(es) were reported with an unusable run id — the agent could not ` +
+      'derive `<RUN>` from its own worktree branch and named the branch after a missing value instead (e.g. ' +
+      `\`${placeholderBranches[0]}\`). They are on the teardown list and will be deleted by exact name; their ` +
+      '`worktree-<run-id>-<n>` siblings cannot be matched by pattern and may need deleting by hand. This is a ' +
+      '**teardown** shortfall and affects no finding.',
+  );
 }
 
 // The wrapper creates the fix branch off HEAD and cherry-picks `commits` in order. `base` is the commit every one of

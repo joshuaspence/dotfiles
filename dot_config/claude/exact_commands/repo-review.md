@@ -252,16 +252,25 @@ or so tool-call turns.
 
 Price it at Anthropic's list rates, per million tokens (verified 2026-08-27 against
 https://platform.claude.com/docs/en/about-claude/pricing.md  — that `.md` suffix serves clean markdown, so it is worth
-re-fetching rather than trusting this copy):
+re-fetching rather than trusting this copy).
 
-| Model                            | Output ($/1M) | Input ($/1M) | Cache read ($/1M) |
-|----------------------------------|---------------|--------------|-------------------|
-| Fable 5                          | $50.00        | $10.00       | $1.00             |
-| Opus 5 / 4.8 / 4.7 / 4.6 / 4.5   | $25.00        | $5.00        | $0.50             |
-| Sonnet 4.6 / 4.5                 | $15.00        | $3.00        | $0.30             |
-| Sonnet 5 (from 2026-09-01)       | $15.00        | $3.00        | $0.30             |
-| Sonnet 5 (intro, to 2026-08-31)  | $10.00        | $2.00        | $0.20             |
-| Haiku 4.5                        | $5.00         | $1.00        | $0.10             |
+**Every rate below is USD and deliberately written without a dollar sign — do not add one.** Argument substitution
+rewrites a dollar sign followed by a single digit anywhere in this file *before* you ever read it, so a currency figure
+written that way arrives as an **argument value** with the remaining digits stuck to it: a rate of five dollars becomes
+the sixth argument followed by `.00`, and a fifty-cent rate becomes the whole argument list followed by `.50`. The table
+on disk was correct for months while every invocation silently received a corrupted one — the rates being read were
+whatever paths the user happened to pass. No escaping helps, because the rewrite is textual and happens first; so the
+sign is simply absent from the data and the unit lives in the column header instead. Note that this paragraph must obey
+its own rule, which is why it spells the amounts out in words. Apply it to any currency figure added later.
+
+| Model                            | Output (USD/1M) | Input (USD/1M) | Cache read (USD/1M) |
+|----------------------------------|-----------------|----------------|---------------------|
+| Fable 5                          | 50.00           | 10.00          | 1.00                |
+| Opus 5 / 4.8 / 4.7 / 4.6 / 4.5   | 25.00           | 5.00           | 0.50                |
+| Sonnet 4.6 / 4.5                 | 15.00           | 3.00           | 0.30                |
+| Sonnet 5 (from 2026-09-01)       | 15.00           | 3.00           | 0.30                |
+| Sonnet 5 (intro, to 2026-08-31)  | 10.00           | 2.00           | 0.20                |
+| Haiku 4.5                        | 5.00            | 1.00           | 0.10                |
 
 Match the **version** and the run's date, not just the tier: through 2026-08-31 Sonnet 5 is 33% cheaper on output than
 Sonnet 4.5/4.6, so collapsing them into one "Sonnet" rate misprices the run — once that introductory rate lapses the two
@@ -278,12 +287,12 @@ A worked example, from a 32-agent single-file `--fix` run — note that Opus is 
 the per-tier split is the useful part of this summary, and the reviewer count (`--partitions` × 6, see
 [Notes](#notes)) is where it is actually spent:
 
-| Tier          | Agents | Tokens        | Output rate ($/1M) | Cost       |
-|---------------|--------|---------------|--------------------|------------|
-| Opus 5        | 25     | 806,803       | $25.00             | $20.17     |
-| Sonnet 4.5    | 5      | 168,826       | $15.00             | $2.53      |
-| Haiku 4.5     | 2      | 39,896        | $5.00              | $0.20      |
-| **Total**     | **32** | **1,015,525** |                    | **$22.90** |
+| Tier          | Agents | Tokens        | Output rate (USD/1M) | Cost (USD) |
+|---------------|--------|---------------|----------------------|------------|
+| Opus 5        | 25     | 806,803       | 25.00                | 20.17      |
+| Sonnet 4.5    | 5      | 168,826       | 15.00                | 2.53       |
+| Haiku 4.5     | 2      | 39,896        | 5.00                 | 0.20       |
+| **Total**     | **32** | **1,015,525** |                      | **22.90**  |
 
 If `workflowProgress` is missing or carries no per-agent `model`, still report `totalTokens` and the scale line, and say
 the per-tier cost breakdown was unavailable — an unpriceable run is not a free one.
@@ -342,9 +351,19 @@ stranded the twelve behind it.
    Commits *rejected in pre-flight* do not block cleanup by themselves — they are unlandable wherever they sit, so
    note them as discarded and say which branches held them, so the user can salvage one if they want. Accepting
    *nothing* satisfies the condition rather than failing it: run this step even when step 3 sent you straight here.
-   - Work from `fix.sandboxBranches`, the branches this run created. Derive the run prefix from them (they
-     are `rrfix/<run-id>/<n>` and `rrmerge/<run-id>/<n>`) and confine every deletion to that one `<run-id>`: it scopes
-     the teardown to *this* run, so a concurrent `--fix` run in the same repository is never collateral damage.
+   - Work from `fix.sandboxBranches`, the branches this run created. **Delete those refs by exact name, not by
+     prefix.** The list itself is the authority: the script has already screened every entry into the
+     `rrfix/<run-id>/<n>` / `rrmerge/<run-id>/<n>` namespace, so exact-name deletion is inherently scoped to this run
+     and cannot reach `master` or a concurrent run's branches. Do not filter the list down to one `<run-id>` before
+     deleting — the run id is derived *by each agent* from its own worktree branch, and that derivation has failed in a
+     real run: 49 of 116 names came back as `rrfix/undefined/<n>` and one had mis-split the id into
+     `wf_6c337c34-fb5-400`. Those branches exist. Prefix-filtering them out of the delete list leaves them behind, which
+     is precisely the leak the list is meant to prevent.
+   - You still need a single `<run-id>` for the `worktree-<run-id>-<n>` refs below, because those are *not* on the list
+     and can only be matched by pattern. Take the one that appears in the **most** entries rather than the one in the
+     first entry, and ignore `undefined` / `null` outright. When the names disagree the script says so in `gaps`; expect
+     `worktree-*` refs under the minority ids to survive teardown, and report them as leftovers rather than widening the
+     pattern to catch them.
    - Worktrees first — a branch checked out somewhere cannot be deleted. For each entry in
      `git worktree list --porcelain` whose `branch` is one of those refs *or* is a `worktree-<run-id>-<n>` branch for
      this `<run-id>`, run `git worktree remove <path>`, adding `--force` if it refuses: the commit is what you landed,
@@ -367,10 +386,11 @@ stranded the twelve behind it.
      **Never glob `worktree-*`.** That namespace belongs to every worktree-isolated agent in the session, not just this
      run, so an unscoped delete destroys unrelated work; match on this run's `<run-id>` and nothing else.
 
-   Touch nothing outside this run's `<run-id>`. Branch names are per-run precisely so that a leftover cannot break the
+   Touch nothing this run did not create. Branch names are per-run precisely so that a leftover cannot break the
    next run — the fixers used to restart at `rrfix/0` every time, and a run that ended without teardown made the next
-   run's `git switch --create rrfix/0` fail outright. The run id is a path component of the branch names
-   (`rrfix/<run-id>/<n>`), so read it from `fix.sandboxBranches` rather than reconstructing it.
+   run's `git switch --create rrfix/0` fail outright. For the `rrfix`/`rrmerge` refs that means deleting exactly the
+   names in `fix.sandboxBranches` and nothing else; for the `worktree-*` refs, which are not listed, it means the
+   majority `<run-id>` read out of those names and nothing else. Never reconstruct either set from a guess.
 
 Do not push, and do not open a pull request — landing the commits on the local branch is where this stops.
 

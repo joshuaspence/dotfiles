@@ -57,6 +57,9 @@ const INTERNALS = [
   'isRepoRelativePath',
   'isSafeBranchName',
   'isSafeRepoPath',
+  'isSandboxBranch',
+  'PLACEHOLDER_RUN_IDS',
+  'runIdTally',
   'sitePaths',
 
   // Grouping and sizing.

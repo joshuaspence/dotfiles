@@ -65,6 +65,28 @@ describe('the pin instruction', () => {
     expect(instruction).toContain('stripping the leading `worktree-` and the trailing `-<agentNumber>`');
     expect(instruction).toContain('every agent in this run must derive the *same* `<RUN>`');
   });
+
+  it('gives the derivation as a command, because agents asked to do it in their heads got it wrong', async () => {
+    // Prose alone did not hold: in one run 49 agents reported `rrfix/undefined/<n>` and one stripped only the prefix,
+    // keeping the agent number. Both produce a real branch under an id no other agent shares, which is outside the
+    // pattern teardown can derive for the matching `worktree-<run-id>-<n>` ref.
+    const { pinToReviewHead } = await internals();
+    const instruction = pinToReviewHead(HEAD, 'rrfix', '3', 'give up');
+
+    // Two substitutions rather than a backreference: this script is compiled with `new Function`, so it runs sloppy-mode
+    // where a `'\1'` in a single-quoted JS string is a legacy octal escape and would ship a literal U+0001 to the agent.
+    expect(instruction).toContain("sed -E 's/^worktree-//; s/-[0-9]+$//'");
+    expect(instruction).not.toContain('\u0001');
+  });
+
+  it('forbids naming a branch after a value the agent never read', async () => {
+    const { pinToReviewHead } = await internals();
+    const instruction = pinToReviewHead(HEAD, 'rrfix', '3', 'give up');
+
+    expect(instruction).toContain('Never put the word `undefined`, `null`, or an empty segment in a branch name.');
+    // Declining is the safe direction: a fix is lost, but no unreachable branch is created.
+    expect(instruction).toContain('do not guess a placeholder');
+  });
 });
 
 describe('the sandbox the pin is applied inside', () => {
