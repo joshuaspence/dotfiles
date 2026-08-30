@@ -313,8 +313,9 @@ The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps 
 - `gaps` — strings recording every way the run fell short of a complete, clean pass. They come in three kinds, and each
   entry states in prose which it is:
 
-  - **coverage** — a reviewer, lens, or validation that did not complete, or a partition folded down to the unit ceiling.
-    Findings may be *missing*.
+  - **coverage** — a reviewer, lens, or validation that did not complete, a whole review unit whose pipeline failed
+    outright (that unit contributed nothing this round; what earlier rounds found for it is carried unchanged), or a
+    partition folded down to the unit ceiling. Findings may be *missing*.
   - **dedupe** — a dedupe stage that stalled or did not converge. Every finding here *was* reviewed and validated; one
     defect may simply be listed twice.
   - **fix** — present only with `--fix`: a fix that could not be produced, reviewed or verified. This is about fixing
@@ -592,9 +593,10 @@ source file and neither is committed — if the user does not want the ledger tr
   (`haiku`/`sonnet`/`opus`) and its `effort`, and it caps the high-fan-out reviewers and validators at `xhigh`, clamping
   `max` down. That cap is a deliberate reliability tradeoff — those agents run at high multiplicity (roughly
   `--partitions` × 6 reviewers, plus validators per issue), and launching that many concurrent `max` Opus inferences has
-  been observed to intermittently stall (an agent gets its tool result and its next turn never arrives). Because the
-  review phase is a `parallel()` barrier, one hung agent can wedge the run; the cap keeps the many leaf agents off
-  `max`, the only level observed to stall. A *silent* hang has no timeout to recover from — hence watching `/workflows`
+  been observed to intermittently stall (an agent gets its tool result and its next turn never arrives). A hung reviewer
+  no longer wedges the whole review — the units run as a `pipeline()`, so only its own unit waits on it — but it still
+  costs that unit's findings and its dedupe; the cap keeps the many leaf agents off `max`, the only level observed to
+  stall. A *silent* hang has no timeout to recover from — hence watching `/workflows`
   above.
 - The dedupe agents are capped harder still, and never run at `max`, for a related but distinct reason. The harness
   kills an agent that reports no progress for 180s, and dedupe calls no tools, so it reports nothing while it thinks. At
@@ -611,18 +613,22 @@ source file and neither is committed — if the user does not want the ledger tr
   180s — 18 minutes in which the run emits nothing and looks hung. `high` was measured answering 116 findings in 96s
   and 163 in ~2 minutes, then killed on all six attempts at 209 and at 253; `medium` answered both, in ~140s. So a
   digest above 180 findings starts at `medium`, and the script logs that it did — a guard the 150-finding chunk cap
-  below now keeps out of reach, since `chunkScopes` applies that cap to stage one's scopes as well and no agent is
+  below now keeps out of reach, since one mechanism deduplicates every scope and so caps stage one's too, and no agent is
   handed more than one chunk. So do not go looking for that skip log to explain a wedged run: a step-down at any label,
   `dedupe:<unit>` or a chunked `dedupe:cross:1+2` alike, is an agent that stalled *under* its rung's own ceiling rather
   than one skipped over it. A skip log at all would mean a scope escaped chunking.
-- Dedupe runs in two stages, because think time tracks how many findings one agent was handed. Stage one runs an agent
-  per unit in parallel (`dedupe:<unit>`, plus `dedupe:cross-cutting` for the repo-wide findings no unit claims), which
-  catches the common case: six reviewers reading one unit from different angles report the same defect six times. Stage
-  two then compares what survived, to catch a defect reported under two different units. Both are `parallel()` fan-outs,
-  so a stalled agent costs only its own merges, and each partial failure is its own `gaps` entry — a lost unit repeats a
-  defect *within* one unit, a lost cross chunk repeats one *across* two. Stage two is skipped entirely when a single
-  scope held everything *and* fitted in one chunk, since then one agent already compared every pair; a unit too big for
-  one chunk always reaches stage two instead, whose passes close the chains splitting a scope costs stage one.
+- Dedupe runs in two stages, because think time tracks how many findings one agent was handed. Stage one is one agent
+  per unit (`dedupe:<unit>`), and it runs *inside* the review pipeline: a unit deduplicates the moment its own reviewers
+  are in, so a `dedupe:` row appearing while other units are still reviewing is the expected shape and not a phase
+  starting early. It catches the common case — six reviewers reading one unit from different angles report the same
+  defect six times. A unit that found nothing new this round spends no agent there at all, since what it holds was
+  deduplicated by the round that produced it. Stage two then compares what survived across units, and with it
+  `dedupe:cross-cutting`, the one scope that cannot be done per unit: the repo-wide lens findings, plus anything a
+  reviewer cited outside the unit it was given. Both stages are `parallel()` fan-outs, so a stalled agent costs only its
+  own merges, and each partial failure is its own `gaps` entry — a lost unit repeats a defect *within* one unit, a lost
+  cross chunk repeats one *across* two. Stage two is skipped entirely when a single scope held everything *and* fitted
+  in one chunk, since then one agent already compared every pair; a unit too big for one chunk always reaches stage two
+  instead, whose passes close the chains splitting a scope costs stage one.
 - **Chunking is what actually bounds this phase, and it bounds both stages.** Splitting the union by unit is a partition,
   not a bound: unit sizes are the partitioner's choice, so a repository whose code sits mostly in one unit would hand
   that whole scope to one agent. Stage two has no partition at all and sees every survivor accumulated so far — on one

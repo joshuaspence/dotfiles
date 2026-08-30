@@ -200,8 +200,13 @@ const parallelImpl = (thunks) =>
   Promise.all(thunks.map((thunk) => Promise.resolve().then(thunk).catch(() => null)));
 
 /**
- * No script uses `pipeline` yet, but a divergent stub would be a trap for whatever does next: each item runs every
- * stage independently with no barrier, and a stage that throws drops that item to `null`.
+ * Faithful stand-in for the runtime's `pipeline`: each item runs every stage independently with no barrier, and a stage
+ * that throws drops that item to `null`.
+ *
+ * That last clause is the one a script has to be written against, and it is also the one no fake `agent` can produce —
+ * every `agent` call inside a stage sits under a `parallel()` or a `try`, so nothing a scenario answers reaches the
+ * `catch` here. `runWorkflow` therefore takes a `pipeline` override, so a test can wrap this and drop an item the way the
+ * runtime would (a stalled agent *throws*; see the no-progress watchdog) and assert what the script does about it.
  */
 export const pipelineImpl = (items, ...stages) =>
   Promise.all(
@@ -230,7 +235,7 @@ export const pipelineImpl = (items, ...stages) =>
  * prompts, so the instructions sent can be asserted), the `log` lines, and the phases entered — each once, in the
  * order it was first entered, by either of the two routes into a phase.
  */
-export async function runWorkflow({ scriptPath, args = {}, agent } = {}) {
+export async function runWorkflow({ scriptPath, args = {}, agent, pipeline = pipelineImpl } = {}) {
   if (typeof agent !== 'function') {
     throw new Error(
       'runWorkflow needs an `agent` function to answer the agent calls the script makes. Without one every call ' +
@@ -268,7 +273,7 @@ export async function runWorkflow({ scriptPath, args = {}, agent } = {}) {
     args,
     agentImpl,
     parallelImpl,
-    pipelineImpl,
+    pipeline,
     enterPhase,
     (message) => logs.push(message),
     stubBudget(),

@@ -996,7 +996,7 @@ const unitSlug = (name) => {
 };
 
 // The two names the dedupe phase mints for itself in the same `dedupe:<name>` namespace unit slugs live in: the shared
-// bucket `dedupeScopes` gives the findings no unit claimed, and the prefix every `crossDedupe` chunk label starts with.
+// bucket `claimUnits` gives the findings no unit claimed, and the prefix every `crossDedupe` chunk label starts with.
 // Declared here, next to the numbering that de-collides that namespace, because that numbering can only see names it is
 // told about — and both are words a partition agent plausibly names a unit. `Cross-Cutting Concerns` slugs to exactly
 // `cross-cutting`, which without this would label two concurrent stage-1 agents identically. Both stages read the name
@@ -1236,40 +1236,43 @@ const mergeIssueGroups = (issues, groups) => {
   });
 };
 
-// Split the union into the scopes dedupe runs over, so no single agent has to reason about every finding at once. One
-// fan-in agent over the whole round is what the watchdog keeps killing, and the effort ladder above only buys one rung:
-// measured on Opus at `high`, a 163-finding round answered in ~2 minutes and a 253-finding round was killed on all six
-// attempts, then answered at `medium`. Think time tracks the digest, so the durable fix is to shrink the digest.
+// Split a round's findings into the scopes dedupe runs over, so no single agent has to reason about every finding at
+// once. One fan-in agent over the whole round is what the watchdog keeps killing, and the effort ladder above only buys
+// one rung: measured on Opus at `high`, a 163-finding round answered in ~2 minutes and a 253-finding round was killed on
+// all six attempts, then answered at `medium`. Think time tracks the digest, so the durable fix is to shrink the digest.
 //
 // Units are the split already available: file-disjoint by construction, and most duplicates live inside one, because
 // the six reviewers all read the same code from different angles, so one defect can come back six times from a unit.
 // Cross-unit duplicates exist too, so a second pass over the survivors still runs — but it starts from a smaller set.
-// This is a partition, not a bound: unit sizes are the partitioner's choice, so `chunkScopes` caps what comes out of it.
+// This is a partition, not a bound: unit sizes are the partitioner's choice, so `scopeDedupe` caps what comes out of it.
 //
-// A finding is scoped by its primary file, the same relation `fileInUnit` already uses to tell a reviewer which
-// findings are known. Overlapping unit paths would place one finding in two scopes; `mergeIssueGroups` awards an
-// index to the first group that claims it, so that degrades to "not merged twice", never to a lost finding.
-const dedupeScopes = (issues, units) => {
-  const scoped = (units || []).map((unit) => ({
-    name: unit.slug,
-    indices: issues.flatMap((issue, i) => (fileInUnit(issue?.file, unit) ? [i] : [])),
-  }));
+// A finding is scoped by its primary file, the same relation `fileInUnit` already uses to tell a reviewer which findings
+// are known. This hands back the findings themselves rather than indices into a shared array, which is what lets a unit's
+// scope be assembled — and deduped — from that one unit's reviewers, without waiting for the rest of the round. The
+// numbering the agents work in is per scope now, and lives entirely inside `scopeDedupe`.
+//
+// It is a *partition* and not a per-unit classification: a finding goes to the first unit that claims it, so overlapping
+// unit paths cannot place one finding in two scopes. Under the old shared-index union that mattered less, because
+// `mergeIssueGroups` awarded an index to the first group to claim it and the worst case was "not merged twice". Now each
+// scope merges its own list and the survivors are concatenated, so a finding in two scopes would come back twice — a
+// duplicate the review invented rather than one it failed to remove.
+const claimUnits = (issues, units) => {
+  const owner = issues.map((issue) => (units || []).findIndex((unit) => fileInUnit(issue?.file, unit)));
 
-  // Whatever the partition does not claim: the repo-wide architecture findings, plus anything naming a file the
-  // partitioner excluded or a reviewer misspelled. One shared bucket, so those are deduped against each other rather
-  // than skipped — they are the findings most likely to be reported three times, once per architectural lens.
-  const claimed = new Set(scoped.flatMap((scope) => scope.indices));
-  const unclaimed = issues.flatMap((issue, i) => (claimed.has(i) ? [] : [i]));
+  return {
+    perUnit: (units || []).map((_unit, u) => issues.filter((_issue, i) => owner[i] === u)),
 
-  // A scope holding one finding has nothing to compare it against, so an agent there could only answer `groups: []`.
-  return [...scoped, ...(unclaimed.length ? [{ name: DEDUPE_UNCLAIMED_SLUG, indices: unclaimed }] : [])].filter(
-    (scope) => scope.indices.length > 1,
-  );
+    // Whatever the partition does not claim: the repo-wide architecture findings, plus anything naming a file the
+    // partitioner excluded or a reviewer misspelled. One shared bucket, so those are deduped against each other rather
+    // than skipped — they are the findings most likely to be reported three times, once per architectural lens.
+    unclaimed: issues.filter((_issue, i) => owner[i] < 0),
+  };
 };
 
-// Translate a scope's answer back into indices into the union. The agent numbers what it was shown from 0, so its
-// groups mean nothing without this. An index outside what it was shown is dropped here, because `mergeIssueGroups`
-// could not catch it: every scope-local index is also a valid union index, so the merge would collapse a stranger.
+// Translate a chunk's answer back into indices into the scope it was cut from. The agent numbers what it was shown from
+// 0, so its groups mean nothing without this. An index outside what it was shown is dropped here, because
+// `mergeIssueGroups` could not catch it: every chunk-local index is also a valid scope index, so the merge would
+// collapse a stranger.
 const globalizeGroups = (groups, indices) =>
   (Array.isArray(groups) ? groups : []).map((group) =>
     (Array.isArray(group) ? group : [])
@@ -1324,8 +1327,8 @@ const dedupeAgent = async (issues, { label }) => {
 // four-round run: the cross pass was handed 116 findings in round 1, 209 in round 2 and 262 in round 3, while the
 // largest single unit scope in that whole run was 68. So the fan-in grows with what a round is handed, however well the
 // units are split, and the effort ladder just delays the wall — 209 exhausted `high`, and `medium` has no rung below it.
-// Chunking is what actually bounds it, and `chunkScopes` below applies the same cap to stage 1, whose scopes are only as
-// small as the partitioner happened to make its units.
+// Chunking is what actually bounds it, and `scopeDedupe` below is one mechanism for both stages, so the same cap covers
+// a unit scope too — which matters, because a unit is only as small as the partitioner happened to make it.
 //
 // Chunking naively would be worse than not chunking. The union is built unit-major, so a contiguous slice of it is
 // mostly one unit's findings — the duplicates stage 1 already merged — while the cross-unit pairs this stage exists to
@@ -1343,8 +1346,8 @@ const DEDUPE_CHUNK_CAP = 150;
 // four findings, and a pass that merges nothing means the set is genuinely converged.
 const DEDUPE_CHUNK_PASSES = 3;
 
-// The chunks one pass runs, as `{ name, indices }` — the same shape `dedupeScopes` returns, so both stages label and
-// globalize the same way. `name` is empty for the single chunk that holds everything, which is the common case and
+// The chunks one scope is cut into, as `{ name, indices }`. Every scope goes through this, per-unit and cross alike, so
+// both stages label and globalize the same way. `name` is empty for the single chunk that holds everything, which is the common case and
 // keeps the plain `dedupe:cross` label it has always had.
 const crossChunks = (count, cap = DEDUPE_CHUNK_CAP) => {
   const all = Array.from({ length: Math.max(count, 0) }, (_, i) => i);
@@ -1361,23 +1364,51 @@ const crossChunks = (count, cap = DEDUPE_CHUNK_CAP) => {
   );
 };
 
-// The same cap, applied to stage 1. `dedupeScopes` *partitions* the union; it does not bound the pieces, because a unit's
-// size is the partitioner's free choice — a repository whose code sits mostly in one unit hands that whole scope to one
-// agent, which is the unbounded fan-in `DEDUPE_CHUNK_CAP` exists to remove, ladder or no ladder. So one mechanism owns
-// the bound at both stages: an over-cap scope is split by the same pair-covering chunks, keeping the guarantee that any
-// two findings in a scope still share some chunk. A scope that fits the cap comes back untouched under its own name, so
-// the ordinary review still runs exactly one agent per unit.
+// One scope, deduped: chunk it, run an agent per chunk, merge every answer back. This is the whole of a stage-1 unit
+// scope and the whole of one stage-2 pass, so the cap is owned in one place rather than applied twice.
 //
-// Chunking costs stage 1 the thing a single agent gave it for free: chains, since `mergeIssueGroups` is first-claim-wins.
-// Nothing is lost, because splitting a scope necessarily leaves more than one scope, which is what makes the stage-2
-// short-circuit below fall through to `crossDedupe` and its passes.
-const chunkScopes = (scopes) =>
-  scopes.flatMap((scope) =>
-    crossChunks(scope.indices.length).map((chunk) => ({
-      name: [scope.name, chunk.name].filter(Boolean).join(':'),
-      indices: chunk.indices.map((i) => scope.indices[i]),
-    })),
+// `claimUnits` *partitions* a round's findings; it does not bound the pieces, because a unit's size is the partitioner's
+// free choice — a repository whose code sits mostly in one unit hands that whole scope to one agent, which is the
+// unbounded fan-in `DEDUPE_CHUNK_CAP` exists to remove, ladder or no ladder. An over-cap scope is split by the
+// pair-covering chunks above, keeping the guarantee that any two findings in a scope still share some chunk. A scope that
+// fits the cap runs exactly one agent, under the plain `dedupe:<name>` label it has always had.
+//
+// Every index in here is local to `issues`, and that locality is what the per-unit pipeline is built on: stage 1 used to
+// number one union assembled from every reviewer's answer, which is precisely why no scope could be deduped until all of
+// them were in. A scope now carries its own numbering and nothing outside it needs to know the numbers at all.
+//
+// Chunking costs a scope the thing a single agent gave it for free: chains, since `mergeIssueGroups` is first-claim-wins.
+// Nothing is lost, because splitting a scope necessarily leaves more than one chunk, which is what clears `whole` and
+// sends the caller on to `crossDedupe` and its passes.
+const scopeDedupe = async (issues, name) => {
+  // One finding has nothing to be compared against, so an agent here could only answer `groups: []`, at Opus prices.
+  if (issues.length < 2) return { issues, stalled: [], chunks: 0, largest: 0, whole: true };
+
+  const chunks = crossChunks(issues.length);
+  const nameOf = (chunk) => [name, chunk.name].filter(Boolean).join(':');
+
+  // Each chunk is its own `dedupeAgent`, so it gets the effort ladder and the rung ceiling, and `parallel()` keeps one
+  // stalled chunk from costing the merges every other chunk found.
+  const results = await parallel(
+    chunks.map((chunk) => () =>
+      dedupeAgent(
+        chunk.indices.map((i) => issues[i]),
+        { label: `dedupe:${nameOf(chunk)}` },
+      ).then((groups) => (groups ? globalizeGroups(groups, chunk.indices) : null)),
+    ),
   );
+
+  return {
+    issues: mergeIssueGroups(issues, results.filter(Boolean).flat()),
+    stalled: chunks.filter((_chunk, i) => !results[i]).map(nameOf),
+    chunks: chunks.length,
+    largest: Math.max(...chunks.map((chunk) => chunk.indices.length)),
+
+    // Whether one agent compared everything in this scope, chains included — the only condition under which there is
+    // nothing left for a further pass to find.
+    whole: chunks.length === 1,
+  };
+};
 
 // Run the cross-unit pass to convergence. Returns the surviving findings plus what the caller needs to report: how
 // many chunks never came back, and whether the loop converged or ran out of passes.
@@ -1386,38 +1417,27 @@ const crossDedupe = async (issues) => {
   let stalled = 0;
 
   for (let pass = 1; pass <= DEDUPE_CHUNK_PASSES; pass += 1) {
-    const chunks = crossChunks(survivors.length);
     const before = survivors.length;
 
-    // Each chunk is its own `dedupeAgent`, so it gets the effort ladder and the rung ceiling, and `parallel()` keeps
-    // one stalled chunk from costing the merges every other chunk found.
-    const results = await parallel(
-      chunks.map((chunk) => () => {
-        // The pass number joins the label only once there is more than one pass to tell apart, so a review small
-        // enough for a single chunk still shows the plain `dedupe:cross` it always did.
-        const label = [`dedupe:${DEDUPE_CROSS_SLUG}`, pass > 1 ? `p${pass}` : '', chunk.name].filter(Boolean).join(':');
-        const digest = chunk.indices.map((i) => survivors[i]);
-
-        return dedupeAgent(digest, { label }).then((groups) =>
-          groups ? globalizeGroups(groups, chunk.indices) : null,
-        );
-      }),
-    );
+    // The pass number joins the scope name only once there is more than one pass to tell apart, so a review small
+    // enough for a single chunk still shows the plain `dedupe:cross` it always did.
+    const name = [DEDUPE_CROSS_SLUG, pass > 1 ? `p${pass}` : ''].filter(Boolean).join(':');
+    const scope = await scopeDedupe(survivors, name);
 
     // The worst single pass, not the sum over passes. The number is reported as a count of chunks, and a chunk that
     // exhausts the effort ladder does it again next pass — same digest size, same ceiling — so summing would report one
     // slow chunk two or three times, above the chunk count any pass ever ran.
-    stalled = Math.max(stalled, results.filter((groups) => !groups).length);
-    survivors = mergeIssueGroups(survivors, results.filter(Boolean).flat());
+    stalled = Math.max(stalled, scope.stalled.length);
+    survivors = scope.issues;
 
     log(
-      `Cross-dedupe pass ${pass}: ${before} finding(s) over ${chunks.length} chunk(s) of at most ` +
-        `${Math.max(...chunks.map((chunk) => chunk.indices.length))} -> ${survivors.length}.`,
+      `Cross-dedupe pass ${pass}: ${before} finding(s) over ${scope.chunks} chunk(s) of at most ` +
+        `${scope.largest} -> ${survivors.length}.`,
     );
 
     // One chunk means one agent saw everything, chains included, so there is nothing a further pass could add. No
     // merge means the same conclusion by measurement rather than by construction.
-    if (chunks.length === 1 || survivors.length === before) return { issues: survivors, stalled, converged: true };
+    if (scope.whole || survivors.length === before) return { issues: survivors, stalled, converged: true };
   }
 
   return { issues: survivors, stalled, converged: false };
@@ -1936,8 +1956,8 @@ const unitFiles = unitPaths.every(namesOneFile) ? unitPaths.length : 0;
 
 log(`Partitioned into ${units.length} unit(s) over ${unitPaths.length} path(s); ${exclusions.length} exclusion(s).`);
 
-// Phases 3 & 4 — Review + Dedupe, for this round. Round 1 is the baseline pass; a later round feeds each reviewer an
-// escalating emphasis and a scoped list of what is already held, so it looks where earlier rounds did not.
+// What this round starts from. Round 1 is the baseline pass; a later round feeds each reviewer an escalating emphasis
+// and a scoped list of what is already held, so it looks where earlier rounds did not.
 //
 // `deduped` starts holding what those rounds found rather than empty, because both dedupe stages merge this round's raw
 // findings *against* it — that is what turns a re-report into an absorbed duplicate instead of a second entry, and it is
@@ -1975,91 +1995,170 @@ if (!runLenses) {
 // That matters beyond legibility: a label is part of the resume cache key, so an un-tagged label is one a resumed run
 // can still match.
 
-// Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full effort.
-// This must complete before dedup, which reasons over every finding, so it runs as a single `parallel()` barrier.
+// Phases 3 & 4, as one `pipeline()` over the units. A unit's reviewers run concurrently among themselves, and the moment
+// that unit's own answers are in, its dedupe scope is assembled and deduped — without waiting for any other unit. There
+// is no barrier between the two phases, which is the point: as a `parallel()` pair they cost the slowest reviewer in the
+// *whole round* before the first dedupe agent could start, and a run killed anywhere in that window produced nothing at
+// all. Both phases are still bounded by the unit ceiling; what changed is that the waiting is per unit.
+//
+// Only stage 1 of dedupe fits inside the pipeline. The cross-unit pass exists precisely to compare findings from
+// different units, so it is a genuine barrier and stays one, below.
+//
+// The architecture lenses are not units — each reads the whole repository — so they run alongside the pipeline rather
+// than in it, and their findings join the leftovers scope after the barrier.
 phase('Review');
-const reviewSpecs = [
-  ...units.flatMap((unit) =>
-    activeReviewers.map((reviewer) => ({
-      label: `review:${unit.slug}:${reviewer.key}`,
-      model: reviewer.model,
-      effort: leafEffort,
-      category: reviewer.key,
-      prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths, {
-        round,
 
-        // Scoped by unit, not by category: a reviewer that cannot see the other five reviewers' findings for its own
-        // unit re-reports them, and `mergeIssueGroups` then pays for that at full review cost.
-        known: deduped.filter((f) => fileInUnit(f.file, unit)),
-      }),
-    })),
-  ),
-  ...(runLenses
-    ? ARCHITECTURAL_LENSES.map((lens) => ({
-        label: `review:arch:${lens.key}`,
-        model: 'opus',
-        effort,
-        category: ARCHITECTURE_CATEGORY,
-        prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
-          round,
-
-          // A lens reads the whole repository, so there is no unit to scope by and it sees everything held. That is
-          // the largest known-findings block the run produces, and deliberately so: the measured architecture
-          // duplicates were against `code-quality`, `consistency` and `bug`, none of which a category filter shows.
-          known: deduped,
-        }),
-      }))
-    : []),
-];
-
-const reviewResults = await parallel(
-  reviewSpecs.map((spec) => () =>
-    agent(spec.prompt, {
-      label: spec.label,
-      phase: 'Review',
-      model: spec.model,
-      effort: spec.effort,
-      schema: ISSUES_SCHEMA,
-    }),
-  ),
-);
+// The held findings, partitioned once, by the same rule the round's own findings will be. This is not the same question
+// as what a reviewer is *told* is known: overlapping unit paths make `claimUnits` award a finding to one unit, while
+// every reviewer that can see the file should hear about it, so the prompt below keeps its own unscoped filter.
+const held = claimUnits(deduped, units);
 
 // Counted apart from the findings: a reviewer that came back with an empty list is evidence its unit is clean, and
 // one that never came back is no evidence at all. Only the first kind can make an empty round mean the review is dry.
 let reviewersReturned = 0;
+let reviewersRun = 0;
 
-const roundIssues = reviewResults.flatMap((result, i) => {
-  const spec = reviewSpecs[i];
+// Raw findings, counted before any merging, because that — and not the number that survived dedupe — is what decides
+// whether this round looked and found nothing. A round whose every finding was absorbed as a duplicate of something
+// already held did produce evidence; it is just evidence that the review has converged, which `newFindings` reports.
+let rawFound = 0;
 
-  if (!result?.issues) {
-    gaps.push(`Reviewer did not complete: ${spec.label}`);
-    return [];
-  }
+// Run a set of reviewers concurrently and read their answers. Findings are fingerprinted as they are read, after the
+// category is stamped and never before: `category` is one of the three fields the identity is built from, and the
+// reviewer's own answer for it is overwritten by the roster's key on that very line. `NEW_THIS_ROUND` goes on here too,
+// so that everything downstream can tell this round's findings from the ones that arrived on `args` without comparing
+// content — and so that no later stage has to remember to mark them.
+const reviewIssues = async (specs) => {
+  reviewersRun += specs.length;
 
-  reviewersReturned += 1;
+  const results = await parallel(
+    specs.map((spec) => () =>
+      agent(spec.prompt, {
+        label: spec.label,
+        phase: 'Review',
+        model: spec.model,
+        effort: spec.effort,
+        schema: ISSUES_SCHEMA,
+      }),
+    ),
+  );
 
-  // Fingerprinted here, after the category is stamped and never before: `category` is one of the three fields the
-  // identity is built from, and the reviewer's own answer for it is overwritten by the roster's key on this very line.
-  return result.issues.map((issue) => withFingerprint({ ...issue, category: spec.category }));
+  return results.flatMap((result, i) => {
+    if (!result?.issues) {
+      gaps.push(`Reviewer did not complete: ${specs[i].label}`);
+
+      return [];
+    }
+
+    reviewersReturned += 1;
+    rawFound += result.issues.length;
+
+    return result.issues.map((issue) =>
+      withFingerprint({ ...issue, category: specs[i].category, [NEW_THIS_ROUND]: true }),
+    );
+  });
+};
+
+const lensSpecs = runLenses
+  ? ARCHITECTURAL_LENSES.map((lens) => ({
+      label: `review:arch:${lens.key}`,
+      model: 'opus',
+      effort,
+      category: ARCHITECTURE_CATEGORY,
+      prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
+        round,
+
+        // A lens reads the whole repository, so there is no unit to scope by and it sees everything held. That is
+        // the largest known-findings block the run produces, and deliberately so: the measured architecture
+        // duplicates were against `code-quality`, `consistency` and `bug`, none of which a category filter shows.
+        known: deduped,
+      }),
+    }))
+  : [];
+
+const [unitScopes, lensIssues] = await parallel([
+  () =>
+    pipeline(
+      units,
+      // Stage 1 — this unit's reviewers, at capped leaf effort.
+      (unit) =>
+        reviewIssues(
+          activeReviewers.map((reviewer) => ({
+            label: `review:${unit.slug}:${reviewer.key}`,
+            model: reviewer.model,
+            effort: leafEffort,
+            category: reviewer.key,
+            prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths, {
+              round,
+
+              // Scoped by unit, not by category: a reviewer that cannot see the other five reviewers' findings for its
+              // own unit re-reports them, and `mergeIssueGroups` then pays for that at full review cost.
+              known: deduped.filter((f) => fileInUnit(f.file, unit)),
+            }),
+          })),
+        ),
+
+      // Stage 2 — this unit's dedupe, as soon as its own reviewers are in and not a moment later.
+      async (raw, unit, u) => {
+        // A reviewer may cite a file outside the unit it was given. That finding cannot be deduped here — the unit that
+        // owns the file may already have finished — so anything this unit does not claim is handed to the leftovers
+        // scope after the barrier. Nothing is lost by that: `crossDedupe` compares every surviving pair, so a misrouted
+        // finding still meets the copy already held, one stage later than it would have.
+        const mine = new Set(claimUnits(raw, units).perUnit[u]);
+        const strays = raw.filter((issue) => !mine.has(issue));
+
+        // Held findings first, this round's after — the ordering `NEW_THIS_ROUND` depends on, here within one scope.
+        const scope = [...held.perUnit[u], ...mine];
+
+        // A unit that found nothing new has nothing to merge: its held findings were deduped by the round that produced
+        // them, and re-comparing a settled set is a full Opus agent spent to be told `groups: []`. Under the shared
+        // union this ran anyway, once per unit, on every round after the first.
+        if (mine.size === 0) return { issues: scope, strays, stalled: [], chunks: 0, whole: true };
+
+        return { strays, ...(await scopeDedupe(scope, unit.slug)) };
+      },
+    ),
+
+  // The lenses have no unit and so no stage-1 scope of their own; every finding they raise is a leftover by construction.
+  () => reviewIssues(lensSpecs),
+]);
+
+// A unit's stage dying takes its whole pipeline item down, and that item is where the findings already held for the unit
+// were waiting to be merged. `pipeline()` reports it as a `null`, so a `null` is refilled from `held` rather than skipped:
+// dropping it would erase every earlier round's findings for that unit from the ledger, the same failure the three abort
+// returns above exist to prevent. What this round found for the unit died with the stage and is not recoverable, so this
+// is a partial review and it says so.
+const scopes = units.map((unit, u) => {
+  const scope = unitScopes?.[u];
+
+  if (scope) return scope;
+
+  gaps.push(
+    `Review and dedupe of unit '${unit.slug}' in round ${round} failed outright, so it contributed nothing — the ` +
+      `${held.perUnit[u].length} finding(s) already held for it are carried unchanged. Re-run the review.`,
+  );
+
+  return { issues: held.perUnit[u], strays: [], stalled: [], chunks: 0, whole: true };
 });
 
 log(
-  `Round ${round}: ${roundIssues.length} raw finding(s) from ${reviewersReturned} of ${reviewSpecs.length} ` +
-    'reviewer(s).',
+  `Round ${round}: ${rawFound} raw finding(s) from ${reviewersReturned} of ${reviewersRun} ` +
+    `reviewer(s) over ${units.length} unit(s).`,
 );
 
 // A round that raised nothing has nothing to dedupe against what is held, nothing to validate and nothing to fix, and
 // the set it holds is the one it was handed — already deduped and already confirmed by the rounds that produced it. So
-// return it here rather than paying a dedupe pass to re-merge a settled set and a Validate pass to re-confirm it.
+// return it here rather than paying a cross pass to re-merge a settled set and a Validate pass to re-confirm it. Every
+// per-unit scope skipped its own agent for the same reason, so a dry round now costs nothing beyond the reviewers.
 // `newFindings: 0` is what tells the caller the review has gone dry and there is no round after this one.
-if (roundIssues.length === 0) {
+if (rawFound === 0) {
   // An empty round only means the review went dry if somebody actually looked. When every reviewer failed, the round
   // says nothing about the code, and the per-reviewer gaps above do not add up to that: read one at a time they look
   // like partial coverage, while `newFindings: 0` reads as convergence. Say it once, plainly, so an empty `findings`
   // list cannot be reported as "No issues found" — and so a caller does not stop looping on a review that never ran.
   if (reviewersReturned === 0) {
     gaps.push(
-      `All ${reviewSpecs.length} reviewer(s) in round ${round} failed to return, so nothing was reviewed in it — ` +
+      `All ${reviewersRun} reviewer(s) in round ${round} failed to return, so nothing was reviewed in it — ` +
         'this round found nothing because of that, not because the code is clean. Re-run the review.',
     );
     log(`Round ${round}: no reviewer returned — nothing was reviewed.`);
@@ -2070,48 +2169,51 @@ if (roundIssues.length === 0) {
   return { reviewedCommit: reviewHead, round, findings: knownFindings, newFindings: 0, exclusions, gaps };
 }
 
-// Dedupe (Opus). A deterministic script cannot reason over findings, so this is delegated. Merge this round's raw
-// findings into everything accumulated so far; how many of them survive is the round's novelty signal.
-//
-// Two stages: one agent per unit in parallel, then a pass over what survives. See `dedupeScopes` for why the union is
-// split rather than handed over whole — in short, one agent's share of the work has to stop growing with the size of
-// the review, or the no-progress watchdog eventually wins whatever effort it is asked for. `chunkScopes` is what makes
-// that a guarantee rather than a hope: a unit big enough to overwhelm an agent is split like a stage-2 chunk.
+// Dedupe, stage 2 (Opus). A deterministic script cannot reason over findings, so this is delegated. Stage 1 already ran
+// inside the pipeline above, one scope per unit; what is left is the scope no unit owns, and then the pass that compares
+// findings *across* units — which is the one part of this phase that genuinely needs every reviewer's answer, and
+// therefore the only barrier left between Review and Validate.
 phase('Dedupe');
 const prevCount = deduped.length;
 
-// This round's raw findings go *above* everything already held, which is the ordering `NEW_THIS_ROUND` depends on.
-const union = [...deduped, ...roundIssues.map((issue) => ({ ...issue, [NEW_THIS_ROUND]: true }))];
+// The leftovers: everything no unit claimed. The repo-wide lens findings, the strays a reviewer cited outside its own
+// unit, and the held findings naming a file the partition no longer covers. One shared scope, so those are at least
+// compared against each other rather than skipped — they are the likeliest triplicates in the round, one per lens.
+// Held first here too, so a lens re-reporting a held finding is absorbed into the copy the ledger already knows.
+const unclaimed = [...held.unclaimed, ...scopes.flatMap((scope) => scope.strays), ...(lensIssues ?? [])];
+const leftovers = await scopeDedupe(unclaimed, DEDUPE_UNCLAIMED_SLUG);
 
-const scopes = chunkScopes(dedupeScopes(union, units));
-const scopeGroups = await parallel(
-  scopes.map(
-    (scope) => () =>
-      dedupeAgent(
-        scope.indices.map((i) => union[i]),
-        { label: `dedupe:${scope.name}` },
-      ).then((groups) => (groups ? globalizeGroups(groups, scope.indices) : null)),
-  ),
-);
-
-const stalledScopes = scopes.filter((_, i) => !scopeGroups[i]).map((scope) => scope.name);
+const allScopes = [...scopes, leftovers];
+const stalledScopes = allScopes.flatMap((scope) => scope.stalled);
+const scopeCount = allScopes.reduce((total, scope) => total + scope.chunks, 0);
 
 if (stalledScopes.length) {
   gaps.push(
-    `Dedupe did not return for ${stalledScopes.length} of ${scopes.length} scope(s) in round ${round} ` +
+    `Dedupe did not return for ${stalledScopes.length} of ${scopeCount} scope(s) in round ${round} ` +
       `(${stalledScopes.join(', ')}) — those findings were kept raw, so one defect may be reported more than once.`,
   );
 }
 
-// Both stages merge against the list the agents were shown, so `afterUnits` is the union minus the intra-unit
-// duplicates, still in reviewer order — which is the order the per-finding validator and fixer labels index into.
-const afterUnits = mergeIssueGroups(union, scopeGroups.filter(Boolean).flat());
+// Every scope merged its own list; concatenating them gives the round minus its intra-unit duplicates, in unit order —
+// which is the order the per-finding validator and fixer labels index into.
+//
+// Re-partitioned so that everything held sits below everything new, across scopes and not merely inside one.
+// `mergeIssueGroups` carries a group's marks over from its lowest-indexed member, so this is what decides which copy of a
+// re-reported defect survives the cross pass. With one unit's new findings sitting above another unit's held ones, the
+// new report would win: the ledger's entry would be replaced, losing its `firstSeen` and everything the round that first
+// saw it recorded, and the defect would then be re-validated and re-fixed as though it had never been reported.
+const merged = allScopes.flatMap((scope) => scope.issues);
+const afterUnits = [
+  ...merged.filter((issue) => !issue[NEW_THIS_ROUND]),
+  ...merged.filter((issue) => issue[NEW_THIS_ROUND]),
+];
 
-// The second stage exists to catch one defect reported under two different units, so it has nothing to add when a
-// single scope already compared everything: re-asking would only spend a rung of the ladder on a settled question.
-// "Already compared everything" means one *unchunked* scope, which is what a lone scope now is — `chunkScopes` leaves
-// several, so an over-cap round always reaches `crossDedupe` and the passes that close the chains chunking splits up.
-const wholeUnionScoped = scopes.length === 1 && scopes[0].indices.length === union.length;
+// The cross pass exists to catch one defect reported under two different units, so it has nothing to add when a single
+// scope already compared everything: re-asking would only spend a rung of the ladder on a settled question. It takes one
+// *unchunked* scope for that, so an over-cap round always reaches `crossDedupe` and the passes that close the chains
+// chunking splits up — and so does a round whose findings landed in more than one scope, however small.
+const compared = allScopes.filter((scope) => scope.issues.length > 0);
+const wholeUnionScoped = compared.length === 1 && compared[0].chunks === 1;
 const cross =
   wholeUnionScoped || afterUnits.length < 2
     ? { issues: afterUnits, stalled: 0, converged: true }
@@ -2136,7 +2238,7 @@ if (!cross.converged) {
 deduped = cross.issues;
 
 log(
-  `Deduped round ${round}: ${union.length} -> ${deduped.length} finding(s) over ${scopes.length} scope(s) ` +
+  `Deduped round ${round}: ${prevCount + rawFound} -> ${deduped.length} finding(s) over ${scopeCount} scope(s) ` +
     `(${prevCount} before this round).`,
 );
 

@@ -34,7 +34,6 @@ const INTERNALS = [
   'DEDUPE_CHUNK_CAP',
   'DEDUPE_CHUNK_PASSES',
   'crossChunks',
-  'chunkScopes',
   'effort',
   'EFFORT_ORDER',
   'fix',
@@ -74,8 +73,8 @@ const INTERNALS = [
   'COALESCED_UNIT_NAME',
   'inScopeFiles',
   'unitCeiling',
+  'claimUnits',
   'DEDUPE_CROSS_SLUG',
-  'dedupeScopes',
   'DEDUPE_UNCLAIMED_SLUG',
   'fileInUnit',
   'globalizeGroups',
@@ -522,14 +521,19 @@ async function scopeUnitsFor(args) {
 /**
  * Run a `--fix` review end to end. `validators` and `reviewers` are pinned to 1 so each finding gets one validator and
  * each fix one reviewer, rather than following the `auto` heuristics, which vary by category.
+ *
+ * `pipeline` is forwarded straight through to the harness, for the one thing a fake `agent` cannot express: a `pipeline`
+ * stage that throws, which drops that item to `null`. Every `agent` call the script makes inside a stage is caught before
+ * it can get there, so a test about what the script does with a dropped unit has to wrap the pipeline instead.
  */
-export async function runFix({ args = {}, ...config } = {}) {
+export async function runFix({ args = {}, pipeline, ...config } = {}) {
   const runArgs = { fix: true, reviewers: 1, validators: 1, ...args };
   const scenario = fixScenario({ ...config, scopeUnits: await scopeUnitsFor(runArgs) });
   const run = await runWorkflow({
     scriptPath: SCRIPT,
     args: runArgs,
     agent: scenario.agent,
+    ...(pipeline ? { pipeline } : {}),
   });
 
   // Raised from here as well as from the post-condition `fixScenario` registers, so that a fixture which could not tell

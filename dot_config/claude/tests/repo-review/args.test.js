@@ -775,65 +775,30 @@ describe('dedupe resource management', () => {
     expect(negativeChunks[0].indices).toEqual([]);
   });
 
-  it('passes through scopes that fit the cap without splitting', async () => {
-    // A scope smaller than the cap comes back untouched under its own name, so the ordinary review still runs exactly one
-    // agent per unit.
-    const { chunkScopes, DEDUPE_CHUNK_CAP } = await internals();
+  it('never shows any dedupe agent, at either stage, more findings than the cap', async () => {
+    // The resource claim the cap is for, asserted over a whole run rather than over one helper: `scopeDedupe` is the only
+    // way a dedupe agent is reached, so one mechanism bounds the per-unit scopes, the cross-unit passes and the leftovers
+    // scope alike. A unit's size is the partitioner's free choice and the cross pass grows with everything held, so
+    // neither is bounded by anything upstream of this. `dedupe.test.js` covers the chunk labels and the pair coverage.
+    const { DEDUPE_CHUNK_CAP } = await internals();
+    const perUnit = DEDUPE_CHUNK_CAP + 10;
+    const run = await runFix({
+      args: { fix: false },
+      dedupe: () => ({ groups: [] }),
+      units: [
+        { name: 'api', slug: 'api', summary: 'the request surface', paths: ['api'] },
+        { name: 'core', slug: 'core', summary: 'the protocol', paths: ['core'] },
+      ],
+      issues: [
+        ...Array.from({ length: perUnit }, (_, i) => issue({ file: `api/f${i}.py` })),
+        ...Array.from({ length: perUnit }, (_, i) => issue({ file: `core/f${i}.py` })),
+      ],
+    });
 
-    const scopes = [
-      { name: 'unit-a', indices: Array.from({ length: 50 }, (_, i) => i) },
-      { name: 'unit-b', indices: Array.from({ length: 30 }, (_, i) => i + 50) },
-    ];
+    const sizes = run.called(/^dedupe/).map((call) => Number(/Findings \((\d+)\)/.exec(call.prompt)[1]));
 
-    const chunked = chunkScopes(scopes);
-
-    // Two scopes in, two scopes out.
-    expect(chunked).toHaveLength(2);
-    expect(chunked[0].name).toBe('unit-a');
-    expect(chunked[0].indices).toHaveLength(50);
-    expect(chunked[1].name).toBe('unit-b');
-    expect(chunked[1].indices).toHaveLength(30);
-  });
-
-  it('splits over-cap scopes into pair-covering chunks', async () => {
-    // A scope bigger than the cap is split into chunks the same way `crossChunks` does, with chunk names joined to the
-    // scope name by a colon.
-    const { chunkScopes, DEDUPE_CHUNK_CAP } = await internals();
-
-    const scopes = [{ name: 'big-unit', indices: Array.from({ length: 200 }, (_, i) => i) }];
-
-    const chunked = chunkScopes(scopes);
-
-    // More than one chunk out.
-    expect(chunked.length).toBeGreaterThan(1);
-
-    // Each chunk's name should start with the scope name and include the chunk suffix.
-    for (const chunk of chunked) {
-      expect(chunk.name).toContain('big-unit');
-      expect(chunk.name).toContain('+');
-      expect(chunk.indices.length).toBeLessThanOrEqual(DEDUPE_CHUNK_CAP);
-    }
-  });
-
-  it('handles a mix of under-cap and over-cap scopes', async () => {
-    // Some scopes pass through, others are split — the function operates independently on each.
-    const { chunkScopes, DEDUPE_CHUNK_CAP } = await internals();
-
-    const scopes = [
-      { name: 'small', indices: Array.from({ length: 20 }, (_, i) => i) },
-      { name: 'huge', indices: Array.from({ length: 250 }, (_, i) => i + 20) },
-    ];
-
-    const chunked = chunkScopes(scopes);
-
-    // The small scope passes through as one.
-    const small = chunked.filter((c) => c.name === 'small');
-    expect(small).toHaveLength(1);
-    expect(small[0].indices).toHaveLength(20);
-
-    // The huge scope is split into multiple chunks.
-    const huge = chunked.filter((c) => c.name.startsWith('huge'));
-    expect(huge.length).toBeGreaterThan(1);
+    expect(sizes.length).toBeGreaterThan(3);
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(DEDUPE_CHUNK_CAP);
   });
 });
 

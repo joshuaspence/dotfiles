@@ -177,10 +177,10 @@ describe('fileInUnit', () => {
   });
 
   it('correctly filters findings per unit when building dedupe scopes', async () => {
-    // The actual usage: `dedupeScopes` scopes findings to units through `fileInUnit`, so each scope holds only the
-    // indices of findings whose files belong to that unit. Scopes with fewer than 2 findings are dropped by that
-    // function's trailing `scope.indices.length > 1` filter, because dedupe needs at least two findings to compare.
-    const { dedupeScopes, DEDUPE_UNCLAIMED_SLUG } = await internals();
+    // The actual usage: `claimUnits` partitions findings into the dedupe scopes through `fileInUnit`, so each unit's
+    // scope holds only the findings whose files belong to it. A scope holding fewer than two has nothing to compare, and
+    // `scopeDedupe` is where that is noticed — the partition itself reports what it found either way.
+    const { claimUnits } = await internals();
 
     const findings = [
       { file: 'src/a.ts', description: 'first in src' },
@@ -196,17 +196,12 @@ describe('fileInUnit', () => {
       { slug: 'lib', paths: ['lib'] },
     ];
 
-    const scopes = dedupeScopes(findings, units);
+    const { perUnit, unclaimed } = claimUnits(findings, units);
 
     // The `src` unit should contain findings 0 and 1 (both in src/), and the `lib` unit should contain findings 2 and 3.
-    const srcScope = scopes.find((scope) => scope.name === 'src');
-    const libScope = scopes.find((scope) => scope.name === 'lib');
-
-    expect(srcScope?.indices).toEqual([0, 1]);
-    expect(libScope?.indices).toEqual([2, 3]);
+    expect(perUnit).toEqual([findings.slice(0, 2), findings.slice(2, 4)]);
 
     // Findings 4 and 5 (docs/ and repo-wide) are unclaimed and go to a shared bucket since neither matches any unit.
-    const unclaimedScope = scopes.find((scope) => scope.name === DEDUPE_UNCLAIMED_SLUG);
-    expect(unclaimedScope?.indices).toEqual([4, 5]);
+    expect(unclaimed).toEqual(findings.slice(4));
   });
 });

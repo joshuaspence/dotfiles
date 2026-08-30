@@ -640,31 +640,30 @@ describe('dedupe scopes', () => {
   ];
 
   it('gives each unit its own scope', async () => {
-    const { dedupeScopes } = await internals();
+    // Findings, not indices into a shared array. That is what lets a unit's scope be assembled and deduped from that one
+    // unit's reviewers without waiting for the rest of the round — the numbering is per scope now, inside `scopeDedupe`.
+    const { claimUnits } = await internals();
 
-    expect(dedupeScopes(spread, units)).toEqual([
-      { name: 'api', indices: [0, 1] },
-      { name: 'core', indices: [2, 3] },
+    expect(claimUnits(spread, units).perUnit).toEqual([
+      [spread[0], spread[1]],
+      [spread[2], spread[3]],
     ]);
   });
 
-  it('pools the findings no unit claims into one cross-cutting scope', async () => {
+  it('pools the findings no unit claims into one cross-cutting bucket', async () => {
     // The repo-wide architecture findings belong to no unit, and neither does anything naming a file the partitioner
     // excluded or a reviewer misspelled. Those are the likeliest triplicates of all — one per architectural lens — so
     // they need a scope to be compared in rather than being left out of the phase entirely.
-    const { dedupeScopes } = await internals();
-    const unclaimed = [...spread, issue({ file: 'setup.py' }), issue({ file: 'docs/design.md' })];
+    const { claimUnits } = await internals();
+    const findings = [...spread, issue({ file: 'setup.py' }), issue({ file: 'docs/design.md' })];
 
-    expect(dedupeScopes(unclaimed, units).find((scope) => scope.name === 'cross-cutting')).toEqual({
-      name: 'cross-cutting',
-      indices: [4, 5],
-    });
+    expect(claimUnits(findings, units).unclaimed).toEqual([findings[4], findings[5]]);
   });
 
-  it('pools findings with null, undefined, or empty files into the cross-cutting scope', async () => {
+  it('pools findings with null, undefined, or empty files into the cross-cutting bucket', async () => {
     // Findings without a primary file must not silently match every unit, nor be dropped. They are scoped to the
     // cross-cutting bucket so they can still be compared against each other — the same logic fileInUnit uses.
-    const { dedupeScopes } = await internals();
+    const { claimUnits } = await internals();
     const withoutFiles = [
       ...spread,
       issue({ file: null, description: 'repo-wide arch finding' }),
@@ -672,30 +671,47 @@ describe('dedupe scopes', () => {
       issue({ file: '', description: 'finding with empty file' }),
     ];
 
-    expect(dedupeScopes(withoutFiles, units).find((scope) => scope.name === 'cross-cutting')).toEqual({
-      name: 'cross-cutting',
-      indices: [4, 5, 6],
-    });
+    expect(claimUnits(withoutFiles, units).unclaimed).toEqual(withoutFiles.slice(4));
   });
 
-  it('drops a scope holding one finding, which has nothing to compare it against', async () => {
-    // An agent there could only ever answer `groups: []`, at Opus prices.
-    const { dedupeScopes } = await internals();
+  it('awards a finding to the first unit that claims it, so overlapping paths cannot duplicate it', async () => {
+    // A partition it is, then, and not a classification repeated per unit. Under the old shared-index union this mattered
+    // less: `mergeIssueGroups` awarded an index to the first group to claim it, so the worst case was "not merged twice".
+    // Now each scope merges its own list and the survivors are concatenated, so a finding in two scopes would come back
+    // twice — a duplicate the review invented rather than one it failed to remove.
+    const { claimUnits } = await internals();
+    const overlapping = [
+      { name: 'core', slug: 'core', summary: 'the protocol', paths: ['core'] },
+      { name: 'wire', slug: 'wire', summary: 'the wire format', paths: ['core/wire.py'] },
+    ];
 
-    expect(dedupeScopes([spread[0], spread[2], spread[3]], units).map((scope) => scope.name)).toEqual(['core']);
-    expect(dedupeScopes([spread[0]], units)).toEqual([]);
+    expect(claimUnits([spread[2]], overlapping)).toEqual({ perUnit: [[spread[2]], []], unclaimed: [] });
   });
 
-  it('translates a scope answer back into union indices', async () => {
-    // The agent numbers what it was shown from 0, so `[[0, 1]]` from the `core` scope means union findings 2 and 3.
+  it('runs no agent for a scope holding one finding, which has nothing to compare it against', async () => {
+    // An agent there could only ever answer `groups: []`, at Opus prices. The scope used to be dropped before stage 1
+    // fanned out; the guard now sits in `scopeDedupe`, so the cross pass and the leftovers scope get it too.
+    const alone = await runFix({ issues: [spread[0]] });
+
+    expect(alone.called(/^dedupe/)).toEqual([]);
+
+    // One finding per unit: neither unit has a pair, so stage 1 runs nothing at all — but the two findings could still be
+    // duplicates of each other across units, which is exactly what the cross pass is for.
+    const apiece = await runFix({ issues: [spread[0], spread[2]], units });
+
+    expect(apiece.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:cross:high']);
+  });
+
+  it('translates a chunk answer back into indices into the scope it was cut from', async () => {
+    // The agent numbers what it was shown from 0, so `[[0, 1]]` from a chunk covering scope positions 2 and 3 means those.
     const { globalizeGroups } = await internals();
 
     expect(globalizeGroups([[0, 1]], [2, 3])).toEqual([[2, 3]]);
   });
 
-  it('drops an index outside what the scope was shown, which the merge could not catch', async () => {
-    // Every scope-local index is also a valid union index, so `mergeIssueGroups` would take a hallucinated 5 from a
-    // two-finding scope as a real finding and collapse a stranger. The range check has to happen here, while the number
+  it('drops an index outside what the chunk was shown, which the merge could not catch', async () => {
+    // Every chunk-local index is also a valid scope index, so `mergeIssueGroups` would take a hallucinated 5 from a
+    // two-finding chunk as a real finding and collapse a stranger. The range check has to happen here, while the number
     // of findings the agent actually saw is still known. Each of these then degrades to a group too small to merge.
     const { globalizeGroups } = await internals();
 
@@ -925,42 +941,42 @@ describe('stage-1 scope chunking', () => {
   // in one unit used to hand that whole scope to one agent — the unbounded fan-in the chunks exist to remove, and past
   // the measured `medium` limit both rungs stall and that unit's merges are lost outright. One mechanism now bounds both
   // stages.
-  it('leaves a scope that fits the cap exactly as `dedupeScopes` returned it', async () => {
-    // The ordinary review must still run one agent per unit, under the unit's own name.
-    const { chunkScopes } = await internals();
-    const scopes = [{ name: 'core', indices: [0, 1, 2] }, { name: 'cross-cutting', indices: [3, 4] }];
+  it('keeps every chunk of an over-cap unit inside the cap', async () => {
+    // The bound restated where it is now enforced. `crossChunks` above owns the arithmetic and the pair-covering
+    // guarantee; what this asserts is that a *unit* scope goes through it, since a unit's size is the partitioner's free
+    // choice and nothing upstream bounds it.
+    const { DEDUPE_CHUNK_CAP } = await internals();
+    const many = Array.from({ length: DEDUPE_CHUNK_CAP + 10 }, (_, i) => issue({ file: `src/f${i}.ts` }));
+    const run = await runFix({ issues: many, args: { fix: false }, dedupe: () => ({ groups: [] }) });
+    const sizes = run.called(/^dedupe:core/).map((call) => Number(/Findings \((\d+)\)/.exec(call.prompt)[1]));
 
-    expect(chunkScopes(scopes)).toEqual(scopes);
+    expect(sizes.length).toBeGreaterThan(1);
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(DEDUPE_CHUNK_CAP);
   });
 
-  it('splits an over-cap scope into chunks inside the cap, still keyed to union indices', async () => {
-    // The chunk indices are scope-local, so they have to be mapped back through the scope before either the digest or
-    // `globalizeGroups` sees them — otherwise a chunk of the `core` scope would merge whatever sits at those positions
-    // in the union.
-    const { chunkScopes, DEDUPE_CHUNK_CAP } = await internals();
-    const offset = 7;
-    const indices = Array.from({ length: DEDUPE_CHUNK_CAP + 10 }, (_, i) => i + offset);
-    const chunks = chunkScopes([{ name: 'core', indices }]);
+  it('chunks only the units that need it, leaving the rest one agent each', async () => {
+    // Each scope is bounded on its own, so one oversized unit must not cost a small one its single plain-named agent —
+    // and a small unit must not be silently folded in with the chunks of a large one.
+    const { DEDUPE_CHUNK_CAP } = await internals();
+    const run = await runFix({
+      args: { fix: false },
+      dedupe: () => ({ groups: [] }),
+      units: [
+        { name: 'api', slug: 'api', summary: 'the request surface', paths: ['api'] },
+        { name: 'core', slug: 'core', summary: 'the protocol', paths: ['core'] },
+      ],
+      issues: [
+        ...Array.from({ length: 3 }, (_, i) => issue({ file: `api/f${i}.py` })),
+        ...Array.from({ length: DEDUPE_CHUNK_CAP + 10 }, (_, i) => issue({ file: `core/f${i}.py` })),
+      ],
+    });
 
-    expect(chunks.length).toBeGreaterThan(1);
-    expect(Math.max(...chunks.map((chunk) => chunk.indices.length))).toBeLessThanOrEqual(DEDUPE_CHUNK_CAP);
-    expect(chunks.map((chunk) => chunk.name)).toEqual(['core:1+2', 'core:1+3', 'core:2+3']);
-    expect(Math.min(...chunks.flatMap((chunk) => chunk.indices))).toBe(offset);
-    expect(new Set(chunks.flatMap((chunk) => chunk.indices)).size).toBe(indices.length);
-  });
-
-  it('still puts every pair inside a chunked scope in some chunk', async () => {
-    // Same property the cross pass relies on: chunking a unit must compare every pair a single agent would have, or a
-    // duplicate reported twice inside one unit could sit in two chunks that never meet.
-    const { chunkScopes, DEDUPE_CHUNK_CAP } = await internals();
-    const indices = Array.from({ length: DEDUPE_CHUNK_CAP + 50 }, (_, i) => i);
-    const seen = new Set();
-
-    for (const chunk of chunkScopes([{ name: 'core', indices }])) {
-      chunk.indices.forEach((a, i) => chunk.indices.slice(i + 1).forEach((b) => seen.add(`${a}:${b}`)));
-    }
-
-    expect(seen.size).toBe((indices.length * (indices.length - 1)) / 2);
+    expect(run.called(/^dedupe:api/).map((call) => call.label)).toEqual(['dedupe:api:high']);
+    expect(run.called(/^dedupe:core/).map((call) => call.label)).toEqual([
+      'dedupe:core:1+2:high',
+      'dedupe:core:1+3:high',
+      'dedupe:core:2+3:high',
+    ]);
   });
 
   it('fans an over-cap unit out into chunked stage-1 agents', async () => {
