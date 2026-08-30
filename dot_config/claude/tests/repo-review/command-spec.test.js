@@ -165,7 +165,15 @@ describe('command specification examples', () => {
       // The keys the script actually reads off `input`, plus the two the ledger supplies. A row carrying anything else
       // is a silently ignored argument: the script sees `undefined`, applies its default, and reports a run that reads
       // as though the flag had been honoured.
-      const READ = ['paths', 'effort', 'partitions', 'validators', 'round', 'knownFindings'];
+      const READ = [
+        'paths',
+        'effort',
+        'partitions',
+        'reviewersPerUnit',
+        'validators',
+        'round',
+        'knownFindings',
+      ];
 
       for (const { invocation, args } of SPEC_EXAMPLES) {
         expect(Object.keys(args).filter((key) => !READ.includes(key)), invocation).toEqual([]);

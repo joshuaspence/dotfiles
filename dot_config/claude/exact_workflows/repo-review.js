@@ -284,6 +284,31 @@ const knownFindings = (Array.isArray(input?.knownFindings) ? input.knownFindings
   .filter((issue) => issue && typeof issue === 'object')
   .map(withFingerprint);
 
+// How many agents review one unit — the last knob rather than one beside its siblings, deliberately, because its abort
+// below has to be able to hand `knownFindings` back. `--effort`'s abort cannot: it is declared above them and returns
+// `findings: []`, which for a bad flag on round 4 discards three rounds of accumulated review. One knob's guard reading
+// oddly out of order is the cheaper of the two.
+//
+// Only 2 or 6 mean anything (see `reviewerGroups`), so anything else aborts rather than falling back. `positiveIntOr` is
+// the wrong helper here for exactly that reason: its contract is a silent fallback, which would turn
+// `--reviewers-per-unit 4` into a run that reports six-agent coverage while the user believes they asked for something
+// else. A bare `parseInt` leaves `NaN` for the guard to catch, so non-numeric input aborts too.
+const REVIEWERS_PER_UNIT = [2, 6];
+const reviewersPerUnit = input?.reviewersPerUnit === undefined ? 2 : parseInt(input.reviewersPerUnit, 10);
+
+if (!REVIEWERS_PER_UNIT.includes(reviewersPerUnit)) {
+  return {
+    round,
+    findings: knownFindings,
+    newFindings: 0,
+    exclusions: [],
+    gaps: [
+      `\`--reviewers-per-unit\` must be ${REVIEWERS_PER_UNIT.join(' or ')} but received ` +
+        `'${input.reviewersPerUnit}'. Review aborted — re-run with a valid value.`,
+    ],
+  };
+}
+
 
 // --- Effort caps -----------------------------------------------------------------------------------------------------
 // Clamp a requested effort down to a ceiling, never up: asking for `low` gets `low` everywhere.
@@ -337,7 +362,11 @@ const dedupeRungs = (count) => {
 // copy of this set drifts the moment a reviewer is added or renamed, and drifts silently: the schema stops accepting
 // the new category's findings, and the validator quietly puts them on the cheap path.
 
-// --- Per-unit reviewers (Agents 1-6) -----------------------------------------------------------------------------
+// --- Per-unit reviewers ------------------------------------------------------------------------------------------
+// Six entries, but not six agents: `--reviewers-per-unit` decides whether each one is its own agent or whether they are
+// grouped by `model` into two (see `reviewerGroups`). The roster is the same either way — no category is dropped and none
+// is moved to a weaker model.
+//
 // `highRisk` marks the categories the Validate phase checks the hard way — Opus, and three voters under
 // `--validators auto`. It is deliberately not the reviewer's own `model`: `consistency` defects are cheap to find
 // and expensive to get wrong, so a Sonnet reviewer reports them and an Opus validator confirms them.
@@ -410,6 +439,31 @@ const REVIEWERS = [
       'a unit/repo that ships no tests at all, or stylistic test preferences a linter/formatter handles.',
   },
 ];
+
+// The roster collapsed into one agent per model, in the order the roster first names each: `[{ model, members }, …]`.
+// This is the two in `--reviewers-per-unit 2`, and the largest cost cut left in the run — the unit ceiling bounds how
+// many units there are, and until now every one of them cost six reviewers.
+//
+// Grouped by `model`, and specifically **not** by `highRisk`. The two look interchangeable and are not: `highRisk` says
+// which findings a *validator* checks the hard way, which is the opposite question from which model is good at finding
+// them, and the roster says so in as many words. Grouping by it would put `consistency` on Opus and `test-critique` on
+// Sonnet in the same run whose comment explains why `consistency` is a Sonnet reviewer with an Opus validator.
+//
+// Derived from whatever roster it is handed rather than from `REVIEWERS`, so the `claude-md` gate thins a group instead of
+// having to be applied twice — and a group that gate emptied simply does not appear.
+const reviewerGroups = (roster) => {
+  const byModel = new Map();
+
+  for (const reviewer of roster) {
+    if (!byModel.has(reviewer.model)) {
+      byModel.set(reviewer.model, []);
+    }
+
+    byModel.get(reviewer.model).push(reviewer);
+  }
+
+  return [...byModel].map(([model, members]) => ({ model, members }));
+};
 
 
 // --- Architecture lenses (Agent 7) — one instance each, over the whole repo, blind to the others -----------------
@@ -489,6 +543,27 @@ const ISSUES_SCHEMA = {
   },
   required: ['issues'],
 };
+
+// `ISSUES_SCHEMA` with the category enum narrowed to the categories one agent is allowed to report under.
+//
+// A reviewer that is its own agent needs no such thing — the script stamps the roster's key over whatever the agent
+// answered, so the field is not really the agent's to get wrong. A *grouped* reviewer carries several categories and
+// chooses among them, and that choice is constrained here rather than only asked for in the prompt: a schema mismatch is
+// retried at the tool-call layer, whereas a prose instruction that goes unheeded arrives as a real finding filed under
+// another reviewer's category — which then picks the wrong validator model, the wrong known-findings list, and a
+// fingerprint built from a category the finding does not have.
+const issuesSchema = (categories) => ({
+  ...ISSUES_SCHEMA,
+  properties: {
+    issues: {
+      type: 'array',
+      items: {
+        ...ISSUE,
+        properties: { ...ISSUE.properties, category: { ...ISSUE.properties.category, enum: categories } },
+      },
+    },
+  },
+});
 
 // What the dedupe agent returns: which findings are duplicates, as indices — never the findings themselves. See
 // `dedupePrompt` for why echoing them back is not an option.
@@ -731,13 +806,18 @@ const KNOWN_OWN_BUDGET = 220;
 
 const KNOWN_OTHER_BUDGET = 110;
 
+// `ownCategory` is one category for a reviewer that is its own agent and several for a grouped one. Only the noun's
+// number changes with it, so a single-category call renders exactly the text it always did — which matters because
+// `--reviewers-per-unit 6` is the control arm of an A/B and a control whose prompts also moved measures nothing.
 const knownFindingsBlock = (known, ownCategory) => {
-  const own = (known || []).filter((issue) => issue?.category === ownCategory);
-  const other = (known || []).filter((issue) => issue?.category !== ownCategory);
+  const mine = Array.isArray(ownCategory) ? ownCategory : [ownCategory];
+  const own = (known || []).filter((issue) => mine.includes(issue?.category));
+  const other = (known || []).filter((issue) => !mine.includes(issue?.category));
+  const yours = mine.length > 1 ? 'your categories' : 'your category';
 
   return (
     (own.length
-      ? '\n\nAlready reported in your category by earlier passes — do NOT re-report these; find what they missed:\n' +
+      ? `\n\nAlready reported in ${yours} by earlier passes — do NOT re-report these; find what they missed:\n` +
         own.map((issue) => knownLine(issue, KNOWN_OWN_BUDGET)).join('\n')
       : '') +
     (other.length
@@ -1377,27 +1457,81 @@ function partitionPrompt(survey, fileCount) {
   );
 }
 
-function reviewerPrompt(reviewer, unit, survey, claudeMdPaths, roundCtx = {}) {
-  const extra =
-    reviewer.key === 'claude-md'
-      ? '\n\nGoverning `CLAUDE.md` files (paths only — read their contents yourself):\n' +
-        bulletList(claudeMdPaths, '(none found)')
-      : '';
-  const files = bulletList(unit.paths, '');
+// The `CLAUDE.md` paths block, present only for the agent carrying the compliance reviewer — which is that reviewer
+// itself when each has its own agent, and the whole Sonnet group when they are grouped.
+const claudeMdBlock = (carries, claudeMdPaths) =>
+  carries
+    ? '\n\nGoverning `CLAUDE.md` files (paths only — read their contents yourself):\n' +
+      bulletList(claudeMdPaths, '(none found)')
+    : '';
 
+// Everything a reviewer prompt says that is not about which axes the agent covers: the unit, its file list, the severity
+// rubric, the return contract, the review rules, and the round's own steering.
+//
+// Shared by the two builders below so they can differ only in the part that genuinely differs — the head, and the clause
+// naming which category a finding takes. A rule added to one of them would otherwise miss the other, and the two are not
+// symmetric in how visibly that would fail: `--reviewers-per-unit 6` is the control arm of an A/B nothing in the test
+// suite can see, so a control drifting from the experiment is exactly the divergence no assertion here would catch.
+const reviewUnitBlock = (unit) =>
+  // The unit's prose name, as the partition agent wrote it — untrusted for the same reason its paths are, and quoted
+  // on its own line directly above the file list. `agentNote` renders it exactly as the hand-written quotes did for
+  // any ordinary name, and flattens and escapes the one that would otherwise break out of them.
+  `Review this unit: ${agentNote(unit.name)}.\n` +
+  `Files in scope:\n${bulletList(unit.paths, '')}\n\n` +
+  `${SEVERITY_RUBRIC}\n\n`;
+
+const reviewTailBlock = (categoryClause, extra, survey, roundCtx, ownCategories) =>
+  `Return a list of issues. For each: a description, a severity, ${categoryClause}, the primary ` +
+  'file and line/range (or the set of files/modules for repo-wide findings), and the reason it was flagged. ' +
+  `${REVIEW_RULES}\n\n${FALSE_POSITIVES}${extra}` +
+  `${emphasisBlock(roundCtx.round)}${knownFindingsBlock(roundCtx.known, ownCategories)}` +
+  `\n\n${surveyBlock(survey)}`;
+
+function reviewerPrompt(reviewer, unit, survey, claudeMdPaths, roundCtx = {}) {
   return (
     `You are the ${reviewer.title} reviewer. ${reviewer.instruction}\n\n` +
-    // The unit's prose name, as the partition agent wrote it — untrusted for the same reason its paths are, and quoted
-    // on its own line directly above the file list. `agentNote` renders it exactly as the hand-written quotes did for
-    // any ordinary name, and flattens and escapes the one that would otherwise break out of them.
-    `Review this unit: ${agentNote(unit.name)}.\n` +
-    `Files in scope:\n${files}\n\n` +
-    `${SEVERITY_RUBRIC}\n\n` +
-    `Return a list of issues. For each: a description, a severity, the category "${reviewer.key}", the primary ` +
-    'file and line/range (or the set of files/modules for repo-wide findings), and the reason it was flagged. ' +
-    `${REVIEW_RULES}\n\n${FALSE_POSITIVES}${extra}`+
-    `${emphasisBlock(roundCtx.round)}${knownFindingsBlock(roundCtx.known, reviewer.key)}` +
-    `\n\n${surveyBlock(survey)}`
+    reviewUnitBlock(unit) +
+    reviewTailBlock(
+      `the category "${reviewer.key}"`,
+      claudeMdBlock(reviewer.key === 'claude-md', claudeMdPaths),
+      survey,
+      roundCtx,
+      reviewer.key,
+    )
+  );
+}
+
+// One agent covering several of the roster's reviewers — the two-per-unit arm.
+//
+// The head is where this differs from a single reviewer's prompt, and the difference it has to overcome is attention:
+// asked for four things at once, an agent tends to answer the first well and the rest as an afterthought, and an axis
+// answered as an afterthought is indistinguishable in the output from an axis that found nothing. So the axes are
+// numbered, the instructions are the roster's verbatim, and the head says plainly that silence about an axis is a claim
+// about the code rather than an omission.
+//
+// Each axis names the category its findings must carry, because the script cannot stamp one here: with several categories
+// in play the choice is the agent's, constrained by `issuesSchema`'s narrowed enum.
+function groupPrompt(group, unit, survey, claudeMdPaths, roundCtx = {}) {
+  const axes = group.members
+    .map((reviewer, i) => `${i + 1}. **${reviewer.title}** — category \`${reviewer.key}\`. ${reviewer.instruction}`)
+    .join('\n\n');
+
+  return (
+    `You are reviewing one unit on ${group.members.length} distinct axes. Work through every one of them: a finding ` +
+    'under one axis is not a substitute for looking at the next, and an axis you report nothing under is a claim that ' +
+    'the unit is clean on it. Each finding belongs to exactly one axis, and that axis decides its category.\n\n' +
+    `${axes}\n\n` +
+    reviewUnitBlock(unit) +
+    reviewTailBlock(
+      'the category of the axis it belongs to',
+      claudeMdBlock(
+        group.members.some((reviewer) => reviewer.key === 'claude-md'),
+        claudeMdPaths,
+      ),
+      survey,
+      roundCtx,
+      group.members.map((reviewer) => reviewer.key),
+    )
   );
 }
 
@@ -1700,11 +1834,22 @@ let reviewersRun = 0;
 // already held did produce evidence; it is just evidence that the review has converged, which `newFindings` reports.
 let rawFound = 0;
 
+// The category a finding is recorded under. A spec that covers one category stamps it, overwriting whatever the agent
+// answered — the field is not really the agent's there, and this is the line that makes a reviewer's key *be* its
+// category. A spec covering several has to take the agent's answer, so the answer is checked against the group rather
+// than trusted: `issuesSchema` already narrowed the enum, and this is what happens if that constraint is not honoured.
+//
+// Coerced to the group's first category rather than dropped. A finding under the wrong category is mis-filed — it picks
+// the wrong validator model and the wrong feedback list — while a dropped one is a defect the run looked at and then
+// discarded, and only the first of those is recoverable by reading the report.
+const categoryOf = (spec, issue) =>
+  spec.category ?? (spec.categories.includes(issue?.category) ? issue.category : spec.categories[0]);
+
 // Run a set of reviewers concurrently and read their answers. Findings are fingerprinted as they are read, after the
-// category is stamped and never before: `category` is one of the three fields the identity is built from, and the
-// reviewer's own answer for it is overwritten by the roster's key on that very line. `NEW_THIS_ROUND` goes on here too,
-// so that everything downstream can tell this round's findings from the ones that arrived on `args` without comparing
-// content — and so that no later stage has to remember to mark them.
+// category is settled and never before: `category` is one of the three fields the identity is built from, so a
+// fingerprint taken first would name a finding by a category it does not end up carrying. `NEW_THIS_ROUND` goes on here
+// too, so that everything downstream can tell this round's findings from the ones that arrived on `args` without
+// comparing content — and so that no later stage has to remember to mark them.
 const reviewIssues = async (specs) => {
   reviewersRun += specs.length;
 
@@ -1715,14 +1860,16 @@ const reviewIssues = async (specs) => {
         phase: 'Review',
         model: spec.model,
         effort: spec.effort,
-        schema: ISSUES_SCHEMA,
+        schema: spec.schema ?? ISSUES_SCHEMA,
       }),
     ),
   );
 
   return results.flatMap((result, i) => {
+    const spec = specs[i];
+
     if (!result?.issues) {
-      gaps.push(`Reviewer did not complete: ${specs[i].label}`);
+      gaps.push(`Reviewer did not complete: ${spec.label}`);
 
       return [];
     }
@@ -1730,9 +1877,63 @@ const reviewIssues = async (specs) => {
     reviewersReturned += 1;
     rawFound += result.issues.length;
 
+    // Said once per agent rather than once per finding: a grouped reviewer that misread the instruction misreads it for
+    // everything it reports, and one gap per finding would bury every other gap in the round.
+    const strays = spec.categories
+      ? result.issues.filter((issue) => !spec.categories.includes(issue?.category)).length
+      : 0;
+
+    if (strays) {
+      gaps.push(
+        `${spec.label} reported ${strays} of ${result.issues.length} finding(s) under a category outside the ` +
+          `${spec.categories.join(', ')} axes it was given; those are recorded as '${spec.categories[0]}', so their ` +
+          'category is unreliable.',
+      );
+    }
+
     return result.issues.map((issue) =>
-      withFingerprint({ ...issue, category: specs[i].category, [NEW_THIS_ROUND]: true }),
+      withFingerprint({ ...issue, category: categoryOf(spec, issue), [NEW_THIS_ROUND]: true }),
     );
+  });
+};
+
+// The agents that review one unit, under whichever arm `--reviewers-per-unit` selected.
+//
+// The two arms differ in more than how many agents they spawn, and the differences are all in the same direction: the
+// six-arm's specs name one category each and carry the roster's own prompt, so the script stamps the category and the
+// full `ISSUES_SCHEMA` is enough. The two-arm's name a set, so the category comes back from the agent under a narrowed
+// enum. Everything else — the label grammar, the effort cap, the unit-scoped feedback list — is shared, because it is
+// about the unit rather than about who is looking at it.
+//
+// The third label segment is a category key in one arm and a model name in the other. Those two vocabularies are
+// disjoint, so a label still says unambiguously what produced it, and a `/workflows` tree now also says which arm the
+// run was: `review:core:bug` is one of six, `review:core:opus` is one of two.
+const unitSpecs = (unit) => {
+  // Scoped by unit, not by category: a reviewer that cannot see the other reviewers' findings for its own unit
+  // re-reports them, and `mergeIssueGroups` then pays for that at full review cost.
+  const roundCtx = { round, known: deduped.filter((f) => fileInUnit(f.file, unit)) };
+
+  if (reviewersPerUnit === 6) {
+    return activeReviewers.map((reviewer) => ({
+      label: `review:${unit.slug}:${reviewer.key}`,
+      model: reviewer.model,
+      effort: leafEffort,
+      category: reviewer.key,
+      prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths, roundCtx),
+    }));
+  }
+
+  return reviewerGroups(activeReviewers).map((group) => {
+    const categories = group.members.map((reviewer) => reviewer.key);
+
+    return {
+      label: `review:${unit.slug}:${group.model}`,
+      model: group.model,
+      effort: leafEffort,
+      categories,
+      schema: issuesSchema(categories),
+      prompt: groupPrompt(group, unit, survey, claudeMdPaths, roundCtx),
+    };
   });
 };
 
@@ -1758,22 +1959,7 @@ const [unitScopes, lensIssues] = await parallel([
     pipeline(
       units,
       // Stage 1 — this unit's reviewers, at capped leaf effort.
-      (unit) =>
-        reviewIssues(
-          activeReviewers.map((reviewer) => ({
-            label: `review:${unit.slug}:${reviewer.key}`,
-            model: reviewer.model,
-            effort: leafEffort,
-            category: reviewer.key,
-            prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths, {
-              round,
-
-              // Scoped by unit, not by category: a reviewer that cannot see the other five reviewers' findings for its
-              // own unit re-reports them, and `mergeIssueGroups` then pays for that at full review cost.
-              known: deduped.filter((f) => fileInUnit(f.file, unit)),
-            }),
-          })),
-        ),
+      (unit) => reviewIssues(unitSpecs(unit)),
 
       // Stage 2 — this unit's dedupe, as soon as its own reviewers are in and not a moment later.
       async (raw, unit, u) => {

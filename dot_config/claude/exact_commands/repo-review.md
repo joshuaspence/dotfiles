@@ -5,6 +5,7 @@ argument-hint: >-
   [--effort <low|medium|high|xhigh|max>]
   [--output <file>]
   [--partitions <n|auto>]
+  [--reviewers-per-unit <2|6>]
   [--rounds <n>]
   [--validators <n|auto>]
   [path ...]
@@ -64,6 +65,14 @@ so collect each one as you scan the tokens instead of expecting a single run at 
   it to `auto`, which lets the partitioner choose within a range the script scales to how many files are actually in
   scope — so a narrow set of paths does not fan out as though it were the whole repository. Pass an explicit `n` to
   override that sizing in either direction.
+- `--reviewers-per-unit <2|6>` sets how many agents review each unit. Must be exactly `2` or `6` — reject any other
+  value, including any other integer, and stop with an error rather than guessing; the script rejects one too rather than
+  falling back, because a run that silently picked an arm would report the coverage of six agents having spent two. If
+  omitted, the script uses `2`. Both values review the same six categories: `2` groups the reviewers by the model they
+  run on, so one Opus agent covers `bug` and `security` and one Sonnet agent covers the other four, while `6` gives each
+  its own agent. This is the run's largest single cost — `units × reviewers-per-unit` leaf agents per round — and `6`
+  is the older, more expensive arm, kept so that the two can be compared on a real repository. Pass `6` when the user
+  asks for the most thorough review available and is willing to pay three times the reviewer cost for it.
 - `--validators <n|auto>` sets how many independent validators run per issue. Must be a positive integer or `auto`;
   reject any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` — do not
   pass `auto` yourself; `auto` applies only when the user explicitly asks for it. A fixed `n > 1` keeps an issue only on
@@ -239,8 +248,8 @@ Call the `Workflow` tool with:
 
   Build it from **only the flags the user actually supplied**: add a key for each flag the user gave, and omit the rest.
   The script fills in the documented defaults for anything omitted (whole repository, `--effort high`,
-  `--partitions auto`, `--validators 1`, round 1 holding no findings), so do not synthesise default values here, and
-  never include `--output` or `--rounds`.
+  `--partitions auto`, `--reviewers-per-unit 2`, `--validators 1`, round 1 holding no findings), so do not synthesise
+  default values here, and never include `--output` or `--rounds`.
 
   Two keys do not come from a flag at all. `round` and `knownFindings` come from
   [the ledger](#the-ledger): on a cold start omit both — rather than passing `round: 1` and an empty list, so that the
@@ -260,6 +269,7 @@ Call the `Workflow` tool with:
   | `/repo-review src --rounds 3`                        | `{ "paths": ["src"] }`                                   |
   | `/repo-review 2024 --rounds 3`                       | `{ "paths": ["2024"] }`                                  |
   | `/repo-review src --partitions 6 lib`                | `{ "paths": ["src", "lib"], "partitions": 6 }`           |
+  | `/repo-review --reviewers-per-unit 6`                | `{ "reviewersPerUnit": 6 }`                              |
   | `/repo-review --validators auto`                     | `{ "validators": "auto" }`                               |
   | `/repo-review src/a.js src/b.js --validators 3`      | `{ "paths": ["src/a.js", "src/b.js"], "validators": 3 }` |
   | `/repo-review src/a.js --output report.md`           | `{ "paths": ["src/a.js"] }`                              |
@@ -441,8 +451,9 @@ order-of-magnitude expectation, not a second number to add — it is a rule of t
 
 A worked example, from a 32-agent single-file run that also fixed what it found, back when one command did both — note
 that Opus is 79% of the tokens and 88% of the cost, so the per-tier split is the useful part of this summary, and the
-reviewer count (`--partitions` × 6, see [Notes](#notes)) is where it is actually spent. A review-only run of the same
-scope is smaller than this by whatever the fixers cost:
+reviewer count (`--partitions` × `--reviewers-per-unit`, see [Notes](#notes)) is where it is actually spent. That run
+predates `--reviewers-per-unit`, so its reviewers were the six-per-unit arm; the default arm spends a third of them. A
+review-only run of the same scope is smaller than this by whatever the fixers cost:
 
 | Tier          | Agents | Tokens        | Output rate (USD/1M) | Cost (USD) |
 |---------------|--------|---------------|----------------------|------------|
@@ -478,12 +489,11 @@ source file and neither is committed — if the user does not want the ledger tr
 - The script enforces what this command depends on, so you do not manage it here: it sets each agent's `model` tier
   (`haiku`/`sonnet`/`opus`) and its `effort`, and it caps the high-fan-out reviewers and validators at `xhigh`, clamping
   `max` down. That cap is a deliberate reliability tradeoff — those agents run at high multiplicity (roughly
-  `--partitions` × 6 reviewers, plus validators per issue), and launching that many concurrent `max` Opus inferences has
-  been observed to intermittently stall (an agent gets its tool result and its next turn never arrives). A hung reviewer
-  no longer wedges the whole review — the units run as a `pipeline()`, so only its own unit waits on it — but it still
-  costs that unit's findings and its dedupe; the cap keeps the many leaf agents off `max`, the only level observed to
-  stall. A *silent* hang has no timeout to recover from — hence watching `/workflows`
-  above.
+  `--partitions` × `--reviewers-per-unit`, plus validators per issue), and launching that many concurrent `max` Opus
+  inferences has been observed to intermittently stall (an agent gets its tool result and its next turn never arrives).
+  A hung reviewer no longer wedges the whole review — the units run as a `pipeline()`, so only its own unit waits —
+  but it still costs that unit's findings and its dedupe; the cap keeps the many leaf agents off `max`, the only level
+  observed to stall. A *silent* hang has no timeout to recover from — hence watching `/workflows` above.
 - The dedupe agents are capped harder still, and never run at `max`, for a related but distinct reason. The harness
   kills an agent that reports no progress for 180s, and dedupe calls no tools, so it reports nothing while it thinks. At
   `max` that killed all six attempts of a 155-finding round — and a stalled agent *throws*, so it failed a run that was
@@ -506,9 +516,9 @@ source file and neither is committed — if the user does not want the ledger tr
 - Dedupe runs in two stages, because think time tracks how many findings one agent was handed. Stage one is one agent
   per unit (`dedupe:<unit>`), and it runs *inside* the review pipeline: a unit deduplicates the moment its own reviewers
   are in, so a `dedupe:` row appearing while other units are still reviewing is the expected shape and not a phase
-  starting early. It catches the common case — six reviewers reading one unit from different angles report the same
-  defect six times. A unit that found nothing new this round spends no agent there at all, since what it holds was
-  deduplicated by the round that produced it. Stage two then compares what survived across units, and with it
+  starting early. It catches the common case — the same defect reported once per angle by the reviewers reading one unit,
+  whether those are two agents or six. A unit that found nothing new this round spends no agent there at all, since what
+  it holds was deduplicated by the round that produced it. Stage two then compares what survived across units, and with it
   `dedupe:cross-cutting`, the one scope that cannot be done per unit: the repo-wide lens findings, plus anything a
   reviewer cited outside the unit it was given. Both stages are `parallel()` fan-outs, so a stalled agent costs only its
   own merges, and each partial failure is its own `gaps` entry — a lost unit repeats a defect *within* one unit, a lost
@@ -534,12 +544,12 @@ source file and neither is committed — if the user does not want the ledger tr
 - Both phases label a unit by a short slug rather than the prose name the partition agent chose, so a unit named "Wire
   Protocol Layer" appears as `review:wire-protocol:bug` and `dedupe:wire-protocol`. `/workflows` clips a label at around
   40 columns from the right, and with a title-cased name it was clipping the *category* — the one segment saying which
-  of six reviewers a row is. The script caps the slug at 16 characters so `review:` plus the slug plus the longest
+  reviewer or model a row is. The script caps the slug at 16 characters so `review:` plus the slug plus the longest
   category still fits, and it numbers slugs that collide
   (`wire-protocol-2`) so two units are never one indistinguishable row. Reviewers are still told the prose name, so use
   that when you describe a unit in the output — the slug is for reading the progress tree, not for the report.
-- The Review phase costs roughly `units × 6 reviewers`, plus 3 architecture lenses, per round — so the unit count is
-  the dominant cost lever. The script sizes it from the survey's file counts (see `--partitions`) and, on a scope of two
+- The Review phase costs roughly `units × --reviewers-per-unit`, plus 3 architecture lenses, per round — so those two
+  numbers are the dominant cost lever. The script sizes it from the survey's file counts (see `--partitions`) and, on a scope of two
   files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like
   any other coverage gap: architecture was **not reviewed**, not "clean".
 - The script resolves failures it can see: each fan-out runs under `parallel()`, which resolves a failed agent to

@@ -15,7 +15,12 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { internals, issue, runReview } from './scenario.js';
+import { internals, issue, REVIEW_GROUP_KEYS, runReview } from './scenario.js';
+
+// These counts are `units × agents-per-unit`, and only the first factor is what this file is about. Read off the arm the
+// run is actually in rather than written as a literal, so the ceiling assertions keep asserting the ceiling when
+// `--reviewers-per-unit` changes what the second factor is.
+const AGENTS_PER_UNIT = REVIEW_GROUP_KEYS.length;
 
 // Twelve units, one file each, so a ceiling of 8 has four units' worth of surplus to fold and every unit is nameable in
 // an assertion. Paths rather than findings: the fold is about the file lists the reviewers are given, and a unit needs no
@@ -168,8 +173,7 @@ describe('a partition over the ceiling, end to end', () => {
       survey: wholeRepo,
     });
 
-    // Six reviewers per unit: `bug`, `security`, `claude-md`, `code-quality`, `consistency`, `test-critique`.
-    expect(run.called(/^review:(?!arch)/)).toHaveLength(8 * 6);
+    expect(run.called(/^review:(?!arch)/)).toHaveLength(8 * AGENTS_PER_UNIT);
   });
 
   it('names the bucket to its own reviewers, rather than borrowing the first surplus unit’s name', async () => {
@@ -185,7 +189,7 @@ describe('a partition over the ceiling, end to end', () => {
     // handed five.
     const bucket = run.called(/^review:the-remainder:/);
 
-    expect(bucket).toHaveLength(6);
+    expect(bucket).toHaveLength(AGENTS_PER_UNIT);
     expect(bucket[0].prompt).toContain(COALESCED_UNIT_NAME);
 
     // And the units that were folded into it are not reviewed under their own names.
@@ -236,7 +240,7 @@ describe('a partition over the ceiling, end to end', () => {
     });
 
     expect(run.result.gaps.filter((g) => g.includes('over the ceiling'))).toEqual([]);
-    expect(run.called(/^review:(?!arch)/)).toHaveLength(4 * 6);
+    expect(run.called(/^review:(?!arch)/)).toHaveLength(4 * AGENTS_PER_UNIT);
   });
 
   it('counts the ceiling against what the scope narrowing left, not what the agent sent', async () => {
@@ -250,7 +254,7 @@ describe('a partition over the ceiling, end to end', () => {
       args: { paths: ['src/a.ts', 'src/b.ts', 'src/c.ts'] },
     });
 
-    expect(run.called(/^review:(?!arch)/)).toHaveLength(3 * 6);
+    expect(run.called(/^review:(?!arch)/)).toHaveLength(3 * AGENTS_PER_UNIT);
     expect(run.result.gaps.filter((g) => g.includes('over the ceiling'))).toEqual([]);
   });
 });

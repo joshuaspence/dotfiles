@@ -857,7 +857,7 @@ describe('round labels', () => {
     const run = await runReview({ issues: pair, args: { round: 4, knownFindings: pair } });
 
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high']);
-    expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual(['review:core:bug']);
+    expect(run.called(/^review:core:opus/).map((call) => call.label)).toEqual(['review:core:opus']);
   });
 });
 

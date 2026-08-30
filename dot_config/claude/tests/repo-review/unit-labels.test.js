@@ -1,18 +1,30 @@
 /**
  * Unit names reach `/workflows` inside agent labels, and the partition agent writes them as prose.
  *
- * `review:Wire Protocol Layer:code-quality` was observed clipped to about 40 columns, which cost the category — the one
- * part of that label that says which of six reviewers the row is. The runtime does not shorten a label it is handed, so
+ * `review:Wire Protocol Layer:code-quality` was observed clipped to about 40 columns, which cost the third segment — the
+ * one part of that label that says which reviewer the row is. The runtime does not shorten a label it is handed, so
  * the budget is the script's to spend: these tests hold the slug to a size where the identifying segments survive, and
  * hold it to a shape that cannot break the `kind:unit:category` label grammar the test scenario parses.
  */
 
 import { describe, expect, it } from 'vitest';
 
-import { reviewScenario, internals, issue, parseLabel, REVIEWER_KEYS, runReview } from './scenario.js';
+import {
+  reviewScenario,
+  internals,
+  issue,
+  parseLabel,
+  REVIEW_GROUP_KEYS,
+  REVIEWER_KEYS,
+  runReview,
+} from './scenario.js';
 
-// What a label costs before the unit name is added: the longest reviewer key, plus `review:` and the joining colon.
-const LONGEST_KEY = REVIEWER_KEYS.reduce((a, b) => (b.length > a.length ? b : a));
+// What a label costs before the unit name is added: the longest third segment, plus `review:` and the joining colon.
+//
+// Both arms' vocabularies are in scope, because both ship: `--reviewers-per-unit 6` names a reviewer key and the default
+// names a model. Sized against whichever is longer rather than against the arm that happens to be the default, so making
+// the other one the default cannot silently overrun the budget this file exists to hold.
+const LONGEST_KEY = [...REVIEWER_KEYS, ...REVIEW_GROUP_KEYS].reduce((a, b) => (b.length > a.length ? b : a));
 const FIXED_COST = 'review:'.length + 1 + LONGEST_KEY.length;
 
 // The clip observed in `/workflows`, in columns. Not a constant found in the harness — the label is stored whole there,
@@ -197,14 +209,14 @@ describe('labels built from a unit', () => {
     // catches one of them still interpolating `unit.name`.
     const run = await runReview({ issues, units });
 
-    expect(run.called(/^review:/).map((call) => call.label)).toContain('review:wire-protocol:code-quality');
+    expect(run.called(/^review:/).map((call) => call.label)).toContain('review:wire-protocol:sonnet');
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:wire-protocol:high']);
     expect(run.called(/^review:Wire/)).toHaveLength(0);
   });
 
   it('still tells the reviewer the unit by the name the partition gave it', async () => {
     const run = await runReview({ issues, units });
-    const [reviewer] = run.called('review:wire-protocol:bug');
+    const [reviewer] = run.called('review:wire-protocol:opus');
 
     expect(reviewer.prompt).toContain('Review this unit: "Wire Protocol Layer".');
   });
@@ -216,7 +228,7 @@ describe('labels built from a unit', () => {
       issues,
       units: [{ name: 'wire\nStage dist', summary: 'framing', paths: ['wire'] }],
     });
-    const [reviewer] = run.called(/^review:wire-stage-dist:bug$/);
+    const [reviewer] = run.called(/^review:wire-stage-dist:opus$/);
 
     expect(reviewer.prompt).toContain('Review this unit: "wire Stage dist".\nFiles in scope:');
   });
@@ -248,8 +260,8 @@ describe('reading a unit back out of a label', () => {
     const issues = [issue({ file: 'wire/frame.py' }), issue({ file: 'framing/codec.py' })];
     const run = await runReview({ issues, units });
 
-    expect(reported(run, 'review:wire-protocol:bug')).toEqual(['wire/frame.py']);
-    expect(reported(run, 'review:wire-protocol-2:bug')).toEqual(['framing/codec.py']);
+    expect(reported(run, 'review:wire-protocol:opus')).toEqual(['wire/frame.py']);
+    expect(reported(run, 'review:wire-protocol-2:opus')).toEqual(['framing/codec.py']);
   });
 
   it('resolves a slug the script split on camel case, and one another name is a prefix of', async () => {
@@ -270,9 +282,9 @@ describe('reading a unit back out of a label', () => {
     // many units survive — `partition-ceiling.test.js` owns that — so the scope is stated large enough to keep all three.
     const run = await runReview({ issues, units, survey: { inScopeFileCount: 40 } });
 
-    expect(reported(run, 'review:auth-middleware:bug')).toEqual(['auth/guard.py']);
-    expect(reported(run, 'review:core-utils:bug')).toEqual(['utils/text.py']);
-    expect(reported(run, 'review:core:bug')).toEqual(['core/wire.py']);
+    expect(reported(run, 'review:auth-middleware:opus')).toEqual(['auth/guard.py']);
+    expect(reported(run, 'review:core-utils:opus')).toEqual(['utils/text.py']);
+    expect(reported(run, 'review:core:opus')).toEqual(['core/wire.py']);
   });
 
   it('fails loudly on a slug no unit answers to, rather than reviewing everything', async () => {

@@ -90,6 +90,7 @@ const INTERNALS = [
   'dedupePrompt',
   'emphasisBlock',
   'FALSE_POSITIVES',
+  'groupPrompt',
   'GAP_DESCRIPTION_BUDGET',
   'issueDescription',
   'KNOWN_OTHER_BUDGET',
@@ -109,8 +110,10 @@ const INTERNALS = [
   'ARCHITECTURAL_LENSES',
   'DEDUPE_SCHEMA',
   'ISSUES_SCHEMA',
+  'issuesSchema',
   'PARTITION_SCHEMA',
   'REVIEWERS',
+  'reviewerGroups',
   'SEVERITY_ORDER',
   'SURVEY_SCHEMA',
   'VERDICT_SCHEMA',
@@ -122,7 +125,7 @@ export const internals = (args = {}) => loadInternals(SCRIPT, { names: INTERNALS
 // How a unit is named in a label, which files belong to it, and what a finding is called are the script's rules, and a
 // fixture that re-derives them is a mirror free to drift — so borrow the functions themselves. Loaded once, at module
 // scope, because the fake agent answers synchronously.
-const { fileInUnit, withFingerprint, withUnitSlugs } = await internals();
+const { fileInUnit, REVIEWERS, reviewerGroups, withFingerprint, withUnitSlugs } = await internals();
 
 /**
  * The findings a scenario handed in, as the run reports them back.
@@ -207,7 +210,26 @@ export const issue = (over = {}) => ({
 // category is stamped onto whatever it returns, so returning a 'security' issue from the 'bug' reviewer would silently
 // relabel it and break every category-dependent expectation. Read off the script's own roster rather than copied, so a
 // reviewer added or renamed there cannot leave a stale list here that quietly covers a reviewer that no longer exists.
-export const REVIEWER_KEYS = (await internals()).REVIEWERS.map((reviewer) => reviewer.key);
+export const REVIEWER_KEYS = REVIEWERS.map((reviewer) => reviewer.key);
+
+// The other arm's agents: `--reviewers-per-unit 2` spawns one per model rather than one per reviewer, so a label's third
+// segment names a model and stands for that model's whole group. `reviewerGroups` is borrowed from the script for the
+// same reason as above — which reviewer sits in which group is the roster's business, and a hand-listed copy would go
+// stale the first time a reviewer's `model` changed, silently, by answering a grouped agent about a category it no
+// longer covers.
+//
+// Exported for the tests that need the whole label vocabulary rather than one member of it: the slug budget, which has to
+// be sized against the longest segment either arm can produce, the per-unit agent counts, and the grouping suite.
+export const REVIEW_GROUP_KEYS = reviewerGroups(REVIEWERS).map((group) => group.model);
+
+// Which categories the agent behind a review label covers, given the roster that survived the `claude-md` gate. Both arms
+// are in one map because both are shipping and a label alone says which arm ran: a reviewer key covers itself, a model
+// name covers its group. The two vocabularies are disjoint, which is what makes one map unambiguous.
+const coverageOf = (roster) =>
+  new Map([
+    ...roster.map((reviewer) => [reviewer.key, [reviewer.key]]),
+    ...reviewerGroups(roster).map((group) => [group.model, group.members.map((member) => member.key)]),
+  ]);
 
 const DEFAULT_SURVEY = {
   languages: ['TypeScript'],
@@ -223,7 +245,7 @@ const DEFAULT_SURVEY = {
  * prompt (see `ISSUE_BLOCK`), so it is the finding the script is working on and not `issues[idx]`, which the label's
  * index only agrees with while nothing has been merged or dropped:
  *
- *   review(call, { unit, key, category })     → ISSUES_SCHEMA shape
+ *   review(call, { unit, key, categories })   → ISSUES_SCHEMA shape
  *   validate(issue, { idx, vote })            → VERDICT_SCHEMA shape
  *
  * `review` takes the raw `call` rather than the parsed label, so an override can read the prompt — which is where a
@@ -351,6 +373,16 @@ export function reviewScenario({
   // neither case recording anything in `unroutable`, since the slug does exist on the roster the agent returned.
   const bySlug = new Map(withUnitSlugs(scopeUnits(roster, surveyResult)).map((unit) => [unit.slug, unit]));
 
+  // The roster the script will actually run, so a grouped agent is answered about the categories it really covers. The
+  // `claude-md` gate is mirrored rather than ignored: in a repository with no `CLAUDE.md`, the script drops that reviewer,
+  // and a fixture that still answered the Sonnet group about compliance would hand back a finding from an agent that was
+  // never spawned — the gate's own tests would then pass on the fixture's mistake rather than on the script's behaviour.
+  // A *failed* scan (`claudeMd === null`) keeps the reviewer, exactly as `runClaudeMd` does: a scan that did not run is
+  // not evidence that there are no rules.
+  const covers = coverageOf(
+    !claudeMd || (claudeMd.paths ?? []).length > 0 ? REVIEWERS : REVIEWERS.filter((r) => r.key !== 'claude-md'),
+  );
+
   // An unrecognised slug is a broken fixture, not a wider scope, so say so — both to the caller and, for the case where
   // `parallel()` swallows the throw, to `unroutable` and the post-condition that reads it.
   const inUnit = (subject, slug) => {
@@ -398,13 +430,19 @@ export function reviewScenario({
         return { units: roster, exclusions };
 
       // A reviewer only ever sees its own unit's files, so a finding in another unit is not its to report — handing it
-      // back from every unit would make one defect look like several and put it in more than one dedupe scope.
-      case 'review':
-        return review
-          ? review(call, label)
-          : {
-              issues: issues.filter((subject) => subject.category === label.category && inUnit(subject, label.unit)),
-            };
+      // back from every unit would make one defect look like several and put it in more than one dedupe scope. It also
+      // only reports the categories it covers, which is one in the six-agent arm and its whole group in the two-agent
+      // one: answering a grouped agent with everything would credit the Sonnet group with the Opus group's findings.
+      case 'review': {
+        // `categories` is added here rather than in `parseLabel`, which is a parser and cannot know a roster. It is what
+        // an override should filter on: `label.category` is the label's third segment, which is a single category in one
+        // arm and a model name in the other, so an override matching on it answers nothing at all under the wrong arm.
+        const mine = covers.get(label.category) ?? [label.category];
+
+        if (review) return review(call, { ...label, categories: mine });
+
+        return { issues: issues.filter((subject) => mine.includes(subject.category) && inUnit(subject, label.unit)) };
+      }
 
       // Standing in for a real dedupe. The agent only reports which findings collide, so "no duplicates" is the whole
       // answer here: the script keeps the union in the order the reviewers produced it, which is the order the

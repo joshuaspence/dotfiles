@@ -214,8 +214,12 @@ describe('a cascade through every phase that can record one', () => {
   it('accumulates a reviewer, a dedupe and a validation gap in one run, each naming what it lost', async () => {
     // `runReview` drives `reviewScenario`'s agent as-is and so cannot drop a reviewer, so compose over it the way
     // `review-gate.test.js` does — the review phase is the one failure with a downstream consequence beyond its own gap:
-    // the reviewer that never returns is the one holding `src/a.ts`, so `deduped` loses its first member and every later
-    // `#idx` label renumbers around the gap.
+    // the agent that never returns is the one holding `src/b.ts`, so `deduped` loses a member and every later `#idx`
+    // label renumbers around the gap.
+    //
+    // The dropped agent is the Sonnet group, which under the default arm carries `code-quality` and so exactly one of
+    // these three findings. Dropping the Opus group instead would lose two of them — `bug` and `security` are one agent
+    // now — and with them the validation failure this cascade needs a survivor to produce.
     const scenario = reviewScenario({
       issues: [
         issue({ file: 'src/a.ts', description: 'issue one', category: 'bug' }),
@@ -227,22 +231,22 @@ describe('a cascade through every phase that can record one', () => {
     });
     const run = await runWorkflow({
       scriptPath: SCRIPT,
-      args: { reviewers: 1, validators: 1 },
-      agent: (call) => (call.label === 'review:core:bug' ? null : scenario.agent(call)),
+      args: { validators: 1 },
+      agent: (call) => (call.label === 'review:core:sonnet' ? null : scenario.agent(call)),
     });
 
     // Exactly the three phase gaps named below and nothing else. A count and not a `gaps.length > 1` threshold, because
     // a threshold would have held on any one of them alone. Three files are in scope here, so unlike the two-file
     // scenarios above this one clears the architecture-lens floor and carries no lens gap.
     expectGapCount(run, 3);
-    expectGaps(run, GAP.reviewer('review:core:bug'));
+    expectGaps(run, GAP.reviewer('review:core:sonnet'));
     expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
     expectGaps(run, GAP.validation('src/c.ts:10'));
 
-    // The failed reviewer's `src/a.ts` never entered the union, so the list the `#idx` labels number is `src/b.ts` then
-    // `src/c.ts` — the validator that confirmed `#0` was asked about `src/b.ts`, not the `src/a.ts` it would have been
+    // The failed agent's `src/b.ts` never entered the union, so the list the `#idx` labels number is `src/a.ts` then
+    // `src/c.ts` — the validator that failed on `#1` was asked about `src/c.ts`, not the `src/b.ts` it would have been
     // asked about had every reviewer returned. That is also why only two findings were validated at all.
-    expect(run.result.findings.map((subject) => subject.file)).toEqual(['src/b.ts']);
+    expect(run.result.findings.map((subject) => subject.file)).toEqual(['src/a.ts']);
     expect(run.called(/^validate:/)).toHaveLength(2);
   });
 });

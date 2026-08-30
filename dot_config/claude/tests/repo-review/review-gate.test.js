@@ -14,7 +14,20 @@
 import { describe, expect, it } from 'vitest';
 
 import { runWorkflow } from '../harness.js';
-import { issue, reviewScenario, runReview, SCRIPT, withFingerprints } from './scenario.js';
+import { issue, REVIEW_GROUP_KEYS, reviewScenario, runReview, SCRIPT, withFingerprints } from './scenario.js';
+
+// How many review agents a one-unit round spends, read off the arm the run is in rather than written as a literal — the
+// gap below counts agents, and `--reviewers-per-unit` is what decides how many the same roster becomes.
+const AGENTS = REVIEW_GROUP_KEYS.length;
+
+// Whether a reviewer was given to any agent this round. In the default arm the roster is grouped onto two agents, so a
+// dropped reviewer is not a label that disappeared — the agent still runs, one axis lighter — and the only place the
+// difference shows is the prompt. Keyed on the roster's `title`, which both arms' prompts render verbatim.
+const axesReviewed = (run) =>
+  run
+    .called(/^review:core:/)
+    .map((call) => call.prompt)
+    .join('\n');
 
 // A review in which the reviewers `dropReview` names never return; every other phase keeps the defaults. Composed from
 // `reviewScenario` and `runWorkflow` directly, rather than going through `runReview`, because the drop is keyed off the
@@ -37,7 +50,7 @@ describe('a review round in which every reviewer fails', () => {
     const run = await reviewRun({ dropReview: () => true });
 
     expect(run.result.findings).toEqual([]);
-    expect(run.result.gaps.join(' ')).toContain('All 6 reviewer(s) in round 1 failed to return');
+    expect(run.result.gaps.join(' ')).toContain(`All ${AGENTS} reviewer(s) in round 1 failed to return`);
     expect(run.logged('produced no findings')).toHaveLength(0);
   });
 
@@ -51,7 +64,7 @@ describe('a review round in which every reviewer fails', () => {
 
     expect(run.result.findings).toEqual(withFingerprints(held));
     expect(run.result.newFindings).toBe(0);
-    expect(run.result.gaps.join(' ')).toContain('All 6 reviewer(s) in round 2 failed to return');
+    expect(run.result.gaps.join(' ')).toContain(`All ${AGENTS} reviewer(s) in round 2 failed to return`);
     expect(run.logged('Round 2 produced no findings')).toHaveLength(0);
   });
 
@@ -77,7 +90,7 @@ describe('CLAUDE.md scan', () => {
 
     // A failed scan leaves the list *unknown*, not known-empty, so the reviewer still runs and reads the files itself —
     // the opposite of the case below, and the reason the two cannot share one branch.
-    expect(run.called(/^review:core:claude-md/)).not.toHaveLength(0);
+    expect(axesReviewed(run)).toContain('CLAUDE.md compliance');
     expect(run.result.gaps.join(' ')).not.toContain('compliance not reviewed');
   });
 
@@ -88,12 +101,14 @@ describe('CLAUDE.md scan', () => {
     // in the wrapper's report.
     const run = await runReview({ claudeMd: { paths: [] } });
 
-    expect(run.called(/^review:core:claude-md/)).toHaveLength(0);
+    expect(axesReviewed(run)).not.toContain('CLAUDE.md compliance');
     expect(run.result.gaps.join(' ')).toContain('`CLAUDE.md` compliance not reviewed');
     expect(run.result.gaps.join(' ')).toContain('contains no `CLAUDE.md` file to audit against');
 
-    // Only that reviewer is dropped: the other five still run, and the round is not read as a failed one.
-    expect(run.called(/^review:core:/)).toHaveLength(5);
+    // Only that reviewer is dropped: the rest of the roster still runs, and the round is not read as a failed one. In the
+    // default arm that costs no agent at all — the Sonnet group runs one axis lighter — which is why the count here is
+    // the arm's full agent count rather than one less than it.
+    expect(run.called(/^review:core:/)).toHaveLength(AGENTS);
     expect(run.result.gaps.join(' ')).not.toContain('failed to return');
     expect(run.result.findings).toHaveLength(1);
   });
@@ -198,21 +213,17 @@ describe('validation', () => {
     // Total: 3 + 1 + 3 + 1 = 8 validators
     expect(validators).toHaveLength(8);
 
-    // Verify that bug finding (index 0) had 3 validators
-    const bugValidators = validators.filter(call => call.label.includes('bug#0'));
-    expect(bugValidators).toHaveLength(3);
+    // Matched on the category alone rather than on `<category>#<idx>`. The index is a position in the round's deduplicated
+    // union, and that order follows the order the reviewers returned in — which the default arm changes, since one agent
+    // returns `bug` and `security` together before another returns `code-quality` and `test-critique`. What this test is
+    // about is how many validators a category buys, and pinning the position as well made it also assert an arrangement
+    // that `--reviewers-per-unit` is free to change.
+    const forCategory = (category) => validators.filter((call) => call.label.includes(`${category}#`));
 
-    // Verify that code-quality finding (index 1) had 1 validator
-    const cqValidators = validators.filter(call => call.label.includes('code-quality#1'));
-    expect(cqValidators).toHaveLength(1);
-
-    // Verify that security finding (index 2) had 3 validators
-    const securityValidators = validators.filter(call => call.label.includes('security#2'));
-    expect(securityValidators).toHaveLength(3);
-
-    // Verify that test-critique finding (index 3) had 1 validator
-    const testValidators = validators.filter(call => call.label.includes('test-critique#3'));
-    expect(testValidators).toHaveLength(1);
+    expect(forCategory('bug')).toHaveLength(3);
+    expect(forCategory('code-quality')).toHaveLength(1);
+    expect(forCategory('security')).toHaveLength(3);
+    expect(forCategory('test-critique')).toHaveLength(1);
 
     expect(run.result.findings).toHaveLength(4);
   });

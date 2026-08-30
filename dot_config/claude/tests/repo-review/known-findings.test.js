@@ -21,6 +21,10 @@ import { internals, issue, runReview } from './scenario.js';
 const OWN = 'Already reported in your category';
 const OTHER = 'Already reported by another reviewer';
 
+// The same heading for an agent covering several categories. Only the noun's number changes, which is what keeps
+// `--reviewers-per-unit 6` — the control arm of an A/B nothing here can see — rendering exactly the text it always did.
+const OWN_MANY = 'Already reported in your categories';
+
 describe('known findings block', () => {
   it('says nothing at all when the run holds nothing yet', async () => {
     // Round 1 must be byte-identical to a single-pass run, so an empty list cannot contribute a heading.
@@ -177,6 +181,13 @@ describe('known findings block', () => {
 });
 
 describe('what a reviewer is told across rounds', () => {
+  // Read off `review:core:opus`, the agent the default arm gives this unit: `bug` and `security` are one agent now, so
+  // its own categories are both of them and the other list is what the Sonnet group and the lenses raised. The
+  // regression the file documents — the Bug reviewer blind to Security's finding on the lines it was re-reporting —
+  // cannot recur in this arm at all, because there is no longer a Bug reviewer for Security to be invisible to. The
+  // property being asserted is the one that survives that: the list is scoped by *unit*, not by category, so an agent
+  // hears about every finding held against files it can act on.
+
   const issues = [
     issue({ category: 'bug', file: 'core/wire.py', lines: '10-20', description: 'parse_frame skips the length check' }),
     issue({ category: 'security', file: 'core/wire.py', lines: '10-20', description: 'parse_frame trusts the peer' }),
@@ -198,41 +209,46 @@ describe('what a reviewer is told across rounds', () => {
   const round2 = () => runReview({ issues, units, args: { round: 2, knownFindings: issues } });
 
   it('tells a later round’s reviewer what the other reviewers found in its unit', async () => {
-    // The regression this whole change exists for: the Bug reviewer used to be blind to Security's finding on the very
-    // lines it was about to re-report.
+    // The regression this whole change exists for, in the form it takes once `bug` and `security` share an agent: the
+    // architecture lens's finding on the very file this agent is reviewing is raised by neither of its categories, and
+    // it is exactly the kind a category filter used to hide.
     const run = await round2();
-    const [bug] = run.called('review:core:bug');
+    const [opus] = run.called('review:core:opus');
 
-    expect(bug.prompt).toContain(OTHER);
-    expect(bug.prompt.slice(bug.prompt.indexOf(OTHER))).toContain('parse_frame trusts the peer');
+    expect(opus.prompt).toContain(OTHER);
+    expect(opus.prompt.slice(opus.prompt.indexOf(OTHER))).toContain('wire is four contracts');
   });
 
   it('still tells it which of those findings are its own to look past', async () => {
+    // Both of the agent's categories land in the own list and the lens's finding does not, which is the whole of the
+    // distinction: a finding in a category this agent reports is a floor to look past, and one in a category it does not
+    // report only has to be recognised.
     const run = await round2();
-    const [bug] = run.called('review:core:bug');
-    const own = bug.prompt.slice(bug.prompt.indexOf(OWN), bug.prompt.indexOf(OTHER));
+    const [opus] = run.called('review:core:opus');
+    const own = opus.prompt.slice(opus.prompt.indexOf(OWN_MANY), opus.prompt.indexOf(OTHER));
 
     expect(own).toContain('parse_frame skips the length check');
-    expect(own).not.toContain('parse_frame trusts the peer');
+    expect(own).toContain('parse_frame trusts the peer');
+    expect(own).not.toContain('wire is four contracts');
   });
 
   it('scopes the list to the reviewer\'s own unit', async () => {
     // Widening from one category to all of them must not also widen from one unit to the repository: a reviewer cannot
     // act on a finding in files it was not given, and the block is the largest part of a later round's prompt.
     const run = await round2();
-    const [bug] = run.called('review:core:bug');
+    const [opus] = run.called('review:core:opus');
 
-    expect(bug.prompt).not.toContain('handler swallows the error');
+    expect(opus.prompt).not.toContain('handler swallows the error');
   });
 
   it('gives a round that holds nothing no list at all', async () => {
     // Round 1 with an empty ledger is the common case and its prompts must stay byte-identical to a review that never
     // runs a second round — the emphasis and this list are the only two things a round number can add.
     const run = await runReview({ issues, units });
-    const [bug] = run.called('review:core:bug');
+    const [opus] = run.called('review:core:opus');
 
-    expect(bug.prompt).not.toContain(OWN);
-    expect(bug.prompt).not.toContain(OTHER);
+    expect(opus.prompt).not.toContain(OWN);
+    expect(opus.prompt).not.toContain(OTHER);
   });
 
   it('ignores a malformed entry rather than failing the round over it', async () => {
@@ -244,10 +260,10 @@ describe('what a reviewer is told across rounds', () => {
       units,
       args: { round: 2, knownFindings: [null, 'not a finding', issues[0]] },
     });
-    const [bug] = run.called('review:core:bug');
+    const [opus] = run.called('review:core:opus');
 
-    expect(bug.prompt).toContain('parse_frame skips the length check');
-    expect(bug.prompt).not.toContain('not a finding');
+    expect(opus.prompt).toContain('parse_frame skips the length check');
+    expect(opus.prompt).not.toContain('not a finding');
   });
 
   it('tells an architecture lens about the findings that are not architecture', async () => {

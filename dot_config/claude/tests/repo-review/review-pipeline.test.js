@@ -56,7 +56,7 @@ const dropUnit = (slug) => (items, ...stages) =>
 describe('per-unit review pipeline', () => {
   it("deduplicates a unit as soon as its own reviewers are in, not when the round's are", async () => {
     // Deterministic rather than timed: `core`'s reviewers answer in microtasks while `api`'s answer from a timer, so
-    // every microtask the pipeline can make progress on — `core`'s six reviewers *and* its stage-2 dedupe — necessarily
+    // every microtask the pipeline can make progress on — `core`'s reviewers *and* its stage-2 dedupe — necessarily
     // drains before the first `api` answer exists. Under a barrier `dedupe:core` is unreachable until `api` has returned,
     // so this is the one assertion that tells the two structures apart.
     const order = [];
@@ -64,7 +64,7 @@ describe('per-unit review pipeline', () => {
     const run = await runReview({
       issues: spread,
       units,
-      review: async (call, { unit, category }) => {
+      review: async (call, { unit, categories }) => {
         // The architecture lenses read the whole repository rather than a unit, so they own none of these findings.
         if (unit === 'arch') return { issues: [] };
 
@@ -72,7 +72,7 @@ describe('per-unit review pipeline', () => {
 
         order.push(call.label);
 
-        return { issues: spread.filter((f) => f.category === category && f.file.startsWith(`${unit}/`)) };
+        return { issues: spread.filter((f) => categories.includes(f.category) && f.file.startsWith(`${unit}/`)) };
       },
       dedupe: (call) => {
         order.push(call.label);
@@ -126,8 +126,8 @@ describe('per-unit review pipeline', () => {
     const run = await runReview({
       issues: [apiFinding, ...strays, coreFinding],
       units,
-      review: (_call, { unit, category }) => {
-        if (category !== 'bug') return { issues: [] };
+      review: (_call, { unit, categories }) => {
+        if (!categories.includes('bug')) return { issues: [] };
         if (unit === 'api') return { issues: [apiFinding, ...strays] };
         if (unit === 'core') return { issues: [coreFinding] };
 
