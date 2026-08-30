@@ -54,6 +54,65 @@ describe('what the sandbox is pinned to', () => {
 
     expect(new Set(suffixes).size).toBe(2);
   });
+
+  it('pins a revision too, on a branch of its own', async () => {
+    // A revision is a fresh sandbox, so it needs the pin as much as the first attempt did — and on its own branch, since
+    // the rejected commit is kept for the user to read and a revision committing over it would destroy the thing the
+    // rejection is about.
+    const run = await runFix({ reviewFix: () => ({ approved: false, objection: 'misses a case' }) });
+    const [revision] = run.called(/^revise:/);
+
+    expect(revision.prompt).toContain(`git switch -c rrfix/<RUN>/0-r1 ${HEAD}`);
+  });
+
+  it('does not claim the sandbox is already at the commit being fixed', async () => {
+    // The prompt used to assert this. It was false, and it was worse than saying nothing: a few fixers noticed the
+    // mismatch and re-based themselves while most trusted the claim, which is how one run produced four bases.
+    const run = await runFix();
+    const [fixer] = fixCalls(run);
+
+    expect(fixer.prompt).not.toContain('checked out at the repository');
+    expect(fixer.prompt).toContain('Your worktree is **not** checked out at the commit you are fixing');
+  });
+});
+
+describe('the sandbox the pin is applied inside', () => {
+  // `isolation: 'worktree'` is the entire containment story for the agents that hold Edit and run `git switch -c` /
+  // `git add` / `git commit`. Deleting it would turn N concurrent fixers loose on the user's live checkout, branching
+  // and committing in it — and every prompt assertion above reads identically either way, so without these two tests
+  // nothing in the suite would notice.
+  const COMMITTING = /^(fix|revise):/;
+
+  // One run that reaches both kinds: two findings, and rejecting finding 0's first attempt adds a reviser. The two
+  // findings deliberately sit in the same file, which is the case a fix run simply allows — each gets its own branch and
+  // the overlap is the user's to resolve if they ever merge both.
+  const busy = () =>
+    runFix({
+      args: { findings: [issue({ file: 'src/a.ts' }), issue({ file: 'src/a.ts', description: 'a second finding' })] },
+      reviewFix: (_subject, { idx, attempt }) =>
+        idx === 0 && attempt === 0 ? { approved: false, objection: 'misses a case' } : { approved: true, objection: '' },
+    });
+
+  it('is requested by every fixer and reviser', async () => {
+    const run = await busy();
+    const committing = run.called(COMMITTING);
+
+    // Count them first: a renamed label would otherwise leave the loop below iterating an empty list and passing.
+    expect(run.called(/^fix:/)).toHaveLength(2);
+    expect(run.called(/^revise:/)).toHaveLength(1);
+    expect(committing).toHaveLength(3);
+
+    for (const call of committing) {
+      expect(call.opts.isolation).toBe('worktree');
+    }
+  });
+
+  it('is requested by nothing else in that run, the survey and the fix reviewers being read-only', async () => {
+    const run = await busy();
+    const stray = run.calls.filter((call) => !COMMITTING.test(call.label) && call.opts.isolation !== undefined);
+
+    expect(stray.map((call) => call.label)).toEqual([]);
+  });
 });
 
 describe('the drift note', () => {
@@ -194,5 +253,36 @@ describe('the pin instruction itself', () => {
     const prompt = pinToBase(HEAD, '0', 'stop.');
 
     expect(prompt).toMatch(/Never put the word `undefined`, `null`, or an empty segment in a branch name/);
+  });
+
+  it('gives the run-id derivation as one mechanical rule every agent reaches the same answer from', async () => {
+    // The `<RUN>` segment cannot come from the script — it has no handle on the workflow id — so each agent derives it
+    // from its own sandbox branch name. The rule has to be mechanical: an earlier wording ("extract the wf_<id> token")
+    // admitted two different answers, and agents that disagreed put their branches outside the wrapper's teardown.
+    const { pinToBase } = await internals({});
+    const prompt = pinToBase(HEAD, '0', 'stop.');
+
+    expect(prompt).toContain('stripping the leading `worktree-` and the trailing `-<agentNumber>`');
+    expect(prompt).toContain('every agent in this run must derive the *same* `<RUN>`');
+  });
+
+  it('gives that derivation as a command, because agents asked to do it in their heads got it wrong', async () => {
+    // Prose alone did not hold: in one run 49 agents reported `rrfix/undefined/<n>` and one stripped only the prefix,
+    // keeping the agent number. Both produce a real branch under an id no other agent shares, which is outside the
+    // pattern teardown can derive for the matching `worktree-<run-id>-<n>` ref.
+    const { pinToBase } = await internals({});
+    const prompt = pinToBase(HEAD, '0', 'stop.');
+
+    // Two substitutions rather than a backreference: this script is compiled with `new Function`, so it runs sloppy-mode
+    // where a `'\1'` in a single-quoted JS string is a legacy octal escape and would ship a literal U+0001 to the agent.
+    expect(prompt).toContain("sed -E 's/^worktree-//; s/-[0-9]+$//'");
+    expect(prompt).not.toContain('\u0001');
+  });
+
+  it('tells an agent whose derivation failed to decline rather than name a branch it never read', async () => {
+    // Declining is the safe direction: a fix is lost, but no branch is created that teardown cannot reach.
+    const { pinToBase } = await internals({});
+
+    expect(pinToBase(HEAD, '0', 'stop.')).toContain('do not guess a placeholder');
   });
 });

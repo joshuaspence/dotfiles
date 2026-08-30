@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { commitSha, internals, issue, runFix, withFingerprints } from './scenario.js';
+import { internals, issue, runReview, withFingerprints } from './scenario.js';
 
 const findings = [
   issue({ description: 'frame length unchecked', file: 'wire.py', lines: '132-139', severity: 'high' }),
@@ -396,7 +396,7 @@ describe('dedupe effort', () => {
   it('actually hands the first rung to the agent', async () => {
     // The ladder being right is worthless if the call site still passes the uncapped `effort` — a one-word edit that
     // every value-level assertion above still survives.
-    const run = await runFix({ issues: pair, args: { effort: 'max' } });
+    const run = await runReview({ issues: pair, args: { effort: 'max' } });
     const [call] = run.called(/^dedupe/);
 
     expect(call.opts.effort).toBe('high');
@@ -408,7 +408,7 @@ describe('dedupe stall', () => {
   it('steps down to the next rung when the agent is killed mid-think', async () => {
     // The real harness throws `agent stalled on all 6 attempts (no progress for 180000ms each)`, so a throw is the
     // faithful stand-in. The lower rung's answer must still be applied.
-    const run = await runFix({
+    const run = await runReview({
       issues: pair,
       dedupe: (call) => {
         if (call.opts.effort === 'high') throw new Error('agent stalled on all 6 attempts');
@@ -422,7 +422,7 @@ describe('dedupe stall', () => {
   });
 
   it('names the fallback rung in its label so a step-down is visible in /workflows', async () => {
-    const run = await runFix({
+    const run = await runReview({
       issues: pair,
       dedupe: (call) => {
         if (call.opts.effort === 'high') throw new Error('agent stalled');
@@ -437,7 +437,7 @@ describe('dedupe stall', () => {
   it('survives a stall on every rung instead of discarding the whole review', async () => {
     // This is the guarantee that matters most: an unguarded throw here failed a run that was 42 of 43 agents done.
     // The round must degrade to un-deduplicated findings and record a gap, not take the review down with it.
-    const run = await runFix({
+    const run = await runReview({
       issues: pair,
       dedupe: () => {
         throw new Error('agent stalled on all 6 attempts (no progress for 180000ms each)');
@@ -451,7 +451,7 @@ describe('dedupe stall', () => {
 
   it('still degrades gracefully when the agent merely returns nothing', async () => {
     // The pre-existing null path has to keep working alongside the new throw path.
-    const run = await runFix({ issues: pair, dedupe: () => null });
+    const run = await runReview({ issues: pair, dedupe: () => null });
 
     expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
   });
@@ -475,14 +475,14 @@ describe('dedupe malformed responses', () => {
 
   it('treats groups as a non-array (string) as "nothing collided"', async () => {
     // Schema violation: groups must be an array. The merge logic treats non-arrays as invalid, preserving all findings.
-    const run = await runFix({ issues: pair, dedupe: () => ({ groups: 'not an array' }) });
+    const run = await runReview({ issues: pair, dedupe: () => ({ groups: 'not an array' }) });
 
     expect(run.result.findings).toHaveLength(pair.length);
     expect(reported(run)).toEqual(intact);
   });
 
   it('treats groups as a non-array (object) as "nothing collided"', async () => {
-    const run = await runFix({ issues: pair, dedupe: () => ({ groups: { nested: 'object' } }) });
+    const run = await runReview({ issues: pair, dedupe: () => ({ groups: { nested: 'object' } }) });
 
     expect(run.result.findings).toHaveLength(pair.length);
     expect(reported(run)).toEqual(intact);
@@ -490,7 +490,7 @@ describe('dedupe malformed responses', () => {
 
   it('treats groups containing non-arrays at the top level as "nothing collided"', async () => {
     // Schema violation: groups should be an array of arrays, not an array of integers. Each non-array element is ignored.
-    const run = await runFix({ issues: pair, dedupe: () => ({ groups: [1, 2, 3] }) });
+    const run = await runReview({ issues: pair, dedupe: () => ({ groups: [1, 2, 3] }) });
 
     expect(run.result.findings).toHaveLength(pair.length);
     expect(reported(run)).toEqual(intact);
@@ -498,7 +498,7 @@ describe('dedupe malformed responses', () => {
 
   it('processes valid groups and ignores invalid mixed-in elements', async () => {
     // Mixed types: one valid group plus string and object elements. The valid group merges, invalid ones are ignored.
-    const run = await runFix({ issues: pair, dedupe: () => ({ groups: [[0, 1], 'string', { key: 'value' }] }) });
+    const run = await runReview({ issues: pair, dedupe: () => ({ groups: [[0, 1], 'string', { key: 'value' }] }) });
 
     expect(run.result.findings).toHaveLength(1);
     expect(run.result.findings[0].file).toBe('a.py');
@@ -506,14 +506,14 @@ describe('dedupe malformed responses', () => {
 
   it('treats undefined return the same as null', async () => {
     // Different from an explicit null: the agent returned nothing at all. Must produce the same gap as null.
-    const run = await runFix({ issues: pair, dedupe: () => undefined });
+    const run = await runReview({ issues: pair, dedupe: () => undefined });
 
     expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
   });
 
   it('survives groups containing arrays with non-integer elements', async () => {
     // Within a group array: strings, floats, nulls, objects all violate the schema but must not crash.
-    const run = await runFix({
+    const run = await runReview({
       issues: pair,
       dedupe: () => ({ groups: [[0, 'x'], [1, 2.5], [null, undefined]] }),
     });
@@ -524,7 +524,7 @@ describe('dedupe malformed responses', () => {
 
   it('never invents findings when the agent returns garbage', async () => {
     // The contract: output is a subset of input. Malformed groups must degrade to "all kept", never "new issues added".
-    const run = await runFix({
+    const run = await runReview({
       issues: pair,
       dedupe: () => ({ groups: [[999], [-1], [0, 0], 'junk', { completely: 'wrong' }] }),
     });
@@ -603,7 +603,7 @@ describe('dedupe rung ceilings', () => {
     // covered directly by `dedupeRungs` above. What the run must not do is pay a rung to discover its own size.
     const { DEDUPE_RUNG_CEILING, DEDUPE_CHUNK_CAP } = await internals();
     const many = Array.from({ length: DEDUPE_RUNG_CEILING.high + 1 }, (_, i) => issue({ file: `src/f${i}.ts` }));
-    const run = await runFix({ issues: many, args: { fix: false }, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: many, dedupe: () => ({ groups: [] }) });
     const digests = run.called(/^dedupe/).map((call) => Number(/Findings \((\d+)\)/.exec(call.prompt)[1]));
 
     expect(DEDUPE_CHUNK_CAP).toBeLessThanOrEqual(DEDUPE_RUNG_CEILING.high);
@@ -613,7 +613,7 @@ describe('dedupe rung ceilings', () => {
   });
 
   it('leaves a round under the ceiling starting at the top rung, with nothing logged', async () => {
-    const run = await runFix({ issues: pair, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: pair, dedupe: () => ({ groups: [] }) });
 
     expect(run.called(/^dedupe/).map((call) => call.opts.effort)).toEqual(['high']);
     expect(run.logged(/is over the ceiling/)).toHaveLength(0);
@@ -691,13 +691,13 @@ describe('dedupe scopes', () => {
   it('runs no agent for a scope holding one finding, which has nothing to compare it against', async () => {
     // An agent there could only ever answer `groups: []`, at Opus prices. The scope used to be dropped before stage 1
     // fanned out; the guard now sits in `scopeDedupe`, so the cross pass and the leftovers scope get it too.
-    const alone = await runFix({ issues: [spread[0]] });
+    const alone = await runReview({ issues: [spread[0]] });
 
     expect(alone.called(/^dedupe/)).toEqual([]);
 
     // One finding per unit: neither unit has a pair, so stage 1 runs nothing at all — but the two findings could still be
     // duplicates of each other across units, which is exactly what the cross pass is for.
-    const apiece = await runFix({ issues: [spread[0], spread[2]], units });
+    const apiece = await runReview({ issues: [spread[0], spread[2]], units });
 
     expect(apiece.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:cross:high']);
   });
@@ -719,7 +719,7 @@ describe('dedupe scopes', () => {
   });
 
   it('runs one agent per unit and then a single pass over the survivors', async () => {
-    const run = await runFix({ issues: spread, units, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: spread, units, dedupe: () => ({ groups: [] }) });
 
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual([
       'dedupe:api:high',
@@ -733,14 +733,14 @@ describe('dedupe scopes', () => {
     // With every finding in one unit there is no cross-unit duplicate left to find, so asking again would spend a rung
     // of the effort ladder — and the watchdog window that goes with it — on a settled question. It takes one *unchunked*
     // scope for that to hold; `stage-1 scope chunking` below covers the round too big for one agent to have seen it all.
-    const run = await runFix({ issues: pair });
+    const run = await runReview({ issues: pair });
 
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high']);
   });
 
   it('sizes each scope to its unit rather than to the whole round', async () => {
     // The point of the split, stated as an assertion: no agent sees all four findings.
-    const run = await runFix({ issues: spread, units, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: spread, units, dedupe: () => ({ groups: [] }) });
 
     expect(run.called(/^dedupe:(api|core):high$/).map((call) => /Findings \((\d+)\)/.exec(call.prompt)[1])).toEqual([
       '2',
@@ -752,7 +752,7 @@ describe('dedupe scopes', () => {
     // Its answer is merged against `afterUnits`, so the digest it numbered from has to be `afterUnits` too. Handing it
     // the union instead leaves every index in range but pointing one finding to the left of what the agent meant —
     // silently merging strangers — the mistake `globalizeGroups` catches at stage 1 only because a scope has a size.
-    const run = await runFix({
+    const run = await runReview({
       issues: spread,
       units,
       dedupe: (call) => ({ groups: call.label === 'dedupe:core:high' ? [[0, 1]] : [] }),
@@ -767,7 +767,7 @@ describe('dedupe scopes', () => {
   it('keeps one stalled unit from costing the round what every other unit found', async () => {
     // Stage 1 fans out under `parallel()`, where a rejection resolves to null. As one fan-in agent, a single stall left
     // the entire round un-deduplicated — and with `--fix`, one worktree agent per duplicate colliding on shared files.
-    const run = await runFix({
+    const run = await runReview({
       issues: spread,
       units,
       dedupe: (call) => {
@@ -789,7 +789,7 @@ describe('dedupe scopes', () => {
   it('reports a stalled cross pass separately, since the per-unit merges still happened', async () => {
     // Two different partial outcomes with two different consequences: a lost unit repeats a defect inside one unit, a
     // lost cross pass repeats one across two. Reporting both as "dedupe failed" would hide which findings to distrust.
-    const run = await runFix({
+    const run = await runReview({
       issues: spread,
       units,
       dedupe: (call) => {
@@ -807,7 +807,7 @@ describe('dedupe scopes', () => {
   it('keeps reviewer order through both stages, which the per-finding labels index into', async () => {
     // Two merges, one per stage: `core` collapses its own pair, then the cross pass folds that survivor into an `api`
     // finding. The absorbed sites have to accumulate through both, or the second merge loses the first one's evidence.
-    const run = await runFix({
+    const run = await runReview({
       issues: spread,
       units,
       dedupe: (call) => {
@@ -822,25 +822,20 @@ describe('dedupe scopes', () => {
     expect(run.result.findings[0].otherSites).toEqual(['core/wire.py:10', 'core/frame.py:10']);
   });
 
-  it('asks the fixer at each index about the survivor it names, not the finding it displaced', async () => {
+  it('asks the validator at each index about the survivor it names, not the finding it displaced', async () => {
     // The other side of the same order contract, and the one a scenario can get wrong quietly: a merge renumbers every
-    // finding after it, so `fix:bug#1` here is `core/wire.py` and not the `api/routes.py` that used to sit at index 1.
-    // Reading the index against the pre-merge list would hand the fixer a duplicate the script already folded away.
+    // finding after it, so `validate:bug#1` here is `core/wire.py` and not the `api/routes.py` that used to sit at index
+    // 1. Reading the index against the pre-merge list would spend a validator on a duplicate already folded away — and,
+    // downstream, hand `/repo-review-fix` a ledger whose branch numbers name the wrong findings.
     const asked = [];
-    const run = await runFix({
+    const run = await runReview({
       issues: spread,
       units,
       dedupe: (call) => ({ groups: call.label === 'dedupe:api:high' ? [[0, 1]] : [] }),
-      fix: (subject, { idx }) => {
+      validate: (subject, { idx }) => {
         asked[idx] = subject.file;
 
-        return {
-          status: 'applied',
-          sha: commitSha(idx),
-          branch: `rrfix/wf_test/${idx}`,
-          changedFiles: [subject.file],
-          reason: 'fixed',
-        };
+        return { confirmed: true, rationale: 'confirmed' };
       },
     });
 
@@ -859,7 +854,7 @@ describe('round labels', () => {
     // rounds' `dedupe:core` rows were otherwise the same row twice. A round is its own invocation now, so the tree
     // already says which round it is and the marker would only repeat it. Worth pinning rather than leaving to drift:
     // a label is part of the resume cache key, so a round-tagged label is one a resumed run cannot match.
-    const run = await runFix({ issues: pair, args: { round: 4, knownFindings: pair } });
+    const run = await runReview({ issues: pair, args: { round: 4, knownFindings: pair } });
 
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high']);
     expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual(['review:core:bug']);
@@ -947,7 +942,7 @@ describe('stage-1 scope chunking', () => {
     // choice and nothing upstream bounds it.
     const { DEDUPE_CHUNK_CAP } = await internals();
     const many = Array.from({ length: DEDUPE_CHUNK_CAP + 10 }, (_, i) => issue({ file: `src/f${i}.ts` }));
-    const run = await runFix({ issues: many, args: { fix: false }, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: many, dedupe: () => ({ groups: [] }) });
     const sizes = run.called(/^dedupe:core/).map((call) => Number(/Findings \((\d+)\)/.exec(call.prompt)[1]));
 
     expect(sizes.length).toBeGreaterThan(1);
@@ -958,8 +953,7 @@ describe('stage-1 scope chunking', () => {
     // Each scope is bounded on its own, so one oversized unit must not cost a small one its single plain-named agent —
     // and a small unit must not be silently folded in with the chunks of a large one.
     const { DEDUPE_CHUNK_CAP } = await internals();
-    const run = await runFix({
-      args: { fix: false },
+    const run = await runReview({
       dedupe: () => ({ groups: [] }),
       units: [
         { name: 'api', slug: 'api', summary: 'the request surface', paths: ['api'] },
@@ -982,7 +976,7 @@ describe('stage-1 scope chunking', () => {
   it('fans an over-cap unit out into chunked stage-1 agents', async () => {
     const { DEDUPE_CHUNK_CAP } = await internals();
     const many = Array.from({ length: DEDUPE_CHUNK_CAP + 10 }, (_, i) => issue({ file: `src/f${i}.ts` }));
-    const run = await runFix({ issues: many, args: { fix: false }, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: many, dedupe: () => ({ groups: [] }) });
 
     expect(run.called(/^dedupe:core/).map((call) => call.label)).toEqual([
       'dedupe:core:1+2:high',
@@ -997,7 +991,7 @@ describe('stage-1 scope chunking', () => {
     // moment that scope was split, and left the entire union deduped by nothing.
     const { DEDUPE_CHUNK_CAP } = await internals();
     const many = Array.from({ length: DEDUPE_CHUNK_CAP + 10 }, (_, i) => issue({ file: `src/f${i}.ts` }));
-    const run = await runFix({ issues: many, args: { fix: false }, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: many, dedupe: () => ({ groups: [] }) });
 
     expect(run.called(/^dedupe:cross/).map((call) => call.label)).toEqual([
       'dedupe:cross:1+2:high',
@@ -1019,27 +1013,26 @@ describe('cross-pass convergence', () => {
       { name: 'api', slug: 'api', summary: 'the request surface', paths: ['api'] },
       { name: 'core', slug: 'core', summary: 'the protocol', paths: ['core'] },
     ],
-    args: { fix: false },
   });
 
   const crossLabels = (run) => run.called(/^dedupe:cross/).map((call) => call.label);
 
   it('splits an over-cap round into chunked cross-pass agents', async () => {
-    const run = await runFix({ ...spanning(80), dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ ...spanning(80), dedupe: () => ({ groups: [] }) });
 
     expect(crossLabels(run)).toEqual(['dedupe:cross:1+2:high', 'dedupe:cross:1+3:high', 'dedupe:cross:2+3:high']);
   });
 
   it('stops after a pass that merges nothing', async () => {
     // Complete pair coverage plus no merges is a real answer, so a second pass could only repeat the first.
-    const run = await runFix({ ...spanning(80), dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ ...spanning(80), dedupe: () => ({ groups: [] }) });
 
     expect(crossLabels(run).some((label) => label.includes(':p2:'))).toBe(false);
   });
 
   it('runs another pass when the last one merged, because merging is first-claim-wins', async () => {
     // Chunks reporting {A,B} and {B,C} leave C unmerged, so a chain needs one pass per link. Merging on pass 1 only.
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(80),
       dedupe: (call) => ({ groups: call.label.startsWith('dedupe:cross:1+2:') ? [[0, 1]] : [] }),
     });
@@ -1051,7 +1044,7 @@ describe('cross-pass convergence', () => {
 
   it('records a gap when it is still merging after the last pass', async () => {
     const { DEDUPE_CHUNK_PASSES } = await internals();
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(80),
       dedupe: (call) => ({ groups: call.label.includes(':1+2:') ? [[0, 1]] : [] }),
     });
@@ -1064,7 +1057,7 @@ describe('cross-pass convergence', () => {
 
   it('converges on pass 2 when pass 1 merges but pass 2 does not', async () => {
     // Verifies successful convergence on the second pass: pass 1 reduces the finding count, pass 2 sees no duplicates.
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(80),
       dedupe: (call) => {
         // Only chunk 1+2 on pass 1 merges; pass 2 chunks see nothing to merge.
@@ -1084,7 +1077,7 @@ describe('cross-pass convergence', () => {
   it('shows finding count decreasing across passes when merging continues', async () => {
     // Each pass merges one finding from chunk 1+2, so the count drops by 1 each pass until max passes.
     let mergeCount = 0;
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(80),
       dedupe: (call) => {
         // Chunk 1+2 merges one pair each pass; the finding at index 0 has already been merged in earlier passes.
@@ -1104,7 +1097,7 @@ describe('cross-pass convergence', () => {
   });
 
   it('keeps the merges from the chunks that answered when one chunk stalls', async () => {
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(80),
       dedupe: (call) => {
         if (call.label.startsWith('dedupe:cross:1+3')) throw new Error('agent stalled on all 6 attempts');
@@ -1121,7 +1114,7 @@ describe('cross-pass convergence', () => {
     // The gap is phrased as a number of chunks, and a chunk that exhausts the effort ladder exhausts it again next pass
     // — same digest size, same ceiling. Summing the passes reported three failed chunks where one failed, more than any
     // pass ever ran, contradicting the chunk counts in the log lines beside it.
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(80),
       dedupe: (call) => {
         if (call.label.includes(':1+3:')) throw new Error('agent stalled on all 6 attempts');
@@ -1139,7 +1132,7 @@ describe('cross-pass convergence', () => {
   // the chunks that failed, so it must not collapse these two into one any more than it multiplies the one above by
   // three. Only pass 1 stalls here — the chunk label carries a `pN` segment from pass 2 on, which `startsWith` misses.
   it('keeps the merges from the chunk that answered when multiple chunks stall', async () => {
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(80),
       dedupe: (call) => {
         if (call.label.startsWith('dedupe:cross:1+3')) throw new Error('agent stalled on all 6 attempts');
@@ -1154,7 +1147,7 @@ describe('cross-pass convergence', () => {
   });
 
   it('leaves a round that fits one chunk on the plain label it always had', async () => {
-    const run = await runFix({ ...spanning(20), dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ ...spanning(20), dedupe: () => ({ groups: [] }) });
 
     expect(crossLabels(run)).toEqual(['dedupe:cross:high']);
   });
@@ -1162,7 +1155,7 @@ describe('cross-pass convergence', () => {
   it('does not re-run a single chunk that merged, since one agent saw every pair and every chain', async () => {
     // The reason for terminating on chunk count as well as on a dry pass: a merge is what keeps the loop going, so a
     // small review with any duplicate at all would otherwise pay for a second full pass that can find nothing new.
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(20),
       dedupe: (call) => ({ groups: call.label.startsWith('dedupe:cross') ? [[0, 1]] : [] }),
     });
@@ -1173,7 +1166,7 @@ describe('cross-pass convergence', () => {
 
   it('omits pass number on pass 1 but labels pass 2+ when multiple passes run', async () => {
     // The label conditional in `crossDedupe` only adds pass numbers once there is more than one pass to tell apart.
-    const run = await runFix({
+    const run = await runReview({
       ...spanning(80),
       dedupe: (call) => ({ groups: call.label.startsWith('dedupe:cross:1+2:') ? [[0, 1]] : [] }),
     });
@@ -1190,7 +1183,7 @@ describe('cross-pass convergence', () => {
 describe('what dedupe contributes to the round’s novelty count', () => {
   // The count the caller loops on is read off the marks that survived dedupe, not differenced against the size of the
   // set the round was handed — and this is where the difference is observable, because dedupe is the only phase that can
-  // shrink that set. `runFix` is driven at round 2 throughout: the accumulated findings arrive on `args` now, so a test
+  // shrink that set. `runReview` is driven at round 2 throughout: the accumulated findings arrive on `args` now, so a test
   // states what the review already holds instead of staging a first round to accumulate it. See `rounds.test.js` for the
   // rest of the round contract.
   //
@@ -1214,7 +1207,7 @@ describe('what dedupe contributes to the round’s novelty count', () => {
   ];
 
   const round2 = (dedupe) =>
-    runFix({ issues: found, units, args: { fix: false, round: 2, knownFindings: held }, dedupe });
+    runReview({ issues: found, units, args: { round: 2, knownFindings: held }, dedupe });
 
   it('counts the findings the round contributed, not the change in the accumulated total', async () => {
     // Round 2 does two things at once. It merges the three findings it was handed into one — the leftover merge a

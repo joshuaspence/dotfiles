@@ -15,7 +15,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { internals, issue, runFix } from './scenario.js';
+import { internals, issue, runReview } from './scenario.js';
 
 // Twelve units, one file each, so a ceiling of 8 has four units' worth of surplus to fold and every unit is nameable in
 // an assertion. Paths rather than findings: the fold is about the file lists the reviewers are given, and a unit needs no
@@ -160,13 +160,12 @@ describe('coalesceToCeiling', () => {
 describe('a partition over the ceiling, end to end', () => {
   it('reviews the ceiling’s worth of units and no more', async () => {
     // The assertion the prose could never make: twelve units come back and eight are reviewed. Counted over the reviewer
-    // labels, because that is where the cost is — `units × REVIEWERS`, and `--reviewers 1` through `runFix` makes the
+    // labels, because that is where the cost is — `units × REVIEWERS`, and `--reviewers 1` through `runReview` makes the
     // two numbers the same one.
-    const run = await runFix({
+    const run = await runReview({
       issues: [issue({ file: 'src/a.ts' })],
       units: twelveUnits,
       survey: wholeRepo,
-      args: { fix: false },
     });
 
     // Six reviewers per unit: `bug`, `security`, `claude-md`, `code-quality`, `consistency`, `test-critique`.
@@ -175,11 +174,10 @@ describe('a partition over the ceiling, end to end', () => {
 
   it('names the bucket to its own reviewers, rather than borrowing the first surplus unit’s name', async () => {
     const { COALESCED_UNIT_NAME } = await internals();
-    const run = await runFix({
+    const run = await runReview({
       issues: [issue({ file: 'src/a.ts' })],
       units: twelveUnits,
       survey: wholeRepo,
-      args: { fix: false },
     });
 
     // The unit's name is read back from the label's slug, and it is shown to its reviewers as prose above their file
@@ -196,11 +194,10 @@ describe('a partition over the ceiling, end to end', () => {
   });
 
   it('hands the bucket’s reviewers every path that was folded into it', async () => {
-    const run = await runFix({
+    const run = await runReview({
       issues: [issue({ file: 'src/a.ts' })],
       units: twelveUnits,
       survey: wholeRepo,
-      args: { fix: false },
     });
 
     const [bucket] = run.called(/^review:the-remainder:/);
@@ -215,11 +212,10 @@ describe('a partition over the ceiling, end to end', () => {
     // Every finding is reported the same way whichever unit produced it, so a bucket of five modules read by one set of
     // reviewers returns a shorter list than five units would have and nothing in that list says why. A log line is not
     // enough: the report is what the user reads, and it is about to offer to fix what did come back.
-    const run = await runFix({
+    const run = await runReview({
       issues: [issue({ file: 'src/a.ts' })],
       units: twelveUnits,
       survey: wholeRepo,
-      args: { fix: false },
     });
 
     const gap = run.result.gaps.find((g) => g.includes('over the ceiling'));
@@ -233,11 +229,10 @@ describe('a partition over the ceiling, end to end', () => {
   });
 
   it('records no such gap when the partition fits, so the report does not cry wolf', async () => {
-    const run = await runFix({
+    const run = await runReview({
       issues: [issue({ file: 'src/a.ts' })],
       units: twelveUnits.slice(0, 4),
       survey: wholeRepo,
-      args: { fix: false },
     });
 
     expect(run.result.gaps.filter((g) => g.includes('over the ceiling'))).toEqual([]);
@@ -248,11 +243,11 @@ describe('a partition over the ceiling, end to end', () => {
     // The two enforcement steps compose in one direction only: narrowing first can bring an over-ceiling partition back
     // under it on its own, and folding first would bucket units that were about to be dropped for being out of scope
     // anyway — spending the bucket on nothing and reporting a gap for it.
-    const run = await runFix({
+    const run = await runReview({
       issues: [issue({ file: 'src/a.ts' })],
       units: twelveUnits,
       survey: wholeRepo,
-      args: { fix: false, paths: ['src/a.ts', 'src/b.ts', 'src/c.ts'] },
+      args: { paths: ['src/a.ts', 'src/b.ts', 'src/c.ts'] },
     });
 
     expect(run.called(/^review:(?!arch)/)).toHaveLength(3 * 6);

@@ -1,150 +1,73 @@
 /**
  * Argument handling. Each knob has to tolerate a missing or malformed value without silently reviewing something other
- * than what was asked for — a default that quietly widens the scope or turns `--fix` off is worse than an error.
+ * than what was asked for — a default that quietly widens the scope past the subtree the user named, or spends one
+ * validator where three were asked for, is worse than an error, because the run still returns a plausible report.
  */
 
 import { describe, expect, it } from 'vitest';
 
 import { runWorkflow } from '../harness.js';
-import { fixScenario, internals, issue, runFix, SCRIPT, withFingerprints } from './scenario.js';
+import { reviewScenario, internals, issue, runReview, SCRIPT, withFingerprints } from './scenario.js';
 
 describe('args arriving as a JSON string', () => {
-  it('is recovered, so the knobs inside it still take effect', async () => {
-    // This call site has delivered `args` JSON-encoded rather than as an object. Falling back to defaults would look
-    // like a successful run while reviewing the whole repository with `--fix` off.
-    const scenario = fixScenario();
-    const run = await runWorkflow({
-      scriptPath: SCRIPT,
-      args: JSON.stringify({ fix: true, validators: 1, reviewers: 1, path: 'src' }),
-      agent: scenario.agent,
-    });
+  // Some call sites deliver `args` JSON-encoded rather than as an object. Falling back to defaults on one of those would
+  // look like a perfectly successful run that reviewed the whole repository instead of the subtree it was pointed at.
+  //
+  // Driven through `runWorkflow` directly rather than `runReview`, because only it will pass a string as `args` at all.
+  const jsonRun = async (args) => {
+    const scenario = reviewScenario();
+    const run = await runWorkflow({ scriptPath: SCRIPT, args, agent: scenario.agent });
 
-    // Composed with `runWorkflow` directly, because only it takes a JSON-string `args` — which skips the eager call
-    // `runFix` makes. The post-condition `fixScenario` registers would still catch these at teardown, but raising them
-    // here names the cause before the assertions below fail on the figures it explains: a per-finding prompt that
-    // stopped embedding its subject would leave every fix a dead agent and both of them would still hold.
+    // Raised here as well as from the post-condition `reviewScenario` registers, so a fixture that could not tell what it
+    // was asked about names the cause before the assertions below fail on the figures it explains.
     scenario.report();
 
-    expect(run.result.fix).toBeDefined();
-    const [survey] = run.called('survey');
-    expect(survey.prompt).toContain('Survey the subtree `src`');
-  });
+    return run;
+  };
 
-  it('aborts before the first agent when it is not JSON at all', async () => {
-    const run = await runWorkflow({ scriptPath: SCRIPT, args: 'src --fix', agent: () => null });
-
-    expect(run.calls).toHaveLength(0);
-    expect(run.result.findings).toEqual([]);
-    expect(run.result.gaps.join(' ')).toContain('nothing was reviewed');
-    // `reviewedCommit` is on every exit. Omitting it here would leave the wrapper an undefined third state alongside
-    // the SHA and the null it is told to read as "fall back to `git rev-parse HEAD`".
-    expect(run.result).toHaveProperty('reviewedCommit', null);
-  });
-
-  it('aborts when JSON has a trailing comma', async () => {
-    const run = await runWorkflow({ scriptPath: SCRIPT, args: '{"fix": true,}', agent: () => null });
-
-    expect(run.calls).toHaveLength(0);
-    expect(run.result.findings).toEqual([]);
-    expect(run.result.gaps.join(' ')).toContain('nothing was reviewed');
-  });
-
-  it('aborts when JSON uses single quotes instead of double quotes', async () => {
-    const run = await runWorkflow({ scriptPath: SCRIPT, args: "{'fix': true}", agent: () => null });
-
-    expect(run.calls).toHaveLength(0);
-    expect(run.result.findings).toEqual([]);
-    expect(run.result.gaps.join(' ')).toContain('nothing was reviewed');
-  });
-
-  it('recovers deeply nested JSON objects', async () => {
-    const scenario = fixScenario();
-    const deepArgs = {
-      fix: true,
+  it.each([
+    ['a plain object of knobs', { validators: 1, path: 'src' }],
+    ['deeply nested values', { validators: 1, path: 'src', nested: { l1: { l2: { l3: { l4: 'deep' } } } } }],
+    ['quotes, backslashes, control characters and non-ASCII text', {
       validators: 1,
-      reviewers: 1,
-      path: 'src',
-      nested: { level1: { level2: { level3: { level4: 'deep' } } } },
-    };
-    const run = await runWorkflow({
-      scriptPath: SCRIPT,
-      args: JSON.stringify(deepArgs),
-      agent: scenario.agent,
-    });
-
-    expect(run.result.fix).toBeDefined();
-    const [survey] = run.called('survey');
-    expect(survey.prompt).toContain('Survey the subtree `src`');
-  });
-
-  it('recovers JSON with special characters and unicode', async () => {
-    const scenario = fixScenario();
-    const argsWithSpecialChars = {
-      fix: true,
-      validators: 1,
-      reviewers: 1,
       path: 'src',
       comment: 'Line with "quotes" and \\backslash\nand newline\tand tab 测试',
-    };
-    const run = await runWorkflow({
-      scriptPath: SCRIPT,
-      args: JSON.stringify(argsWithSpecialChars),
-      agent: scenario.agent,
-    });
-
-    expect(run.result.fix).toBeDefined();
+    }],
+    ['nulls and mixed types', { validators: 1, path: 'src', n: null, b: false, i: 42, a: [1, 2, 3] }],
+  ])('is recovered when it encodes %s', async (_label, args) => {
+    const run = await jsonRun(JSON.stringify(args));
     const [survey] = run.called('survey');
+
+    // The scope is the assertion because it is the knob a silent fallback would lose: every other phase then behaves
+    // correctly for the wider scope, so nothing downstream can tell it was widened.
+    expect(survey.prompt).toContain('Survey the subtree `src`');
+    expect(run.result.findings).toHaveLength(1);
+  });
+
+  it('is recovered through the whitespace a heredoc or a shell leaves around it', async () => {
+    const run = await jsonRun('  {\n      "validators": 1,\n      "path": "src"\n    }  ');
+    const [survey] = run.called('survey');
+
     expect(survey.prompt).toContain('Survey the subtree `src`');
   });
 
-  it('recovers JSON with null values and various data types', async () => {
-    const scenario = fixScenario();
-    const argsWithVariousTypes = {
-      fix: true,
-      validators: 1,
-      reviewers: 1,
-      path: 'src',
-      nullValue: null,
-      boolValue: false,
-      numValue: 42,
-      arrayValue: [1, 2, 3],
-    };
-    const run = await runWorkflow({
-      scriptPath: SCRIPT,
-      args: JSON.stringify(argsWithVariousTypes),
-      agent: scenario.agent,
-    });
-
-    expect(run.result.fix).toBeDefined();
-    const [survey] = run.called('survey');
-    expect(survey.prompt).toContain('Survey the subtree `src`');
-  });
-
-  it('recovers JSON with extra whitespace', async () => {
-    const scenario = fixScenario();
-    const argsString = `  {
-      "fix": true,
-      "validators": 1,
-      "reviewers": 1,
-      "path": "src"
-    }  `;
-    const run = await runWorkflow({
-      scriptPath: SCRIPT,
-      args: argsString,
-      agent: scenario.agent,
-    });
-
-    expect(run.result.fix).toBeDefined();
-    const [survey] = run.called('survey');
-    expect(survey.prompt).toContain('Survey the subtree `src`');
-  });
-
-  it('aborts when JSON is truncated', async () => {
-    const run = await runWorkflow({ scriptPath: SCRIPT, args: '{"fix": true, "path": "sr', agent: () => null });
+  it.each([
+    ['is not JSON at all', 'src --fix'],
+    ['has a trailing comma', '{"path": "src",}'],
+    ['uses single quotes', "{'path': 'src'}"],
+    ['is truncated', '{"path": "sr'],
+  ])('aborts before the first agent when it %s', async (_label, args) => {
+    // Guessing at a malformed string is the one thing that must not happen: a review of the wrong scope is reported the
+    // same way as a review of the right one. So the run ends before any agent is spawned.
+    const run = await runWorkflow({ scriptPath: SCRIPT, args, agent: () => null });
 
     expect(run.calls).toHaveLength(0);
     expect(run.result.findings).toEqual([]);
     expect(run.result.gaps.join(' ')).toContain('nothing was reviewed');
+
+    // `reviewedCommit` is on every exit. Omitting it here would leave the wrapper an undefined third state alongside the
+    // SHA and the null it is told to read as "the review never anchored itself".
+    expect(run.result).toHaveProperty('reviewedCommit', null);
   });
 });
 
@@ -168,13 +91,6 @@ describe('knobs', () => {
     // leaf agent wedges the run.
     expect((await internals({ effort: 'max' })).leafEffort).toBe('xhigh');
     expect((await internals({ effort: 'medium' })).leafEffort).toBe('medium');
-  });
-
-  it('accepts zero reviewers without falling back to one', async () => {
-    // `--reviewers 0` disables the Review Fix phase, so it needs a non-negative parser rather than a positive one.
-    expect((await internals({ reviewers: 0 })).reviewers).toBe(0);
-    expect((await internals({ reviewers: 'many' })).reviewers).toBe(1);
-    expect((await internals({})).reviewers).toBe(1);
   });
 
   it('reads the round number off args, defaulting to the baseline pass', async () => {
@@ -260,7 +176,7 @@ describe('knobs', () => {
     // The unit test above exercises `autoUnitTarget` in isolation, but if the survey's `inScopeFileCount` field stopped
     // being used for this purpose, that test would still pass. Verify the end-to-end data flow: survey returns a small
     // count → partitioner is told the scaled-down range, not the repository-sized default.
-    const run = await runFix({ survey: { inScopeFileCount: 2 } });
+    const run = await runReview({ survey: { inScopeFileCount: 2 } });
     const [partitionCall] = run.called(/partition/);
 
     expect(partitionCall.prompt).toContain('the range 1-2');
@@ -364,7 +280,7 @@ describe('path scope', () => {
   });
 
   it('passes the scope to agents that need it', async () => {
-    const run = await runFix({ args: { paths: ['src', 'lib'] } });
+    const run = await runReview({ args: { paths: ['src', 'lib'] } });
     const [survey] = run.called('survey');
 
     expect(survey.prompt).toContain('Survey the subtrees `src`, `lib`');
@@ -375,7 +291,7 @@ describe('partition phase', () => {
   it('aborts when partition returns only exclusions and no usable units', async () => {
     // The partitioner may exclude everything in scope (e.g., all generated files), leaving nothing to review. Rather
     // than silently running zero reviewers, the workflow aborts with a specific message naming the cause.
-    const run = await runFix({
+    const run = await runReview({
       units: [],
       exclusions: [{ path: 'generated/bundle.js', reason: 'generated code' }],
     });
@@ -495,8 +411,8 @@ describe('partition scope enforcement', () => {
     // `unit.paths` is the scope every phase after Partition actually works from — the reviewers' file list, the count
     // the lens gate keys on, and (with `--fix`) what gets edited. Left unchecked, an agent widening past the requested
     // subtrees redefines the review's scope and nothing downstream can tell.
-    const run = await runFix({
-      args: { paths: ['src'], fix: false },
+    const run = await runReview({
+      args: { paths: ['src'] },
       units: [
         { name: 'core', summary: 'in scope', paths: ['src/a.ts', 'docs/guide.md'] },
         { name: 'docs', summary: 'out of scope', paths: ['docs'] },
@@ -521,37 +437,14 @@ describe('partition scope enforcement', () => {
 
   it('aborts rather than review a partition that lies entirely outside the requested subtrees', async () => {
     // Reviewing the wrong scope is the failure this guard exists to prevent, so there is nothing to fall back to.
-    const run = await runFix({
-      args: { paths: ['src'], fix: false },
+    const run = await runReview({
+      args: { paths: ['src'] },
       units: [{ name: 'docs', summary: 'out of scope', paths: ['docs'] }],
     });
 
     expect(run.called(/^review:/)).toHaveLength(0);
     expect(run.result.findings).toEqual([]);
     expect(run.result.gaps.join(' ')).toContain('no path within the subtree `src`');
-  });
-});
-
-describe('without --fix', () => {
-  it('returns a read-only result and runs no fix agents', async () => {
-    const run = await runFix({ args: { fix: false } });
-
-    expect(run.result.fix).toBeUndefined();
-    expect(run.result.findings).toHaveLength(1);
-    expect(run.called(/^fix:/)).toHaveLength(0);
-    expect(run.phases).not.toContain('Fix');
-    expect(run.phases).not.toContain('Review Fix');
-  });
-});
-
-describe('with --fix', () => {
-  it('enters the fix phases, including the one no `phase()` call names', async () => {
-    // The positive half of the assertion above: 'Review Fix' is only ever entered through the fix reviewers' `phase`
-    // option, so if that route went unrecorded the negative form would pass for it whether the phase ran or not.
-    const run = await runFix();
-
-    expect(run.phases).toContain('Fix');
-    expect(run.phases).toContain('Review Fix');
   });
 });
 
@@ -592,93 +485,55 @@ describe('round emphasis escalation', () => {
   });
 });
 
-describe('utility functions for parsing user input', () => {
-  describe('positiveIntOr', () => {
-    it('returns fallback for NaN', async () => {
-      expect((await internals({ validators: NaN })).validators).toBe(1);
-      expect((await internals({ round: NaN })).round).toBe(1);
-    });
-
-    it('returns fallback for Infinity and -Infinity', async () => {
-      expect((await internals({ validators: Infinity })).validators).toBe(1);
-      expect((await internals({ validators: -Infinity })).validators).toBe(1);
-      expect((await internals({ round: Infinity })).round).toBe(1);
-      expect((await internals({ round: -Infinity })).round).toBe(1);
-    });
-
-    it('accepts very large positive numbers beyond safe integer range', async () => {
-      // parseInt handles astronomically large numbers by converting them to strings first, which may lose precision but
-      // still produces an integer that passes the positive check.
-      const veryLarge = Number.MAX_SAFE_INTEGER * 10;
-      expect((await internals({ validators: veryLarge })).validators).toBe(veryLarge);
-      expect((await internals({ round: veryLarge })).round).toBe(veryLarge);
-    });
-
-    it('returns fallback for non-numeric strings', async () => {
-      expect((await internals({ validators: 'abc' })).validators).toBe(1);
-      expect((await internals({ validators: 'NaN' })).validators).toBe(1);
-      expect((await internals({ validators: 'Infinity' })).validators).toBe(1);
-      expect((await internals({ round: 'abc' })).round).toBe(1);
-    });
-
-    it('parses strings with leading numbers then stops at non-numeric characters', async () => {
-      // parseInt('12.34.56', 10) returns 12, not the fallback, because it parses successfully up to the decimal point.
-      expect((await internals({ validators: '12.34.56' })).validators).toBe(12);
-      expect((await internals({ validators: '42abc' })).validators).toBe(42);
-      // parseInt('0x10', 10) returns 0 (stops at 'x' in base 10), which is < 1, so fallback is used.
-      expect((await internals({ round: '0x10' })).round).toBe(1);
-    });
-
-    it('returns fallback for zero and negative numbers', async () => {
-      expect((await internals({ validators: 0 })).validators).toBe(1);
-      expect((await internals({ validators: -5 })).validators).toBe(1);
-      expect((await internals({ round: -1 })).round).toBe(1);
-    });
-
-    it('returns fallback for edge case strings and objects', async () => {
-      expect((await internals({ validators: '' })).validators).toBe(1);
-      expect((await internals({ validators: '   ' })).validators).toBe(1);
-      expect((await internals({ validators: {} })).validators).toBe(1);
-      expect((await internals({ validators: [] })).validators).toBe(1);
-      expect((await internals({ validators: null })).validators).toBe(1);
-      expect((await internals({ validators: undefined })).validators).toBe(1);
-    });
+describe('positiveIntOr, the parser behind every count', () => {
+  it('returns fallback for NaN', async () => {
+    expect((await internals({ validators: NaN })).validators).toBe(1);
+    expect((await internals({ round: NaN })).round).toBe(1);
   });
 
-  describe('nonNegativeIntOr', () => {
-    it('returns fallback for NaN', async () => {
-      expect((await internals({ reviewers: NaN })).reviewers).toBe(1);
-    });
+  it('returns fallback for Infinity and -Infinity', async () => {
+    expect((await internals({ validators: Infinity })).validators).toBe(1);
+    expect((await internals({ validators: -Infinity })).validators).toBe(1);
+    expect((await internals({ round: Infinity })).round).toBe(1);
+    expect((await internals({ round: -Infinity })).round).toBe(1);
+  });
 
-    it('returns fallback for Infinity and -Infinity', async () => {
-      expect((await internals({ reviewers: Infinity })).reviewers).toBe(1);
-      expect((await internals({ reviewers: -Infinity })).reviewers).toBe(1);
-    });
+  it('accepts very large positive numbers beyond safe integer range', async () => {
+    // parseInt handles astronomically large numbers by converting them to strings first, which may lose precision but
+    // still produces an integer that passes the positive check.
+    const veryLarge = Number.MAX_SAFE_INTEGER * 10;
+    expect((await internals({ validators: veryLarge })).validators).toBe(veryLarge);
+    expect((await internals({ round: veryLarge })).round).toBe(veryLarge);
+  });
 
-    it('accepts zero but rejects negative numbers', async () => {
-      expect((await internals({ reviewers: 0 })).reviewers).toBe(0);
-      expect((await internals({ reviewers: -1 })).reviewers).toBe(1);
-      expect((await internals({ reviewers: -100 })).reviewers).toBe(1);
-    });
+  it('returns fallback for non-numeric strings', async () => {
+    expect((await internals({ validators: 'abc' })).validators).toBe(1);
+    expect((await internals({ validators: 'NaN' })).validators).toBe(1);
+    expect((await internals({ validators: 'Infinity' })).validators).toBe(1);
+    expect((await internals({ round: 'abc' })).round).toBe(1);
+  });
 
-    it('returns fallback for non-numeric strings', async () => {
-      expect((await internals({ reviewers: 'many' })).reviewers).toBe(1);
-      expect((await internals({ reviewers: 'abc' })).reviewers).toBe(1);
-      expect((await internals({ reviewers: 'NaN' })).reviewers).toBe(1);
-      expect((await internals({ reviewers: '' })).reviewers).toBe(1);
-    });
+  it('parses strings with leading numbers then stops at non-numeric characters', async () => {
+    // parseInt('12.34.56', 10) returns 12, not the fallback, because it parses successfully up to the decimal point.
+    expect((await internals({ validators: '12.34.56' })).validators).toBe(12);
+    expect((await internals({ validators: '42abc' })).validators).toBe(42);
+    // parseInt('0x10', 10) returns 0 (stops at 'x' in base 10), which is < 1, so fallback is used.
+    expect((await internals({ round: '0x10' })).round).toBe(1);
+  });
 
-    it('accepts very large positive numbers', async () => {
-      const veryLarge = Number.MAX_SAFE_INTEGER * 10;
-      expect((await internals({ reviewers: veryLarge })).reviewers).toBe(veryLarge);
-    });
+  it('returns fallback for zero and negative numbers', async () => {
+    expect((await internals({ validators: 0 })).validators).toBe(1);
+    expect((await internals({ validators: -5 })).validators).toBe(1);
+    expect((await internals({ round: -1 })).round).toBe(1);
+  });
 
-    it('returns fallback for edge case values', async () => {
-      expect((await internals({ reviewers: null })).reviewers).toBe(1);
-      expect((await internals({ reviewers: undefined })).reviewers).toBe(1);
-      expect((await internals({ reviewers: {} })).reviewers).toBe(1);
-      expect((await internals({ reviewers: [] })).reviewers).toBe(1);
-    });
+  it('returns fallback for edge case strings and objects', async () => {
+    expect((await internals({ validators: '' })).validators).toBe(1);
+    expect((await internals({ validators: '   ' })).validators).toBe(1);
+    expect((await internals({ validators: {} })).validators).toBe(1);
+    expect((await internals({ validators: [] })).validators).toBe(1);
+    expect((await internals({ validators: null })).validators).toBe(1);
+    expect((await internals({ validators: undefined })).validators).toBe(1);
   });
 });
 
@@ -782,8 +637,7 @@ describe('dedupe resource management', () => {
     // neither is bounded by anything upstream of this. `dedupe.test.js` covers the chunk labels and the pair coverage.
     const { DEDUPE_CHUNK_CAP } = await internals();
     const perUnit = DEDUPE_CHUNK_CAP + 10;
-    const run = await runFix({
-      args: { fix: false },
+    const run = await runReview({
       dedupe: () => ({ groups: [] }),
       units: [
         { name: 'api', slug: 'api', summary: 'the request surface', paths: ['api'] },
@@ -799,91 +653,5 @@ describe('dedupe resource management', () => {
 
     expect(sizes.length).toBeGreaterThan(3);
     expect(Math.max(...sizes)).toBeLessThanOrEqual(DEDUPE_CHUNK_CAP);
-  });
-});
-
-describe('generated path detection', () => {
-  it('filters exclusions by the generated flag', async () => {
-    // The partition phase marks generated paths with an explicit boolean flag. Exclusions with `generated: true` must be
-    // recognized as generated, regardless of their reason text, so fixers are told to leave them unstaged.
-    const run = await runFix({
-      exclusions: [
-        { path: 'dist', reason: 'build output', generated: true },
-        { path: 'docs', reason: 'documentation', generated: false },
-      ],
-    });
-
-    const logged = run.logged('Fixers told to leave');
-    expect(logged.length).toBeGreaterThan(0);
-    expect(logged[0]).toContain('1 generated path');
-  });
-
-  it('filters exclusions by reason when the generated flag is missing', async () => {
-    // An exclusion from a partition cached before the `generated` field existed arrives with no flag at all, so the
-    // script falls back to matching the reason against a regex. Several patterns indicate generated or build output.
-    const run = await runFix({
-      exclusions: [
-        { path: 'out', reason: 'generated code' },
-        { path: 'bundle.js', reason: 'build output' },
-        { path: 'lib', reason: 'compiled from TypeScript' },
-        { path: 'vendor', reason: 'vendored dependencies' },
-      ],
-    });
-
-    const logged = run.logged('Fixers told to leave');
-    expect(logged.length).toBeGreaterThan(0);
-    expect(logged[0]).toContain('4 generated path');
-  });
-
-  it('does not misclassify hand-written exclusions as generated', async () => {
-    // Exclusions with `generated: false` and a reason that does not match the regex must not be treated as generated,
-    // or fixers would be forbidden from staging legitimate source files.
-    const run = await runFix({
-      exclusions: [
-        { path: 'docs', reason: 'documentation', generated: false },
-        { path: 'test/fixtures', reason: 'test data', generated: false },
-      ],
-    });
-
-    const logged = run.logged('Fixers told to leave');
-    expect(logged).toHaveLength(0);
-  });
-
-  it('names every detected path to the fixer, since the prose is now the whole of the mechanism', async () => {
-    // The log line above only says how many paths were found; what acts on them is the list in the fixer's prompt. It
-    // used to be backed up by a refusal gate that read `changedFiles` and downgraded a fix that had staged an artifact,
-    // and that gate is gone — it existed to keep the landing sequence's cherry-picks from colliding on a regenerated
-    // bundle, and nothing is landed now. So an unheeded instruction costs a reviewable diff rather than a fix, and
-    // this assertion is the only thing standing between the fixers and no instruction at all.
-    const run = await runFix({
-      exclusions: [
-        { path: 'dist', reason: 'build output', generated: true },
-        { path: 'docs', reason: 'documentation', generated: false },
-      ],
-    });
-
-    const [fix] = run.called(/^fix:/);
-    expect(fix.prompt).toContain('NEVER stage these');
-    expect(fix.prompt).toContain('- dist');
-    expect(fix.prompt).not.toContain('- docs');
-  });
-
-  it('passes a path through verbatim, trailing slash and all, rather than normalizing it', async () => {
-    // The partitioner may report a directory either way, and the fixer is a model reading prose: `build/` and `build`
-    // both name the same directory to it. Normalizing would only matter to a matcher, and there is no longer one — so
-    // the path is quoted as the partitioner wrote it, which is also how it appears in the exclusions the report prints.
-    const run = await runFix({ exclusions: [{ path: 'build/', reason: 'build output', generated: true }] });
-
-    const [fix] = run.called(/^fix:/);
-    expect(fix.prompt).toContain('- build/');
-  });
-
-  it('omits the block entirely when nothing was detected, rather than naming an empty list', async () => {
-    // A heading with no paths under it reads as a rule the fixer cannot check itself against, and it is one more thing
-    // between the fixer and the numbered procedure it is meant to be following.
-    const run = await runFix({ exclusions: [{ path: 'docs', reason: 'documentation', generated: false }] });
-
-    const [fix] = run.called(/^fix:/);
-    expect(fix.prompt).not.toContain('NEVER stage these');
   });
 });

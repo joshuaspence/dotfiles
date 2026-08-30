@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { internals, issue, runFix } from './scenario.js';
+import { internals, issue, runReview } from './scenario.js';
 
 const OWN = 'Already reported in your category';
 const OTHER = 'Already reported by another reviewer';
@@ -195,7 +195,7 @@ describe('what a reviewer is told across rounds', () => {
   // that ran inside the same run. That makes these tests direct: state what the review already holds and read the prompt
   // it produces, with no round 1 to stage first. `issues` is what *this* round's fake reviewers return, which the
   // prompts under assertion are built before ever seeing.
-  const round2 = () => runFix({ issues, units, args: { fix: false, round: 2, knownFindings: issues } });
+  const round2 = () => runReview({ issues, units, args: { round: 2, knownFindings: issues } });
 
   it('tells a later round’s reviewer what the other reviewers found in its unit', async () => {
     // The regression this whole change exists for: the Bug reviewer used to be blind to Security's finding on the very
@@ -228,7 +228,7 @@ describe('what a reviewer is told across rounds', () => {
   it('gives a round that holds nothing no list at all', async () => {
     // Round 1 with an empty ledger is the common case and its prompts must stay byte-identical to a review that never
     // runs a second round — the emphasis and this list are the only two things a round number can add.
-    const run = await runFix({ issues, units, args: { fix: false } });
+    const run = await runReview({ issues, units });
     const [bug] = run.called('review:core:bug');
 
     expect(bug.prompt).not.toContain(OWN);
@@ -239,10 +239,10 @@ describe('what a reviewer is told across rounds', () => {
     // `knownFindings` makes a full round trip through the wrapper's JSON, so its shape is not this script's to
     // guarantee. A `null` in the list reaches `issueSite`, which throws — and it would throw while building the very
     // first reviewer prompt, discarding a whole round before an agent ran.
-    const run = await runFix({
+    const run = await runReview({
       issues,
       units,
-      args: { fix: false, round: 2, knownFindings: [null, 'not a finding', issues[0]] },
+      args: { round: 2, knownFindings: [null, 'not a finding', issues[0]] },
     });
     const [bug] = run.called('review:core:bug');
 

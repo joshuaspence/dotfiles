@@ -1,12 +1,15 @@
 /**
  * Scenario fixtures for `repo-review.js`.
  *
- * Reaching the Fix phase means satisfying five earlier phases of agents (survey, CLAUDE.md scan, partition, six
- * reviewers, dedupe, validators), none of which a test about a fix branch cares about. `fixScenario` supplies a working
- * default for all of them and lets a test override only the part under examination.
+ * Reaching a finding in the return value means satisfying five phases of agents (survey, CLAUDE.md scan, partition, six
+ * reviewers per unit, dedupe, validators), none of which a test about one of them cares about. `reviewScenario` supplies
+ * a working default for all of them and lets a test override only the part under examination.
  *
- * Everything is keyed off the agent labels, which encode the finding index, revision attempt and vote — so a scenario
- * can answer per-finding without the test having to know the order agents happen to run in.
+ * Everything is keyed off the agent labels, which encode the unit and the finding index and vote — so a scenario can
+ * answer per-finding without the test having to know the order agents happen to run in.
+ *
+ * Nothing here fixes anything. This script's phases end at Validate and its return value is a report; the agents that
+ * write commits live in `repo-review-fix.js` and are driven by the fixtures under `tests/repo-review-fix/`.
  */
 
 import { onTestFinished } from 'vitest';
@@ -21,7 +24,8 @@ export const SCRIPT = workflowScript('repo-review');
 // test touches is covering nothing, so listing it would just make renaming a private helper fail every suite that
 // imports this fixture.
 const INTERNALS = [
-  // The content-addressed name a finding keeps across invocations — the ledger's key and a fix commit's trailer.
+  // The content-addressed name a finding keeps across invocations — the ledger's key, and what `/repo-review-fix`
+  // matches a fix against.
   'fingerprint',
   'fingerprintKey',
   'withFingerprint',
@@ -36,35 +40,26 @@ const INTERNALS = [
   'crossChunks',
   'effort',
   'EFFORT_ORDER',
-  'fix',
   'input',
   'leafEffort',
   'knownFindings',
   'lsFiles',
   'narrowToScope',
   'paths',
-  'reviewers',
   'round',
   'scope',
   'underPath',
   'validators',
 
   // The risk model `--validators auto` resolves through, and the label grammar every per-finding agent is keyed off.
-  'attemptTag',
   'findingTag',
   'HIGH_RISK',
   'validatorCount',
   'voteTag',
 
-  // Untrusted-input guards.
-  'containedSites',
-  'isRepoRelativePath',
-  'isSafeBranchName',
-  'isSafeRepoPath',
-  'isSandboxBranch',
-  'PLACEHOLDER_RUN_IDS',
-  'runIdTally',
-  'sitePaths',
+  // The one untrusted-input guard left here: `headSha` is the only model-supplied string this script hands on to
+  // something that builds a command line from it. The path and branch guards moved out with the fixing.
+  'fullCommitSha',
 
   // Grouping and sizing.
   'autoUnitRange',
@@ -95,17 +90,12 @@ const INTERNALS = [
   'dedupePrompt',
   'emphasisBlock',
   'FALSE_POSITIVES',
-  'fixerPrompt',
-  'fixReviewPrompt',
   'GAP_DESCRIPTION_BUDGET',
   'issueDescription',
   'KNOWN_OTHER_BUDGET',
   'KNOWN_OWN_BUDGET',
   'knownFindingsBlock',
-  'OBJECTION_BUDGET',
-  'objectionText',
   'partitionPrompt',
-  'pinToReviewHead',
   'reviewerPrompt',
   'REVIEW_RULES',
   'ROUND_EMPHASIS',
@@ -118,11 +108,9 @@ const INTERNALS = [
   // Agent rosters and schemas.
   'ARCHITECTURAL_LENSES',
   'DEDUPE_SCHEMA',
-  'FIX_RESULT_SCHEMA',
   'ISSUES_SCHEMA',
   'PARTITION_SCHEMA',
   'REVIEWERS',
-  'REVIEW_RESULT_SCHEMA',
   'SEVERITY_ORDER',
   'SURVEY_SCHEMA',
   'VERDICT_SCHEMA',
@@ -148,9 +136,13 @@ const { fileInUnit, withFingerprint, withUnitSlugs } = await internals();
 export const withFingerprints = (issues) => issues.map(withFingerprint);
 
 // --- Label parsing --------------------------------------------------------------------------------------------------
-// The script encodes which finding, revision attempt and vote an agent belongs to in its label, so a fake agent can
-// answer per-finding from the label alone. Mirrors `findingTag` / `attemptTag` / `voteTag`.
-const PER_FINDING = /^(fix|revise|review-fix|validate):(.+?)#(\d+)(?: attempt (\d+))?(?: vote (\d+)\/(\d+))?$/;
+// The script encodes which finding and which vote an agent belongs to in its label, so a fake agent can answer
+// per-finding from the label alone. Mirrors `findingTag` / `voteTag`.
+//
+// `validate` is the only per-finding kind left. The grammar used to also cover `fix` / `revise` / `review-fix`, which is
+// why it still carries an `attempt` clause — a revision loop is a thing only a fixer has, and `/repo-review-fix` keeps
+// its own copy of this pattern for exactly that reason.
+const PER_FINDING = /^validate:(.+?)#(\d+)(?: vote (\d+)\/(\d+))?$/;
 
 // Labels carry no round marker: one round is one invocation, so a `/workflows` tree holds a single round and the ` round
 // k/n` suffix a looped run needed is gone. This used to strip it, and the strip was worth removing rather than keeping
@@ -160,15 +152,14 @@ export function parseLabel(label = '') {
   const perFinding = PER_FINDING.exec(label);
 
   if (perFinding) {
-    const [, kind, category, idx, attempt, vote] = perFinding;
+    const [, category, idx, vote] = perFinding;
 
     return {
-      kind,
+      kind: 'validate',
       category,
       idx: Number(idx),
 
-      // `attemptTag` renders attempt N as "attempt N+1", and omits it entirely for the original attempt.
-      attempt: attempt ? Number(attempt) - 1 : 0,
+      // `voteTag` renders vote N as "vote N+1", and omits it entirely for a single-vote finding.
       vote: vote ? Number(vote) - 1 : 0,
     };
   }
@@ -189,23 +180,18 @@ export function parseLabel(label = '') {
 
 // --- The finding a per-finding agent was actually asked about --------------------------------------------------------
 // The label's index numbers the script's *own* list — the de-duplicated union `mergeIssueGroups` produces, numbered once
-// and never renumbered afterwards, so `fix:bug#1` stays the finding `validate:bug#1` judged even though validation
-// dropped some of its neighbours. It is therefore not an index into the `issues` a scenario supplied: one merge
+// and never renumbered afterwards. It is therefore not an index into the `issues` a scenario supplied: one merge
 // collapses two findings into one and shifts every later index left. Resolving `issues[idx]` answers about the wrong
 // finding, silently, in exactly the tests that exercise merging.
 //
-// Every per-finding prompt embeds its subject as `Issue:\n<JSON>` (`validatorPrompt`, `fixerPrompt` and
-// `fixReviewPrompt` all do), so reading it back out of the prompt is authoritative: an override sees the finding the
-// script is really working on, merged severity and absorbed `otherSites` included. The closing brace anchors the match
-// because `JSON.stringify(…, null, 2)` indents everything nested, leaving the top-level `}` the only one at column 0.
+// `validatorPrompt` embeds its subject as `Issue:\n<JSON>`, so reading it back out of the prompt is authoritative: an
+// override sees the finding the script is really working on, merged severity and absorbed `otherSites` included. The
+// closing brace anchors the match because `JSON.stringify(…, null, 2)` indents everything nested, leaving the top-level
+// `}` the only one at column 0.
 const ISSUE_BLOCK = /^Issue:\n(\{[\s\S]*?^\})$/m;
 
-// A plausible reviewed HEAD, i.e. what the survey reports and every pin instruction has to carry.
+// A plausible reviewed HEAD, i.e. what the survey reports and what the run anchors its findings to.
 export const HEAD = 'cd976db1f0a94c2f9b7e5d3a8c1e6f40b2d75a93';
-
-// Deterministic 40-character hex object names. `Math.random` is unavailable to workflow scripts and would make failures
-// irreproducible here too, so commit SHAs are derived from a seed.
-export const commitSha = (seed) => `deadbeef${String(seed).slice(0, 32).padStart(32, '0')}`;
 
 export const issue = (over = {}) => ({
   description: 'A validated finding',
@@ -231,15 +217,13 @@ const DEFAULT_SURVEY = {
 };
 
 /**
- * Build a fake agent for a `--fix` run.
+ * Build a fake agent for a review run.
  *
  * Overridable behaviours, each receiving the parsed label so it can answer per-finding. `issue` is read back out of the
  * prompt (see `ISSUE_BLOCK`), so it is the finding the script is working on and not `issues[idx]`, which the label's
  * index only agrees with while nothing has been merged or dropped:
  *
  *   review(call, { unit, key, category })     → ISSUES_SCHEMA shape
- *   fix(issue, { idx, attempt, call })        → FIX_RESULT_SCHEMA shape, or null for an agent that never returned
- *   reviewFix(issue, { idx, attempt, vote })  → REVIEW_RESULT_SCHEMA shape
  *   validate(issue, { idx, vote })            → VERDICT_SCHEMA shape
  *
  * `review` takes the raw `call` rather than the parsed label, so an override can read the prompt — which is where a
@@ -247,7 +231,7 @@ const DEFAULT_SURVEY = {
  * with: the unit routing `inUnit` performs for the default is the default's business, so an override is trusted to
  * return findings its unit could plausibly own.
  */
-export function fixScenario({
+export function reviewScenario({
   headSha = HEAD,
   issues = [issue()],
   exclusions = [],
@@ -258,14 +242,11 @@ export function fixScenario({
   // empty list is not a neutral default: it is the specific "no `CLAUDE.md` anywhere" case that drops that reviewer and
   // records a gap, which every unrelated test would then be asserting around.
   claudeMd = { paths: ['CLAUDE.md'] },
-  headOnly,
   review,
   dedupe,
-  fix,
-  reviewFix,
   validate,
   // How the script narrows the roster the partition agent returned into the partition the reviewers are actually given.
-  // Supplied by `runFix`, which knows the run's `args` and borrows the script's own `narrowToScope` for it. The
+  // Supplied by `runReview`, which knows the run's `args` and borrows the script's own `narrowToScope` for it. The
   // identity default is what a run with no `--path` does, which is every scenario built without one.
   scopeUnits = (roster) => roster,
 } = {}) {
@@ -296,8 +277,6 @@ export function fixScenario({
     }
   }
 
-  // Every fix result handed out, by finding index, so tests can assert against what the fixers actually claimed.
-  const handedOut = new Map();
   const unmatched = [];
 
   // Prompts no `Issue:` block could be read out of. Collected rather than thrown, because a throw here reads as an
@@ -310,21 +289,15 @@ export function fixScenario({
   // to `null`, which would read as a unit that found nothing.
   const unroutable = [];
 
-  // Every finding the script numbered, keyed by the number its labels carry. Validate runs once over the findings this
-  // round contributed, so this ends a run holding one entry per finding that was *judged* — which is what lets
-  // `outcomeAt` tell which of them validation then dropped. On a round given `knownFindings` it therefore holds less
-  // than `findings`, deliberately: a finding the round was handed has no outcome of its own here to line up.
-  const numbered = new Map();
-
-  // The checks live with the state they guard, so every way of driving this fixture gets them: `runFix`, and a test that
-  // composes `agent` with `runWorkflow` itself to pass args no wrapper can express. Registered on the test rather than
-  // performed by a wrapper, because a wrapper can be bypassed — which is how these checks used to be forfeited: two of
-  // the three lived in `runFix` alone, so the compose paths kept none of them. Building a scenario outside a test throws
-  // here instead of quietly skipping them.
+  // The checks live with the state they guard, so every way of driving this fixture gets them: `runReview`, and a test
+  // that composes `agent` with `runWorkflow` itself to pass args no wrapper can express. Registered on the test rather
+  // than performed by a wrapper, because a wrapper can be bypassed — which is how these checks used to be forfeited: two
+  // of the three lived in `runReview` alone, so the compose paths kept none of them. Building a scenario outside a test
+  // throws here instead of quietly skipping them.
   //
   // Ordered cause before symptom: a reviewer whose scope could not be resolved returned null for that reason, and a
   // finding it then failed to report leaves labels behind that are only the consequence. Reported at most once, so that
-  // `runFix` may raise them while its own run is still what failed without the teardown repeating what was already said.
+  // `runReview` may raise them while its own run is still what failed without the teardown repeating what was said.
   let reported = false;
   const report = () => {
     if (reported) return;
@@ -346,7 +319,7 @@ export function fixScenario({
     if (unmatched.length) {
       throw new Error(
         `The scenario had no answer for agent label(s): ${[...new Set(unmatched)].join(', ')}. Teach ` +
-          'fixScenario about them — an unanswered agent returns null, which quietly exercises a failure path.',
+          'reviewScenario about them — an unanswered agent returns null, which quietly exercises a failure path.',
       );
     }
   };
@@ -354,7 +327,7 @@ export function fixScenario({
   onTestFinished(report);
 
   // The partition the whole run is shaped by: one unit holding every finding unless a test says otherwise. Reviewers
-  // are labelled per unit and dedupe is now scoped per unit, so both have to read the same roster.
+  // are labelled per unit and dedupe is scoped per unit, so both have to read the same roster.
   const roster = units ?? [{ name: 'core', summary: 'the code', paths: unitPaths ?? filesOf(issues) }];
 
   // The survey the run receives, hoisted out of the agent switch below because the partition narrowing needs it too: the
@@ -411,14 +384,6 @@ export function fixScenario({
     }
   };
 
-  const defaultFix = (subject, { idx, attempt }) => ({
-    status: 'applied',
-    sha: commitSha(idx * 10 + attempt),
-    branch: `rrfix/wf_test/${idx}${attempt ? `-r${attempt}` : ''}`,
-    changedFiles: [subject.file],
-    reason: 'fixed',
-  });
-
   const agent = (call) => {
     const label = parseLabel(call.label);
 
@@ -428,11 +393,6 @@ export function fixScenario({
 
       case 'claude-md-scan':
         return claudeMd;
-
-      // The one-question re-ask the Fix phase falls back to when the survey dropped `headSha`. Defaults to failing, so
-      // a test that removes `headSha` sees the refusal path unless it deliberately supplies a recovery.
-      case 'review-head':
-        return headOnly ?? null;
 
       case 'partition':
         return { units: roster, exclusions };
@@ -457,25 +417,7 @@ export function fixScenario({
         const subject = subjectOf(call);
         if (!subject) return null;
 
-        numbered.set(label.idx, subject);
-
         return (validate ?? (() => ({ confirmed: true, rationale: 'confirmed' })))(subject, label);
-      }
-
-      case 'fix':
-      case 'revise': {
-        const subject = subjectOf(call);
-        if (!subject) return null;
-        const result = (fix ?? defaultFix)(subject, { ...label, call });
-        handedOut.set(label.idx, result);
-
-        return result;
-      }
-
-      case 'review-fix': {
-        const subject = subjectOf(call);
-        if (!subject) return null;
-        return (reviewFix ?? (() => ({ approved: true, objection: '' })))(subject, label);
       }
 
       default:
@@ -487,7 +429,7 @@ export function fixScenario({
     }
   };
 
-  return { agent, unmatched, unroutable, unreadable, handedOut, numbered, report };
+  return { agent, unmatched, unroutable, unreadable, report };
 }
 
 const filesOf = (issues) => [...new Set(issues.filter((subject) => subject.file).map((subject) => subject.file))];
@@ -519,16 +461,16 @@ async function scopeUnitsFor(args) {
 }
 
 /**
- * Run a `--fix` review end to end. `validators` and `reviewers` are pinned to 1 so each finding gets one validator and
- * each fix one reviewer, rather than following the `auto` heuristics, which vary by category.
+ * Run a review end to end. `validators` is pinned to 1 so each finding gets one validator rather than following the
+ * `auto` heuristic, which varies by category.
  *
  * `pipeline` is forwarded straight through to the harness, for the one thing a fake `agent` cannot express: a `pipeline`
  * stage that throws, which drops that item to `null`. Every `agent` call the script makes inside a stage is caught before
  * it can get there, so a test about what the script does with a dropped unit has to wrap the pipeline instead.
  */
-export async function runFix({ args = {}, pipeline, ...config } = {}) {
-  const runArgs = { fix: true, reviewers: 1, validators: 1, ...args };
-  const scenario = fixScenario({ ...config, scopeUnits: await scopeUnitsFor(runArgs) });
+export async function runReview({ args = {}, pipeline, ...config } = {}) {
+  const runArgs = { validators: 1, ...args };
+  const scenario = reviewScenario({ ...config, scopeUnits: await scopeUnitsFor(runArgs) });
   const run = await runWorkflow({
     scriptPath: SCRIPT,
     args: runArgs,
@@ -536,73 +478,10 @@ export async function runFix({ args = {}, pipeline, ...config } = {}) {
     ...(pipeline ? { pipeline } : {}),
   });
 
-  // Raised from here as well as from the post-condition `fixScenario` registers, so that a fixture which could not tell
-  // what it was asked about fails the run rather than only the teardown — the assertions below it would otherwise fail
-  // first, on figures the diagnostic explains. It is the same check either way, and it speaks only once.
+  // Raised from here as well as from the post-condition `reviewScenario` registers, so that a fixture which could not
+  // tell what it was asked about fails the run rather than only the teardown — the assertions below it would otherwise
+  // fail first, on figures the diagnostic explains. It is the same check either way, and it speaks only once.
   scenario.report();
 
   return { ...run, scenario };
 }
-
-// Where each numbered finding's outcome sits in `fix.outcomes`. Validation filters the numbered findings without
-// reordering or renumbering them (`verdicts.filter(Boolean)`), so the findings a run reports are that list's
-// subsequence: walking both in step gives every outcome to the lowest-numbered finding still unclaimed that it matches.
-// Matched on the serialised finding, which is what `numbered` holds — a JSON round-trip of it, read back out of the
-// validator's prompt — so two findings that are genuinely identical are told apart by their order, the one thing the
-// filter is guaranteed to preserve. Returns null if the two lists could not be lined up at all, which means the fixture
-// has drifted from the script rather than that a finding was dropped.
-const numberedSlots = (numbered, findings) => {
-  const slots = new Map();
-  let slot = 0;
-
-  for (const idx of [...numbered.keys()].sort((left, right) => left - right)) {
-    if (slot < findings.length && JSON.stringify(numbered.get(idx)) === JSON.stringify(findings[slot])) {
-      slots.set(idx, slot++);
-    }
-  }
-
-  return slot === findings.length ? slots : null;
-};
-
-// The per-finding outcome for finding `idx`, which is what most fix assertions are really about. `idx` is the script's
-// numbering — the same one the labels carry, so it agrees with a `fix`/`reviewFix` override's `idx` — and not an index
-// into the `issues` the scenario was given, which it parts ways with as soon as dedupe merges anything.
-//
-// It is not an index into `fix.outcomes` either. That list is positional over the findings that *survived* validation,
-// while the numbering is stamped on the union validation was handed and is deliberately never revised, so that
-// `fix:bug#1` stays the finding `validate:bug#1` judged. The two slide apart the moment a validator rejects something —
-// with `bug#1` dropped, `bug#2`'s outcome sits in slot 1 — so indexing straight into `outcomes` would answer a test
-// about `#1` with a different finding's outcome, and pass for the wrong reason. Resolve through the numbering instead,
-// and refuse to answer for a finding validation dropped: it has no outcome, and its neighbour's is not a substitute.
-export const outcomeAt = (run, idx) => {
-  const numbered = run.scenario?.numbered;
-
-  if (!numbered) {
-    throw new Error(
-      '`outcomeAt` needs the scenario the run was driven by, which `runFix` attaches as `run.scenario`; a run composed ' +
-        'from `fixScenario` and `runWorkflow` has to pass it through, or read `run.result.fix.outcomes` directly.',
-    );
-  }
-
-  const slots = numberedSlots(numbered, run.result.findings ?? []);
-
-  if (!slots) {
-    throw new Error(
-      'The findings this run reported could not be lined up with the ones the fixture saw numbered at validation, so ' +
-        `it cannot tell which outcome belongs to #${idx}: \`validatorPrompt\` no longer embeds the finding verbatim, ` +
-        'or validation no longer preserves its order — update `numberedSlots` to match.',
-    );
-  }
-
-  if (!slots.has(idx)) {
-    const surviving = [...slots.keys()].map((survivor) => `#${survivor}`).join(', ');
-
-    throw new Error(
-      `The run reports no fix outcome for finding #${idx} — validation dropped it, and the findings it kept are ` +
-        `${surviving || 'none at all'}. An outcome carries its finding's \`file\` / \`description\`, so assert on ` +
-        'those when a test needs to say which finding it means.',
-    );
-  }
-
-  return run.result.fix.outcomes[slots.get(idx)];
-};

@@ -9,15 +9,15 @@
  *
  * That makes the round boundary a contract, and these are its terms. In: `round` and `knownFindings` on `args`. Out:
  * `findings` — everything the round was handed, plus what it confirmed — and `newFindings`, the count the caller stops
- * on. And the part that is not visible in the return value at all: a round re-does nothing for the findings it was
- * handed. It does not re-judge them and it does not re-fix them, because the round that produced them already did both;
- * re-doing it is what made every round cost as much as the whole review so far. `NEW_THIS_ROUND` is the mechanism, and
- * `dedupe.test.js` covers the merge rule that makes the mark trustworthy.
+ * on. And the part that is not visible in the return value at all: a round re-judges nothing it was handed, because the
+ * round that produced those findings already validated them; re-doing it is what made every round cost as much as the
+ * whole review so far. `NEW_THIS_ROUND` is the mechanism, and `dedupe.test.js` covers the merge rule that makes the mark
+ * trustworthy.
  */
 
 import { describe, expect, it } from 'vitest';
 
-import { issue, runFix, withFingerprints } from './scenario.js';
+import { issue, runReview, withFingerprints } from './scenario.js';
 
 const held = [
   issue({ description: 'unchecked frame length', file: 'core/wire.py', lines: '132' }),
@@ -31,7 +31,7 @@ const found = [issue({ description: 'the retry loop never terminates', file: 'co
 const units = [{ name: 'core', summary: 'the protocol', paths: ['core/wire.py', 'core/frame.py'] }];
 
 const round = (args = {}, config = {}) =>
-  runFix({ issues: found, units, args: { fix: false, round: 2, knownFindings: held, ...args }, ...config });
+  runReview({ issues: found, units, args: { round: 2, knownFindings: held, ...args }, ...config });
 
 describe('what a round returns', () => {
   it('hands back what it was given along with what it found', async () => {
@@ -53,10 +53,6 @@ describe('what a round returns', () => {
     // two cannot disagree — including when the request was unusable and the script fell back to 1.
     expect((await round({ round: 5 })).result.round).toBe(5);
     expect((await round({ round: 'later' })).result.round).toBe(1);
-
-    // Asserted on the fixing exit too, which is a separate `return` statement: the script leaves by one of six, and a
-    // round number wrong on the one the user reaches with `--fix` is wrong where it is written to the ledger.
-    expect((await round({ round: 5, fix: true })).result.round).toBe(5);
   });
 
   it('counts only what validation confirmed, not everything it found', async () => {
@@ -91,17 +87,14 @@ describe('what a round does not do again', () => {
     expect(judged[0].prompt).toContain('the retry loop never terminates');
   });
 
-  it('offers only what it found itself to `--fix`', async () => {
-    // Same rule, higher unit cost: a fix is a worktree, a fixer and a reviewer. Re-offering a held finding would spend
-    // all three to produce a second branch fixing what an earlier round already has a branch for.
-    const run = await round({ fix: true });
+  it('offers only what it found itself as new, so the next command is not asked to re-fix a held finding', async () => {
+    // `newFindings` and `findings` are read by two different consumers, and this is the one place they disagree on
+    // purpose. The wrapper stops looping on the count; `/repo-review-fix` selects out of the accumulated list but skips
+    // what the ledger already records a branch for. Counting a held finding as new would keep the loop running over a
+    // converged review, and each further round would spend a worktree, a fixer and a reviewer re-fixing what an earlier
+    // round already has a branch for.
+    const run = await round();
 
-    expect(run.called(/^fix:/)).toHaveLength(1);
-    expect(run.result.fix.outcomes.map((outcome) => outcome.description)).toEqual([
-      'the retry loop never terminates',
-    ]);
-
-    // The count on this exit is the same one as on the read-only exit: what the round confirmed, not what it now holds.
     expect(run.result.newFindings).toBe(1);
     expect(run.result.findings).toHaveLength(3);
   });
@@ -152,7 +145,7 @@ describe('a first round', () => {
   it('is a round that happens to hold nothing', async () => {
     // Round 1 is not a special case in the script, and this is the assertion that keeps it that way: with an empty
     // ledger every finding is new, so `newFindings` is the whole confirmed set and `findings` is the same list.
-    const run = await runFix({ issues: [...held, ...found], units, args: { fix: false } });
+    const run = await runReview({ issues: [...held, ...found], units });
 
     expect(run.result.round).toBe(1);
     expect(run.result.findings).toHaveLength(3);

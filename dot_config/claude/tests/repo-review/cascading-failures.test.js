@@ -1,24 +1,21 @@
 /**
- * Cascading phase failures: what happens when multiple phases fail in sequence.
+ * Cascading phase failures: what happens when several phases fail in one run.
  *
- * The script handles each phase failure independently (survey → abort, partition → abort, reviewer → gap, dedupe → gap,
- * validator → gap), but these tests examine what happens when multiple failures occur in sequence, or when a gap in one
- * phase affects the inputs to the next. This ensures that gaps accumulate correctly and error messages remain clear even
- * when the review hits multiple infrastructure problems.
+ * Each phase handles its own failure independently — survey and partition abort, a reviewer, a dedupe scope or a
+ * validator records a gap and the run carries on — and a single phase failing on its own is pinned by the suite that
+ * owns it: dedupe returning nothing by `dedupe.test.js`, validation by `review-gate.test.js`, an aborting partition by
+ * `args.test.js`. What none of those can show is one run losing something at several phases at once, where every gap has
+ * to survive the next phase's failure and stay attributed to the finding it was lost on instead of collapsing into a
+ * single "the review failed" line. So a scenario here fails more than one phase, and the assertions below are about the
+ * whole gap list rather than the presence of one substring somewhere in it.
  *
- * A single phase failing on its own is pinned by the suite that owns that phase — dedupe returning nothing by
- * `dedupe.test.js`, validation and fix review by `review-gate.test.js`, a fix agent that never returned by
- * `fix-branches.test.js`, an aborting partition by `args.test.js`. What none of those can show is one run losing
- * something at several phases at once, where every gap has to survive the next phase's failure and stay attributed to
- * the finding it was lost on instead of collapsing into a single "the review failed" line. So a scenario here fails
- * more than one phase, and the assertions below are about the whole gap list rather than the presence of one substring
- * somewhere in it.
+ * The gaps a fix run accumulates are a separate list from a separate command, pinned in `tests/repo-review-fix/`.
  */
 
 import { describe, expect, it } from 'vitest';
 
 import { runWorkflow } from '../harness.js';
-import { fixScenario, issue, outcomeAt, runFix, SCRIPT } from './scenario.js';
+import { reviewScenario, issue, runReview, SCRIPT } from './scenario.js';
 
 // --- Gap matchers ----------------------------------------------------------------------------------------------------
 // One matcher per gap the script can record, matching the *whole* line. A substring probe for 'Validation did not
@@ -53,15 +50,6 @@ const GAP = {
   partition: () => /^Partition agent did not return usable units — review aborted\.$/,
   reviewer: (label) => new RegExp(`^Reviewer did not complete: ${label ? literal(label) : '.+'}$`),
   validation: (site) => perFinding('Validation did not complete', site),
-  fix: (site) => perFinding('Fix agent did not return', site),
-  fixReview: (site) => perFinding('Fix review did not complete', site),
-
-  // The phase-wide notice for a fix pipeline that threw rather than returned, with the underlying error attached.
-  fixPipeline: (cause) =>
-    new RegExp(
-      '^(?:The Fix phase did not run: all \\d+|\\d+ of \\d+) fix pipeline\\(s\\) failed before returning, so those ' +
-        `findings were never fixed and are \\*\\*not\\*\\* verified as unfixable\\. Cause: ${literal(cause)}$`,
-    ),
 };
 
 // --- Gap assertions --------------------------------------------------------------------------------------------------
@@ -94,7 +82,7 @@ describe('dedupe phase failures', () => {
   it('records a gap when dedupe fails but continues to validation', async () => {
     // Dedupe fails to return, but the pipeline continues to validation with raw findings.
     // Need at least 2 findings for dedupe to run (single findings are trivially not duplicates).
-    const run = await runFix({
+    const run = await runReview({
       issues: [
         issue({ file: 'src/a.ts', description: 'first' }),
         issue({ file: 'src/b.ts', description: 'second' }),
@@ -105,21 +93,18 @@ describe('dedupe phase failures', () => {
     // Dedupe gap should be recorded with specific message about unit scope failure.
     expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
 
-    // But validation and both fix phases succeeded, so none of them recorded anything.
+    // Validation ran cleanly, so it recorded nothing — the dedupe gap is the only one about a finding.
     expectNoGap(run, GAP.validation());
-    expectNoGap(run, GAP.fix());
-    expectNoGap(run, GAP.fixReview());
 
-    // Findings should still validate and potentially fix (dedupe failure doesn't block downstream phases).
+    // Both findings are still reported: dedupe failing costs the round its merging, not its findings. They may name one
+    // defect twice, which is what the gap says.
     expect(run.result.findings).toHaveLength(2);
-    // Both findings validated and were fixed successfully (dedupe failure doesn't prevent fixes).
-    expect(run.result.fix.keepBranches).toHaveLength(2);
   });
 
   it('records a gap when the dedupe agent stalls (throws) but continues to validation', async () => {
     // A stalled agent throws, which is how the real harness surfaces one killed by the no-progress watchdog — a
     // different failure mode from returning null, and the scope has to be reported as unanswered either way.
-    const run = await runFix({
+    const run = await runReview({
       issues: [
         issue({ file: 'src/a.ts', description: 'first' }),
         issue({ file: 'src/b.ts', description: 'second' }),
@@ -132,16 +117,15 @@ describe('dedupe phase failures', () => {
     // Dedupe gap should be recorded (a stall reads the same as a null return in the gap message).
     expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
 
-    // Findings should still validate and potentially fix (a stall doesn't block downstream phases either).
+    // A stall does not block the downstream phases either.
     expect(run.result.findings).toHaveLength(2);
-    expect(run.result.fix.keepBranches).toHaveLength(2);
   });
 });
 
 describe('dedupe failures cascading into validation', () => {
   it('passes raw findings to validation when dedupe fails, accumulating both gaps', async () => {
     // Dedupe fails to return for a unit, so findings stay raw. Validation then also fails.
-    const run = await runFix({
+    const run = await runReview({
       issues: [
         issue({ file: 'src/a.ts', description: 'first potential duplicate', category: 'bug' }),
         issue({ file: 'src/b.ts', description: 'second potential duplicate', category: 'bug' }),
@@ -166,7 +150,7 @@ describe('dedupe failures cascading into validation', () => {
 
   it('accumulates gaps when dedupe stalls (throws) and validation also fails', async () => {
     // The same cascade, but dedupe stalls instead of returning null: both gaps still have to accumulate.
-    const run = await runFix({
+    const run = await runReview({
       issues: [
         issue({ file: 'src/a.ts', description: 'first potential duplicate', category: 'bug' }),
         issue({ file: 'src/b.ts', description: 'second potential duplicate', category: 'bug' }),
@@ -189,22 +173,20 @@ describe('dedupe failures cascading into validation', () => {
   });
 });
 
-describe('validation failures cascading into fix', () => {
-  it('records validation gap but has nothing to fix', async () => {
-    // All validators fail, so no findings pass to the fix phase.
-    const run = await runFix({
+describe('validation failures', () => {
+  it('leaves the gap as the only trace when every validator fails', async () => {
+    const run = await runReview({
       issues: [issue()],
       validate: () => null,
     });
 
     expectGaps(run, GAP.validation('src/a.ts:10'));
     expect(run.result.findings).toEqual([]);
-    expect(run.result.fix).toBeUndefined();
   });
 
-  it('fixes only the findings that passed validation when some validators fail', async () => {
+  it('reports only the findings that passed validation when some validators fail', async () => {
     // Two findings: first validator succeeds, second fails.
-    const run = await runFix({
+    const run = await runReview({
       issues: [
         issue({ file: 'src/a.ts', description: 'first', category: 'bug' }),
         issue({ file: 'src/b.ts', description: 'second', category: 'security' }),
@@ -225,220 +207,43 @@ describe('validation failures cascading into fix', () => {
 
     expect(run.result.findings).toHaveLength(1);
     expect(run.result.findings[0].file).toBe('src/a.ts');
-    // Only src/a.ts validated successfully, so only 1 commit.
-    expect(run.result.fix.keepBranches).toHaveLength(1);
   });
 });
 
-describe('fix failures after multiple upstream gaps', () => {
-  it('records fix gap on top of dedupe and validation gaps, each naming the finding it lost', async () => {
-    // Dedupe fails, validation fails for one finding but succeeds for another, then fix fails.
-    const run = await runFix({
-      issues: [
-        issue({ file: 'src/a.ts', description: 'first', category: 'bug' }),
-        issue({ file: 'src/b.ts', description: 'second', category: 'bug' }),
-      ],
-      dedupe: () => null,
-      validate: (subject) => {
-        // Only first finding validates.
-        if (subject.file === 'src/a.ts') {
-          return { confirmed: true, rationale: 'confirmed' };
-        }
-        return null;
-      },
-      fix: () => null,
-    });
-
-    // All three gap types should be present, and the two per-finding gaps name *different* findings — `src/b.ts` was
-    // lost to validation, `src/a.ts` to the fixer — so a reader can tell which finding to distrust for which reason.
-    // A later failure neither overwrites an earlier gap nor absorbs it.
-    expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
-    expectGaps(run, GAP.validation('src/b.ts:10'));
-    expectGaps(run, GAP.fix('src/a.ts:10'));
-
-    // Only src/a.ts validated (src/b.ts validation failed), so 1 finding — and it still reaches the report, carrying
-    // the fixer's failure.
-    expect(run.result.findings.map((subject) => subject.file)).toEqual(['src/a.ts']);
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-  });
-
-  it('accumulates gaps across review, dedupe, validation, and fix phases', async () => {
-    // Comprehensive cascading failure: partial reviewer failure, dedupe failure, partial validation failure, and fix
-    // failure. `runFix` drives `fixScenario`'s agent as-is and so cannot drop a reviewer, so compose over it the way
-    // `review-gate.test.js` does — the review phase is the one cascade with a downstream consequence beyond its own
-    // gap: the reviewer that never returns is the one holding `src/a.ts`, so `deduped` loses its first member and every
-    // later `#idx` label renumbers around the gap.
-    const scenario = fixScenario({
+describe('a cascade through every phase that can record one', () => {
+  it('accumulates a reviewer, a dedupe and a validation gap in one run, each naming what it lost', async () => {
+    // `runReview` drives `reviewScenario`'s agent as-is and so cannot drop a reviewer, so compose over it the way
+    // `review-gate.test.js` does — the review phase is the one failure with a downstream consequence beyond its own gap:
+    // the reviewer that never returns is the one holding `src/a.ts`, so `deduped` loses its first member and every later
+    // `#idx` label renumbers around the gap.
+    const scenario = reviewScenario({
       issues: [
         issue({ file: 'src/a.ts', description: 'issue one', category: 'bug' }),
         issue({ file: 'src/b.ts', description: 'issue two', category: 'code-quality' }),
         issue({ file: 'src/c.ts', description: 'issue three', category: 'security' }),
       ],
       dedupe: () => null,
-      validate: (subject, { idx }) => {
-        // First validates, second doesn't.
-        return idx === 0 ? { confirmed: true, rationale: 'confirmed' } : null;
-      },
-      // Fix fails for the one finding that validated — the only one the fix phase is ever asked about, so there is no
-      // second arm to write here.
-      fix: () => null,
+      validate: (subject, { idx }) => (idx === 0 ? { confirmed: true, rationale: 'confirmed' } : null),
     });
-    const composed = await runWorkflow({
+    const run = await runWorkflow({
       scriptPath: SCRIPT,
-      args: { fix: true, reviewers: 1, validators: 1 },
+      args: { reviewers: 1, validators: 1 },
       agent: (call) => (call.label === 'review:core:bug' ? null : scenario.agent(call)),
     });
-    // `runFix` hands `outcomeAt` the scenario as `run.scenario`, which is how it resolves a `#idx` through the numbering
-    // the fixture recorded rather than indexing `fix.outcomes` positionally. A run composed by hand has to attach it the
-    // same way, or `outcomeAt` has nothing to resolve against.
-    const run = { ...composed, scenario };
 
-    // Exactly the four phase gaps named below and nothing else. A count and not a `gaps.length > 1` threshold, because
+    // Exactly the three phase gaps named below and nothing else. A count and not a `gaps.length > 1` threshold, because
     // a threshold would have held on any one of them alone. Three files are in scope here, so unlike the two-file
     // scenarios above this one clears the architecture-lens floor and carries no lens gap.
-    expectGapCount(run, 4);
+    expectGapCount(run, 3);
     expectGaps(run, GAP.reviewer('review:core:bug'));
     expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
     expectGaps(run, GAP.validation('src/c.ts:10'));
-    expectGaps(run, GAP.fix('src/b.ts:10'));
 
     // The failed reviewer's `src/a.ts` never entered the union, so the list the `#idx` labels number is `src/b.ts` then
     // `src/c.ts` — the validator that confirmed `#0` was asked about `src/b.ts`, not the `src/a.ts` it would have been
-    // asked about had every reviewer returned.
+    // asked about had every reviewer returned. That is also why only two findings were validated at all.
     expect(run.result.findings.map((subject) => subject.file)).toEqual(['src/b.ts']);
-
-    // But its fix failed.
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-  });
-
-  it('includes the exception message in the gap when a fix pipeline throws', async () => {
-    // A fix pipeline that throws rather than returning null: the phase-wide notice has to carry the underlying error,
-    // and it has to sit alongside the upstream gaps rather than replacing them.
-    const run = await runFix({
-      issues: [
-        issue({ file: 'src/a.ts', description: 'first', category: 'bug' }),
-        issue({ file: 'src/b.ts', description: 'second', category: 'bug' }),
-      ],
-      dedupe: () => null,
-      validate: (subject) => {
-        // Only first finding validates.
-        if (subject.file === 'src/a.ts') {
-          return { confirmed: true, rationale: 'confirmed' };
-        }
-        return null;
-      },
-      fix: () => {
-        throw new Error('Worktree creation failed: disk full');
-      },
-    });
-
-    // Upstream gaps should still be present.
-    expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
-    expectGaps(run, GAP.validation('src/b.ts:10'));
-
-    // The exception is caught and reported once, phase-wide, with its message attached — and not as the per-finding
-    // 'Fix agent did not return' gap, which would read as an agent that answered nothing rather than one that died.
-    expectGaps(run, GAP.fixPipeline('Worktree creation failed: disk full'));
-    expectNoGap(run, GAP.fix());
-
-    // The finding that validated should have a verify-failed status.
-    expect(run.result.findings).toHaveLength(1);
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect(outcomeAt(run, 0).reason).toBe('fix/review pipeline did not return');
-  });
-});
-
-describe('fix review failures after upstream gaps', () => {
-  it('records review gap on top of dedupe and validation gaps', async () => {
-    // Dedupe gap, then validation gap, then fix succeeds but review fails. One phase further than the fix-agent
-    // cascade above, so the third gap comes from a different phase and the outcome is a rejection, not a failure.
-    const run = await runFix({
-      issues: [
-        issue({ file: 'src/a.ts', description: 'first', category: 'bug' }),
-        issue({ file: 'src/b.ts', description: 'second', category: 'bug' }),
-      ],
-      dedupe: () => null,
-      validate: (_, { idx }) => idx === 0 ? { confirmed: true, rationale: 'confirmed' } : null,
-      reviewFix: () => null,
-    });
-
-    // Gaps from all three failing phases: dedupe, the validator that rejected `src/b.ts`, and the review of the fix
-    // for `src/a.ts`.
-    expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
-    expectGaps(run, GAP.validation('src/b.ts:10'));
-    expectGaps(run, GAP.fixReview('src/a.ts:10'));
-
-    // The fixer itself returned, so its own failure gap is not among them.
-    expectNoGap(run, GAP.fix());
-
-    // Only the first finding validated, and its fix went unreviewed. That costs the fix its `applied` status, but not
-    // its branch: an unreviewed commit is still the only copy of an attempt at a confirmed finding, so it survives
-    // teardown for the user to read. The branch is the original and not a revision — no reviewer returned, so there was
-    // no objection to revise against, and a review phase that failed outright is not an opinion about the diff.
-    expect(run.result.findings.map((subject) => subject.file)).toEqual(['src/a.ts']);
-    expect(outcomeAt(run, 0).status).toBe('review-rejected');
-    expect(run.result.fix.keepBranches).toEqual(['rrfix/wf_test/0']);
-    expect(run.called(/^revise:/)).toHaveLength(0);
-  });
-});
-
-describe('colliding fixes after upstream gaps', () => {
-  it('records dedupe, validation, fix and review gaps without any of them costing a branch', async () => {
-    // The deepest cascade the script can produce, and the one that used to end in a fifth gap: dedupe fails, validation
-    // partially fails, a fix agent fails, a fix review fails — and the three fixes that did get made all rewrote the
-    // same file. Under the old landing sequence that collision was itself a failure, because the fixes had to be
-    // cherry-picked into one branch and three edits to `src/shared.ts` cannot be. Nothing is landed now, so the
-    // collision is not an event: each fix keeps its own branch and the user merges whichever of them they want.
-    const run = await runFix({
-      issues: [
-        issue({ file: 'src/shared.ts', description: 'first issue', category: 'bug' }),
-        issue({ file: 'src/shared.ts', description: 'second issue', category: 'bug' }),
-        issue({ file: 'src/shared.ts', description: 'third issue', category: 'bug' }),
-        issue({ file: 'src/other.ts', description: 'fourth issue', category: 'bug' }),
-        issue({ file: 'src/another.ts', description: 'fifth issue', category: 'bug' }),
-      ],
-      dedupe: () => null,
-      validate: (subject, { idx }) => {
-        // First four validate (indices 0-3), fifth doesn't (index 4).
-        return idx < 4 ? { confirmed: true, rationale: 'confirmed' } : null;
-      },
-      fix: (subject, { idx }) => {
-        // First three succeed (indices 0-2, all touching the same file), fourth fails (index 3).
-        if (idx < 3) {
-          return {
-            status: 'applied',
-            sha: `deadbeef${String(idx).padStart(32, '0')}`,
-            branch: `rrfix/wf_test/${idx}`,
-            changedFiles: ['src/shared.ts'],
-            reason: 'fixed',
-          };
-        }
-        return null;
-      },
-      reviewFix: (subject, { idx }) => {
-        // First two approve (indices 0-1), third doesn't (index 2).
-        return idx < 2 ? { approved: true, objection: '' } : null;
-      },
-    });
-
-    // Exactly the four phase gaps, each naming the finding its phase lost. Five files are in scope, so there is no
-    // architecture-lens gap to account for.
-    expectGapCount(run, 4);
-    expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
-    expectGaps(run, GAP.validation('src/another.ts:10'));
-    expectGaps(run, GAP.fix('src/other.ts:10'));
-    expectGaps(run, GAP.fixReview('src/shared.ts:10'));
-
-    // Four findings validated. Two fixes are reported applied, the third is rejected on the reviewers' word and the
-    // fourth never got made — and the three branches that carry a commit are all kept, collision and rejection alike.
-    expect(run.result.findings).toHaveLength(4);
-    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual([
-      'applied',
-      'applied',
-      'review-rejected',
-      'verify-failed',
-    ]);
-    expect(run.result.fix.keepBranches).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1', 'rrfix/wf_test/2']);
+    expect(run.called(/^validate:/)).toHaveLength(2);
   });
 });
 
@@ -446,7 +251,7 @@ describe('cross-unit dedupe failures', () => {
   it('records both per-unit and cross-unit dedupe gaps', async () => {
     // Multiple units, per-unit dedupe partially fails, cross-unit dedupe also fails.
     // Each unit needs multiple findings for per-unit dedupe to run.
-    const run = await runFix({
+    const run = await runReview({
       issues: [
         issue({ file: 'src/core/a.ts', description: 'first', category: 'bug' }),
         issue({ file: 'src/core/b.ts', description: 'second', category: 'bug' }),
@@ -494,7 +299,7 @@ describe('early abort phases', () => {
   it('partition failure aborts immediately', async () => {
     // Partition fails - should abort before review runs. The contrasting case, where a post-partition phase fails and
     // the run carries on accumulating gaps, is every other test in this file.
-    const run = await runFix({
+    const run = await runReview({
       issues: [issue()],
       units: [],
     });

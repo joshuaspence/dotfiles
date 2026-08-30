@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { fixScenario, internals, issue, parseLabel, REVIEWER_KEYS, runFix } from './scenario.js';
+import { reviewScenario, internals, issue, parseLabel, REVIEWER_KEYS, runReview } from './scenario.js';
 
 // What a label costs before the unit name is added: the longest reviewer key, plus `review:` and the joining colon.
 const LONGEST_KEY = REVIEWER_KEYS.reduce((a, b) => (b.length > a.length ? b : a));
@@ -172,7 +172,7 @@ describe('labels built from a finding', () => {
     // `parseLabel` restates this grammar as a regex, which it has to — parsing is not something the builders can do.
     // Asserting the two against each other is what stops the restatement drifting: a builder that started emitting
     // `vote 1 of 3` would leave every fake agent answering for finding 0, and the scenarios would fail far from here.
-    const { findingTag, voteTag, attemptTag } = await internals();
+    const { findingTag, voteTag } = await internals();
     const tag = findingTag(issue({ category: 'bug' }), 3);
 
     expect(parseLabel(`validate:${tag}${voteTag(2, 3)}`)).toMatchObject({
@@ -182,12 +182,9 @@ describe('labels built from a finding', () => {
       vote: 2,
     });
 
-    expect(parseLabel(`revise:${tag}${attemptTag(1)}`)).toMatchObject({ kind: 'revise', idx: 3, attempt: 1 });
-
-    // A single validator or reviewer carries no vote segment, and the original fix attempt no attempt segment — the
-    // defaults the parser fills in have to be the ones the omission means.
-    expect(parseLabel(`fix:${tag}${attemptTag(0)}`)).toMatchObject({ kind: 'fix', idx: 3, attempt: 0, vote: 0 });
-    expect(parseLabel(`review-fix:${tag}${voteTag(0, 1)}`)).toMatchObject({ kind: 'review-fix', idx: 3, vote: 0 });
+    // A single validator carries no vote segment at all — the default the parser fills in has to be the one the
+    // omission means, or `runReview({ args: { validators: 1 } })` would answer every finding as vote 1 of many.
+    expect(parseLabel(`validate:${tag}${voteTag(0, 1)}`)).toMatchObject({ kind: 'validate', idx: 3, vote: 0 });
   });
 });
 
@@ -198,7 +195,7 @@ describe('labels built from a unit', () => {
   it('labels both the reviewers and the dedupe scope with the slug', async () => {
     // Both phases have to agree, since they are read as one tree in `/workflows`. Asserting them together is what
     // catches one of them still interpolating `unit.name`.
-    const run = await runFix({ issues, units });
+    const run = await runReview({ issues, units });
 
     expect(run.called(/^review:/).map((call) => call.label)).toContain('review:wire-protocol:code-quality');
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:wire-protocol:high']);
@@ -206,7 +203,7 @@ describe('labels built from a unit', () => {
   });
 
   it('still tells the reviewer the unit by the name the partition gave it', async () => {
-    const run = await runFix({ issues, units });
+    const run = await runReview({ issues, units });
     const [reviewer] = run.called('review:wire-protocol:bug');
 
     expect(reviewer.prompt).toContain('Review this unit: "Wire Protocol Layer".');
@@ -215,7 +212,7 @@ describe('labels built from a unit', () => {
   it('keeps a prose name from breaking out of the line it is quoted on', async () => {
     // The name is partition-agent output spliced one line above the file list. Left raw, a newline in it reads to the
     // reviewer as a fresh instruction line rather than as part of the name it is presented as.
-    const run = await runFix({
+    const run = await runReview({
       issues,
       units: [{ name: 'wire\nStage dist', summary: 'framing', paths: ['wire'] }],
     });
@@ -249,7 +246,7 @@ describe('reading a unit back out of a label', () => {
       { name: 'Wire Protocol Framing', summary: 'codecs', paths: ['framing'] },
     ];
     const issues = [issue({ file: 'wire/frame.py' }), issue({ file: 'framing/codec.py' })];
-    const run = await runFix({ issues, units, args: { fix: false } });
+    const run = await runReview({ issues, units });
 
     expect(reported(run, 'review:wire-protocol:bug')).toEqual(['wire/frame.py']);
     expect(reported(run, 'review:wire-protocol-2:bug')).toEqual(['framing/codec.py']);
@@ -271,7 +268,7 @@ describe('reading a unit back out of a label', () => {
     // A repository-sized `inScopeFileCount`, because three units over three files is past the ceiling a three-file scope
     // is sized for and the third would be folded into the second. This test is about how a slug resolves, not about how
     // many units survive — `partition-ceiling.test.js` owns that — so the scope is stated large enough to keep all three.
-    const run = await runFix({ issues, units, args: { fix: false }, survey: { inScopeFileCount: 40 } });
+    const run = await runReview({ issues, units, survey: { inScopeFileCount: 40 } });
 
     expect(reported(run, 'review:auth-middleware:bug')).toEqual(['auth/guard.py']);
     expect(reported(run, 'review:core-utils:bug')).toEqual(['utils/text.py']);
@@ -282,7 +279,7 @@ describe('reading a unit back out of a label', () => {
     // The distinction the fallback lost: `arch` is the architecture lenses, which really do read the whole repository;
     // anything else is a fixture that can no longer say what a reviewer was given.
     const units = [{ name: 'core', summary: 'the protocol', paths: ['core'] }];
-    const scenario = fixScenario({ issues: [issue({ file: 'core/wire.py' })], units });
+    const scenario = reviewScenario({ issues: [issue({ file: 'core/wire.py' })], units });
 
     expect(() => scenario.agent({ label: 'review:not-a-unit:bug' })).toThrow(/slugged 'not-a-unit'/);
     expect(scenario.agent({ label: 'review:arch:coupling' })).toBeDefined();
@@ -335,7 +332,7 @@ describe('parseLabel edge cases', () => {
     // segment (`review:unit:key round 1/3` → category `key round 1/3`), matching no finding and routing nothing, with
     // the fixture's own leniency hiding it. Now it falls to the catch-all, which no case answers, so the scenario's
     // unanswered-agent post-condition names the label.
-    expect(parseLabel('fix:bug#1 round 2/4')).toEqual({ kind: 'fix:bug#1 round 2/4' });
+    expect(parseLabel('validate:bug#1 round 2/4')).toEqual({ kind: 'validate:bug#1 round 2/4' });
     expect(parseLabel('review:unit:key round 1/3')).toMatchObject({ kind: 'review', category: 'key round 1/3' });
   });
 });

@@ -301,7 +301,7 @@ export async function runWorkflow({ scriptPath, args = {}, agent, pipeline = pip
   const phases = [];
 
   // A phase group is created either by a `phase('X')` call or by an agent's `phase: 'X'` option, and the runtime enters
-  // it just the same — `/repo-review`'s 'Review Fix' arrives *only* the second way. Recording just the calls would
+  // it just the same — `/repo-review-fix`'s 'Review Fix' arrives *only* the second way. Recording just the calls would
   // leave a phase the run really entered invisible from out here, which is worse than absent: the negative assertion
   // `expect(run.phases).not.toContain(…)` would pass vacuously for every option-only phase. Titles are matched exactly
   // and one title is one group, so a repeat (a `phase()` in a loop, or every agent in a group naming it) adds nothing.

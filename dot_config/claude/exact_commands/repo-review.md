@@ -3,26 +3,26 @@ name: Repo Review
 description: Review an entire repository
 argument-hint: >-
   [--effort <low|medium|high|xhigh|max>]
-  [--fix]
   [--output <file>]
   [--partitions <n|auto>]
-  [--reviewers <n>]
   [--rounds <n>]
   [--validators <n|auto>]
   [path ...]
 allowed-tools:
-  - Bash(git branch --delete --force:*)
   - Bash(git remote get-url:*)
   - Bash(git rev-parse:*)
-  - Bash(git worktree list:*)
-  - Bash(git worktree prune:*)
-  - Bash(git worktree remove:*)
   - Read
   - Workflow
   - Write
 ---
 
 Provide a code review for an entire repository.
+
+**This command only reads.** It finds defects, reports them, and records them in a ledger; it never edits, commits or
+creates a branch. Fixing them is `/repo-review-fix`, which reads the same ledger. The two were one command with a `--fix`
+flag, and the coupling cost both halves: every fix run paid for a full re-review to reach the fixers, and the fix phase
+could only ever see the findings *that round* confirmed. So there is no `--fix` here — finish a review, then run
+`/repo-review-fix`.
 
 The review runs as a committed **workflow** — `repo-review`, referenced by name — which fans it out across subagents
 (survey → partition → review → dedup → validate) and returns validated findings. This command is a thin wrapper: parse
@@ -41,10 +41,10 @@ may ignore. So: if a token is not a flag and not a preceding flag's value, it **
 the only path and the review silently widens from one subtree to the entire repository; drop one of several and it
 silently narrows, so a subtree the user asked about is never opened. Either way every phase then behaves correctly for
 that wrong scope, and nothing downstream can detect the mistake. Adding a flag never removes a path: the paths are
-independent of `--fix`, `--output`, and every other flag, and combining them does not make any of them optional.
+independent of `--output` and every other flag, and combining them does not make any of them optional.
 
-Paths are not required to be contiguous or to come last — `/repo-review src --fix lib` supplies two of them — so
-collect each one as you scan the tokens instead of expecting a single run at either end.
+Paths are not required to be contiguous or to come last — `/repo-review src --partitions 6 lib` supplies two of them —
+so collect each one as you scan the tokens instead of expecting a single run at either end.
 
 - Bare `path` arguments are optional and scope the review to the subtrees they name. Any number may be given: none
   (review the whole repository), one, or several. When given they apply throughout the script (survey, partition, and
@@ -96,24 +96,6 @@ collect each one as you scan the tokens instead of expecting a single run at eit
   made `true` and `3` both legal values of one key. A mandatory value removes all of that: `--rounds` parses exactly like
   `--partitions`.
 
-- `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix and Review Fix phases
-  — one isolated agent per validated finding attempts a clean, verified fix and commits it on a branch of its own, and
-  those fixes are independently reviewed (see `--reviewers`) — and returns a per-finding outcome plus the branches worth
-  keeping. This command **lands nothing**: it verifies those branches against git, reports them for you to review and
-  merge yourself, and tears down only the sandboxes that hold no work (see
-  [Report the fix branches](#report-the-fix-branches)). If omitted, the review is strictly read-only, as before. Pass it
-  as `fix`: `true` when present; omit it otherwise. `--fix` is independent of the other flags (it fixes whatever the
-  review, at whatever partitions/validators/effort/rounds, validated). Each round fixes only the findings *it* confirmed,
-  so a multi-round `--fix` run produces branches as it goes rather than a batch at the end.
-
-- `--reviewers <n>` sets how many independent reviewers judge each fix in the Review Fix phase (only meaningful with
-  `--fix`). Must be a non-negative integer; reject any other value and stop with an error rather than guessing. If
-  omitted, the script defaults it to `1`. A fix is kept only on a **strict majority** of its reviewers; a rejected fix
-  is sent back to the fixer with the objection and re-reviewed, up to an internal revision cap, before being reported
-  unfixed. **`--reviewers 0` disables the Review Fix phase entirely** — every fix that verified in its own sandbox is
-  then reported as applied without a second opinion on it. Pass it through as `reviewers` when given; omit it otherwise.
-  This is to *fixes* what `--validators` is to *findings*.
-
 - `--output <file>` writes the report to that file in addition to the terminal. This command handles it; do **not** pass
   it to the script. It is the only flag you parse and then deliberately withhold — every other flag is either passed
   through or absent — so take care that consuming `--output` and its filename does not also consume a `path`. Its
@@ -153,13 +135,14 @@ re-worded by the reviewer that re-reports it.
       "lines": "132",
       "otherSites": [],
       "reason": "a length prefix is read but never bounded",
-      "firstSeen": { "round": 2, "commit": "a1b2c3d4…" }
+      "firstSeen": { "round": 2, "commit": "a1b2c3d4…" },
+      "fixBranch": { "branch": "rrfix/wf_9a1c2e/0", "sha": "7f3b91c" }
     }
   ]
 }
 ```
 
-- `findings` is the last round's `findings` array **verbatim**, entry for entry, with exactly one key added per entry:
+- `findings` is the last round's `findings` array **verbatim**, entry for entry, with exactly one key *you* add per entry:
   `firstSeen`, holding the `round` and `reviewedCommit` of the round that first reported that fingerprint. Add nothing
   else, and change nothing that was already there: what you store is what the next round is handed back as
   `knownFindings`, and a finding you re-worded is one dedupe can no longer recognise as the same finding.
@@ -168,8 +151,14 @@ re-worded by the reviewer that re-reports it.
   as, so the key you wrote is on it again in the next round's `findings` — read it from there rather than re-joining by
   fingerprint. Only a finding that is new needs one stamped. The script reads just `category`, `file`, `lines`,
   `description`, `severity` and `otherSites` off a held finding and renders those into the prompts, so a wrapper-owned key
-  never reaches an agent; it is also why this is the only key to add, since an unknown one is carried rather than
+  never reaches an agent; it is also why this is the only key *you* add, since an unknown one is carried rather than
   validated and a mistake here would be silent.
+
+  `fixBranch` is the other command's key and rides along on exactly the same mechanism: `/repo-review-fix` writes it onto
+  a finding it has produced an unmerged branch for. It is optional and most findings have none. Carry it through
+  untouched, and do not treat it as "fixed" — nothing has been landed, so the defect is still in the tree and the review
+  is still right to hold it. Mention it when you report that finding, so the user is not offered a second fix for
+  something they already have one for.
 - `round` is the last round's `round` — the **absolute** count across every invocation, which the next one continues
   from. It is not the number of rounds run today; see `--rounds`.
 - `reviewedCommit` is the last round's, so the next report can say how far the checkout has moved since the review.
@@ -222,14 +211,15 @@ signal reveals) or the round is not returning what it claims. Report the discrep
 the one derived from the findings themselves.
 
 The corollary is the part that has to be said out loud in every report after the first: **the held findings were not
-re-examined this round.** They were not re-read, not re-validated and, under `--fix`, not re-offered — that is precisely
-what makes a later round cost about what round 1 cost. So some of them may already be fixed. Say that, and say how many
-findings are held versus new, rather than presenting the whole accumulated list as the current state of the code.
+re-examined this round.** They were not re-read and not re-validated — that is precisely what makes a later round cost
+about what round 1 cost. So some of them may already be fixed. Say that, and say how many findings are held versus new,
+rather than presenting the whole accumulated list as the current state of the code.
 
-Finally, report the held count as a cost signal. Nothing prunes the ledger, so the list handed to the reviewers and to
-the cross-unit dedupe pass grows with the review's whole history; past roughly 150 findings that pass starts chunking
-(see [Notes](#notes)), which costs `C(m,2)` agent calls rather than `m`. That is measured and reported here, never
-enforced: the remedy is the user's, and it is to fix some findings or delete the file.
+Finally, report the held count as a cost signal. Nothing this command does prunes the ledger, so the list handed to the
+reviewers and to the cross-unit dedupe pass grows with the review's whole history; past roughly 150 findings that pass
+starts chunking (see [Notes](#notes)), which costs `C(m,2)` agent calls rather than `m`. That is measured and reported
+here, never enforced: the remedy is the user's, and it is to run `/repo-review-fix` — which retires a finding the fixer
+found already resolved — or to delete the file.
 
 ## Run the workflow
 
@@ -261,26 +251,23 @@ Call the `Workflow` tool with:
   you nothing. Note that every `path` survives every flag combination, that the path-less rows are path-less only because
   the user gave no path, and that the two wrapper-handled flags leave no trace in `args` at all:
 
-  | Invocation                                            | `args`                                                 |
-  |-------------------------------------------------------|--------------------------------------------------------|
-  | `/repo-review`                                        | `{}`                                                   |
-  | `/repo-review src --partitions 6`                     | `{ "paths": ["src"], "partitions": 6 }`                |
-  | `/repo-review src lib`                                | `{ "paths": ["src", "lib"] }`                          |
-  | `/repo-review --rounds 3`                             | `{}`                                                   |
-  | `/repo-review src --rounds 3`                         | `{ "paths": ["src"] }`                                 |
-  | `/repo-review 2024 --rounds 3`                        | `{ "paths": ["2024"] }`                                |
-  | `/repo-review --fix`                                  | `{ "fix": true }`                                      |
-  | `/repo-review --fix --reviewers 2`                    | `{ "fix": true, "reviewers": 2 }`                      |
-  | `/repo-review src/a.js --fix`                         | `{ "paths": ["src/a.js"], "fix": true }`               |
-  | `/repo-review src --fix lib`                          | `{ "paths": ["src", "lib"], "fix": true }`             |
-  | `/repo-review src/a.js src/b.js --fix`                | `{ "paths": ["src/a.js", "src/b.js"], "fix": true }`   |
-  | `/repo-review src/a.js --output report.md`            | `{ "paths": ["src/a.js"] }`                            |
-  | `/repo-review src/a.js --fix --output report.md`      | `{ "paths": ["src/a.js"], "fix": true }`               |
-  | `/repo-review pkg docs --fix --output r.md`           | `{ "paths": ["pkg", "docs"], "fix": true }`            |
-  | `/repo-review pkg --effort xhigh --fix --output r.md` | `{ "paths": ["pkg"], "effort": "xhigh", "fix": true }` |
+  | Invocation                                           | `args`                                                   |
+  |------------------------------------------------------|----------------------------------------------------------|
+  | `/repo-review`                                       | `{}`                                                     |
+  | `/repo-review src --partitions 6`                    | `{ "paths": ["src"], "partitions": 6 }`                  |
+  | `/repo-review src lib`                               | `{ "paths": ["src", "lib"] }`                            |
+  | `/repo-review --rounds 3`                            | `{}`                                                     |
+  | `/repo-review src --rounds 3`                        | `{ "paths": ["src"] }`                                   |
+  | `/repo-review 2024 --rounds 3`                       | `{ "paths": ["2024"] }`                                  |
+  | `/repo-review src --partitions 6 lib`                | `{ "paths": ["src", "lib"], "partitions": 6 }`           |
+  | `/repo-review --validators auto`                     | `{ "validators": "auto" }`                               |
+  | `/repo-review src/a.js src/b.js --validators 3`      | `{ "paths": ["src/a.js", "src/b.js"], "validators": 3 }` |
+  | `/repo-review src/a.js --output report.md`           | `{ "paths": ["src/a.js"] }`                              |
+  | `/repo-review pkg docs --validators 3 --output r.md` | `{ "paths": ["pkg", "docs"], "validators": 3 }`          |
+  | `/repo-review pkg --effort xhigh --output r.md`      | `{ "paths": ["pkg"], "effort": "xhigh" }`                |
 
 Before you call `Workflow`, state in one line the `args` object you built and the scope it implies — naming every path,
-e.g. "Reviewing `src` and `lib` (scoped) with `--fix`." — then check it against `$ARGUMENTS`: every non-flag token must
+e.g. "Reviewing `src` and `lib` (scoped), 2 rounds." — then check it against `$ARGUMENTS`: every non-flag token must
 appear in `paths`, and `paths` must hold exactly as many entries as there were such tokens. If you wrote "whole
 repository" when the user gave a path, or named one subtree when they gave two, you have dropped one; fix `args` before
 launching. Finalise every argument value *before* you call `Workflow`. Running that workflow *is* the review: it runs
@@ -310,7 +297,7 @@ The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps 
   which makes the total fall on a round that genuinely found something.
 - `exclusions` — `{ path, reason }` entries for everything the partitioner left out (vendored/third-party code,
   generated code, lock files, binaries).
-- `gaps` — strings recording every way the run fell short of a complete, clean pass. They come in three kinds, and each
+- `gaps` — strings recording every way the run fell short of a complete, clean pass. They come in two kinds, and each
   entry states in prose which it is:
 
   - **coverage** — a reviewer, lens, or validation that did not complete, a whole review unit whose pipeline failed
@@ -318,33 +305,9 @@ The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps 
     partition folded down to the unit ceiling. Findings may be *missing*.
   - **dedupe** — a dedupe stage that stalled or did not converge. Every finding here *was* reviewed and validated; one
     defect may simply be listed twice.
-  - **fix** — present only with `--fix`: a fix that could not be produced, reviewed or verified. This is about fixing
-    work, not review coverage.
-- `fix` — present **only when `--fix` was requested** and there were findings. It is
-  `{ base, sandboxBranches, keepBranches, outcomes }`:
-  - `base` — the commit the fix agents were told to branch from: `reviewedCommit` again, under the name teardown checks
-    branches against. You verify this rather than assume it (see
-    [Report the fix branches](#report-the-fix-branches)).
-  - `sandboxBranches` — every branch the run's fix agents reported creating, successful or not, plus the branch each
-    agent that never reported back was told to create: one killed mid-run had already cut its branch as its first step,
-    and an unrecorded branch is one teardown cannot remove. This is the *candidate* teardown list — everything this run
-    is responsible for, and it exists because those branches, not a naming glob, are what that means. A reconstructed
-    entry may name a branch that was never actually created (the agent died before creating it), so a "not found" while
-    deleting one is expected and not a failure.
-  - `keepBranches` — the subset of `sandboxBranches` the script believes carries a commit worth keeping: every
-    `applied` fix, and every `review-rejected` one too, because a rejection is an opinion and that branch is the only
-    copy of the work it rejected. These must survive teardown. The script has no git access, so this is the agents'
-    self-report: treat it as a floor rather than a census, and keep any *other* branch you find sitting ahead of `base`.
-  - `outcomes` — one entry per finding:
-    `{ fingerprint, description, category, severity, file, lines, status, sha, branch, changedFiles, reason }`. The
-    `fingerprint` is the same one on the finding and the same one the fixer was told to write into its commit as a
-    `Repo-Review-Finding:` trailer, so it joins a branch to the finding it answers — and it is the only join that
-    survives a killed run, since `git log --all --grep 'Repo-Review-Finding: <fp>'` finds the commit with no state file at
-    all. `status` is
-    `applied` (fixed and committed), `declined` (not a safe, localized fix), `verify-failed` (the fix broke the
-    build/tests in its sandbox), or `review-rejected` (reviewers rejected the fix and revisions were exhausted). Only
-    `applied` is fixed; every other status is an **unfixed** finding — though a `review-rejected` one still leaves a
-    branch behind for you to look at.
+
+  There is no third kind any more: fixing gaps belong to `/repo-review-fix` and are reported by it, so nothing in this
+  result is about work that was attempted and failed rather than coverage that was lost.
 
 ## Run the rounds
 
@@ -358,8 +321,8 @@ cap depends on the flag; everything else, the ledger write included, applies to 
 
 1. Call `Workflow` with the `args` you built, ledger keys included.
 2. **Report the round before deciding anything, and write the ledger** — the whole
-   [Produce the output](#produce-the-output) section, including the branch table when `--fix` was given, including its
-   teardown, and including [writing the ledger](#writing-it). Do not accumulate rounds and report once at the end: that
+   [Produce the output](#produce-the-output) section, including [writing the ledger](#writing-it). Do not accumulate
+   rounds and report once at the end: that
    reintroduces exactly the failure this design removes, since a run interrupted between rounds then has nothing to show
    for the rounds that did finish — and now nothing persisted for the *next invocation* to build on either, which makes
    an interrupted multi-round run cost the same as never having run it. Say which round it was, and how many rounds this
@@ -381,8 +344,7 @@ cap depends on the flag; everything else, the ledger write included, applies to 
    untouched — do not re-sort it, prune it, re-word a description, or drop the ones you judged low value. The script
    merges this round's raw findings against it, which is what turns a re-report into an absorbed duplicate rather than a
    second entry, and a finding you edited is one it can no longer recognise as the same finding. It also skips
-   re-validating and re-fixing everything on that list, so a finding you drop from it comes back as new and is paid for
-   twice.
+   re-validating everything on that list, so a finding you drop from it comes back as new and is paid for twice.
 
 Each round is a separate `Workflow` call and so a separate `/workflows` tree; the survey and partition run again in each
 one, which is the price of a round being self-contained. Later rounds are handed what is already held and are pushed to
@@ -408,19 +370,20 @@ findings):
   and modules involved, for repository-wide findings), and why it was flagged. Link each to its source with the
   permalink format below, and note any `otherSites`. Mark each as new this round or held, and for a held one give the
   round it was first seen in — a finding outstanding since round 1 of four reads very differently from one found minutes
-  ago. Then say once, plainly, that the held findings were **not re-examined this round** and some may already be fixed.
+  ago. If a held finding carries a `fixBranch` from [the ledger](#the-ledger), say so and name the branch: it is still
+  open, but an unmerged fix for it already exists and the user should read that rather than ask for another. Then say
+  once, plainly, that the held findings were **not re-examined this round** and some may already be fixed.
 - If none were returned, state: "No issues found. Checked for bugs, security, consistency, code quality, architecture,
   test coverage and quality, and `CLAUDE.md` compliance." Only say that when the *accumulated* set is empty. A later
   round returning nothing at all means dedupe merged away or validation rejected everything the review held, which is a
   surprising result worth naming as such rather than reporting as a clean repository.
 - In both cases, state which parts of the repository were excluded (`exclusions`), and report every entry in `gaps` —
   no gap may read as "clean". Label each one by its kind (above), which the entry's own wording tells you: a **coverage**
-  gap is **not reviewed / not validated**; a **dedupe** gap was reviewed and validated but may be **reported twice**; a
-  **fix** gap is a finding **not fixed** and not verified as unfixable. Do not report a dedupe or fix gap as missing
-  review coverage — mislabelling one hides a real gap behind a false alarm.
-- When a `fix` object is present, annotate each finding with its outcome from `fix.outcomes` (fixed, or the reason it
-  was not), and report the branch table (below) plus a tally: how many findings were fixed (`applied`) versus left
-  unfixed (`declined` / `verify-failed` / `review-rejected`). An unfixed finding must never read as fixed.
+  gap is **not reviewed / not validated**, and a **dedupe** gap was reviewed and validated but may be **reported twice**.
+  Do not report a dedupe gap as missing review coverage — mislabelling one hides a real gap behind a false alarm.
+- Close by pointing at `/repo-review-fix`, in one line, whenever the accumulated set is non-empty: this command has
+  changed nothing, and that is the command that acts on what it just reported. Suggest a `--severity` floor when the list
+  is long, since the fixer's cap spends itself worst-first and a floor is how the user aims it.
 
 ### Run summary
 
@@ -476,9 +439,10 @@ review run (every reviewer reads files) but are priced at a fifth of the output 
 of it — so the all-in figure has tended to land within roughly a factor of two of the floor. Offer that as an
 order-of-magnitude expectation, not a second number to add — it is a rule of thumb, not measured.
 
-A worked example, from a 32-agent single-file `--fix` run — note that Opus is 79% of the tokens and 88% of the cost, so
-the per-tier split is the useful part of this summary, and the reviewer count (`--partitions` × 6, see
-[Notes](#notes)) is where it is actually spent:
+A worked example, from a 32-agent single-file run that also fixed what it found, back when one command did both — note
+that Opus is 79% of the tokens and 88% of the cost, so the per-tier split is the useful part of this summary, and the
+reviewer count (`--partitions` × 6, see [Notes](#notes)) is where it is actually spent. A review-only run of the same
+scope is smaller than this by whatever the fixers cost:
 
 | Tier          | Agents | Tokens        | Output rate (USD/1M) | Cost (USD) |
 |---------------|--------|---------------|----------------------|------------|
@@ -492,97 +456,19 @@ the per-tier cost breakdown was unavailable — an unpriceable run is not a free
 
 If `--output <file>` was provided, write the same report to that file.
 
-## Report the fix branches
+## What this command does not do
 
-Only when a `fix` object was returned. Each fix already exists as a commit on a branch of its own, made by an agent in
-an isolated worktree. **You do not land it.** You do not cherry-pick, merge, rebase, switch, edit a file, resolve a
-conflict, or amend a commit: you verify what exists, report it, and delete only the sandboxes that hold nothing.
+This command **only reads**. Do not edit a file, commit, create or delete a branch, create a worktree, create GitHub
+issues, post comments, push, or open a pull request. There is nothing here to land: the review's whole output is the
+report and the ledger, and fixing anything it found is `/repo-review-fix`, which has its own authorization and its own
+`allowed-tools`.
 
-That is the opposite of what this command used to do, and the reversal was deliberate. Landing meant cherry-picking
-every fix onto one branch, which is sound only if the fixes are pairwise-disjoint in their files — an invariant the
-script can never actually verify (it has no git access, so "disjoint" is only ever what the fix agents *said*), and one
-that real runs broke twice over: four fixes each rebuilt `dist/server.cjs`, and a shared allowlist that two separate
-fixes both had to touch produced a "disjoint" pair that passed apart and failed together. Enforcing disjointness meant
-*discarding real fixes* to protect a merge nobody had asked for. So fixes are now additive and independent — one branch
-each, freely overlapping — and whoever wants two of them together does that deliberately, with the conflict in front of
-them.
+That is enforced rather than promised — `allowed-tools` above holds no write verb at all (see [Notes](#notes)) — and the
+enforcement matters because the prose has been overruled before. When this command still fixed, it cherry-picked each fix
+onto a shared branch, and a `100755 → 100644` mode change survived the switch back and dirtied the user's tree despite a
+paragraph saying the checkout was left untouched.
 
-1. **Note where the repository is.** Run `git rev-parse HEAD` and compare it with `fix.base`. If they differ the
-   checkout has moved since the review; say so, and say how far, but do not treat it as a failure — nothing is being
-   applied, so a moved `HEAD` costs the user a rebase rather than costing correctness. You do **not** need a clean
-   working tree for any of this, and must not stash, commit, or check anything out to get one.
-2. **Verify every branch against git before you name it.** For each entry in `fix.keepBranches`, and each distinct
-   `outcome.branch` that came back with a `sha`, run `git rev-parse <branch>` and `git rev-parse <branch>^`. The branch
-   must resolve, and its first parent must be `fix.base`. A branch that does not resolve, or that resolves *to*
-   `fix.base`, carries no commit at all: the agent reported a fix it never made. That is a **defect in the run**, not an
-   unfixable finding — say so plainly, and count the finding as not fixed. A branch whose parent is some other commit
-   still holds work; keep it, but say the base is not the one the run claimed.
-3. **Report a table**, one row per branch that verified, most severe first:
-
-   | branch | commit | severity | category | file | fix status |
-   |---|---|---|---|---|---|
-
-   Abbreviate the `sha` from the outcome, and give the finding's description in the row or immediately beneath it. Then
-   say once, plainly, that these branches are **unmerged**: nothing has been applied to the working checkout, they are
-   all cut from `fix.base`, and two of them may well touch the same file, so taking more than one is a deliberate act
-   that may need a conflict resolved. Point the user at `git diff <base-sha>..<branch>` to read one and
-   `git cherry-pick <sha>` to take one, spelling out the real SHAs. Those are suggestions *for the user to run* — they
-   are not in your `allowed-tools`, and you do not run them.
-4. **Tear down only the empty sandboxes.** Every worktree goes; a branch goes only if it holds nothing. This inversion
-   is the whole point of the phase: a branch *is* the product of `--fix`, so the failure to avoid is deleting one that
-   holds work, not leaving an empty one behind. When in doubt, keep it and say you did — a stray `rrfix/*` ref costs
-   nothing, and per-run branch names mean a leftover cannot break the next run. (They are per-run for exactly that
-   reason: the fixers used to restart at `rrfix/0` every time, and one run ending without teardown made the next run's
-   `git switch --create rrfix/0` fail outright.)
-   - **Worktrees first, all of them.** A branch checked out somewhere cannot be deleted, and a branch you are keeping
-     does not need its worktree — the commit lives in the repository, not in the checkout. For each entry in
-     `git worktree list --porcelain` whose `branch` is one of `fix.sandboxBranches` *or* is a `worktree-<run-id>-<n>`
-     branch for this run's `<run-id>`, run `git worktree remove <path>`, adding `--force` if it refuses: the commit is
-     what you reported, and anything else left in the sandbox is scratch. Match both forms, because a fixer only moves
-     onto its `rrfix/*` ref once it has run its own `git switch --create`: one that died before that leaves a sandbox
-     still checked out on the `worktree-<run-id>-<n>` ref the harness made it on, which the `rrfix/*` refs alone never
-     match. Miss it and both the worktree and that branch leak — the branch delete below cannot touch a ref that is
-     checked out, and `git worktree prune` only drops administrative files for worktrees whose directory is already
-     gone.
-   - **Then delete `fix.sandboxBranches` minus everything step 2 found carrying a commit.** That is `keepBranches` plus
-     any branch you found ahead of `fix.base` that was not on it — the script reports from the agents' self-report, so
-     git is the authority here and it overrules the list in the keep direction only. Never in the delete direction: a
-     branch missing from `keepBranches` that turns out to hold a commit is exactly the agent that committed and then
-     died before reporting back, and its branch is the only copy of that work.
-   - **Delete refs by exact name, not by prefix.** The list itself is the authority for *scope*: the script has already
-     screened every entry into the `rrfix/<run-id>/<n>` namespace, so exact-name deletion is inherently confined to this
-     run and cannot reach `master` or a concurrent run's branches. Do not filter the list down to one `<run-id>` before
-     deleting — the run id is derived *by each agent* from its own worktree branch, and that derivation has failed in a
-     real run: 49 of 116 names came back as `rrfix/undefined/<n>` and one had mis-split the id into
-     `wf_6c337c34-fb5-400`. Those branches exist. Prefix-filtering them out of the delete list leaves them behind, which
-     is precisely the leak the list is meant to prevent.
-   - Use `git branch --delete --force`, and spell both flags out long-form: the `allowed-tools` rule is a literal prefix
-     match on `git branch --delete --force`, with no flag aliasing, so the `-D` shorthand misses it and costs you a
-     confirmation prompt mid-teardown. `--force` rather than a safe delete because these branches were never merged
-     anywhere, so `--delete` alone would refuse every one of them. A ref git reports as not found is not an error: the
-     list includes the branch an agent that never reported back was told to create, and it may have died before creating
-     it. Skip that one and keep going through the rest.
-   - You still need a single `<run-id>` for the `worktree-<run-id>-<n>` refs, because those are *not* on the list and
-     can only be matched by pattern. Take the one appearing in the **most** `fix.sandboxBranches` entries rather than
-     the one in the first entry, and ignore `undefined` / `null` outright. When the names disagree the script says so in
-     `gaps`; expect `worktree-*` refs under the minority ids to survive teardown, and report them as leftovers rather
-     than widening the pattern to catch them. The harness does not reap those refs itself — they are what the fix
-     branches were cut from — so delete the ones for this `<run-id>` (the worktree step above has already released any
-     sandbox still checked out on one), then finish with `git worktree prune` to drop the stale administrative files.
-     **Never glob `worktree-*`.** That namespace belongs to every worktree-isolated agent in the session, not just this
-     run, so an unscoped delete destroys unrelated work; match on this run's `<run-id>` and nothing else.
-
-   Touch nothing this run did not create, and never reconstruct either set from a guess: for the `rrfix/*` refs that
-   means deleting only names that appear in `fix.sandboxBranches`; for the `worktree-*` refs, which are not listed, only
-   the majority `<run-id>` read out of those names.
-
-Do not push, and do not open a pull request. Do not merge the branches anywhere, including into each other.
-
-Without `--fix`, this command only reports: do not create GitHub issues, do not post comments, do not edit files, and
-do not commit anything. With `--fix`, the *only* actions it takes are the read-only verification above and the teardown
-of the empty `rrfix/*` sandboxes it created — it still does not edit, commit, merge, push, comment, or open PRs.
-
-The two files this command writes are not exceptions to that. `--output` writes where the user pointed it, and
+The two files this command writes are not exceptions. `--output` writes where the user pointed it, and
 [the ledger](#the-ledger) is this command's own state, at a fixed path, holding only what it just reported. Neither is a
 source file and neither is committed — if the user does not want the ledger tracked, `.claude/` belongs in their
 `.gitignore`, which is their decision and not one to make for them.
@@ -657,10 +543,10 @@ source file and neither is committed — if the user does not want the ledger tr
   files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like
   any other coverage gap: architecture was **not reviewed**, not "clean".
 - The script resolves failures it can see: each fan-out runs under `parallel()`, which resolves a failed agent to
-  `null` rather than rejecting the batch, and every dropped reviewer, lens, validation, dedupe stage or fix pipeline is
-  recorded in `gaps`. Surface those gaps in the output, each under its own kind — only the dropped reviewers, lenses and
-  validations are lost *review coverage*.
-- A round is a whole invocation of the script, survey and partition included, and validation and `--fix` run inside it
+  `null` rather than rejecting the batch, and every dropped reviewer, lens, validation or dedupe stage is recorded in
+  `gaps`. Surface those gaps in the output, each under its own kind — only the dropped reviewers, lenses and validations
+  are lost *review coverage*.
+- A round is a whole invocation of the script, survey and partition included, and validation runs inside it
   over **only what that round contributed** — not over the accumulated set. That is what makes a round cost about the
   same as round 1 instead of as much as every round before it put together: the old in-script loop re-validated and
   re-fixed everything held, so round 4 paid for rounds 1 through 3 again. The price of the new shape is re-surveying and
@@ -677,81 +563,37 @@ source file and neither is committed — if the user does not want the ledger tr
   defects behind unrelated ones. So a reviewer now sees every finding held for its unit, in two lists: its own
   category's, to look past, and the other reviewers', to recognise and not restate. The architecture lenses read the
   whole repository and so have no unit to scope by; they see everything, which is the largest such list a run builds.
-- With `--fix`, the Fix phase adds one worktree-isolated agent **per validated finding**, each of which edits and then
-  runs the repository's typecheck/tests in its sandbox before committing — the expensive-and-slow part. A fixer commits
-  only a clear, safe, localized change that still passes; otherwise it declines or reports a verify failure, and that
-  finding is reported unfixed. In-sandbox verification silently degrades to "commit the edit" when the repository has
-  no runnable test suite, so the branch-per-fix plus your own reading of the diff is the real safety net. Nothing is
-  merged and nothing is pushed, and the working checkout is left untouched by construction rather than by promise: this
-  command no longer has a `git switch`, `git cherry-pick` or `git checkout` in its `allowed-tools` at all. The previous
-  design *did* promise that and broke it — a cherry-picked `100755 → 100644` mode change survived the switch back and
-  dirtied the user's tree.
-- **A fix sandbox is not checked out at your `HEAD`.** `isolation: 'worktree'` creates the worktree on a branch
-  `worktree-<run-id>-<n>` pointing at the **remote default branch** — `refs/remotes/origin/master` — not at local
-  `HEAD`. In one observed run every one of 81 sandboxes was based 126 commits behind the `HEAD` the reviewers had read.
-  Two things followed, and dropping the landing sequence only cures the second:
-
-  - The fixers read and edited 126-commit-stale source while the findings described current source. No downstream step
-    can repair that: a change reasoned about against text that no longer exists is not rebaseable, only discardable.
-    **This is still fatal.** A branch is only worth reporting if its diff was authored against code the user recognises.
-  - The bases diverged *unpredictably*. Pinning was left to agent initiative, so some fixers noticed the mismatch and
-    re-based onto local `master` themselves while most committed straight onto the stale base — four distinct bases
-    across one run. That used to void the cherry-pick guarantee; now it costs only a confusing report, which is why
-    step 2 of [Report the fix branches](#report-the-fix-branches) reports an unexpected parent rather than rejecting the
-    branch over it.
-
-  The script pins every sandbox explicitly: the survey captures `git rev-parse HEAD` as `headSha` before any worktree
-  exists, and each fix agent's first instruction is to `git switch -c <branch> <headSha>` and verify the pin took before
-  reading a file. It refuses to run the Fix phase at all if that SHA is unavailable — an unpinned fix phase produces
-  confident-looking commits built on the wrong code. Do not weaken that: the failure is silent, and it reads as success.
-- **Fixes must not commit regenerated build output.** A fix whose verification step rebuilds a tracked artifact and
-  stages it drowns its own change: `dist/server.cjs` is tens of thousands of lines, and a branch whose diff is one
-  useful hunk buried in a regenerated bundle cannot be reviewed, which for a report-only phase means it cannot be used
-  at all. In one measured run four fixes each rebuilt that file. The script names the partitioner's generated/excluded
-  paths to the fixers as unstageable, and that is prose to the fixer rather than a gate on the result: refusing a commit
-  outright over a cosmetic defect in its diff would throw away a real fix, which is the mistake the whole
-  landing-sequence removal exists to stop repeating.
-- The Review Fix phase (unless `--reviewers 0`) adds, per applied fix, `--reviewers` read-only reviewers that judge the
-  diff for correctness and quality — the thing the in-sandbox tests can't. A fix rejected by a majority is handed back
-  to a fresh fixer with the objection and re-reviewed, up to an internal cap of two revisions, then reported
-  `review-rejected` if it still fails. A `review-rejected` branch is still reported and still kept: with nothing being
-  landed, a rejection is an opinion about a commit rather than a reason to destroy the only copy of it. Cost is roughly
-  `findings × up-to-3 fix attempts` (the expensive worktree + test runs) plus
-  `findings × up-to-3 review rounds × --reviewers` (cheaper read-only reviewers); `--reviewers 0` skips the review cost
-  entirely and reports every fix that passed its own sandbox verification as applied.
-- `allowed-tools` governs only this wrapper — running the workflow, verifying and reporting the fix branches, and
-  formatting the result — not the subagents the workflow launches. Those carry their own default tool pool, so reviewers
-  and validators can `Read`, `Grep`, `Glob`, and `git ls-files`, and the `--fix` agents can `Edit` and commit in their
-  own worktrees, regardless of this list; you neither need to nor can provision their tools from here. This list is
-  therefore minimal, and every entry in it is read-only *or* deletes something this run created: `Workflow` to run the
-  review, `Read` for [the ledger](#the-ledger), `Write` for the ledger and for `--output`, `git remote get-url` and
-  `git rev-parse` to build permalinks and to check the fix
-  branches against git, and `git worktree list`/`remove`/`prune` plus `git branch --delete --force` to tear down the
-  sandboxes. There is deliberately **no** way to change the code under review or the repository's git state from here —
-  no `git switch`, no `git checkout`, no `git cherry-pick`, no `git commit`. `Write` is the one entry that puts bytes on
-  disk, and its two uses are named above: a report the user asked for by name, and this command's own state file.
-  Neither touches a source file, and neither is committed. The report-only design is enforced by the absence of those
-  entries, not by the
-  prose asking for it, because prose and a permission pattern are two enforcement layers and the pattern wins silently
-  when they disagree.
-- Seven entries were removed when landing was removed (`git cherry-pick:*`, `git checkout --:*`, `git status:*`,
-  `git show:*`, `git switch -`, `git switch --create repo-review-fixes`, `git branch --show-current`), and that removal
-  is the load-bearing part of the change rather than tidying after it. Each of those existed for one step of the landing
-  sequence, and each had already been narrowed once after the broad form turned out to pre-approve something the prose
-  forbade: `Bash(git checkout:*)` pre-approved `--ours`/`--theirs`, which is resolving a conflict by hand;
+- `allowed-tools` governs only this wrapper — running the workflow and formatting the result — not the subagents the
+  workflow launches. Those carry their own default tool pool, so reviewers and validators can `Read`, `Grep`, `Glob`, and
+  `git ls-files` regardless of this list; you neither need to nor can provision their tools from here. This list is
+  therefore minimal, and every entry in it is read-only: `Workflow` to run the review, `Read` for
+  [the ledger](#the-ledger), `Write` for the ledger and for `--output`, and `git remote get-url` plus `git rev-parse` to
+  build permalinks. There is deliberately **no** way to change the code under review or the repository's git state from
+  here — no `git switch`, no `git checkout`, no `git cherry-pick`, no `git commit`, no `git branch`, no `git worktree`.
+  `Write` is the one entry that puts bytes on disk, and its two uses are named above: a report the user asked for by name,
+  and this command's own state file. Neither touches a source file, and neither is committed. The read-only design is
+  enforced by the absence of those entries, not by the prose asking for it, because prose and a permission pattern are two
+  enforcement layers and the pattern wins silently when they disagree.
+- Eleven entries have been removed from that list over two changes, and each removal is load-bearing rather than tidying.
+  Landing went first (`git cherry-pick:*`, `git checkout --:*`, `git status:*`, `git show:*`, `git switch -`,
+  `git switch --create repo-review-fixes`, `git branch --show-current`), and the fix phase's own teardown went with the
+  split (`git branch --delete --force:*`, `git worktree list:*`, `git worktree remove:*`, `git worktree prune:*`) — those
+  four now live in `/repo-review-fix`, which is the command that creates the sandboxes they clean up. Several of the first
+  seven had already been narrowed once after the broad form turned out to pre-approve something the prose forbade:
+  `Bash(git checkout:*)` pre-approved `--ours`/`--theirs`, which is resolving a conflict by hand;
   `Bash(git switch --create:*)` pre-approved a start-point plus `--force` — upstream an alias for `--discard-changes` —
-  so `git switch --create repo-review-fixes HEAD~1 --force` exits 0 on a dirty tree and throws the uncommitted work
-  away. That history is the reason not to leave them behind "in case": a pre-approved write is a write the next model to
+  so `git switch --create repo-review-fixes HEAD~1 --force` exits 0 on a dirty tree and throws the uncommitted work away.
+  That history is the reason not to leave any of them behind "in case": a pre-approved write is a write the next model to
   read this file can make without a prompt.
-- The same narrowing still applies to what remains. `Bash(git remote:*)` would pre-approve `set-url`, and
-  `Bash(git branch:*)` would pre-approve `--force` (which silently moves a branch and can orphan commits) and `-m`,
-  hence `git remote get-url:*` and `git branch --delete --force:*` rather than the subcommand wildcards, and one entry
-  each for `git worktree list`/`remove`/`prune`. Only the *refs* teardown deletes are computed at run time, so pinning
-  the subcommand flag costs nothing; `rev-parse` is the one whose arguments are all computed and cannot be usefully
-  narrowed. A prefix rule matches only the exact string or that string followed by a space — which is why
-  `git branch --delete --force` must be spelled long-form for the rule to match at all — and it is hygiene rather than a
-  safety boundary: `allowed-tools` is allow-only, so a pattern that stops matching restores a confirmation prompt and
-  never removes a capability.
+- The same narrowing still applies to what remains. `Bash(git remote:*)` would pre-approve `set-url`, hence
+  `git remote get-url:*` rather than the subcommand wildcard; `rev-parse` is the one whose arguments are all computed and
+  cannot be usefully narrowed. A prefix rule matches only the exact string or that string followed by a space, and it is
+  hygiene rather than a safety boundary: `allowed-tools` is allow-only, so a pattern that stops matching restores a
+  confirmation prompt and never removes a capability.
+- The findings this command records are what `/repo-review-fix` acts on, and the two commands agree on nothing but
+  [the ledger](#the-ledger) and the `fingerprint` in it. In particular the fixer works against current `HEAD`, not against
+  `reviewedCommit`: it is told how far the tree has moved and reports a finding it can no longer find as resolved. So a
+  review left to go stale costs fix accuracy, not review accuracy — re-run the review after merging anything.
 - Cite each finding with a file path and line range, and link it if the repository has a GitHub remote. Follow this
   format precisely, otherwise the Markdown preview won't render correctly:
   https://github.com/anthropics/claude-code/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15

@@ -20,7 +20,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { pipelineImpl } from '../harness.js';
-import { issue, runFix } from './scenario.js';
+import { issue, runReview } from './scenario.js';
 
 // Two findings per unit, which is the smallest scope a dedupe agent runs for at all — one finding has nothing to be
 // compared against, so a unit holding one spends no agent and would make the ordering below unobservable.
@@ -61,10 +61,9 @@ describe('per-unit review pipeline', () => {
     // so this is the one assertion that tells the two structures apart.
     const order = [];
 
-    const run = await runFix({
+    const run = await runReview({
       issues: spread,
       units,
-      args: { fix: false },
       review: async (call, { unit, category }) => {
         // The architecture lenses read the whole repository rather than a unit, so they own none of these findings.
         if (unit === 'arch') return { issues: [] };
@@ -99,10 +98,10 @@ describe('per-unit review pipeline', () => {
     // once per unit on every round after the first, which is a per-round cost proportional to the partition rather than
     // to what the round found.
     const held = spread.slice(2);
-    const run = await runFix({
+    const run = await runReview({
       issues: spread.slice(0, 2),
       units,
-      args: { fix: false, round: 2, knownFindings: held },
+      args: { round: 2, knownFindings: held },
     });
 
     expect(run.called(/^dedupe:core/)).toEqual([]);
@@ -124,10 +123,9 @@ describe('per-unit review pipeline', () => {
     ];
     const coreFinding = issue({ description: 'handshake timeout ignored', file: 'core/buffer.py' });
 
-    const run = await runFix({
+    const run = await runReview({
       issues: [apiFinding, ...strays, coreFinding],
       units,
-      args: { fix: false },
       review: (_call, { unit, category }) => {
         if (category !== 'bug') return { issues: [] };
         if (unit === 'api') return { issues: [apiFinding, ...strays] };
@@ -156,10 +154,10 @@ describe('per-unit review pipeline', () => {
     // every earlier round's findings for the unit from the ledger — the same loss the phase's three abort returns exist
     // to prevent — so the null is refilled from `held` and the round reports itself as partial.
     const held = spread.slice(2);
-    const run = await runFix({
+    const run = await runReview({
       issues: spread.slice(0, 2),
       units,
-      args: { fix: false, round: 2, knownFindings: held },
+      args: { round: 2, knownFindings: held },
       pipeline: dropUnit('core'),
     });
 
@@ -185,13 +183,13 @@ describe('cross-scope ordering', () => {
     const known = issue({ description: 'partial read treated as EOF', file: 'core/wire.py' });
     const found = issue({ description: 'read returns short and is not retried', file: 'api/handler.py' });
 
-    const run = await runFix({
+    const run = await runReview({
       issues: [found],
       units,
       // Named explicitly because the ceiling is a function of it, and one finding cites one file — which sizes the
       // review for a single unit and coalesces the partition this test is about the seam between.
       survey: { inScopeFileCount: 4 },
-      args: { fix: false, round: 2, knownFindings: [known] },
+      args: { round: 2, knownFindings: [known] },
       // Each unit's scope holds one finding, so stage 1 runs no agent at all and this answers the cross pass.
       dedupe: () => ({ groups: [[0, 1]] }),
     });

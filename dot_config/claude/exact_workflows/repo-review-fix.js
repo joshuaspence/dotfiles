@@ -429,10 +429,11 @@ const objectionText = (text) => String(text ?? '').replace(/\s+/g, ' ').trim().s
 // The execution guard every un-isolated prompt carries. Only the fixers and revisers get `isolation: 'worktree'`; the
 // surveyor and the fix reviewers run in the user's live checkout, holding Bash, and a fix reviewer in particular is
 // reading a commit it might be tempted to check by *running* the tests. That would leave `node_modules/`, `dist/` or
-// coverage output in the tree — which the wrapper's `git status --porcelain` pre-flight is there to keep clean, since a
-// dirty tree is indistinguishable from an unfinished edit of the user's own. Phrased as forbidden *actions*, not as an
-// exhaustive toolkit, and paired with an explicit release: read-only inspection is the whole job of these agents, and
-// one that read this as "no searching" would abstain — which on a strict-majority gate silently drops a good fix.
+// coverage output in the live tree, where it is indistinguishable from an unfinished edit of the user's own and the user
+// has to sort it out by hand — nothing else in this run touches their checkout, so there is no cleanup step that would.
+// Phrased as forbidden *actions*, not as an exhaustive toolkit, and paired with an explicit release: read-only
+// inspection is the whole job of these agents, and one that read this as "no searching" would abstain — which on a
+// strict-majority gate silently drops a good fix.
 const READ_ONLY_RULE =
   "You are working in the user's live checkout, not a sandbox: do not modify, create, or delete any file, and do " +
   'not build, typecheck, lint, or test the repository. Read-only inspection is otherwise unrestricted — read and ' +

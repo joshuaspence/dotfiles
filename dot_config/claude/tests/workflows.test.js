@@ -31,10 +31,11 @@ import {
  */
 const DRIVERS = {
   'repo-review': async () => {
-    const { fixScenario } = await import('./repo-review/scenario.js');
+    const { reviewScenario } = await import('./repo-review/scenario.js');
 
-    // `fix: true` reaches the Fix and Review Fix phases; the counts are the minimum that still spawns one of each agent.
-    return { agent: fixScenario().agent, args: { fix: true, validators: 1, reviewers: 1 } };
+    // Every phase this script declares is unconditional once the partition returns a unit, so the default one-finding
+    // scenario enters all five; `validators: 1` is the minimum that still spawns a validator and so enters Validate.
+    return { agent: reviewScenario().agent, args: { validators: 1 } };
   },
 
   'repo-review-fix': async () => {

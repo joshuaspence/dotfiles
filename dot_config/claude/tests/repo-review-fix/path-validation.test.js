@@ -4,7 +4,7 @@
  * `isSafeRepoPath` validates the paths in `changedFiles`, which the script never runs a command with itself but does
  * hand to a fix reviewer beside a `git show`, and to the wrapper as the `file` column of the branch table a user reads
  * and acts on. It is critical for security: a malicious path can inject shell commands wherever it is interpolated, and
- * the script has no git access with which to check any of it against the repository. While fix-branches.test.js
+ * the script has no git access with which to check any of it against the repository. While `branches.test.js`
  * exercises these guards indirectly through the full pipeline, this suite pins the specific rejection logic for
  * different attack patterns.
  *

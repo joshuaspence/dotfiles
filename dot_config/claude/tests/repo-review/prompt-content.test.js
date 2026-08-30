@@ -1,9 +1,13 @@
 /**
- * Content verification for the four core agent prompts (partition, reviewer, fixer, fix-review). While orchestration
- * tests verify these prompts are called with the right arguments (via `runFix` scenarios), none read the actual prompt
- * strings to confirm critical instructions are present. For example: does `partitionPrompt` actually tell the agent to
- * never split a file? Does `fixerPrompt` include the git add instruction? These prompts are the agents' only
- * instructions, so missing text is a silent failure. A prompt content regression test catches prompt drift.
+ * Content verification for the two prompts that shape the review itself: the partition and the reviewers.
+ *
+ * Every other suite here checks that these prompts were *called* with the right arguments. None of them reads the text,
+ * and the text is the whole instruction — an agent told nothing about splitting files still returns a well-formed
+ * partition, just one where `src/index.ts` is in two units and gets reviewed twice. So these are the sentences some
+ * other invariant depends on, not a transcript of the wording.
+ *
+ * The fixer's and fix reviewer's prompts moved out with the command that sends them, to
+ * `tests/repo-review-fix/prompt-content.test.js`.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -21,15 +25,20 @@ describe('partitionPrompt', () => {
     expect(prompt).toContain('each file belongs to exactly one unit');
   });
 
-  it('requires exclusions to have a generated flag for build output', async () => {
+  it('asks for a machine-readable `generated` flag, not just a reason naming the path as build output', async () => {
+    // This flag is the one part of the partition's answer that outlives the review: the wrapper persists it to the
+    // ledger and `/repo-review-fix` reads it to name the paths its fix agents must never stage. Prose alone would put a
+    // regex over a free-text `reason` between build output and a fixer's `git add`, which is where a wording the regex
+    // does not match ends up in a commit.
     const { partitionPrompt } = await internals();
     const survey = { languages: ['JavaScript'] };
 
     const prompt = partitionPrompt(survey, 10);
 
-    expect(prompt).toContain('generated');
+    expect(prompt).toContain('`generated`');
     expect(prompt).toContain('tooling produces that path');
-    expect(prompt).toContain('forbids the fix agents from staging');
+    expect(prompt).toContain('forbid its fix agents from staging those paths');
+    expect(prompt).toMatch(/it reads the flag, not your `reason` prose/);
   });
 
   it('instructs use of git ls-files to enumerate paths', async () => {
@@ -104,157 +113,5 @@ describe('reviewerPrompt', () => {
     expect(prompt).toContain('Files in scope');
     expect(prompt).toContain('src/index.js');
     expect(prompt).toContain('src/util.js');
-  });
-});
-
-describe('fixerPrompt', () => {
-  it('instructs the agent to pin to the review head first', async () => {
-    const { fixerPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixerPrompt(issue, survey, 'abc123', 'undefined', []);
-
-    expect(prompt).toContain('PIN YOUR BASE');
-    expect(prompt).toContain('git rev-parse');
-    expect(prompt).toContain('abc123');
-  });
-
-  it('instructs the agent to use git add with explicit paths, never git add -A', async () => {
-    const { fixerPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixerPrompt(issue, survey, 'abc123', 'undefined', []);
-
-    expect(prompt).toContain('git add -- <paths>');
-    expect(prompt).toContain('never `git add -A`');
-  });
-
-  it('requires verification with build/test tooling', async () => {
-    const { fixerPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixerPrompt(issue, survey, 'abc123', 'undefined', []);
-
-    expect(prompt).toContain('verify in this worktree');
-    expect(prompt).toContain('typecheck and run the tests');
-  });
-
-  it('requires returning structured result with status, sha, branch, changedFiles', async () => {
-    const { fixerPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixerPrompt(issue, survey, 'abc123', 'undefined', []);
-
-    expect(prompt).toContain('status: "applied"');
-    expect(prompt).toContain('sha');
-    expect(prompt).toContain('branch');
-    expect(prompt).toContain('changedFiles');
-  });
-
-  it('warns about generated paths when provided', async () => {
-    const { fixerPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const survey = { languages: ['JavaScript'] };
-    const generatedPaths = ['dist/bundle.js', 'package-lock.json'];
-
-    const prompt = fixerPrompt(issue, survey, 'abc123', 'undefined', generatedPaths);
-
-    expect(prompt).toContain('dist/bundle.js');
-    expect(prompt).toContain('package-lock.json');
-    expect(prompt).toContain('NEVER stage');
-  });
-
-  it('includes revision context when provided', async () => {
-    const { fixerPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const survey = { languages: ['JavaScript'] };
-    const revisionCtx = { priorSha: 'def456', objection: 'The fix was incomplete' };
-
-    const prompt = fixerPrompt(issue, survey, 'abc123', 'undefined', [], revisionCtx);
-
-    expect(prompt).toContain('REVISION');
-    expect(prompt).toContain('def456');
-    expect(prompt).toContain('The fix was incomplete');
-    expect(prompt).toContain('REJECTED');
-  });
-});
-
-describe('fixReviewPrompt', () => {
-  it('instructs the reviewer to inspect the commit with git show', async () => {
-    const { fixReviewPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const fixResult = { sha: 'abc123', changedFiles: ['test.js'], reason: 'fixed it' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixReviewPrompt(issue, fixResult, survey);
-
-    expect(prompt).toContain('git show abc123');
-    expect(prompt).toContain('Inspect the change read-only');
-  });
-
-  it('instructs the reviewer NOT to trust the fixer', async () => {
-    const { fixReviewPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const fixResult = { sha: 'abc123', changedFiles: ['test.js'], reason: 'fixed it' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixReviewPrompt(issue, fixResult, survey);
-
-    expect(prompt).toContain('do NOT trust the fixer');
-    expect(prompt).toContain('Judge that commit independently');
-  });
-
-  it('instructs the reviewer not to run tests or modify anything', async () => {
-    const { fixReviewPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const fixResult = { sha: 'abc123', changedFiles: ['test.js'], reason: 'fixed it' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixReviewPrompt(issue, fixResult, survey);
-
-    expect(prompt).toContain('do not modify anything');
-    expect(prompt).toContain('do not run the tests');
-  });
-
-  it('requires judging both correctness and quality', async () => {
-    const { fixReviewPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const fixResult = { sha: 'abc123', changedFiles: ['test.js'], reason: 'fixed it' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixReviewPrompt(issue, fixResult, survey);
-
-    expect(prompt).toContain('correctness');
-    expect(prompt).toContain('quality');
-    expect(prompt).toContain('minimal');
-    expect(prompt).toContain('no new bugs');
-  });
-
-  it('requires specific actionable objection when rejecting', async () => {
-    const { fixReviewPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const fixResult = { sha: 'abc123', changedFiles: ['test.js'], reason: 'fixed it' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixReviewPrompt(issue, fixResult, survey);
-
-    expect(prompt).toContain('specific, actionable objection');
-    expect(prompt).toContain('fixer can act on');
-  });
-
-  it('requires structured result with approved and objection fields', async () => {
-    const { fixReviewPrompt } = await internals();
-    const issue = { file: 'test.js', description: 'fix this' };
-    const fixResult = { sha: 'abc123', changedFiles: ['test.js'], reason: 'fixed it' };
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = fixReviewPrompt(issue, fixResult, survey);
-
-    expect(prompt).toContain('approved');
-    expect(prompt).toContain('objection');
   });
 });

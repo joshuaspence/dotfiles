@@ -1,29 +1,29 @@
 /**
- * The read-only boundary of the un-isolated phases.
+ * The read-only boundary of every phase.
  *
- * `isolation: 'worktree'` is set on exactly one kind of agent — the fixers and revisers. Every other
- * agent runs in the user's live checkout while holding the same tools it would in a sandbox, and the script has no way
- * to take those tools away: the only thing standing between a review and a dirty working tree is the sentence its
- * prompt happens to carry. Stating that per prompt is how Validate — the highest fan-out un-isolated phase — came to be
- * the one prompt with no execution guard at all, invisibly.
+ * Nothing in this command sets `isolation: 'worktree'` — the agents that commit live in `/repo-review-fix`. So every
+ * agent here runs in the user's live checkout while holding the same tools it would in a sandbox, and the script has no
+ * way to take those tools away: the only thing standing between a review and a dirty working tree is the sentence its
+ * prompt happens to carry. Stating that per prompt is how Validate — the highest fan-out phase — came to be the one
+ * prompt with no execution guard at all, invisibly.
  *
- * So the table below is where that invariant lives. It must name a guard for every un-isolated agent a run produces, so
- * deleting a guard, or adding an un-isolated phase without one, fails here rather than waiting for a review. "A run"
- * has to mean more than one configuration for that to hold: a phase that only fires on a degraded path is invisible to
- * a table scoped to one happy-path fixture, which is exactly how the `review-head` re-ask came to be un-isolated and
- * unguarded. So the checks below read the union of every fixture listed here, and each fixture is a configuration that
- * reaches a phase the others cannot.
+ * So the table below is where that invariant lives. It must name a guard for every agent a run produces, so deleting a
+ * guard, or adding a phase without one, fails here rather than waiting for a review. That only holds if the fixture is
+ * wide enough to reach every phase: the architecture lenses are skipped on a narrow scope and the `CLAUDE.md` scan is
+ * skipped on a repository without one, and a table scoped to a two-file happy path would read as complete while saying
+ * nothing about either. The one phase that used to be reachable *only* on a degraded path — the `headSha` re-ask — left
+ * with the fixing, since a re-ask exists to pin a sandbox and this command pins nothing.
  */
 
 import { describe, expect, it } from 'vitest';
 
-import { HEAD, issue, runFix } from './scenario.js';
+import { issue, runReview } from './scenario.js';
 
-// One phrase per un-isolated phase, quoted from the prompt that carries it. Substrings, not shapes: the point is that
-// the words reach the agent, which is the only enforcement that exists. Each phrase has to forbid an action, too — the
-// first three rows once quoted "do not walk the filesystem" and "enumerate with `git ls-files`", which say how to list
-// files and nothing about touching them, so those phases read as guarded here while their prompts named no prohibition
-// a later edit could remove.
+// One phrase per phase, quoted from the prompt that carries it. Substrings, not shapes: the point is that the words
+// reach the agent, which is the only enforcement that exists. Each phrase has to forbid an action, too — the first three
+// rows once quoted "do not walk the filesystem" and "enumerate with `git ls-files`", which say how to list files and
+// nothing about touching them, so those phases read as guarded here while their prompts named no prohibition a later
+// edit could remove.
 const GUARDS = [
   { phase: 'survey', label: /^survey\b/, guard: 'do not modify, create, or delete any file' },
   { phase: 'CLAUDE.md scan', label: /^claude-md-scan\b/, guard: 'do not modify, create, or delete any file' },
@@ -31,14 +31,12 @@ const GUARDS = [
   { phase: 'review', label: /^review:/, guard: 'Do not build, typecheck, lint, or test the repository' },
   { phase: 'dedupe', label: /^dedupe\b/, guard: 'do not read files and do not run any commands' },
   { phase: 'validate', label: /^validate:/, guard: 'do not build, typecheck, lint, or test the repository' },
-  { phase: 'review fix', label: /^review-fix:/, guard: 'do not modify anything, do not run the tests' },
-  { phase: 'head re-ask', label: /^review-head$/, guard: 'do not modify, create, or delete any file' },
 ];
 
-// A run wide enough to reach every un-isolated phase at once: two units, so the per-unit and the cross-unit dedupe
-// agents both run, over four in-scope files, since the architecture lenses are skipped on a scope of two or fewer.
+// A run wide enough to reach every phase at once: two units, so the per-unit and the cross-unit dedupe agents both run,
+// over four in-scope files, since the architecture lenses are skipped on a scope of two or fewer.
 const wideRun = () =>
-  runFix({
+  runReview({
     issues: [
       issue({ file: 'src/a.ts' }),
       issue({ file: 'src/b.ts', category: 'security' }),
@@ -51,19 +49,10 @@ const wideRun = () =>
     unitPaths: ['src/a.ts', 'src/b.ts', 'lib/c.ts', 'lib/d.ts'],
   });
 
-// The run above cannot reach the `headSha` re-ask: the script only asks that question when the survey failed to answer
-// it, so it takes a survey with the field dropped, plus a recovery so the Fix phase still runs afterwards. Width alone
-// does not reach a phase gated behind a failure.
-const reaskRun = () => runFix({ survey: { headSha: '' }, headOnly: { headSha: HEAD } });
+// Read from what the script actually asked for rather than from a list of labels kept here.
+const liveAgents = async () => (await wideRun()).calls;
 
-// Read from what the script actually asked for, not from a list of labels kept here: an agent that loses its isolation
-// is exactly the case this file exists to catch.
-const unisolated = (run) => run.calls.filter((call) => call.opts?.isolation !== 'worktree');
-
-// Every un-isolated agent across every configuration the table claims to cover.
-const liveAgents = async () => (await Promise.all([wideRun(), reaskRun()])).flatMap(unisolated);
-
-describe('every un-isolated agent is told not to write to the checkout', () => {
+describe('every agent is told not to write to the checkout', () => {
   it.each(GUARDS)('tells the $phase agents: $guard', async ({ label, guard }) => {
     const guarded = (await liveAgents()).filter((call) => label.test(call.label));
 
@@ -74,7 +63,7 @@ describe('every un-isolated agent is told not to write to the checkout', () => {
     for (const call of guarded) expect(call.prompt, `${call.label} carries no read-only guard`).toContain(guard);
   });
 
-  it('has an entry for every un-isolated agent the runs produced', async () => {
+  it('has an entry for every agent the run produced', async () => {
     const unlisted = [
       ...new Set(
         (await liveAgents())
@@ -83,8 +72,8 @@ describe('every un-isolated agent is told not to write to the checkout', () => {
       ),
     ];
 
-    // A new phase that runs in the live checkout has to state its own guard and be listed above. Nothing else in the
-    // script owns this, so an unlisted label is an unguarded agent until proven otherwise.
+    // A new phase has to state its own guard and be listed above. Nothing else in the script owns this, so an unlisted
+    // label is an unguarded agent until proven otherwise.
     expect(unlisted).toEqual([]);
   });
 });
@@ -92,9 +81,10 @@ describe('every un-isolated agent is told not to write to the checkout', () => {
 describe('the validators specifically', () => {
   it('run in the live checkout, and are told not to build or test it', async () => {
     // Validate is `findings × validators` agents deep, each holding Bash and several asked to confirm a claim that is
-    // itself about build or test behaviour. One that settles such a claim by running the build leaves `node_modules/`
-    // or coverage output behind: without `--fix` that breaks the read-only contract, and with it the wrapper's
-    // `git status --porcelain` pre-flight then discards every fix commit, since Validate runs first.
+    // itself about build or test behaviour. One that settles such a claim by running the build leaves `node_modules/` or
+    // coverage output behind, which breaks this command's read-only contract outright — and then costs a second time,
+    // because `/repo-review-fix` runs next over the same checkout and cannot tell its own sandboxes' output from a dirty
+    // tree it inherited.
     const run = await wideRun();
     const [validator] = run.called(/^validate:/);
 

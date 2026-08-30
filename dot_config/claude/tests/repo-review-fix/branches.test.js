@@ -1,5 +1,5 @@
 /**
- * What survives to `fix.outcomes` and `fix.keepBranches`, and what the script refuses.
+ * What survives to `outcomes` and `keepBranches`, and what the script refuses.
  *
  * Nothing is landed: each fix is a commit on a branch of its own, and the script's job is to report which branches are
  * worth looking at and which sandboxes teardown may delete. Every input to that judgement is a self-reported string from
@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { commitSha, internals, issue, outcomeAt, runFix } from './scenario.js';
+import { commitSha, internals, issue, runFix } from './scenario.js';
 
 // Two findings in different files, so they group separately and each fix's commit stands on its own.
 const twoFindings = [
@@ -46,9 +46,11 @@ const fixerClaiming = (byIdx) => (subject, { idx }) => ({
 });
 
 describe('generated build output', () => {
-  // Identified by the partitioner's own `generated` flag rather than a hardcoded path list: it already had to identify
-  // generated code to leave it out of the review. The `reason` here is wording a partitioner could plausibly choose and
-  // that matches none of the prose fallback's substrings, so these cases turn on the flag and nothing else.
+  // Identified by the review partitioner's own `generated` flag rather than a hardcoded path list: it already had to
+  // identify generated code to leave it out of the review, and this command reads its answer off the ledger. The `reason`
+  // here is wording a partitioner could plausibly choose and that matches none of the prose fallback's substrings, so
+  // these cases turn on the flag and nothing else. That the flag is asked for at all is the other command's invariant, and
+  // is pinned over there — `tests/repo-review/prompt-content.test.js`.
   const distExcluded = [{ path: 'dist', reason: 'produced by `npm run build`, not source', generated: true }];
 
   it('is asked for in prose and not enforced afterwards, because a refusal would discard a real fix', async () => {
@@ -57,19 +59,18 @@ describe('generated build output', () => {
     // any other. This used to be a gate: the commit was refused, the finding reported `conflict-skipped`, and a real fix
     // was thrown away over a cosmetic defect in its diff, to protect a cherry-pick sequence that no longer exists.
     const run = await runFix({
-      issues: twoFindings,
-      exclusions: distExcluded,
+      args: { findings: twoFindings, exclusions: distExcluded },
       fix: fixerClaiming({ 0: ['src/a.ts', 'dist/server.cjs'], 1: ['src/b.ts'] }),
     });
 
-    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
-    expect(outcomeAt(run, 0).changedFiles).toContain('dist/server.cjs');
-    expect([...run.result.fix.keepBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
+    expect(run.result.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
+    expect(run.result.outcomes[0].changedFiles).toContain('dist/server.cjs');
+    expect([...run.result.keepBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
     expect(run.result.gaps.join(' ')).not.toContain('generated build output');
   });
 
   it('is named to the fixers so they do not stage it in the first place', async () => {
-    const run = await runFix({ exclusions: distExcluded });
+    const run = await runFix({ args: { exclusions: distExcluded } });
     const [fixer] = run.called(/^fix:/);
 
     expect(fixer.prompt).toContain('NEVER stage these');
@@ -77,21 +78,11 @@ describe('generated build output', () => {
     expect(run.logged(/Fixers told to leave 1 generated path\(s\) unstaged/).length).toBe(1);
   });
 
-  it('is asked of the partitioner as a flag, since the classification is not in its prose', async () => {
-    // `reason` is free text written for a human reader; nothing in the schema or the prompt ever made it a vocabulary.
-    // Both mechanisms above depend on the answer, so the prompt has to ask the question they actually read.
-    const run = await runFix({ exclusions: distExcluded });
-    const [partitioner] = run.called(/^partition$/);
-
-    expect(partitioner.prompt).toContain('`generated`');
-    expect(partitioner.prompt).toMatch(/not your\s+`reason` prose/);
-  });
-
   it('is still recognised from the reason when an exclusion carries no flag at all', async () => {
-    // A partition cached before the field existed, or an agent that dropped it. Falling back to the prose keeps such a
-    // run no worse off than before the flag, and the fallback is only ever reached when the flag is absent.
+    // A ledger written before the field existed, or a partition agent that dropped it. Falling back to the prose keeps
+    // such a run no worse off than before the flag, and the fallback is only ever reached when the flag is absent.
     const run = await runFix({
-      exclusions: [{ path: 'dist', reason: 'generated build output, not reviewed' }],
+      args: { exclusions: [{ path: 'dist', reason: 'generated build output, not reviewed' }] },
     });
     const [fixer] = run.called(/^fix:/);
 
@@ -99,12 +90,35 @@ describe('generated build output', () => {
     expect(fixer.prompt).toContain('- dist');
   });
 
-  it('does not claim a hand-written path the partitioner excluded for some other reason', async () => {
+  it.each([
+    ['generated code'],
+    ['build output'],
+    ['compiled from TypeScript'],
+    ['vendored dependencies'],
+  ])('is recognised from the reason %j, since a partitioner writes prose and not a keyword', async (reason) => {
+    // The fallback pattern has to be wide enough to cover the wordings a partitioner actually reaches for, since it is
+    // the only thing reading a flagless exclusion. Each is asserted separately: one alternative dropped from the regex
+    // leaves the others matching and the count assertion satisfied.
+    const run = await runFix({ args: { exclusions: [{ path: 'out', reason }] } });
+
+    expect(run.called(/^fix:/)[0].prompt).toContain('- out');
+  });
+
+  it('is named as the partitioner wrote it, trailing slash and all, rather than normalized', async () => {
+    // `build/` and `build` name the same directory to a model reading prose, and there is no matcher here that would
+    // care about the difference — the instruction is the whole mechanism. Rewriting the path would only make the
+    // fixer's list disagree with the exclusions the review's own report printed.
+    const run = await runFix({ args: { exclusions: [{ path: 'build/', reason: 'build output', generated: true }] } });
+
+    expect(run.called(/^fix:/)[0].prompt).toContain('- build/');
+  });
+
+  it('does not claim a hand-written path the review excluded for some other reason', async () => {
     // Excluding a path is not the same as it being rebuildable. Naming `docs/` to the fixers as untouchable build output
     // would forbid the one edit some fix needs — and since the instruction is now the only mechanism, an over-broad list
     // is a fix silently not made rather than one refused after the fact.
     const run = await runFix({
-      exclusions: [{ path: 'docs', reason: 'prose, not code under review', generated: false }],
+      args: { exclusions: [{ path: 'docs', reason: 'prose, not code under review', generated: false }] },
     });
     const [fixer] = run.called(/^fix:/);
 
@@ -119,14 +133,14 @@ describe('a fix that committed but reported no files', () => {
     // set was a fix that had to be dropped. Nothing depends on it now except the row the wrapper prints, and the branch
     // still holds a verified commit — so an inaccurate label costs the reader a `git show`, not a fix.
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: fixerClaiming({ 0: [], 1: ['src/b.ts'] }),
     });
 
-    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
-    expect(outcomeAt(run, 0).sha).toBe(commitSha(0));
-    expect(outcomeAt(run, 0).changedFiles).toEqual([]);
-    expect([...run.result.fix.keepBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
+    expect(run.result.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
+    expect(run.result.outcomes[0].sha).toBe(commitSha(0));
+    expect(run.result.outcomes[0].changedFiles).toEqual([]);
+    expect([...run.result.keepBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
   });
 
   it('is kept even when a sibling fix touches the same file, since the two are never merged', async () => {
@@ -134,17 +148,19 @@ describe('a fix that committed but reported no files', () => {
     // gets its own branch and its own row, and whether to take both is the user's decision to make with the diffs in
     // front of them.
     const run = await runFix({
-      issues: [
-        issue({ file: 'src/a.ts', description: 'reports no files' }),
-        issue({ file: 'src/a.ts', description: 'reports files normally' }),
-      ],
+      args: {
+        findings: [
+          issue({ file: 'src/a.ts', description: 'reports no files' }),
+          issue({ file: 'src/a.ts', description: 'reports files normally' }),
+        ],
+      },
       fix: fixerClaiming({ 0: [], 1: ['src/a.ts'] }),
     });
 
-    expect(outcomeAt(run, 0).status).toBe('applied');
-    expect(outcomeAt(run, 1).status).toBe('applied');
-    expect(outcomeAt(run, 0).branch).not.toBe(outcomeAt(run, 1).branch);
-    expect(run.result.fix.keepBranches).toHaveLength(2);
+    expect(run.result.outcomes[0].status).toBe('applied');
+    expect(run.result.outcomes[1].status).toBe('applied');
+    expect(run.result.outcomes[0].branch).not.toBe(run.result.outcomes[1].branch);
+    expect(run.result.keepBranches).toHaveLength(2);
   });
 });
 
@@ -172,10 +188,10 @@ describe('untrusted commit, branch and path names', () => {
       }),
     });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect(outcomeAt(run, 0).sha).toBe('');
-    expect(outcomeAt(run, 0).reason).toContain('without a usable commit SHA');
-    expect(run.result.fix.keepBranches).toEqual([]);
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
+    expect(run.result.outcomes[0].sha).toBe('');
+    expect(run.result.outcomes[0].reason).toContain('without a usable commit SHA');
+    expect(run.result.keepBranches).toEqual([]);
 
     // Downgrading the outcome is not enough on its own: the check has to fire *before* the fix reviewer is launched.
     // `fixReviewPrompt` interpolates the SHA straight into a `git show <sha>` instruction, and that reviewer is the one
@@ -209,10 +225,10 @@ describe('untrusted commit, branch and path names', () => {
       reviewFix: () => ({ approved: false, objection: 'misses a case' }),
     });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect(outcomeAt(run, 0).sha).toBe('');
-    expect(outcomeAt(run, 0).reason).toContain('without a usable commit SHA');
-    expect(run.result.fix.keepBranches).toEqual([]);
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
+    expect(run.result.outcomes[0].sha).toBe('');
+    expect(run.result.outcomes[0].reason).toContain('without a usable commit SHA');
+    expect(run.result.keepBranches).toEqual([]);
 
     // The revision is the harder half of the same ordering guarantee: one review has already run and rejected, so the
     // loop is live and would ordinarily review the replacement next. Exactly one review happened — the first attempt's,
@@ -223,7 +239,7 @@ describe('untrusted commit, branch and path names', () => {
   });
 
   // `isSafeBranchName` guards two separable things — a plain-name character class and a `..` traversal check — so both
-  // clauses are pinned. A reported branch leaves here as `fix.sandboxBranches` and the wrapper interpolates it into
+  // clauses are pinned. A reported branch leaves here as `sandboxBranches` and the wrapper interpolates it into
   // `git worktree remove` and `git branch -D <ref>` under a pre-authorized `Bash(git branch:*)`, so a name like `--all`
   // or one carrying `;`/`$(…)`/backticks is caught by the character class alone.
   it.each([
@@ -244,9 +260,9 @@ describe('untrusted commit, branch and path names', () => {
       }),
     });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect(outcomeAt(run, 0).branch).toBe('');
-    expect(run.result.fix.sandboxBranches).toEqual([]);
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
+    expect(run.result.outcomes[0].branch).toBe('');
+    expect(run.result.sandboxBranches).toEqual([]);
   });
 
   it.each([
@@ -261,40 +277,42 @@ describe('untrusted commit, branch and path names', () => {
     // itself is a command injection wherever it is interpolated.
     const run = await runFix({ fix: fixerClaiming({ 0: ['src/a.ts', file] }) });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect(outcomeAt(run, 0).sha).toBe('');
-    expect(outcomeAt(run, 0).reason).toContain('not a plain repo-relative path');
-    expect(run.result.fix.keepBranches).toEqual([]);
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
+    expect(run.result.outcomes[0].sha).toBe('');
+    expect(run.result.outcomes[0].reason).toContain('not a plain repo-relative path');
+    expect(run.result.keepBranches).toEqual([]);
   });
 
   it('never names such a path to a fix reviewer', async () => {
     // Two findings in one file, so the poisoned fix has a live sibling to be reported alongside: the string is gone
     // before either review prompt is composed, and the clean fix is unaffected by its neighbour.
     const run = await runFix({
-      issues: [
-        issue({ file: 'src/a.ts', description: 'the first finding' }),
-        issue({ file: 'src/a.ts', description: 'the second finding in the same file' }),
-      ],
+      args: {
+        findings: [
+          issue({ file: 'src/a.ts', description: 'the first finding' }),
+          issue({ file: 'src/a.ts', description: 'the second finding in the same file' }),
+        ],
+      },
       fix: fixerClaiming({ 0: ['src/a.ts; rm -rf /'], 1: ['src/a.ts'] }),
     });
 
     expect(run.called(/^review-fix:/).every((call) => !call.prompt.includes('rm -rf /'))).toBe(true);
-    expect(run.result.fix.keepBranches).toEqual(['rrfix/wf_test/1']);
+    expect(run.result.keepBranches).toEqual(['rrfix/wf_test/1']);
   });
 
   it('keeps the ordinary paths a repository actually contains', async () => {
     // Refusing is the safe direction, but only for genuinely odd names: dots, dashes, underscores and nested
     // directories are what every real path list is made of, and refusing one would report a real fix as unfixed.
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: fixerClaiming({
         0: ['dot_config/claude/exact_workflows/repo-review.js', '.github/workflows/ci.yml'],
         1: ['a-b.c_d/E1/.eslintrc.json'],
       }),
     });
 
-    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
-    expect(run.result.fix.keepBranches).toHaveLength(2);
+    expect(run.result.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
+    expect(run.result.keepBranches).toHaveLength(2);
   });
 });
 
@@ -303,79 +321,66 @@ describe('untrusted cited paths', () => {
   // worktree of its own. A path that leaves the worktree aims that write outside the sandbox, where nothing downstream
   // would see it: it cannot be staged from inside the worktree, so it never reaches `changedFiles` or any check that
   // reads them, and removing the worktree does not undo it.
+  //
+  // Every shape is driven end to end rather than against the guard alone, which the ledger makes cheap: a finding
+  // arrives on `args` exactly as written, so an empty or absent `file` needs no reviewer coaxed into reporting one. It
+  // used to: the same table on the review side could only supply the four below, and the empty and whitespace cases had
+  // to be pinned against `isRepoRelativePath` directly because reaching the fixers with them meant driving an
+  // architecture lens over three in-scope paths.
   it.each([
     ['absolute', '/etc/hosts'],
     ['traversing', '../../.ssh/config'],
     ['traversing from within the tree', 'src/../../.ssh/config'],
     ['home-relative', '~/.ssh/config'],
+    ['empty', ''],
+    ['whitespace-only', '   '],
+    ['absent', undefined],
   ])('are never handed to a fix agent when %s', async (_label, file) => {
-    const run = await runFix({ issues: [issue({ file })] });
+    const run = await runFix({ args: { findings: [issue({ file })] } });
 
     expect(run.called(/^fix:/)).toHaveLength(0);
-    expect(outcomeAt(run, 0).status).toBe('declined');
-    expect(outcomeAt(run, 0).reason).toContain('outside the reviewed checkout');
-    expect(run.result.fix.keepBranches).toEqual([]);
-    expect(run.result.gaps.join(' ')).toContain('cites a path outside the reviewed checkout');
+    expect(run.result.outcomes[0].status).toBe('declined');
+    expect(run.result.outcomes[0].reason).toContain('outside the checkout');
+    expect(run.result.keepBranches).toEqual([]);
+    expect(run.result.gaps.join(' ')).toContain('cites a path outside the checkout');
   });
 
-  it('are never handed to a fix agent when the path is empty', async () => {
-    // Driven through a run like the table above, because a finding citing no file does reach the Fix phase: `fileInUnit`
-    // only *classifies*, so one it places in no unit is not dropped — it pools into the `cross-cutting` dedupe scope and
-    // travels on like any other, and this guard is the only thing standing between it and a fix agent. An architecture
-    // lens is the reviewer that can report one, since it reads the whole repository rather than a unit's file list; that
-    // needs three paths in scope, below which the lenses are skipped, and all three lenses see the same repository, so
-    // one repo-wide claim comes back three times.
-    const run = await runFix({
-      issues: [issue({ category: 'architecture', file: '', description: 'the layers are tangled' })],
-      unitPaths: ['src/a.ts', 'src/b.ts', 'src/c.ts'],
-    });
-
-    expect(run.called(/^dedupe:cross-cutting/)).toHaveLength(1);
-    expect(run.called(/^fix:/)).toHaveLength(0);
-    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['declined', 'declined', 'declined']);
-    expect(outcomeAt(run, 0).reason).toContain('outside the reviewed checkout');
-    expect(run.result.fix.keepBranches).toEqual([]);
-    expect(run.result.gaps.join(' ')).toContain('cites a path outside the reviewed checkout');
-  });
-
-  it('refuses a cited path that is empty, whitespace-only, or absent', async () => {
-    // Against the guard, for the shapes the run above does not supply: a whitespace-only or absent `file` arrives at the
-    // Fix phase by exactly the same route, and the guard is what the phase relies on to stop them, so each is pinned
-    // here rather than left to one input's worth of end-to-end evidence.
+  it('admits the ordinary path a finding cites, so the guard is not refusing everything', async () => {
+    // The table above is all refusals, and a guard that returned `false` unconditionally would pass every row of it
+    // while fixing nothing at all.
     const { isRepoRelativePath } = await internals();
 
-    expect(isRepoRelativePath('')).toBe(false);
-    expect(isRepoRelativePath('   ')).toBe(false);
-    expect(isRepoRelativePath(undefined)).toBe(false);
     expect(isRepoRelativePath('src/a.ts')).toBe(true);
   });
 
   it('does not refuse a path that merely contains dots', async () => {
     // Refusing `a..b.ts` or `..bashrc` would report a perfectly fixable finding as unfixed — the same silent loss in
     // the other direction. Only a whole `..` segment escapes the tree.
-    const run = await runFix({ issues: [issue({ file: 'src/a..b.ts' }), issue({ file: 'src/..bashrc.ts' })] });
+    const run = await runFix({ args: { findings: [issue({ file: 'src/a..b.ts' }), issue({ file: 'src/..bashrc.ts' })] } });
 
     expect(run.called(/^fix:/)).toHaveLength(2);
-    expect(outcomeAt(run, 0).status).toBe('applied');
-    expect(outcomeAt(run, 1).status).toBe('applied');
+    expect(run.result.outcomes[0].status).toBe('applied');
+    expect(run.result.outcomes[1].status).toBe('applied');
   });
 
   it('drops an escaping `otherSites` entry from the fixer’s licence, keeping the rest', async () => {
     // `otherSites` widens what the fixer is told it may edit, so it needs the same containment as `file` — but only the
     // offending entry goes, since `file` is what defines the fix.
     const run = await runFix({
-      issues: [
-        issue({
-          otherSites: ['/etc/hosts:1 (also here)', '../../.ssh/config (and here)', 'src/b.ts:20 (and here too)'],
-        }),
-      ],
+      args: {
+        findings: [
+          issue({
+            otherSites: ['/etc/hosts:1 (also here)', '../../.ssh/config (and here)', 'src/b.ts:20 (and here too)'],
+          }),
+        ],
+      },
     });
     const [fixer] = run.called(/^fix:/);
 
     expect(fixer.prompt).not.toContain('/etc/hosts');
     expect(fixer.prompt).not.toContain('.ssh/config');
     expect(fixer.prompt).toContain('src/b.ts:20 (and here too)');
-    expect(outcomeAt(run, 0).status).toBe('applied');
+    expect(run.result.outcomes[0].status).toBe('applied');
   });
 
   it('drops an `otherSites` entry that hides an escaping path behind an in-tree one', async () => {
@@ -383,17 +388,19 @@ describe('untrusted cited paths', () => {
     // to be the leading token to be followed. Checking only the leading token would let an innocuous in-tree path escort
     // any of these past the gate.
     const run = await runFix({
-      issues: [
-        issue({
-          otherSites: [
-            'src/b.ts:20 (and also /etc/hosts, same defect)',
-            'src/c.ts:5 (mirrored in ../../.ssh/config)',
-            'src/d.ts:5 (mirrored in ~/.ssh/config)',
-            'src/e.ts:5(/etc/shadow)',
-            'src/f.ts:30 (and here too)',
-          ],
-        }),
-      ],
+      args: {
+        findings: [
+          issue({
+            otherSites: [
+              'src/b.ts:20 (and also /etc/hosts, same defect)',
+              'src/c.ts:5 (mirrored in ../../.ssh/config)',
+              'src/d.ts:5 (mirrored in ~/.ssh/config)',
+              'src/e.ts:5(/etc/shadow)',
+              'src/f.ts:30 (and here too)',
+            ],
+          }),
+        ],
+      },
     });
     const [fixer] = run.called(/^fix:/);
 
@@ -401,13 +408,14 @@ describe('untrusted cited paths', () => {
     expect(fixer.prompt).not.toContain('.ssh/config');
     expect(fixer.prompt).not.toContain('/etc/shadow');
     expect(fixer.prompt).toContain('src/f.ts:30 (and here too)');
-    expect(outcomeAt(run, 0).status).toBe('applied');
+    expect(run.result.outcomes[0].status).toBe('applied');
   });
 
   it('leaves an in-tree finding’s sites as reported, prose and all', async () => {
     // Nothing to drop must mean nothing dropped: a site naming a module rather than a path is not an escape, and the
     // fixer still needs it.
-    const run = await runFix({ issues: [issue({ otherSites: ['src/b.ts:20 (same defect)', 'the dedupe helper'] })] });
+    const sites = ['src/b.ts:20 (same defect)', 'the dedupe helper'];
+    const run = await runFix({ args: { findings: [issue({ otherSites: sites })] } });
     const [fixer] = run.called(/^fix:/);
 
     expect(fixer.prompt).toContain('src/b.ts:20 (same defect)');
@@ -420,34 +428,34 @@ describe('sandboxBranches', () => {
     // The branch is created in step 0, before the fix is attempted. Teardown works off this list rather than the
     // per-finding outcomes precisely because a declined fixer's outcome names no commit.
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: (subject, { idx }) =>
         idx === 0
           ? { status: 'declined', branch: 'rrfix/wf_test/0', reason: 'not a safe localized edit' }
           : fixerClaiming({ 1: ['src/b.ts'] })(subject, { idx }),
     });
 
-    expect(outcomeAt(run, 0).status).toBe('declined');
-    expect(run.result.fix.sandboxBranches).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
+    expect(run.result.outcomes[0].status).toBe('declined');
+    expect(run.result.sandboxBranches).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
   });
 
   it('lists every revision branch, not just the last', async () => {
     // A finding rejected through the revision cap created three branches; its outcome names only the third.
     const run = await runFix({ reviewFix: () => ({ approved: false, objection: 'misses a case' }) });
 
-    expect(run.result.fix.sandboxBranches).toEqual([
+    expect(run.result.sandboxBranches).toEqual([
       'rrfix/wf_test/0',
       'rrfix/wf_test/0-r1',
       'rrfix/wf_test/0-r2',
     ]);
-    expect(outcomeAt(run, 0).status).toBe('review-rejected');
+    expect(run.result.outcomes[0].status).toBe('review-rejected');
     // The rejected commit still exists; naming its branch is what lets the user go and look before teardown.
-    expect(outcomeAt(run, 0).branch).toBe('rrfix/wf_test/0-r2');
+    expect(run.result.outcomes[0].branch).toBe('rrfix/wf_test/0-r2');
   });
 
   it('does not repeat a branch two agents reported', async () => {
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: () => ({
         status: 'declined',
         branch: 'rrfix/wf_test/shared',
@@ -455,7 +463,7 @@ describe('sandboxBranches', () => {
       }),
     });
 
-    expect(run.result.fix.sandboxBranches).toEqual(['rrfix/wf_test/shared']);
+    expect(run.result.sandboxBranches).toEqual(['rrfix/wf_test/shared']);
   });
 
   it.each([
@@ -468,8 +476,8 @@ describe('sandboxBranches', () => {
     // well-shaped name is not enough: reporting `master` while the user sits on a feature branch would delete it.
     const run = await runFix({ fix: () => ({ status: 'declined', branch, reason: 'declined' }) });
 
-    expect(outcomeAt(run, 0).status).toBe('declined');
-    expect(run.result.fix.sandboxBranches).toEqual([]);
+    expect(run.result.outcomes[0].status).toBe('declined');
+    expect(run.result.sandboxBranches).toEqual([]);
   });
 
   it('lists the branch of an agent that died before reporting one', async () => {
@@ -478,7 +486,7 @@ describe('sandboxBranches', () => {
     // the ref they have checked out, so an unlisted branch leaves its worktree alive too. The name is reconstructible:
     // the suffix is the script's own, and the run id is read back out of a branch another agent did report.
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: (subject, { idx }) => {
         if (idx === 0) {
           throw new Error('agent stalled with no progress for 180s');
@@ -488,24 +496,24 @@ describe('sandboxBranches', () => {
       },
     });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect([...run.result.fix.sandboxBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
+    expect([...run.result.sandboxBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
   });
 
   it('keeps a branch whose run id the agent failed to derive, because that branch exists too', async () => {
     // The observed shape: an agent that could not read `<RUN>` out of its own worktree branch interpolated a missing
-    // value and reported `rrfix/undefined/<n>`. `isSandboxBranch` accepts it — `undefined` is a legal path segment — and
-    // it must, because `git switch -c` already ran and the branch and its worktree are sitting there. Dropping it from
-    // this list is the one outcome that actually leaks.
+    // value and reported `rrfix/undefined/<n>`. `isSandboxBranch` accepts it — `undefined` is a legal path segment —
+    // and it must, because `git switch -c` already ran and the branch and its worktree are sitting there. Dropping it
+    // from this list is the one outcome that actually leaks.
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: (subject, { idx }) =>
         idx === 0
           ? { status: 'declined', branch: 'rrfix/undefined/0', reason: 'could not read my branch name' }
           : fixerClaiming({ 1: ['src/b.ts'] })(subject, { idx }),
     });
 
-    expect([...run.result.fix.sandboxBranches].sort()).toEqual(['rrfix/undefined/0', 'rrfix/wf_test/1']);
+    expect([...run.result.sandboxBranches].sort()).toEqual(['rrfix/undefined/0', 'rrfix/wf_test/1']);
   });
 
   it('reconstructs a dead agent’s branch from the run id the majority derived, not the first one reported', async () => {
@@ -513,7 +521,7 @@ describe('sandboxBranches', () => {
     // every reconstructed name was then built on `undefined`, matching no ref that exists, while the branch the dead
     // agent really left behind was never named. Teardown printed a row of "not found" and left the mess in place.
     const run = await runFix({
-      issues: threeFindings,
+      args: { findings: threeFindings },
       fix: (subject, { idx }) => {
         if (idx === 0) {
           return { status: 'declined', branch: 'rrfix/undefined/0', reason: 'could not read my branch name' };
@@ -529,7 +537,7 @@ describe('sandboxBranches', () => {
 
     // `rrfix/wf_test/1` is the reconstruction: built on `wf_test` (which one agent demonstrably used) rather than on
     // `undefined` (which was merely reported first).
-    expect([...run.result.fix.sandboxBranches].sort()).toEqual([
+    expect([...run.result.sandboxBranches].sort()).toEqual([
       'rrfix/undefined/0',
       'rrfix/wf_test/1',
       'rrfix/wf_test/2',
@@ -538,7 +546,7 @@ describe('sandboxBranches', () => {
 
   it('records a teardown gap when a run id could not be derived, since its worktree ref is unreachable', async () => {
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: (subject, { idx }) =>
         idx === 0
           ? { status: 'declined', branch: 'rrfix/undefined/0', reason: 'could not read my branch name' }
@@ -559,7 +567,7 @@ describe('sandboxBranches', () => {
     // number, inventing a run id no other agent shares. Unlike `undefined` it is a plausible-looking value, so the only
     // signal that anything went wrong is that it disagrees with the majority.
     const run = await runFix({
-      issues: threeFindings,
+      args: { findings: threeFindings },
       fix: (subject, { idx }) =>
         idx === 1
           ? { status: 'declined', branch: 'rrfix/wf_test-147/1', reason: 'mis-split its own branch name' }
@@ -576,7 +584,7 @@ describe('sandboxBranches', () => {
 
   it('reports no run-id gap at all when every agent derived the same one', async () => {
     // The gaps above must not fire on a clean run: a gap that always appears is indistinguishable from no gap at all.
-    const run = await runFix({ issues: twoFindings, fix: fixerClaiming({ 0: ['src/a.ts'], 1: ['src/b.ts'] }) });
+    const run = await runFix({ args: { findings: twoFindings }, fix: fixerClaiming({ 0: ['src/a.ts'], 1: ['src/b.ts'] }) });
 
     expect(run.result.gaps.filter((entry) => /run id|run's id/.test(entry))).toEqual([]);
   });
@@ -586,13 +594,13 @@ describe('sandboxBranches', () => {
     // handle on the workflow id. With every agent dead there is nothing to read it out of, and a guessed prefix could
     // name another run's branches, so the list stays empty rather than becoming wrong.
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: () => {
         throw new Error('worktree could not be created');
       },
     });
 
-    expect(run.result.fix.sandboxBranches).toEqual([]);
+    expect(run.result.sandboxBranches).toEqual([]);
   });
 });
 
@@ -658,10 +666,10 @@ describe('keepBranches', () => {
     ['drops a declined one, whose branch exists and is empty', { status: 'declined', reason: 'no safe edit' }, false],
     ['drops one that claimed to have committed without saying where', { status: 'applied', reason: 'done' }, false],
   ])('%s', async (_label, result, kept) => {
-    const run = await runFix({ issues: [issue()], fix: fixReturning(result) });
+    const run = await runFix({ args: { findings: [issue()] }, fix: fixReturning(result) });
 
-    expect(run.result.fix.sandboxBranches).toEqual(['rrfix/wf_test/0']);
-    expect(run.result.fix.keepBranches).toEqual(kept ? ['rrfix/wf_test/0'] : []);
+    expect(run.result.sandboxBranches).toEqual(['rrfix/wf_test/0']);
+    expect(run.result.keepBranches).toEqual(kept ? ['rrfix/wf_test/0'] : []);
   });
 
   it('keeps a review-rejected fix, because the rejection is an opinion and the branch is its subject', async () => {
@@ -669,8 +677,8 @@ describe('keepBranches', () => {
     // revision loop means the branch that ends up kept is the last attempt's rather than the first's.
     const run = await runFix({ reviewFix: () => ({ approved: false, objection: 'misses a case' }) });
 
-    expect(outcomeAt(run, 0).status).toBe('review-rejected');
-    expect(run.result.fix.keepBranches).toContain(outcomeAt(run, 0).branch);
+    expect(run.result.outcomes[0].status).toBe('review-rejected');
+    expect(run.result.keepBranches).toContain(run.result.outcomes[0].branch);
   });
 });
 
@@ -680,10 +688,10 @@ describe('the report the wrapper formats', () => {
     // a SHA and a branch, and that branch must be one teardown is told to keep. Every gate here drops in the safe
     // direction, and this asserts the direction rather than any one gate.
     //
-    // Keyed off the file of the finding the fixer was actually handed, not off `idx`: the script numbers its findings in
-    // reviewer order (bug, claude-md, code-quality, consistency, security, test-critique), which is not the order this
-    // `issues` list is written in, so an `idx`-keyed fixer hands each behaviour to the wrong finding — `idx` 1 here is
-    // the `src/c.ts` finding, not the `src/b.ts` one.
+    // Keyed off the file of the finding the fixer was actually handed rather than off `idx`, so the fixture states which
+    // behaviour belongs to which finding instead of relying on the selection order to line them up. Every finding here
+    // is equally severe, so that order is the ledger's own — but it is `selected`'s to decide, and a severity edit to one
+    // of these fixtures would silently reassign every behaviour if the mapping went through the index.
     const staged = {
       'src/a.ts': ['src/a.ts'], // an ordinary fix
       'src/b.ts': ['src/b.ts', 'dist/server.cjs'], // stages an artifact: untidy, still a fix
@@ -692,13 +700,15 @@ describe('the report the wrapper formats', () => {
     };
 
     const run = await runFix({
-      issues: [
-        issue({ file: 'src/a.ts', description: 'is fixed plainly' }),
-        issue({ file: 'src/b.ts', description: 'stages an artifact', category: 'security' }),
-        issue({ file: 'src/c.ts', description: 'reports no files', category: 'code-quality' }),
-        issue({ file: 'src/d.ts', description: 'is declined', category: 'consistency' }),
-      ],
-      exclusions: [{ path: 'dist', reason: 'generated build output', generated: true }],
+      args: {
+        findings: [
+          issue({ file: 'src/a.ts', description: 'is fixed plainly' }),
+          issue({ file: 'src/b.ts', description: 'stages an artifact', category: 'security' }),
+          issue({ file: 'src/c.ts', description: 'reports no files', category: 'code-quality' }),
+          issue({ file: 'src/d.ts', description: 'is declined', category: 'consistency' }),
+        ],
+        exclusions: [{ path: 'dist', reason: 'generated build output', generated: true }],
+      },
       fix: (subject, { idx }) =>
         Object.hasOwn(staged, subject.file)
           ? {
@@ -711,15 +721,15 @@ describe('the report the wrapper formats', () => {
           : { status: 'declined', branch: `rrfix/wf_test/${idx}`, reason: 'judgment call' },
     });
 
-    const kept = new Set(run.result.fix.keepBranches);
-    const claimedFixed = run.result.fix.outcomes.filter((outcome) => outcome.status === 'applied');
+    const kept = new Set(run.result.keepBranches);
+    const claimedFixed = run.result.outcomes.filter((outcome) => outcome.status === 'applied');
 
     // Three of the four: only the declined finding is unfixed. The other two used to be refused here, for the shape of
     // their diff and the shape of their file list, and were reported as findings nobody had fixed.
     expect(claimedFixed.map((outcome) => outcome.description)).toEqual([
       'is fixed plainly',
-      'reports no files',
       'stages an artifact',
+      'reports no files',
     ]);
 
     claimedFixed.forEach((outcome) => {
@@ -730,14 +740,14 @@ describe('the report the wrapper formats', () => {
 
   it('gives every unfixed finding a reason naming why', async () => {
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: (subject, { idx }) =>
         idx === 0
           ? { status: 'declined', branch: 'rrfix/wf_test/0', reason: 'not a safe localized edit' }
           : fixerClaiming({ 1: ['src/b.ts'] })(subject, { idx }),
     });
 
-    run.result.fix.outcomes
+    run.result.outcomes
       .filter((outcome) => outcome.status !== 'applied')
       .forEach((outcome) => expect(outcome.reason).toBeTruthy());
   });
@@ -747,18 +757,20 @@ describe('the report the wrapper formats', () => {
     // the way it was maintained was by discarding fixes. Two of these three findings sit in `src/b.ts`; all three are
     // reported, with three distinct branches, and the overlap is stated rather than resolved.
     const run = await runFix({
-      issues: [
-        issue({ file: 'src/a.ts', description: 'one' }),
-        issue({ file: 'src/b.ts', description: 'two', category: 'security' }),
-        issue({ file: 'src/b.ts', description: 'three, overlapping two', category: 'code-quality' }),
-      ],
+      args: {
+        findings: [
+          issue({ file: 'src/a.ts', description: 'one' }),
+          issue({ file: 'src/b.ts', description: 'two', category: 'security' }),
+          issue({ file: 'src/b.ts', description: 'three, overlapping two', category: 'code-quality' }),
+        ],
+      },
     });
 
-    const outcomes = run.result.fix.outcomes;
+    const outcomes = run.result.outcomes;
 
     expect(outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied', 'applied']);
     expect(new Set(outcomes.map((outcome) => outcome.branch)).size).toBe(3);
-    expect(run.result.fix.keepBranches).toHaveLength(3);
+    expect(run.result.keepBranches).toHaveLength(3);
 
     // And the collision is visible in the report rather than hidden by it: two rows name the same file.
     expect(outcomes.filter((outcome) => outcome.changedFiles.includes('src/b.ts'))).toHaveLength(2);
@@ -770,14 +782,16 @@ describe('the report the wrapper formats', () => {
     // built from, which depends on `parallel()` preserving input array order (Promise.all semantics), so the branch table
     // the wrapper prints is reproducible rather than being whatever order the agents finished in.
     const run = await runFix({
-      issues: [
-        issue({ file: 'src/a.ts', description: 'first' }),
-        issue({ file: 'src/b.ts', description: 'second', category: 'security' }),
-        issue({ file: 'src/c.ts', description: 'third', category: 'code-quality' }),
-      ],
-      // Each fixer claims the file of the finding it was actually handed. Keying the claim off `idx` would attach it to
-      // the wrong subject: `idx` follows the reviewers' order (bug before code-quality before security), not the order
-      // the findings are written above.
+      args: {
+        findings: [
+          issue({ file: 'src/a.ts', description: 'first' }),
+          issue({ file: 'src/b.ts', description: 'second', category: 'security' }),
+          issue({ file: 'src/c.ts', description: 'third', category: 'code-quality' }),
+        ],
+      },
+      // Each fixer claims the file of the finding it was actually handed rather than a file keyed off `idx`, so what the
+      // last assertion below checks is a real pairing and not a tautology: `changedFiles` has to have come from the
+      // subject the script chose for that index.
       fix: (subject, { idx }) => ({
         status: 'applied',
         sha: commitSha(idx),
@@ -787,7 +801,7 @@ describe('the report the wrapper formats', () => {
       }),
     });
 
-    const outcomes = run.result.fix.outcomes;
+    const outcomes = run.result.outcomes;
 
     expect(outcomes).toHaveLength(3);
     expect(outcomes.map((outcome) => outcome.sha)).toEqual([commitSha(0), commitSha(1), commitSha(2)]);
@@ -806,23 +820,23 @@ describe('a fix pipeline that dies', () => {
       },
     });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect(run.result.gaps.join(' ')).toContain('The Fix phase did not run');
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
+    expect(run.result.gaps.join(' ')).toContain('No fix ran');
     expect(run.result.gaps.join(' ')).toContain('no space left on device');
   });
 
   it('shows both causes when the pipelines die of 2 different errors', async () => {
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: (issue, { idx }) => {
         throw new Error(idx === 0 ? 'no space left on device' : 'permission denied');
       },
     });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect(outcomeAt(run, 1).status).toBe('verify-failed');
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
+    expect(run.result.outcomes[1].status).toBe('verify-failed');
     const gaps = run.result.gaps.join(' ');
-    expect(gaps).toContain('The Fix phase did not run: all 2 fix pipeline(s) failed');
+    expect(gaps).toContain('No fix ran: all 2 fix pipeline(s) failed');
     expect(gaps).toContain('no space left on device | permission denied');
   });
 
@@ -831,14 +845,14 @@ describe('a fix pipeline that dies', () => {
     // message repeated per finding is noise. Drive both pipelines to the identical error and pin that it is stated
     // once, which is the only assertion the deduplication is load-bearing for.
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: () => {
         throw new Error('no space left on device');
       },
     });
 
     const gaps = run.result.gaps.join(' ');
-    expect(gaps).toContain('The Fix phase did not run: all 2 fix pipeline(s) failed');
+    expect(gaps).toContain('No fix ran: all 2 fix pipeline(s) failed');
     expect(gaps).toContain('Cause: no space left on device');
     expect(gaps.match(/no space left on device/g)).toHaveLength(1);
   });
@@ -850,7 +864,7 @@ describe('a fix pipeline that dies', () => {
       issue({ file: 'src/c.ts', description: 'third' }),
     ];
     const run = await runFix({
-      issues: threeFindings,
+      args: { findings: threeFindings },
       fix: (issue, { idx }) => {
         const errors = ['no space left', 'permission denied', 'connection timeout'];
         throw new Error(errors[idx]);
@@ -858,14 +872,14 @@ describe('a fix pipeline that dies', () => {
     });
 
     const gaps = run.result.gaps.join(' ');
-    expect(gaps).toContain('The Fix phase did not run: all 3 fix pipeline(s) failed');
+    expect(gaps).toContain('No fix ran: all 3 fix pipeline(s) failed');
     expect(gaps).toContain('no space left | permission denied');
     expect(gaps).not.toContain('connection timeout');
   });
 
   it('reports "N of M pipelines failed" when only some pipelines fail', async () => {
     const run = await runFix({
-      issues: twoFindings,
+      args: { findings: twoFindings },
       fix: (issue, { idx }) => {
         if (idx === 0) {
           throw new Error('git checkout failed: worktree locked');
@@ -880,8 +894,8 @@ describe('a fix pipeline that dies', () => {
       },
     });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
-    expect(outcomeAt(run, 1).status).toBe('applied');
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
+    expect(run.result.outcomes[1].status).toBe('applied');
     const gaps = run.result.gaps.join(' ');
     expect(gaps).toContain('1 of 2 fix pipeline(s) failed before returning');
     expect(gaps).toContain('git checkout failed: worktree locked');
@@ -890,7 +904,7 @@ describe('a fix pipeline that dies', () => {
   it('is distinguished from a fixer that returned nothing', async () => {
     const run = await runFix({ fix: () => null });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
     expect(run.result.gaps.join(' ')).toContain('Fix agent did not return');
   });
 
@@ -901,7 +915,7 @@ describe('a fix pipeline that dies', () => {
       },
     });
 
-    expect(outcomeAt(run, 0).status).toBe('verify-failed');
+    expect(run.result.outcomes[0].status).toBe('verify-failed');
     const gaps = run.result.gaps.join(' ');
     expect(gaps).toContain('line one — line two — line three');
     expect(gaps).not.toContain('line four');

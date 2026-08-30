@@ -20,7 +20,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { internals, issue, outcomeAt, runFix } from './scenario.js';
+import { internals, issue, runReview } from './scenario.js';
 
 const { fingerprint, fingerprintKey, withFingerprint } = await internals();
 
@@ -255,8 +255,7 @@ describe('every finding a run reports', () => {
   it('comes back named', async () => {
     // Stamped on ingestion rather than on the way out, so the value a fixer is told to commit and the value the wrapper
     // persists are the same one by construction rather than by two call sites agreeing.
-    const run = await runFix({
-      args: { fix: false },
+    const run = await runReview({
       issues: [issue({ file: 'src/a.ts' }), issue({ file: 'src/b.ts', description: 'a second finding' })],
     });
 
@@ -268,22 +267,15 @@ describe('every finding a run reports', () => {
     }
   });
 
-  it('is named the same thing in its fix outcome', async () => {
-    // `fix.outcomes` is a flattened projection of the findings, not the findings themselves, so this is the join the
-    // wrapper uses to record which findings this run has a branch for — keyed by something that survives the finding's
-    // position changing in the next round.
-    const run = await runFix({ issues: [issue()] });
+  it('is what the wrapper writes to the ledger, so the next command can ask about it by name', async () => {
+    // The ledger is the whole interface between this command and `/repo-review-fix`, and the fingerprint is the only
+    // field in it that survives a finding's position changing between rounds. Every finding reaching the caller with one
+    // is what makes the ledger addressable at all.
+    const run = await runReview({ issues: [issue({ file: 'src/a.ts' }), issue({ file: 'src/b.ts' })] });
 
-    expect(outcomeAt(run, 0).fingerprint).toBe(run.result.findings[0].fingerprint);
-  });
-
-  it('is named to the fixer, in the commit trailer it is told to write', async () => {
-    // The only durable link from a branch back to the finding it answers. This script has no git access and learns a
-    // branch name only from what the fixer returns, so a run killed before it reports leaves the trailer as the sole way
-    // to tell which of `rrfix/*` fixes what — recoverable with `git log --all --grep` and no state file at all.
-    const run = await runFix({ issues: [issue()] });
-    const [fixer] = run.called(/^fix:/);
-
-    expect(fixer.prompt).toContain(`Repo-Review-Finding: ${run.result.findings[0].fingerprint}`);
+    expect(run.result.findings.map((finding) => finding.fingerprint)).toEqual(
+      run.result.findings.map(fingerprint),
+    );
+    expect(new Set(run.result.findings.map((finding) => finding.fingerprint)).size).toBe(2);
   });
 });

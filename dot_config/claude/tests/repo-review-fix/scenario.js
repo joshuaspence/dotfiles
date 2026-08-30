@@ -46,9 +46,15 @@ const INTERNALS = [
   'reviewers',
 
   // Untrusted-input guards.
+  'containedSites',
   'fullCommitSha',
-  'isSandboxBranch',
+  'isRepoRelativePath',
+  'isSafeBranchName',
   'isSafeRepoPath',
+  'isSandboxBranch',
+  'PLACEHOLDER_RUN_IDS',
+  'runIdTally',
+  'sitePaths',
 
   // Prompt builders and the label grammar every per-finding agent is keyed off.
   'attemptTag',
@@ -60,6 +66,17 @@ const INTERNALS = [
   'READ_ONLY_RULE',
   'surveyPrompt',
   'voteTag',
+
+  // How a `gaps` entry names the finding it is about, and the budget it names it within.
+  'GAP_DESCRIPTION_BUDGET',
+  'issueDescription',
+  'issueSite',
+
+  // The two clamps on agent-authored prose, and the budgets they clamp to.
+  'AGENT_NOTE_BUDGET',
+  'agentNote',
+  'OBJECTION_BUDGET',
+  'objectionText',
 
   // Schemas and the statuses that are not in one.
   'FIX_RESULT_SCHEMA',
