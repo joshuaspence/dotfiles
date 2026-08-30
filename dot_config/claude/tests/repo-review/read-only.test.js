@@ -9,7 +9,7 @@
  *
  * So the table below is where that invariant lives. It must name a guard for every agent a run produces, so deleting a
  * guard, or adding a phase without one, fails here rather than waiting for a review. That only holds if the fixture is
- * wide enough to reach every phase: the architecture lenses are skipped on a narrow scope and the `CLAUDE.md` scan is
+ * wide enough to reach every phase: the architecture agent is skipped on a narrow scope and the `CLAUDE.md` scan is
  * skipped on a repository without one, and a table scoped to a two-file happy path would read as complete while saying
  * nothing about either. The one phase that used to be reachable *only* on a degraded path — the `headSha` re-ask — left
  * with the fixing, since a re-ask exists to pin a sandbox and this command pins nothing.
@@ -34,7 +34,7 @@ const GUARDS = [
 ];
 
 // A run wide enough to reach every phase at once: two units, so the per-unit and the cross-unit dedupe agents both run,
-// over four in-scope files, since the architecture lenses are skipped on a scope of two or fewer.
+// over four in-scope files, since the architecture agent is skipped on a scope of two or fewer.
 const wideRun = () =>
   runReview({
     issues: [

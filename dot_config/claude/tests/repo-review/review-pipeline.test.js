@@ -66,7 +66,7 @@ describe('per-unit review pipeline', () => {
       issues: spread,
       units,
       review: async (call, { unit, categories }) => {
-        // The architecture lenses read the whole repository rather than a unit, so they own none of these findings.
+        // The architecture agent reads the whole repository rather than a unit, so it owns none of these findings.
         if (unit === 'arch') return { issues: [] };
 
         if (unit === 'api') await new Promise((resolve) => setTimeout(resolve, 0));

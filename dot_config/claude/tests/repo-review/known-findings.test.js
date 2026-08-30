@@ -266,14 +266,14 @@ describe('what a reviewer is told across rounds', () => {
     expect(opus.prompt).not.toContain('not a finding');
   });
 
-  it('tells an architecture lens about the findings that are not architecture', async () => {
-    // A lens reads the whole repository, so it has no unit to scope by — and the measured architecture duplicates were
+  it('tells the architecture agent about the findings that are not architecture', async () => {
+    // It reads the whole repository, so it has no unit to scope by — and the measured architecture duplicates were
     // against `code-quality`, `consistency` and `bug`, which a category filter is exactly what hides.
     const run = await round2();
-    const [lens] = run.called('review:arch:layering-and-boundaries');
-    const other = lens.prompt.slice(lens.prompt.indexOf(OTHER));
+    const [arch] = run.called('review:arch:opus');
+    const other = arch.prompt.slice(arch.prompt.indexOf(OTHER));
 
-    expect(lens.prompt).toContain('wire is four contracts');
+    expect(arch.prompt).toContain('wire is four contracts');
     expect(other).toContain('parse_frame skips the length check');
     expect(other).toContain('handler swallows the error');
   });

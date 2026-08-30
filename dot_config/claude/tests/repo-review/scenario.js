@@ -91,7 +91,7 @@ const INTERNALS = [
   // Prompt builders.
   'AGENT_NOTE_BUDGET',
   'agentNote',
-  'architecturalLensPrompt',
+  'architecturePrompt',
   'bulletList',
   'DEDUPE_DESCRIPTION_BUDGET',
   'dedupeDigest',

@@ -4,11 +4,13 @@
  * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
  * access.
  *
- * Inputs arrive on `args` as `{ paths, effort, partitions, validators, round, knownFindings }`, normalized through
- * `normalizeArgs` below because this call site delivers that object JSON-encoded as a string. The return value is
- * `{ reviewedCommit, round, findings, newFindings, exclusions, gaps }`. `reviewedCommit` is on every exit, including the
- * aborts: it is the commit the whole review is defined against, so the wrapper cites it rather than re-deriving a `HEAD`
- * that may have moved since.
+ * Inputs arrive on `args` as `{ paths, effort, partitions, validators, round, knownFindings, architectureReview }`,
+ * normalized through `normalizeArgs` below because this call site delivers that object JSON-encoded as a string. The
+ * return value is `{ reviewedCommit, architectureReview, round, findings, newFindings, exclusions, gaps }`.
+ * `reviewedCommit` is on every exit, including the aborts: it is the commit the whole review is defined against, so the
+ * wrapper cites it rather than re-deriving a `HEAD` that may have moved since. `architectureReview` is the one key that
+ * travels in *both* directions — the wrapper stores what comes back and hands it in again next round, which is how a
+ * structural review runs once per commit instead of once per round (see `heldArchitecture`).
  *
  * **Read-only, throughout.** Nothing here writes to the repository and no phase runs in an isolated worktree, which is
  * why the guard against a stray build or install appears in every prompt below rather than in some of them. Fixing what
@@ -321,8 +323,8 @@ const capEffort = (e, ceiling) => (EFFORT_ORDER.indexOf(e) > EFFORT_ORDER.indexO
 
 // The per-unit reviewers (Review phase) and the validators (Validate phase) run at high multiplicity; launching many
 // concurrent `max` Opus inferences has been observed to intermittently stall, and the Review phase is a barrier, so a
-// single hung agent can wedge the run. Cap those leaf agents at `xhigh`. The surveyors, the partitioner and the three
-// architecture lenses keep the requested effort.
+// single hung agent can wedge the run. Cap those leaf agents at `xhigh`. The surveyors, the partitioner and the
+// architecture agent keep the requested effort.
 const capLeaf = (e) => capEffort(e, 'xhigh');
 const leafEffort = capLeaf(effort);
 
@@ -471,10 +473,15 @@ const reviewerGroups = (roster) => {
 };
 
 
-// --- Architecture lenses (Agent 7) — one instance each, over the whole repo, blind to the others -----------------
+// --- The architecture review (Agent 7) — one agent over the whole repo, working through every lens ----------------
 // All three lenses report under one category — a finding names what was looked for, not which lens looked — so the
 // category is named here rather than taken from a lens `key`, and the two derivations read it from here.
 const ARCHITECTURE_CATEGORY = 'architecture';
+
+// The label the one architecture agent runs under, third segment included so it reads like every other reviewer's
+// (`review:<unit>:<model>`); `arch` is not a unit slug, and no unit can be slugged it. Named rather than inlined
+// because the epoch record below is only stamped when the agent under *this* label came back.
+const ARCHITECTURE_LABEL = 'review:arch:opus';
 
 const ARCHITECTURAL_LENSES = [
   {
@@ -714,6 +721,42 @@ const PARTITION_SCHEMA = {
 // or `null` when it is not one.
 const fullCommitSha = (value) =>
   typeof value === 'string' && /^[0-9a-fA-F]{40}$/.test(value) ? value.toLowerCase() : null;
+
+
+// --- The architecture epoch ------------------------------------------------------------------------------------------
+// Where the structural review stands, as the wrapper hands it back: the commit the architecture agent last completed on,
+// and the scope it was reporting against. It makes a round trip exactly the way `knownFindings` does — this script writes
+// it into its return value, the wrapper stores it in the ledger, and it arrives here again on the next round — because
+// what it describes outlives an invocation and no phase inside one round can observe it.
+//
+// It exists because the architecture agent is the only reviewer in the run whose answer cannot change between rounds. It
+// reads repository structure, and `/repo-review` writes nothing at all, so rounds 2 through n sent a whole-repository
+// Opus agent over a byte-identical tree to re-report what round 1 already found and dedupe already merged into the
+// ledger. Keyed on the commit rather than on the round number, so a tree that *did* move under the ledger — a looped
+// review of a branch someone is still pushing to — is re-assessed rather than trusted.
+//
+// Keyed on what *ran*, not on what was found, which is the whole reason this is a record of its own rather than a query
+// over `knownFindings`. A repository with sound structure yields no architecture findings, so "the ledger holds none for
+// this commit" is true forever there, and exactly the repositories with nothing to find would have gone on paying for
+// the agent every round while the ones with findings stopped. It is also why the epoch cannot be read off `firstSeen`:
+// that key is the wrapper's and is documented as inert here, and a finding is evidence the agent ran but its absence is
+// not evidence that it did not.
+//
+// Sanitised rather than trusted, for the same reason `knownFindings` is: it makes a full round trip through the
+// wrapper's JSON. An unreadable record is no record, which re-runs the agent — the failure that costs agents rather than
+// coverage.
+const heldArchitecture = {
+  commit: fullCommitSha(input?.architectureReview?.commit),
+  scope: normalizePaths(input?.architectureReview?.scope),
+};
+
+// Whether a recorded scope was at least as wide as this round's — the half of the epoch test that is not about the
+// commit. The agent examines the whole repository but reports only on the requested subtrees, so a record made under
+// `--path src` does not stand for a whole-repository round: skipping on it would leave everything outside `src`
+// structurally unreviewed while the ledger read as though the commit had been covered. Narrowing is the safe direction
+// and is allowed — a record for the whole repository, or for a parent of every path asked for now, covers this round.
+const architectureCovers = (recorded) =>
+  recorded.length === 0 || (paths.length > 0 && paths.every((p) => recorded.some((r) => underPath(p, r))));
 
 
 // --- Shared prompt fragments -------------------------------------------------------------------------------------
@@ -1623,26 +1666,39 @@ const surveyPrompt = () =>
   'Finally, run `git rev-parse HEAD` and return its full 40-character output as `headSha` — the commit the rest of ' +
   `this review is defined against.\n\n${READ_ONLY_RULE}`;
 
-function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
-  let extra = '';
-
-  if (lens.key === 'cohesion-and-duplication') {
-    const root = claudeMdPaths.find((p) => p === 'CLAUDE.md');
-
-    if (root) {
-      extra = `\n\nRepository-root \`CLAUDE.md\`: ${root} — read it yourself and judge organization against it.`;
-    }
-  }
+// The three lenses, as one agent. They used to be three, one per lens, each told it was "restricted to a single lens and
+// blind to the others" — the same blind-reviewer construction the per-unit roster used before it was grouped, and it
+// fails here for a sharper version of the same reason. The lenses overlap by construction: a circular dependency between
+// two packages is a dependency-structure defect, a layering violation and evidence of poor cohesion all at once, so all
+// three agents were reachable by it and all three reported it. The leftovers scope's most frequent duplicate was
+// therefore one architecture finding per lens, and an Opus agent that reads a whole repository is the most expensive
+// agent in the review to have spent on producing something dedupe then merges away. One agent reads the tree once and
+// answers all three questions: the same coverage, a third of the cost, and nothing left to triplicate.
+//
+// The lenses stay separate *data* rather than becoming one paragraph, because they are what makes the coverage claim
+// checkable — the prompt numbers them and says an unreported lens is a claim of cleanliness, which is what stops one
+// agent from answering the easiest of the three and stopping.
+function architecturePrompt(survey, claudeMdPaths, roundCtx = {}) {
+  // The root `CLAUDE.md` used to be shown only to the cohesion lens, whose instruction is the one that names it. With
+  // one agent covering every lens there is nobody else to withhold it from.
+  const root = claudeMdPaths.find((p) => p === 'CLAUDE.md');
+  const extra = root
+    ? `\n\nRepository-root \`CLAUDE.md\`: ${root} — read it yourself and judge organization against it.`
+    : '';
 
   const scopeNote = paths.length
     ? ` A path scope is in effect (${pathList}): examine the whole repository but report only defects that involve ` +
       `${paths.length > 1 ? 'those subtrees' : 'that subtree'}.`
     : '';
 
+  const lenses = ARCHITECTURAL_LENSES.map((lens, i) => `${i + 1}. ${lens.instruction}`).join('\n\n');
+
   return (
-    "You are the Architecture reviewer, restricted to a single lens and blind to the others. " +
-    "Assess the repository's overall structure and design coherence, not individual files.\n\n" +
-    `Lens — ${lens.instruction}${scopeNote}\n\n` +
+    "You are the Architecture reviewer. Assess the repository's overall structure and design coherence, not " +
+    'individual files.\n\n' +
+    `Work through every one of the ${ARCHITECTURAL_LENSES.length} lenses below: a finding under one lens is not a ` +
+    'substitute for looking through the next, and a lens you report nothing under is a claim that the repository is ' +
+    `clean on it.${scopeNote}\n\n${lenses}\n\n` +
     `${SEVERITY_RUBRIC}\n\n` +
     'Flag only concrete, demonstrable structural defects, and cite the specific modules or files involved. Do not flag ' +
     `subjective preferences or "this would be cleaner as X" rewrites. Return issues with category ` +
@@ -2015,13 +2071,27 @@ log(`Partitioned into ${units.length} unit(s) over ${unitPaths.length} path(s); 
 // the caller gets back exactly what it handed over, plus whatever survived here.
 let deduped = knownFindings;
 
-// The architecture lenses assess repository-level structure, so on a scope of one or two files there is nothing
-// structural to assess — three whole-repo Opus agents would return noise at best. Skip them below that threshold and
-// record it: a lens that never ran must not read as "architecture: clean". An unknown scope size still runs them.
-const runLenses = !unitFiles || unitFiles > 2;
+// The architecture agent assesses repository-level structure, so on a scope of one or two files there is nothing
+// structural to assess — a whole-repo Opus agent would return noise at best. Skip it below that threshold and record it:
+// a lens that never ran must not read as "architecture: clean". An unknown scope size still runs it.
+const scopeTooSmall = unitFiles > 0 && unitFiles <= 2;
 
-if (!runLenses) {
+if (scopeTooSmall) {
   gaps.push(`Architecture lenses not run: only ${unitFiles} file(s) in scope — too small for a structural review.`);
+}
+
+// The other reason not to run it, and deliberately *not* a gap. The structural review already completed at this exact
+// commit under a scope at least as wide as this one, and everything it found came back on `knownFindings` — so the
+// coverage is there, and "architecture: clean" is a claim this round is still entitled to make. That is what separates
+// this from the skip above: that one is a hole in the round and belongs in the caveats the wrapper reports as things it
+// did not look at, and this one is a cache hit and belongs in the narration. A round with no usable `HEAD` cannot tell
+// whether the tree it is reading is the one in the record, so it runs the agent rather than assume.
+const architectureHeld =
+  Boolean(reviewHead) && heldArchitecture.commit === reviewHead && architectureCovers(heldArchitecture.scope);
+const runLenses = !scopeTooSmall && !architectureHeld;
+
+if (architectureHeld) {
+  log(`Architecture already reviewed at ${reviewHead.slice(0, 10)} — not re-run in round ${round}.`);
 }
 
 // Labels carry no round marker. They used to — ` round k/n` after the colon-delimited identity, suppressed when there
@@ -2040,8 +2110,8 @@ if (!runLenses) {
 // Only stage 1 of dedupe fits inside the pipeline. The cross-unit pass exists precisely to compare findings from
 // different units, so it is a genuine barrier and stays one, below.
 //
-// The architecture lenses are not units — each reads the whole repository — so they run alongside the pipeline rather
-// than in it, and their findings join the leftovers scope after the barrier.
+// The architecture agent is not a unit — it reads the whole repository — so it runs alongside the pipeline rather than
+// in it, and its findings join the leftovers scope after the barrier.
 phase('Review');
 
 // The held findings, partitioned once, by the same rule the round's own findings will be. This is not the same question
@@ -2053,6 +2123,12 @@ const held = claimUnits(deduped, units);
 // one that never came back is no evidence at all. Only the first kind can make an empty round mean the review is dry.
 let reviewersReturned = 0;
 let reviewersRun = 0;
+
+// Which reviewers did not answer, by label. The counters say how many, which is what the round's summary line and its
+// "nothing was reviewed" gap are about; this says *which*, and one caller needs that: the epoch record may only be
+// stamped with this commit if the architecture agent actually came back, or a round that lost it to a stall would tell
+// every later round the structural review had been done.
+const reviewersFailed = new Set();
 
 // Raw findings, counted before any merging, because that — and not the number that survived dedupe — is what decides
 // whether this round looked and found nothing. A round whose every finding was absorbed as a duplicate of something
@@ -2095,6 +2171,7 @@ const reviewIssues = async (specs) => {
 
     if (!result?.issues) {
       gaps.push(`Reviewer did not complete: ${spec.label}`);
+      reviewersFailed.add(spec.label);
 
       return [];
     }
@@ -2162,21 +2239,26 @@ const unitSpecs = (unit) => {
   });
 };
 
+// A list of one, kept as a list because `reviewIssues` takes a roster and an empty one is how the gate above expresses a
+// skip — the same shape whether the agent runs or not.
 const lensSpecs = runLenses
-  ? ARCHITECTURAL_LENSES.map((lens) => ({
-      label: `review:arch:${lens.key}`,
-      model: 'opus',
-      effort,
-      category: ARCHITECTURE_CATEGORY,
-      prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
-        round,
+  ? [
+      {
+        label: ARCHITECTURE_LABEL,
+        model: 'opus',
+        effort,
+        category: ARCHITECTURE_CATEGORY,
+        prompt: architecturePrompt(survey, claudeMdPaths, {
+          round,
 
-        // A lens reads the whole repository, so there is no unit to scope by and it sees everything held. That is
-        // the largest known-findings block the run produces, and deliberately so: the measured architecture
-        // duplicates were against `code-quality`, `consistency` and `bug`, none of which a category filter shows.
-        known: deduped,
-      }),
-    }))
+          // The architecture agent reads the whole repository, so there is no unit to scope by and it sees everything
+          // held. That is the largest known-findings block the run produces, and deliberately so: the measured
+          // architecture duplicates were against `code-quality`, `consistency` and `bug`, none of which a category
+          // filter shows.
+          known: deduped,
+        }),
+      },
+    ]
   : [];
 
 const [unitScopes, lensIssues] = await parallel([
@@ -2228,6 +2310,19 @@ log(
     `reviewer(s) over ${units.length} unit(s).`,
 );
 
+// What this round has to say about the epoch, and what the wrapper stores back. Stamped only when the agent both ran and
+// answered: a round that skipped it for scope, or lost it to a stall, has learned nothing about this commit's structure
+// and hands the incoming record straight back, leaving the next round to run it. A round with no usable `HEAD` likewise
+// keeps the old record rather than overwriting a true statement about some commit with a null one about none.
+//
+// It is on the two exits that reviewed something and absent from every abort above — all of which are upstream of this
+// line — and the wrapper's rule is the same either way: replace what you hold with what you are given, and keep what you
+// hold when you are given nothing.
+const architectureReview =
+  reviewHead && runLenses && !reviewersFailed.has(ARCHITECTURE_LABEL)
+    ? { commit: reviewHead, scope: paths }
+    : heldArchitecture;
+
 // A round that raised nothing has nothing to merge against what is held and nothing to judge, and the set it holds is
 // the one it was handed — already deduped and already confirmed by the rounds that produced it. So return it here
 // rather than paying a cross pass to re-merge a settled set. Every per-unit scope skipped its own adjudicator for the
@@ -2248,20 +2343,30 @@ if (rawFound === 0) {
     log(`Round ${round} produced no findings — the review is dry.`);
   }
 
-  return { reviewedCommit: reviewHead, round, findings: knownFindings, newFindings: 0, exclusions, gaps };
+  return {
+    reviewedCommit: reviewHead,
+    architectureReview,
+    round,
+    findings: knownFindings,
+    newFindings: 0,
+    exclusions,
+    gaps,
+  };
 }
 
 // The barrier, and the only one left after Review. Adjudication already ran inside the pipeline above, one scope per
-// unit; what is left is the scope no unit owns — which does need judging, since the architecture lenses report into it —
+// unit; what is left is the scope no unit owns — which does need judging, since the architecture agent reports into it —
 // and then the pass that compares findings *across* units, the one part of this phase that genuinely needs every
 // reviewer's answer. That pass only ever merges: everything new has a verdict by the time it gets there.
 phase('Adjudicate');
 const prevCount = deduped.length;
 
-// The leftovers: everything no unit claimed. The repo-wide lens findings, the strays a reviewer cited outside its own
-// unit, and the held findings naming a file the partition no longer covers. One shared scope, so those are at least
-// compared against each other rather than skipped — they are the likeliest triplicates in the round, one per lens.
-// Held first here too, so a lens re-reporting a held finding is absorbed into the copy the ledger already knows.
+// The leftovers: everything no unit claimed. The repo-wide architecture findings, the strays a reviewer cited outside
+// its own unit, and the held findings naming a file the partition no longer covers. One shared scope, so those are at
+// least compared against each other rather than skipped. This scope's most frequent duplicate used to arrive here by
+// construction — three blind lenses, one finding each about the same structural defect — and collapsing them into one
+// agent removed that, leaving the duplicate this scope is really for: a structural finding the ledger already holds.
+// Held first here too, so a re-report is absorbed into the copy the ledger already knows.
 const unclaimed = [...held.unclaimed, ...scopes.flatMap((scope) => scope.strays), ...(lensIssues ?? [])];
 const leftovers = await scopeAdjudicate(unclaimed, DEDUPE_UNCLAIMED_SLUG, survey);
 
@@ -2366,4 +2471,12 @@ log(
 // Everything the review has to say, and nothing more: this workflow does not write. Fixing these findings is
 // `/repo-review-fix`, a separate command over the ledger the wrapper persists from this return value — the split is why a
 // re-review no longer has to happen before a fix can, and why nothing here needs git access.
-return { reviewedCommit: reviewHead, round, findings, newFindings: newlyConfirmed.length, exclusions, gaps };
+return {
+  reviewedCommit: reviewHead,
+  architectureReview,
+  round,
+  findings,
+  newFindings: newlyConfirmed.length,
+  exclusions,
+  gaps,
+};

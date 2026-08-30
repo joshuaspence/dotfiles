@@ -215,7 +215,7 @@ describe('a cascade through every phase that can record one', () => {
 
     // Exactly the three phase gaps named below and nothing else. A count and not a `gaps.length > 1` threshold, because
     // a threshold would have held on any one of them alone. Three files are in scope here, so unlike the two-file
-    // scenarios above this one clears the architecture-lens floor and carries no lens gap.
+    // scenarios above this one clears the architecture floor and carries no lens gap.
     expectGapCount(run, 3);
     expectGaps(run, GAP.reviewer('review:core:sonnet'));
     expectGaps(run, GAP.adjudicate({ stalled: 1, agents: 3, names: 'core vote 1/3' }));

@@ -4,7 +4,7 @@
  *
  * The `namesOneFile` function identifies
  * single-file paths by checking for a letter-initial extension, which determines whether a unit path should be counted as
- * a file (for the architecture lens gate). A defect here could cause the gate to misfire: classifying a directory as a
+ * a file (for the architecture gate). A defect here could cause the gate to misfire: classifying a directory as a
  * file would artificially inflate the file count, while failing to recognize a valid file extension could skip the lens
  * review on a large repository.
  */

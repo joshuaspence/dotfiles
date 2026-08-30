@@ -49,7 +49,7 @@ so collect each one as you scan the tokens instead of expecting a single run at 
 
 - Bare `path` arguments are optional and scope the review to the subtrees they name. Any number may be given: none
   (review the whole repository), one, or several. When given they apply throughout the script (survey, partition, and
-  the per-unit reviewers cover only those subtrees; the architecture lenses still read the whole repo but report only
+  the per-unit reviewers cover only those subtrees; the architecture agent still reads the whole repo but reports only
   defects involving them). Pass them as `paths`, an **array of strings** in the order they appeared, e.g.
   `["src", "lib"]` — and use the array form even for a single path (`["src"]`). Omit the key entirely when no path was
   given; the script then reviews the whole repository. Each path may name a directory or a single file, and the two may
@@ -138,6 +138,7 @@ re-worded by the reviewer that re-reports it.
   "version": 1,
   "updatedAt": "2026-08-30T05:41:00Z",
   "reviewedCommit": "cd976db1f0a94c2f9b7e5d3a8c1e6f40b2d75a93",
+  "architectureReview": { "commit": "cd976db1f0a94c2f9b7e5d3a8c1e6f40b2d75a93", "scope": [] },
   "round": 3,
   "scope": ["src"],
   "exclusions": [{ "path": "vendor", "reason": "third-party code" }],
@@ -178,6 +179,17 @@ re-worded by the reviewer that re-reports it.
 - `round` is the last round's `round` — the **absolute** count across every invocation, which the next one continues
   from. It is not the number of rounds run today; see `--rounds`.
 - `reviewedCommit` is the last round's, so the next report can say how far the checkout has moved since the review.
+- `architectureReview` is the one key that travels in **both** directions. Store whatever the round returned under that
+  name, and pass it back on the next round's `args` unchanged. It is opaque to you: do not read it, do not build it, and
+  do not derive it from `findings`. It says which commit the whole-repository structural review last completed on, and
+  under which scope, and it is what lets that review run **once per commit instead of once per round** — it is the single
+  most expensive agent in the run, it reads repository structure, and this command writes nothing, so rounds 2 through n
+  were re-reading an unchanged tree to re-report what round 1 already found.
+
+  A round that could not run the structural review — too small a scope, or an agent that stalled — hands the record back
+  unchanged rather than stamping itself, so the next round runs it. A round that aborted before reviewing anything omits
+  the key altogether. Both cases are covered by one rule: **write what you are given, and keep what you hold when you are
+  given nothing.** Erasing it costs an Opus agent, not coverage, so the safe mistake is the one you make by carrying it.
 - `scope` is the `paths` of the invocation that last wrote the file, or `[]` for a whole-repository run.
 - `exclusions` is the last round's `exclusions`, **overwritten** rather than accumulated: it describes the partition of
   the scope that was last reviewed, and an older run's exclusions are not true of a different scope.
@@ -208,7 +220,8 @@ is a thing the user can do without this command's help.
 Write the file with `Write` after **each** round, as part of reporting that round and before deciding whether to run
 another — same reasoning as reporting the round itself: a round that returned must not be able to be lost by whatever
 happens next. Set `round`, `reviewedCommit`, `exclusions` and `findings` from what the round just returned, `scope` from
-this invocation's paths, and `updatedAt` to the current time.
+this invocation's paths, and `updatedAt` to the current time. Set `architectureReview` from the round's value when it
+returned one and leave the one you already hold in place when it did not.
 
 A finding that was in the ledger and is **not** in the round's `findings` was absorbed by dedupe as a duplicate of
 another finding. Drop it, and let its `firstSeen` go with it — the survivor has its own, and it is the entry the review
@@ -258,10 +271,11 @@ Call the `Workflow` tool with:
   `--partitions auto`, `--reviewers-per-unit 2`, `--validators 1`, round 1 holding no findings), so do not synthesise
   default values here, and never include `--output` or `--rounds`.
 
-  Two keys do not come from a flag at all. `round` and `knownFindings` come from
-  [the ledger](#the-ledger): on a cold start omit both — rather than passing `round: 1` and an empty list, so that the
-  common case sends the same `args` it always did — and otherwise pass `round` set to the ledger's `round` plus one and
-  `knownFindings` set to its `findings` **verbatim**.
+  Three keys do not come from a flag at all. `round`, `knownFindings` and `architectureReview` come from
+  [the ledger](#the-ledger): on a cold start omit all three — rather than passing `round: 1`, an empty list and a null, so
+  that the common case sends the same `args` it always did — and otherwise pass `round` set to the ledger's `round` plus
+  one, `knownFindings` set to its `findings` **verbatim**, and `architectureReview` set to its `architectureReview`,
+  likewise verbatim and only if it has one.
 
   Worked examples — every one of them a cold start, since the two ledger keys are the same in every row and would tell
   you nothing. Note that every `path` survives every flag combination, that the path-less rows are path-less only because
@@ -294,12 +308,15 @@ argument you could have set at launch (a run already under way is not wrong just
 omitted, a value explicitly). The only reason to stop a run is a genuine wedge — most agents done, a few idle for many
 minutes — after which you may re-run, watching progress in `/workflows`, optionally at a lower `--effort`.
 
-The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps }`:
+The result is `{ reviewedCommit, architectureReview, round, findings, newFindings, exclusions, gaps }`:
 
 - `reviewedCommit` — the commit SHA the review was defined against: the `HEAD` the survey read before any agent ran.
   Cite this in permalinks (see the format below) rather than asking git for `HEAD` yourself — a long run can outlive the
   `HEAD` it started on, and links built from a moved `HEAD` point at text no reviewer saw. It is `null` only when the
   survey never reported it, which is the one case where you fall back to `git rev-parse HEAD`.
+- `architectureReview` — where the whole-repository structural review stands, to be stored in
+  [the ledger](#the-ledger) and handed back on the next round. Opaque: store it and pass it, do not read it. Absent from
+  a round that aborted before reviewing anything, and in that case the record you already hold still stands.
 - `round` — which round this was, echoed back from `args.round`. Read the round number off this rather than off your own
   counter: if the value you passed was unusable the script fell back to 1, and the emphasis its reviewers were actually
   given follows the round it ran, not the one you asked for.
@@ -364,8 +381,9 @@ cap depends on the flag; everything else, the ledger write included, applies to 
    - The round aborted: a `gaps` entry says the review was aborted, and `newFindings` is `0`. It hands back everything it
      was holding, so the ledger is safe to write and the accumulated review is intact, but nothing was reviewed. Do not
      spend another round on it — the survey or the partition failed, and a retry is the user's call.
-4. Otherwise call `Workflow` again with the same `args` plus the two ledger keys updated: `round` set to the previous
-   `round` **plus one**, and `knownFindings` set to the previous round's `findings` **verbatim**. Pass that array through
+4. Otherwise call `Workflow` again with the same `args` plus the three ledger keys updated: `round` set to the previous
+   `round` **plus one**, `knownFindings` set to the previous round's `findings` **verbatim**, and `architectureReview` set
+   to what that round returned under the same name (or left as it was, if it returned none). Pass that array through
    untouched — do not re-sort it, prune it, re-word a description, or drop the ones you judged low value. The script
    merges this round's raw findings against it, which is what turns a re-report into an absorbed duplicate rather than a
    second entry, and a finding you edited is one it can no longer recognise as the same finding. It also skips
@@ -576,14 +594,28 @@ source file and neither is committed — if the user does not want the ledger tr
   category still fits, and it numbers slugs that collide
   (`wire-protocol-2`) so two units are never one indistinguishable row. Reviewers are still told the prose name, so use
   that when you describe a unit in the output — the slug is for reading the progress tree, not for the report.
-- The Review phase costs roughly `units × --reviewers-per-unit`, plus 3 architecture lenses, per round — so those two
-  numbers are the dominant cost lever. The script sizes it from the survey's file counts (see `--partitions`) and, on a scope of two
-  files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like
-  any other coverage gap: architecture was **not reviewed**, not "clean".
+- The Review phase costs roughly `units × --reviewers-per-unit` per round, plus **at most one** architecture agent — so
+  the first two numbers are the dominant cost lever. The script sizes them from the survey's file counts (see
+  `--partitions`).
+
+  The architecture agent is a single whole-repository Opus agent working through three structural lenses in one pass. It
+  was three agents, one per lens and each blind to the others, and the lenses overlap so heavily — a circular dependency
+  between two packages is a dependency defect, a layering violation and a cohesion failure at once — that the reliable
+  outcome was three reports of one defect for dedupe to merge afterwards at full price.
+
+  It is skipped for two different reasons, and you report them differently:
+  - **Scope too small.** On a scope of two files or fewer there is no repository-level structure to assess, so it does not
+    run and the skip is recorded in `gaps`. Report it like any other coverage gap: architecture was **not reviewed**, not
+    "clean".
+  - **Already reviewed at this commit.** Structure cannot change during a read-only review, so on a later round over the
+    same commit it does not run again — and this is *not* in `gaps`, because the coverage is real and is carried in the
+    ledger. Report architecture normally. If you want to say so at all, say it ran in an earlier round of this review, not
+    that it was skipped. It runs again as soon as `HEAD` moves, or the scope widens past what the record covers.
 - The script resolves failures it can see: each fan-out runs under `parallel()`, which resolves a failed agent to
-  `null` rather than rejecting the batch, and every dropped reviewer, lens, verdict or merge stage is recorded in
-  `gaps`. Surface those gaps in the output, each under its own kind — only the dropped reviewers, lenses and verdicts are
-  lost *review coverage*.
+  `null` rather than rejecting the batch, and every dropped reviewer, verdict or merge stage is recorded in `gaps`.
+  Surface those gaps in the output, each under its own kind — only the dropped reviewers and verdicts are lost *review
+  coverage*. A dropped architecture agent is one of those, and it also leaves the ledger's record unstamped, so the next
+  round runs it again.
 - A round is a whole invocation of the script, survey and partition included, and adjudication runs inside it
   over **only what that round contributed** — not over the accumulated set. That is what makes a round cost about the
   same as round 1 instead of as much as every round before it put together: the old in-script loop re-judged and
@@ -599,8 +631,8 @@ source file and neither is committed — if the user does not want the ledger tr
   the reviewers produced — and four separate findings for a single missing length check survived even that, because the
   dedupe prompt is deliberately reluctant to merge across categories and cannot be made eager without hiding real
   defects behind unrelated ones. So a reviewer now sees every finding held for its unit, in two lists: its own
-  category's, to look past, and the other reviewers', to recognise and not restate. The architecture lenses read the
-  whole repository and so have no unit to scope by; they see everything, which is the largest such list a run builds.
+  category's, to look past, and the other reviewers', to recognise and not restate. The architecture agent reads the
+  whole repository and so has no unit to scope by; it sees everything, which is the largest such list a run builds.
 - `allowed-tools` governs only this wrapper — running the workflow and formatting the result — not the subagents the
   workflow launches. Those carry their own default tool pool, so reviewers and adjudicators can `Read`, `Grep`, `Glob`,
   and `git ls-files` regardless of this list; you neither need to nor can provision their tools from here. This list is

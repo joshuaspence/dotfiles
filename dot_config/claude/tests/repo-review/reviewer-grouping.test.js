@@ -2,7 +2,7 @@
  * How many agents one unit costs to review.
  *
  * The roster names six reviewers, and every unit used to spend one agent on each of them. With the unit ceiling at 8 that
- * is 48 leaf agents per round before dedupe, validation or the architecture lenses — and it is the single largest line in
+ * is 48 leaf agents per round before dedupe, validation or the architecture pass — and it is the single largest line in
  * the cost that exhausted a session limit in 41 minutes without finishing round 3. `--reviewers-per-unit 2` groups the
  * roster by the model each reviewer runs on, so one Opus agent covers `bug` and `security` and one Sonnet agent covers the
  * rest: the same six axes, a third of the agents.
@@ -169,7 +169,7 @@ describe('the default arm', () => {
 
   it('narrows the enum without disturbing the schema it narrows', async () => {
     // `issuesSchema` spreads rather than mutates. Mutating `ISSUE` in place would narrow the enum for every later
-    // agent too — including the architecture lenses, whose only category is one no group holds.
+    // agent too — including the architecture agent, whose only category is one no group holds.
     const { ISSUES_SCHEMA, issuesSchema } = await internals();
     const narrowed = issuesSchema(['bug']);
 

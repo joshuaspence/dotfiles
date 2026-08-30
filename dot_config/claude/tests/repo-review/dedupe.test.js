@@ -711,8 +711,10 @@ describe('dedupe scopes', () => {
 
   it('pools the findings no unit claims into one cross-cutting bucket', async () => {
     // The repo-wide architecture findings belong to no unit, and neither does anything naming a file the partitioner
-    // excluded or a reviewer misspelled. Those are the likeliest triplicates of all — one per architectural lens — so
-    // they need a scope to be compared in rather than being left out of the phase entirely.
+    // excluded or a reviewer misspelled. This scope's most frequent duplicate used to arrive by construction — three
+    // blind lenses, one finding each about the same structural defect — and collapsing them into one agent removed it;
+    // what is left is a structural finding the ledger already holds. Either way they need a scope to be compared in
+    // rather than being left out of the phase entirely.
     const { claimUnits } = await internals();
     const findings = [...spread, issue({ file: 'setup.py' }), issue({ file: 'docs/design.md' })];
 

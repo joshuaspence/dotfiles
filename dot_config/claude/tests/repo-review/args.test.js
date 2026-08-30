@@ -283,9 +283,9 @@ describe('path scope', () => {
     expect(lsFiles).toBe('git ls-files');
   });
 
-  it('names every subtree to the architecture lenses, which still read the whole repository', async () => {
-    const { architecturalLensPrompt, ARCHITECTURAL_LENSES } = await internals({ paths: ['src', 'lib'] });
-    const prompt = architecturalLensPrompt(ARCHITECTURAL_LENSES[0], { languages: ['TypeScript'] }, []);
+  it('names every subtree to the architecture agent, which still reads the whole repository', async () => {
+    const { architecturePrompt } = await internals({ paths: ['src', 'lib'] });
+    const prompt = architecturePrompt({ languages: ['TypeScript'] }, []);
 
     expect(prompt).toContain('A path scope is in effect (`src`, `lib`)');
     expect(prompt).toContain('report only defects that involve those subtrees');
@@ -357,29 +357,38 @@ describe('survey prompt', () => {
   });
 });
 
-describe('architectural lens prompts', () => {
-  it('adds root CLAUDE.md instruction when cohesion-and-duplication lens has a root CLAUDE.md', async () => {
-    const { architecturalLensPrompt, ARCHITECTURAL_LENSES } = await internals();
-    const cohesionLens = ARCHITECTURAL_LENSES.find((l) => l.key === 'cohesion-and-duplication');
-    const prompt = architecturalLensPrompt(cohesionLens, { languages: ['TypeScript'] }, ['CLAUDE.md', 'src/CLAUDE.md']);
+describe('the architecture prompt', () => {
+  it('puts every lens in the one prompt, and says an unreported lens is a claim of cleanliness', async () => {
+    // The lenses were three agents, each told it was blind to the others. Collapsed into one, the numbered list *is* the
+    // coverage claim: an agent given three overlapping structural questions can answer the easiest and stop, and the
+    // instruction below is the only thing that says it may not. So both halves are pinned — every lens's instruction
+    // reaches the prompt, and the sentence that makes an unreported one a positive assertion reaches it too.
+    const { architecturePrompt, ARCHITECTURAL_LENSES } = await internals();
+    const prompt = architecturePrompt({ languages: ['TypeScript'] }, []);
+
+    for (const lens of ARCHITECTURAL_LENSES) {
+      expect(prompt).toContain(lens.instruction);
+    }
+
+    expect(prompt).toContain(`every one of the ${ARCHITECTURAL_LENSES.length} lenses`);
+    expect(prompt).toContain('a lens you report nothing under is a claim that the repository is clean on it');
+  });
+
+  it('adds the root CLAUDE.md instruction when the repository has one', async () => {
+    // It used to be shown only to the cohesion lens, whose instruction is the one that names the conventions to judge
+    // against. There is nobody else to withhold it from now, so the condition is the file's existence and nothing else.
+    const { architecturePrompt } = await internals();
+    const prompt = architecturePrompt({ languages: ['TypeScript'] }, ['CLAUDE.md', 'src/CLAUDE.md']);
 
     expect(prompt).toContain('Repository-root `CLAUDE.md`: CLAUDE.md');
     expect(prompt).toContain('read it yourself and judge organization against it');
   });
 
-  it('omits root CLAUDE.md instruction when only non-root CLAUDE.md files exist', async () => {
-    const { architecturalLensPrompt, ARCHITECTURAL_LENSES } = await internals();
-    const cohesionLens = ARCHITECTURAL_LENSES.find((l) => l.key === 'cohesion-and-duplication');
-    const prompt = architecturalLensPrompt(cohesionLens, { languages: ['TypeScript'] }, ['src/CLAUDE.md', 'lib/CLAUDE.md']);
-
-    expect(prompt).not.toContain('Repository-root');
-    expect(prompt).not.toContain('read it yourself and judge organization against it');
-  });
-
-  it('omits root CLAUDE.md instruction for other lenses even when root CLAUDE.md exists', async () => {
-    const { architecturalLensPrompt, ARCHITECTURAL_LENSES } = await internals();
-    const otherLens = ARCHITECTURAL_LENSES.find((l) => l.key !== 'cohesion-and-duplication');
-    const prompt = architecturalLensPrompt(otherLens, { languages: ['TypeScript'] }, ['CLAUDE.md']);
+  it('omits it when only non-root CLAUDE.md files exist', async () => {
+    // A nested `CLAUDE.md` governs its own subtree, not the repository's organization, so it is not the file a structural
+    // review judges layout against — and naming one as though it were would invite findings against the wrong rulebook.
+    const { architecturePrompt } = await internals();
+    const prompt = architecturePrompt({ languages: ['TypeScript'] }, ['src/CLAUDE.md', 'lib/CLAUDE.md']);
 
     expect(prompt).not.toContain('Repository-root');
     expect(prompt).not.toContain('read it yourself and judge organization against it');
