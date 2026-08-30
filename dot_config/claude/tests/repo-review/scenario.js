@@ -96,6 +96,7 @@ const INTERNALS = [
   'partitionPrompt',
   'pinToReviewHead',
   'reconcilePrompt',
+  'reviewerPrompt',
   'REVIEW_RULES',
   'ROUND_EMPHASIS',
   'roundEmphasis',
@@ -113,6 +114,7 @@ const INTERNALS = [
   'RECONCILE_RESULT_SCHEMA',
   'REVIEWERS',
   'REVIEW_RESULT_SCHEMA',
+  'SEVERITY_ORDER',
   'SURVEY_SCHEMA',
   'VERDICT_SCHEMA',
 ];

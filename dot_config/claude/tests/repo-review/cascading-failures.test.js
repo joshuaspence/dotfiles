@@ -285,11 +285,15 @@ describe('fix failures after multiple upstream gaps', () => {
       // second arm to write here.
       fix: () => null,
     });
-    const run = await runWorkflow({
+    const composed = await runWorkflow({
       scriptPath: SCRIPT,
       args: { fix: true, reviewers: 1, validators: 1 },
       agent: (call) => (call.label === 'review:core:bug' ? null : scenario.agent(call)),
     });
+    // `runFix` hands `outcomeAt` the scenario as `run.scenario`, which is how it resolves a `#idx` through the numbering
+    // the fixture recorded rather than indexing `fix.outcomes` positionally. A run composed by hand has to attach it the
+    // same way, or `outcomeAt` has nothing to resolve against.
+    const run = { ...composed, scenario };
 
     // Exactly the four phase gaps named below and nothing else. A count and not a `gaps.length > 1` threshold, because
     // a threshold would have held on any one of them alone. Three files are in scope here, so unlike the two-file
