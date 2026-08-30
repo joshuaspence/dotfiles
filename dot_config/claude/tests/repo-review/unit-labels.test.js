@@ -268,7 +268,10 @@ describe('reading a unit back out of a label', () => {
       issue({ file: 'utils/text.py' }),
       issue({ file: 'core/wire.py' }),
     ];
-    const run = await runFix({ issues, units, args: { fix: false } });
+    // A repository-sized `inScopeFileCount`, because three units over three files is past the ceiling a three-file scope
+    // is sized for and the third would be folded into the second. This test is about how a slug resolves, not about how
+    // many units survive — `partition-ceiling.test.js` owns that — so the scope is stated large enough to keep all three.
+    const run = await runFix({ issues, units, args: { fix: false }, survey: { inScopeFileCount: 40 } });
 
     expect(reported(run, 'review:auth-middleware:bug')).toEqual(['auth/guard.py']);
     expect(reported(run, 'review:core-utils:bug')).toEqual(['utils/text.py']);

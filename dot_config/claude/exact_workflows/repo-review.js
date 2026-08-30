@@ -485,10 +485,10 @@ const PARTITION_SCHEMA = {
         properties: {
           path: { type: 'string' },
           reason: { type: 'string', description: 'Why it was left out, for a human reader' },
-          // Asked for as a flag rather than read back out of `reason`, because two of the Fix phase's safety mechanisms
-          // key on it — the fixers are told never to stage these paths, and a commit that did is refused. `reason` is
-          // free prose against no agreed vocabulary, so classifying by matching it made "produced by `npm run build`,
-          // not source" read as hand-written source.
+          // Asked for as a flag rather than read back out of `reason`, because the Fix phase keys on it: the fixers are
+          // told never to stage these paths (`generatedPathsBlock`). `reason` is free prose against no agreed
+          // vocabulary, so classifying by matching it made "produced by `npm run build`, not source" read as
+          // hand-written source.
           generated: {
             type: 'boolean',
             description:
@@ -912,6 +912,33 @@ const withUnitSlugs = (units) => {
 
     return { ...unit, slug };
   });
+};
+
+// Fold everything past the ceiling into a single unit, so the number of units a run reviews is bounded by what the
+// partitioner was *told* rather than by what it chose to return. `units` multiplies every phase downstream of here, and
+// leaving it to an agent's discretion is how a review of a 143-file repository came to spend a whole session limit
+// without producing anything.
+//
+// Coalesced and not dropped. The surplus paths are in scope, the review is supposed to have covered them, and a bounded
+// run that silently reports a partial review as a whole one is worse than an unbounded one — the cost is visible, but a
+// hole in the coverage is not. Reviewing them as one coarse unit is worse than reviewing them as five coherent ones and
+// far better than not reviewing them, and that is the entire trade the ceiling exists to make.
+//
+// The first `ceiling - 1` units survive untouched rather than the surplus being spread evenly across all of them: the
+// units the partitioner actually reasoned about stay intact, and what is left is one identifiable bucket the report can
+// name. Its `name` is what its reviewers are shown and what its agent labels are slugged from, so it says what it is
+// rather than borrowing the name of whichever unit happened to be first over the line.
+const COALESCED_UNIT_NAME = 'the remainder';
+
+const coalesceToCeiling = (units, ceiling) => {
+  if (!Number.isInteger(ceiling) || ceiling < 1 || units.length <= ceiling) return units;
+
+  const surplus = units.slice(ceiling - 1);
+
+  return [
+    ...units.slice(0, ceiling - 1),
+    { name: COALESCED_UNIT_NAME, paths: [...new Set(surplus.flatMap((unit) => unit.paths || []))] },
+  ];
 };
 
 const claudeMdPrompt = () =>
@@ -1481,21 +1508,51 @@ function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
 // partitioner splits that file into conceptual slices, and since the Review phase is `units × REVIEWERS`, every
 // invented slice costs six more reviewers all re-reading the same file. A count of 0 means the survey returned no
 // usable in-scope count — treat the scope size as unknown and keep the repository-sized default.
-const autoUnitTarget = (fileCount) =>
-  !fileCount ? 'the range 4-8'
-  : fileCount <= 1 ? 'exactly 1 unit'
-  : fileCount <= 5 ? 'the range 1-2'
-  : fileCount <= 20 ? 'the range 2-4'
-  : 'the range 4-8';
+//
+// The range is data and the prose is derived from it, because the upper bound is also the *enforced* ceiling
+// (`unitCeiling` below) and the two must not drift. They did: the number here was documented as capping the review at
+// 4-8 units for any repository size, and for as long as it was prose only it capped nothing at all — a partitioner that
+// returned thirty units got thirty units, six reviewers each. `units` is the multiplier every phase downstream is sized
+// by, so it is the one number that has to be a bound rather than a request.
+const autoUnitRange = (fileCount) =>
+  !fileCount ? [4, 8]
+  : fileCount <= 1 ? [1, 1]
+  : fileCount <= 5 ? [1, 2]
+  : fileCount <= 20 ? [2, 4]
+  : [4, 8];
+
+const autoUnitTarget = (fileCount) => {
+  const [min, max] = autoUnitRange(fileCount);
+
+  return min === max ? `exactly ${min} unit${min === 1 ? '' : 's'}` : `the range ${min}-${max}`;
+};
+
+// How many units the run will actually review, whatever comes back. An explicit `--partitions N` is a request for
+// exactly N, so N is its own ceiling: a partitioner that returns more than it was told to has not been more helpful.
+const unitCeiling = (fileCount) => (partitions === 'auto' ? autoUnitRange(fileCount)[1] : partitions);
+
+// The survey's in-scope file count, coerced. A named helper rather than an inline expression because both the range
+// asked for in the prompt and the ceiling enforced on the answer are derived from it, and the two have to agree.
+const inScopeFiles = (survey) =>
+  Number.isInteger(survey?.inScopeFileCount) && survey.inScopeFileCount > 0 ? survey.inScopeFileCount : 0;
 
 function partitionPrompt(survey, fileCount) {
+  // The ceiling is stated, and so is what happens past it. An unqualified "in the range 4-8" reads as a stylistic
+  // preference to an agent that can see forty plausible modules, and it is not one: this is the number the whole review
+  // is sized by. Told the consequence, the agent can choose which paths share a unit — a judgement it is far better
+  // placed to make than the mechanical fold below, which just sweeps the surplus into one bucket.
+  const ceiling = unitCeiling(fileCount);
   const target =
     partitions === 'auto'
       ? `Choose the number of units that best fits the scope, in ${autoUnitTarget(fileCount)}.`
       : `Partition into exactly ${partitions} units.`;
 
   return (
-    `Partition ${scope} into coherent review units, using the survey below. ${target} Each unit should be a module, ` +
+    `Partition ${scope} into coherent review units, using the survey below. ${target} That count is a hard ceiling and ` +
+    `not a preference: units beyond the first ${ceiling} are folded into one bucket unit reviewed as a whole, so a ` +
+    'thirty-unit answer is not a more thorough review — it is the same review with the last twenty-three units ' +
+    'mechanically lumped together. Group deliberately instead: a large scope means large units, not more of them. ' +
+    'Each unit should be a module, ' +
     // The script slugs whatever comes back, but a name chosen short reads better than one cut short: asking for it
     // yields `wire-protocol` where truncating a title yields `wire-protocol` from `Wire Protocol Layer` and, less
     // happily, `authentication` from `AuthenticationMiddleware`.
@@ -1637,8 +1694,7 @@ if (reviewHead) {
 // from summing `structure`: `structure` describes the whole repository whatever the scope, so summing it reported ~170
 // files for a single-file review and the range never narrowed. 0 means no usable count — treated as unknown, keeping
 // the repository-sized default rather than guessing small.
-const surveyedFiles =
-  Number.isInteger(survey.inScopeFileCount) && survey.inScopeFileCount > 0 ? survey.inScopeFileCount : 0;
+const surveyedFiles = inScopeFiles(survey);
 
 log(
   surveyedFiles
@@ -1683,8 +1739,15 @@ if (!partition?.units?.length) {
 // outside what was asked for. The phases below already read that as an unknown scope size and review it anyway, so
 // filtering unconditionally would abort the run instead. Narrowed before slugging, so the numbering of repeated slugs
 // counts only the units that survive.
+//
+// Capped after the narrowing and before the slugging: the narrowing can drop enough units to bring the count back under
+// the ceiling on its own, and slugging last means the numbering of repeated slugs counts only units that survived both.
+// The ceiling is derived from the same file count `partitionPrompt` was given, so the number enforced here is the number
+// the agent was told, not a second opinion about the scope computed from the answer it sent back.
 const scoped = partition.units.map((unit) => ({ ...unit, paths: narrowToScope(unit?.paths) }));
-const units = withUnitSlugs(paths.length ? scoped.filter((unit) => unit.paths.length) : scoped);
+const inScope = paths.length ? scoped.filter((unit) => unit.paths.length) : scoped;
+const capped = coalesceToCeiling(inScope, unitCeiling(surveyedFiles));
+const units = withUnitSlugs(capped);
 const exclusions = partition.exclusions || [];
 
 // Nothing left to review is a failure to report, not a clean review of nothing: an agent whose whole answer fell
@@ -1707,6 +1770,22 @@ units.forEach((unit) => unit.paths.forEach((p) => droppedPaths.delete(p)));
 
 if (droppedPaths.size) {
   log(`Narrowed the partition to ${scope}: ${droppedPaths.size} path(s) it returned were not within it.`);
+}
+
+// A gap and not just a log line, because the difference is invisible in the output otherwise. Every finding the review
+// produces is reported the same way whichever unit found it, so a bucket of twenty modules read by one set of reviewers
+// returns a shorter list than twenty units would have and nothing in that list says why. The reader is entitled to know
+// that "no issues in `src/legacy`" came out of a review that saw `src/legacy` as one file list among many, especially
+// since the fix pipeline will offer to act on what did come back.
+if (capped.length < inScope.length) {
+  const folded = inScope.length - capped.length + 1;
+
+  gaps.push(
+    `Partition agent returned ${inScope.length} unit(s), over the ceiling of ${capped.length} this review is sized ` +
+      `for. The last ${folded} were folded into a single "${COALESCED_UNIT_NAME}" unit covering ` +
+      `${capped[capped.length - 1].paths.length} path(s), reviewed as one scope — so those paths were reviewed more ` +
+      'coarsely than the rest. Re-run with an explicit `--path` to give any of them a review of their own.',
+  );
 }
 
 // The distinct paths the reviewers will actually open, and how many files those paths are known to be. The file count,

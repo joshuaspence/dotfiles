@@ -63,7 +63,12 @@ const INTERNALS = [
   'sitePaths',
 
   // Grouping and sizing.
+  'autoUnitRange',
   'autoUnitTarget',
+  'coalesceToCeiling',
+  'COALESCED_UNIT_NAME',
+  'inScopeFiles',
+  'unitCeiling',
   'DEDUPE_CROSS_SLUG',
   'dedupeScopes',
   'DEDUPE_UNCLAIMED_SLUG',
@@ -339,6 +344,15 @@ export function fixScenario({
   // are labelled per unit and dedupe is now scoped per unit, so both have to read the same roster.
   const roster = units ?? [{ name: 'core', summary: 'the code', paths: unitPaths ?? filesOf(issues) }];
 
+  // The survey the run receives, hoisted out of the agent switch below because the partition narrowing needs it too: the
+  // unit ceiling is a function of `inScopeFileCount`, so the fixture cannot mirror the script's roster without knowing
+  // the same count the script will read. `survey === null` is a run whose survey fails, which aborts before the Partition
+  // phase — nothing reaches the narrowing, so the shape handed to it there does not matter.
+  const surveyResult =
+    survey === null
+      ? null
+      : { ...DEFAULT_SURVEY, inScopeFileCount: (unitPaths ?? filesOf(issues)).length, headSha, ...survey };
+
   // A label carries the unit's *slug*, not the name the partition returned, so the roster is indexed by the slug the
   // script itself stamps on. A re-normalization matched on a prefix instead, which resolved `review:core:bug` to a
   // `core-utils` unit and missed both `unitSlug`'s camel-case split (`AuthMiddleware`) and `withUnitSlugs`' collision
@@ -349,7 +363,7 @@ export function fixScenario({
   // slugging. Routing by the raw roster instead would answer a reviewer about files it was never shown, and would
   // number repeated slugs off units the script discarded — resolving `wire-protocol` to a unit that never ran — in
   // neither case recording anything in `unroutable`, since the slug does exist on the roster the agent returned.
-  const bySlug = new Map(withUnitSlugs(scopeUnits(roster)).map((unit) => [unit.slug, unit]));
+  const bySlug = new Map(withUnitSlugs(scopeUnits(roster, surveyResult)).map((unit) => [unit.slug, unit]));
 
   // An unrecognised slug is a broken fixture, not a wider scope, so say so — both to the caller and, for the case where
   // `parallel()` swallows the throw, to `unroutable` and the post-condition that reads it.
@@ -397,14 +411,7 @@ export function fixScenario({
 
     switch (label.kind) {
       case 'survey':
-        return survey === null
-          ? null
-          : {
-              ...DEFAULT_SURVEY,
-              inScopeFileCount: (unitPaths ?? filesOf(issues)).length,
-              headSha,
-              ...survey,
-            };
+        return surveyResult;
 
       case 'claude-md-scan':
         return claudeMd;
@@ -473,21 +480,28 @@ export function fixScenario({
 const filesOf = (issues) => [...new Set(issues.filter((subject) => subject.file).map((subject) => subject.file))];
 
 /**
- * The step the script performs on its way out of the Partition phase, under the args a run is given: narrow every
- * unit's paths to the requested scope and drop the units the narrowing emptied. The reviewers work from the result, so
- * a fixture routing them by the roster the partition agent returned would be answering for a scope they were never
- * given. Borrowed from the script itself rather than re-derived here, so it cannot drift from the enforcement it models
- * — which is exactly what the scope-enforcement tests are asserting.
+ * The steps the script performs on its way out of the Partition phase, under the args a run is given: narrow every
+ * unit's paths to the requested scope, drop the units the narrowing emptied, then fold everything past the unit ceiling
+ * into one bucket. The reviewers work from the result, so a fixture routing them by the roster the partition agent
+ * returned would be answering for a scope they were never given — and, once the ceiling exists, would not recognise the
+ * coalesced unit's slug at all. All three steps are borrowed from the script itself rather than re-derived here, so they
+ * cannot drift from the enforcement they model — which is exactly what the scope-enforcement tests are asserting.
+ *
+ * Takes the survey the run will actually receive, because the ceiling is a function of the in-scope file count and the
+ * script reads that count from the same place: a fixture that assumed the repository-sized default would mirror a
+ * different ceiling than the one enforced.
  */
 async function scopeUnitsFor(args) {
-  const { narrowToScope, paths } = await internals(args);
+  const { narrowToScope, paths, coalesceToCeiling, unitCeiling, inScopeFiles } = await internals(args);
 
-  return (roster) => {
+  return (roster, survey) => {
     const scoped = roster.map((unit) => ({ ...unit, paths: narrowToScope(unit?.paths) }));
 
     // With no `--path` an empty unit is a partitioner describing a scope it did not enumerate, which the script reviews
     // anyway; the drop is part of enforcing a requested scope, so it is conditional there too.
-    return paths.length ? scoped.filter((unit) => unit.paths.length) : scoped;
+    const inScope = paths.length ? scoped.filter((unit) => unit.paths.length) : scoped;
+
+    return coalesceToCeiling(inScope, unitCeiling(inScopeFiles(survey)));
   };
 }
 
