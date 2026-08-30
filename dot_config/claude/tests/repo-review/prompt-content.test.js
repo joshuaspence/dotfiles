@@ -1,10 +1,9 @@
 /**
- * Content verification for the five core agent prompts (partition, reviewer, fixer, reconcile, fix-review). While
- * orchestration tests verify these prompts are called with the right arguments (via `runFix` scenarios), none read the
- * actual prompt strings to confirm critical instructions are present. For example: does `partitionPrompt` actually tell
- * the agent to never split a file? Does `fixerPrompt` include the git add instruction? Does `reconcilePrompt` include
- * the STAY IN BOUNDS warning? These prompts are the agents' only instructions, so missing text is a silent failure. A
- * prompt content regression test catches prompt drift.
+ * Content verification for the four core agent prompts (partition, reviewer, fixer, fix-review). While orchestration
+ * tests verify these prompts are called with the right arguments (via `runFix` scenarios), none read the actual prompt
+ * strings to confirm critical instructions are present. For example: does `partitionPrompt` actually tell the agent to
+ * never split a file? Does `fixerPrompt` include the git add instruction? These prompts are the agents' only
+ * instructions, so missing text is a silent failure. A prompt content regression test catches prompt drift.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -181,82 +180,6 @@ describe('fixerPrompt', () => {
     expect(prompt).toContain('def456');
     expect(prompt).toContain('The fix was incomplete');
     expect(prompt).toContain('REJECTED');
-  });
-});
-
-describe('reconcilePrompt', () => {
-  it('instructs the agent to pin to the review head first', async () => {
-    const { reconcilePrompt } = await internals();
-    const groupFixes = [
-      { sha: 'abc123', branch: 'fix-1', changedFiles: ['test.js'], reason: 'fixed bug' },
-    ];
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = reconcilePrompt(groupFixes, 0, survey, 'def456', []);
-
-    expect(prompt).toContain('PIN YOUR BASE');
-    expect(prompt).toContain('git rev-parse');
-    expect(prompt).toContain('def456');
-  });
-
-  it('lists all fixes to combine with their SHAs and files', async () => {
-    const { reconcilePrompt } = await internals();
-    const groupFixes = [
-      { sha: 'abc123', branch: 'fix-1', changedFiles: ['test.js'], reason: 'fixed bug' },
-      { sha: 'def456', branch: 'fix-2', changedFiles: ['other.js'], reason: 'fixed other' },
-    ];
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = reconcilePrompt(groupFixes, 0, survey, 'head123', []);
-
-    expect(prompt).toContain('abc123');
-    expect(prompt).toContain('def456');
-    expect(prompt).toContain('test.js');
-    expect(prompt).toContain('other.js');
-    expect(prompt).toContain('git show');
-  });
-
-  it('includes the critical STAY IN BOUNDS warning', async () => {
-    const { reconcilePrompt } = await internals();
-    const groupFixes = [
-      { sha: 'abc123', branch: 'fix-1', changedFiles: ['test.js'], reason: 'fixed bug' },
-    ];
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = reconcilePrompt(groupFixes, 0, survey, 'head123', []);
-
-    expect(prompt).toContain('STAY IN BOUNDS');
-    expect(prompt).toContain('only the files the fixes you are merging already touched');
-    expect(prompt).toContain('un-landable');
-  });
-
-  it('lists the in-bounds files explicitly', async () => {
-    const { reconcilePrompt } = await internals();
-    const groupFixes = [
-      { sha: 'abc123', branch: 'fix-1', changedFiles: ['test.js', 'util.js'], reason: 'fixed bug' },
-      { sha: 'def456', branch: 'fix-2', changedFiles: ['util.js', 'other.js'], reason: 'fixed other' },
-    ];
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = reconcilePrompt(groupFixes, 0, survey, 'head123', []);
-
-    expect(prompt).toContain('In-bounds files');
-    expect(prompt).toContain('test.js');
-    expect(prompt).toContain('util.js');
-    expect(prompt).toContain('other.js');
-  });
-
-  it('instructs use of git add with explicit paths, never git add -A', async () => {
-    const { reconcilePrompt } = await internals();
-    const groupFixes = [
-      { sha: 'abc123', branch: 'fix-1', changedFiles: ['test.js'], reason: 'fixed bug' },
-    ];
-    const survey = { languages: ['JavaScript'] };
-
-    const prompt = reconcilePrompt(groupFixes, 0, survey, 'head123', []);
-
-    expect(prompt).toContain('git add -- <paths>');
-    expect(prompt).toContain('never `git add -A`');
   });
 });
 

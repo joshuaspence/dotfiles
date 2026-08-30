@@ -1,10 +1,12 @@
 /**
- * What survives to `fix.commits`, and what the script refuses.
+ * What survives to `fix.outcomes` and `fix.keepBranches`, and what the script refuses.
  *
- * The wrapper cherry-picks these commits in order onto a fresh branch, so every one of them must share a base and touch
- * files no other one touches. Every input to that judgement is a self-reported list from an agent this script cannot
- * audit — it has no git access — so the rule throughout is to drop what cannot be proven rather than pass it along. A
- * dropped fix is reported honestly as unfixed; an overlapping one aborts the landing and strands every commit behind it.
+ * Nothing is landed: each fix is a commit on a branch of its own, and the script's job is to report which branches are
+ * worth looking at and which sandboxes teardown may delete. Every input to that judgement is a self-reported string from
+ * an agent this script cannot audit — it has no git access — so the rule is asymmetric. A *name* that cannot be proven
+ * safe is dropped, because the wrapper interpolates it into a shell command; but a *fix* is never dropped for the shape
+ * of its diff, because the branch is the only copy of the work and refusing it destroys real output to protect a merge
+ * this design no longer attempts.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -49,18 +51,21 @@ describe('generated build output', () => {
   // that matches none of the prose fallback's substrings, so these cases turn on the flag and nothing else.
   const distExcluded = [{ path: 'dist', reason: 'produced by `npm run build`, not source', generated: true }];
 
-  it('is refused, because every fix that rebuilds the same artifact writes the same path', async () => {
+  it('is asked for in prose and not enforced afterwards, because a refusal would discard a real fix', async () => {
+    // The instruction is the whole mechanism. A fixer that stages `dist/server.cjs` anyway has still produced a commit
+    // that fixes the finding, and a rebuilt bundle only makes its diff tedious to read — so the branch is reported like
+    // any other. This used to be a gate: the commit was refused, the finding reported `conflict-skipped`, and a real fix
+    // was thrown away over a cosmetic defect in its diff, to protect a cherry-pick sequence that no longer exists.
     const run = await runFix({
       issues: twoFindings,
       exclusions: distExcluded,
       fix: fixerClaiming({ 0: ['src/a.ts', 'dist/server.cjs'], 1: ['src/b.ts'] }),
     });
 
-    expect(outcomeAt(run, 0).status).toBe('conflict-skipped');
-    expect(outcomeAt(run, 0).sha).toBeUndefined();
-    expect(outcomeAt(run, 0).reason).toContain('dist/server.cjs');
-    expect(run.result.fix.commits.map((commit) => commit.sha)).toEqual([commitSha(1)]);
-    expect(run.result.gaps.join(' ')).toContain('committed generated build output despite being told not to');
+    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
+    expect(outcomeAt(run, 0).changedFiles).toContain('dist/server.cjs');
+    expect([...run.result.fix.keepBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
+    expect(run.result.gaps.join(' ')).not.toContain('generated build output');
   });
 
   it('is named to the fixers so they do not stage it in the first place', async () => {
@@ -70,46 +75,6 @@ describe('generated build output', () => {
     expect(fixer.prompt).toContain('NEVER stage these');
     expect(fixer.prompt).toContain('- dist');
     expect(run.logged(/Fixers told to leave 1 generated path\(s\) unstaged/).length).toBe(1);
-  });
-
-  it('matches whole path segments, not string prefixes', async () => {
-    // `distant/` and `dist-notreally/` are not inside `dist/`. Refusing them would report a perfectly landable fix as
-    // unfixed, which is the same class of silent loss in the other direction.
-    const run = await runFix({
-      issues: twoFindings,
-      exclusions: distExcluded,
-      fix: fixerClaiming({ 0: ['distant/thing.ts'], 1: ['dist-notreally/x.ts'] }),
-    });
-
-    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
-    expect(run.result.fix.commits).toHaveLength(2);
-  });
-
-  it('is tolerated when the commit is the only one, since it can collide with nothing', async () => {
-    const run = await runFix({
-      exclusions: distExcluded,
-      fix: fixerClaiming({ 0: ['src/a.ts', 'dist/server.cjs'] }),
-    });
-
-    expect(outcomeAt(run, 0).status).toBe('applied');
-    expect(run.result.fix.commits).toHaveLength(1);
-  });
-
-  it('is tolerated once an earlier gate has left it as the only commit', async () => {
-    // A commit does not have to start out alone to earn that exemption — an earlier gate's refusals are what leave it
-    // alone. Here the sibling fix is dropped for reporting no files, so the tainted commit is the only change left and
-    // there is nothing for its artifact to collide with. Judged against the candidate count from before that drop, it
-    // would be refused too, landing nothing and reporting both findings unfixed.
-    const run = await runFix({
-      issues: twoFindings,
-      exclusions: distExcluded,
-      fix: fixerClaiming({ 0: [], 1: ['src/b.ts', 'dist/server.cjs'] }),
-    });
-
-    expect(outcomeAt(run, 0).status).toBe('conflict-skipped');
-    expect(outcomeAt(run, 1).status).toBe('applied');
-    expect(run.result.fix.commits.map((commit) => commit.sha)).toEqual([commitSha(1)]);
-    expect(run.result.gaps.join(' ')).not.toContain('committed generated build output');
   });
 
   it('is asked of the partitioner as a flag, since the classification is not in its prose', async () => {
@@ -126,57 +91,48 @@ describe('generated build output', () => {
     // A partition cached before the field existed, or an agent that dropped it. Falling back to the prose keeps such a
     // run no worse off than before the flag, and the fallback is only ever reached when the flag is absent.
     const run = await runFix({
-      issues: twoFindings,
       exclusions: [{ path: 'dist', reason: 'generated build output, not reviewed' }],
-      fix: fixerClaiming({ 0: ['src/a.ts', 'dist/server.cjs'], 1: ['src/b.ts'] }),
     });
+    const [fixer] = run.called(/^fix:/);
 
-    expect(outcomeAt(run, 0).status).toBe('conflict-skipped');
-    expect(run.result.fix.commits.map((commit) => commit.sha)).toEqual([commitSha(1)]);
+    expect(fixer.prompt).toContain('NEVER stage these');
+    expect(fixer.prompt).toContain('- dist');
   });
 
   it('does not claim a hand-written path the partitioner excluded for some other reason', async () => {
     // Excluding a path is not the same as it being rebuildable. Naming `docs/` to the fixers as untouchable build output
-    // would forbid the one edit some fix needs, and refuse it afterwards for making it.
+    // would forbid the one edit some fix needs — and since the instruction is now the only mechanism, an over-broad list
+    // is a fix silently not made rather than one refused after the fact.
     const run = await runFix({
-      issues: twoFindings,
       exclusions: [{ path: 'docs', reason: 'prose, not code under review', generated: false }],
-      fix: fixerClaiming({ 0: ['src/a.ts', 'docs/readme.md'], 1: ['src/b.ts'] }),
     });
+    const [fixer] = run.called(/^fix:/);
 
-    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
-    expect(run.result.fix.commits).toHaveLength(2);
+    expect(fixer.prompt).not.toContain('NEVER stage these');
+    expect(run.logged(/generated path\(s\) unstaged/)).toEqual([]);
   });
 });
 
 describe('a fix that committed but reported no files', () => {
-  it('is dropped, because its file set is unknown rather than empty', async () => {
-    // Collision detection keys entirely on `changedFiles`, and an empty list unions with nothing — so such a fix looks
-    // disjoint from everything and sails through grouping. If it did touch a landed file, the wrapper hits a conflict
-    // it was told could not happen, having already half-landed the branch.
+  it('is kept, because the commit is what the report points at and the file list is only a label', async () => {
+    // `changedFiles` used to decide whether a commit could be cherry-picked alongside its neighbours, so an unknown file
+    // set was a fix that had to be dropped. Nothing depends on it now except the row the wrapper prints, and the branch
+    // still holds a verified commit — so an inaccurate label costs the reader a `git show`, not a fix.
     const run = await runFix({
       issues: twoFindings,
       fix: fixerClaiming({ 0: [], 1: ['src/b.ts'] }),
     });
 
-    expect(outcomeAt(run, 0).status).toBe('conflict-skipped');
-    expect(outcomeAt(run, 0).sha).toBeUndefined();
-    expect(outcomeAt(run, 0).reason).toContain('reported no changed files');
-    expect(run.result.fix.commits.map((commit) => commit.sha)).toEqual([commitSha(1)]);
+    expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
+    expect(outcomeAt(run, 0).sha).toBe(commitSha(0));
+    expect(outcomeAt(run, 0).changedFiles).toEqual([]);
+    expect([...run.result.fix.keepBranches].sort()).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1']);
   });
 
-  it('is kept when it is the only commit', async () => {
-    const run = await runFix({ fix: fixerClaiming({ 0: [] }) });
-
-    expect(outcomeAt(run, 0).status).toBe('applied');
-    expect(run.result.fix.commits).toHaveLength(1);
-  });
-
-  it('is dropped before reconciliation when it would otherwise collide', async () => {
-    // Two findings in the same file would normally trigger reconciliation, but if one reports no files, it must
-    // be dropped by refuseUnlandable before groupByFileCollision sees it. Without this gate ordering, an empty
-    // changedFiles would look disjoint during grouping ([] unions with nothing) and sail through as landable,
-    // then hit a conflict in the wrapper when the commit actually touches the file the other fix landed.
+  it('is kept even when a sibling fix touches the same file, since the two are never merged', async () => {
+    // The case that used to be a collision: both findings sit in `src/a.ts`, so the two commits certainly overlap. Each
+    // gets its own branch and its own row, and whether to take both is the user's decision to make with the diffs in
+    // front of them.
     const run = await runFix({
       issues: [
         issue({ file: 'src/a.ts', description: 'reports no files' }),
@@ -185,10 +141,10 @@ describe('a fix that committed but reported no files', () => {
       fix: fixerClaiming({ 0: [], 1: ['src/a.ts'] }),
     });
 
-    expect(run.called(/^reconcile:/)).toEqual([]);
-    expect(outcomeAt(run, 0).status).toBe('conflict-skipped');
+    expect(outcomeAt(run, 0).status).toBe('applied');
     expect(outcomeAt(run, 1).status).toBe('applied');
-    expect(run.result.fix.commits.map((commit) => commit.sha)).toEqual([commitSha(1)]);
+    expect(outcomeAt(run, 0).branch).not.toBe(outcomeAt(run, 1).branch);
+    expect(run.result.fix.keepBranches).toHaveLength(2);
   });
 });
 
@@ -204,8 +160,8 @@ describe('untrusted commit, branch and path names', () => {
     run.calls.filter((call) => call.prompt.includes(text)).map((call) => call.label);
 
   it('discards an applied fix whose SHA is not a bare object name', async () => {
-    // These strings are interpolated into the `git show` line of the next agent's prompt and handed to a wrapper that
-    // cherry-picks under a pre-authorized `Bash(git cherry-pick:*)`.
+    // These strings are interpolated into the `git show` line of the next agent's prompt, and into the branch table the
+    // wrapper prints with a `git diff <sha>` for the user to run.
     const run = await runFix({
       fix: () => ({
         status: 'applied',
@@ -219,7 +175,7 @@ describe('untrusted commit, branch and path names', () => {
     expect(outcomeAt(run, 0).status).toBe('verify-failed');
     expect(outcomeAt(run, 0).sha).toBe('');
     expect(outcomeAt(run, 0).reason).toContain('without a usable commit SHA');
-    expect(run.result.fix.commits).toEqual([]);
+    expect(run.result.fix.keepBranches).toEqual([]);
 
     // Downgrading the outcome is not enough on its own: the check has to fire *before* the fix reviewer is launched.
     // `fixReviewPrompt` interpolates the SHA straight into a `git show <sha>` instruction, and that reviewer is the one
@@ -232,7 +188,7 @@ describe('untrusted commit, branch and path names', () => {
   it('discards a revision whose SHA is not a bare object name', async () => {
     // The revision path checks the returned SHA itself rather than inheriting the original fix's verdict, so a first
     // attempt that reported a usable commit does not vouch for the revision that replaces it. Without its own check the
-    // revision's string is what the wrapper would cherry-pick.
+    // revision's string is what the wrapper would print as a command to run.
     const run = await runFix({
       fix: (subject, { attempt }) =>
         attempt === 0
@@ -256,7 +212,7 @@ describe('untrusted commit, branch and path names', () => {
     expect(outcomeAt(run, 0).status).toBe('verify-failed');
     expect(outcomeAt(run, 0).sha).toBe('');
     expect(outcomeAt(run, 0).reason).toContain('without a usable commit SHA');
-    expect(run.result.fix.commits).toEqual([]);
+    expect(run.result.fix.keepBranches).toEqual([]);
 
     // The revision is the harder half of the same ordering guarantee: one review has already run and rejected, so the
     // loop is live and would ordinarily review the replacement next. Exactly one review happened — the first attempt's,
@@ -299,19 +255,21 @@ describe('untrusted commit, branch and path names', () => {
     ['an absolute path', '/etc/passwd'],
     ['a leading dash, which reads as an option wherever the `--` is left off', '-o/tmp/x'],
   ])('discards an applied fix reporting a changed file with %s', async (_label, file) => {
-    // The reconciler is shown this list as its authoritative in-bounds set, printed beside the instructions to
-    // `git add -- <paths>` and `git checkout -- <path>` in a worktree holding the user's real credentials.
+    // The fix reviewer is shown this list beside an instruction to `git show` the commit, in the one un-isolated agent of
+    // the pipeline — and the wrapper prints it as the `file` column of a row a user reads and acts on. It is the one
+    // thing about a fix that *is* refused on its shape: not because the diff is unreviewable, but because the string
+    // itself is a command injection wherever it is interpolated.
     const run = await runFix({ fix: fixerClaiming({ 0: ['src/a.ts', file] }) });
 
     expect(outcomeAt(run, 0).status).toBe('verify-failed');
     expect(outcomeAt(run, 0).sha).toBe('');
     expect(outcomeAt(run, 0).reason).toContain('not a plain repo-relative path');
-    expect(run.result.fix.commits).toEqual([]);
+    expect(run.result.fix.keepBranches).toEqual([]);
   });
 
-  it('never names such a path to a reconciler or a fix reviewer', async () => {
-    // Two findings in one file would normally collide and be reconciled together; the poisoned one is gone before
-    // grouping, so its string reaches neither the merge prompt nor the review prompt.
+  it('never names such a path to a fix reviewer', async () => {
+    // Two findings in one file, so the poisoned fix has a live sibling to be reported alongside: the string is gone
+    // before either review prompt is composed, and the clean fix is unaffected by its neighbour.
     const run = await runFix({
       issues: [
         issue({ file: 'src/a.ts', description: 'the first finding' }),
@@ -320,14 +278,13 @@ describe('untrusted commit, branch and path names', () => {
       fix: fixerClaiming({ 0: ['src/a.ts; rm -rf /'], 1: ['src/a.ts'] }),
     });
 
-    expect(run.called(/^reconcile:/)).toEqual([]);
     expect(run.called(/^review-fix:/).every((call) => !call.prompt.includes('rm -rf /'))).toBe(true);
-    expect(run.result.fix.commits.map((commit) => commit.sha)).toEqual([commitSha(1)]);
+    expect(run.result.fix.keepBranches).toEqual(['rrfix/wf_test/1']);
   });
 
   it('keeps the ordinary paths a repository actually contains', async () => {
     // Refusing is the safe direction, but only for genuinely odd names: dots, dashes, underscores and nested
-    // directories are what every real path list is made of, and refusing one would report a landable fix as unfixed.
+    // directories are what every real path list is made of, and refusing one would report a real fix as unfixed.
     const run = await runFix({
       issues: twoFindings,
       fix: fixerClaiming({
@@ -337,15 +294,15 @@ describe('untrusted commit, branch and path names', () => {
     });
 
     expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied']);
-    expect(run.result.fix.commits).toHaveLength(2);
+    expect(run.result.fix.keepBranches).toHaveLength(2);
   });
 });
 
 describe('untrusted cited paths', () => {
   // A finding's `file` is a model-supplied string, and the fixer is told to open it and edit it — with `Edit` and a
   // worktree of its own. A path that leaves the worktree aims that write outside the sandbox, where nothing downstream
-  // would see it: it cannot be staged from inside the worktree, so it never reaches `changedFiles`, the disjointness
-  // gate, or the wrapper's pre-flight, and removing the worktree does not undo it.
+  // would see it: it cannot be staged from inside the worktree, so it never reaches `changedFiles` or any check that
+  // reads them, and removing the worktree does not undo it.
   it.each([
     ['absolute', '/etc/hosts'],
     ['traversing', '../../.ssh/config'],
@@ -357,7 +314,7 @@ describe('untrusted cited paths', () => {
     expect(run.called(/^fix:/)).toHaveLength(0);
     expect(outcomeAt(run, 0).status).toBe('declined');
     expect(outcomeAt(run, 0).reason).toContain('outside the reviewed checkout');
-    expect(run.result.fix.commits).toEqual([]);
+    expect(run.result.fix.keepBranches).toEqual([]);
     expect(run.result.gaps.join(' ')).toContain('cites a path outside the reviewed checkout');
   });
 
@@ -377,7 +334,7 @@ describe('untrusted cited paths', () => {
     expect(run.called(/^fix:/)).toHaveLength(0);
     expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual(['declined', 'declined', 'declined']);
     expect(outcomeAt(run, 0).reason).toContain('outside the reviewed checkout');
-    expect(run.result.fix.commits).toEqual([]);
+    expect(run.result.fix.keepBranches).toEqual([]);
     expect(run.result.gaps.join(' ')).toContain('cites a path outside the reviewed checkout');
   });
 
@@ -644,7 +601,7 @@ describe('runIdTally', () => {
     const { runIdTally } = await internals();
 
     expect(
-      runIdTally(['rrfix/wf_bad-147/0', 'rrfix/wf_good/1', 'rrmerge/wf_good/0', 'rrfix/wf_good/2']),
+      runIdTally(['rrfix/wf_bad-147/0', 'rrfix/wf_good/1', 'rrfix/wf_good/3', 'rrfix/wf_good/2']),
     ).toEqual([
       ['wf_good', 3],
       ['wf_bad-147', 1],
@@ -685,26 +642,58 @@ describe('runIdTally', () => {
   });
 });
 
+describe('keepBranches', () => {
+  // The rule stated as a table, because the scattered assertions above each pin one status through the run that produces
+  // it and none of them says what the *set* of kept statuses is. Teardown reads this list and deletes the difference, so
+  // a status wrongly absent destroys a commit and a status wrongly present leaves a branch behind forever. The two
+  // errors are not equal, which is why `review-rejected` is on the keep side: the reviewers' verdict is an opinion about
+  // a diff, and that branch is the only copy of the diff the opinion is about. A `declined` fixer never committed, so
+  // its branch is empty and deleting it loses nothing — and the `sandboxBranches` assertion is the part that makes that
+  // case load-bearing, since it proves the branch was created and the status filter is the only thing excluding it. A
+  // `verify-failed` fix is excluded twice over: the same filter, and the downgrade having already cleared its `branch`.
+  const fixReturning = (result) => () => ({ branch: 'rrfix/wf_test/0', ...result });
+
+  it.each([
+    ['keeps an applied fix', { status: 'applied', sha: commitSha(0), changedFiles: ['src/a.ts'], reason: 'fixed' }, true],
+    ['drops a declined one, whose branch exists and is empty', { status: 'declined', reason: 'no safe edit' }, false],
+    ['drops one that claimed to have committed without saying where', { status: 'applied', reason: 'done' }, false],
+  ])('%s', async (_label, result, kept) => {
+    const run = await runFix({ issues: [issue()], fix: fixReturning(result) });
+
+    expect(run.result.fix.sandboxBranches).toEqual(['rrfix/wf_test/0']);
+    expect(run.result.fix.keepBranches).toEqual(kept ? ['rrfix/wf_test/0'] : []);
+  });
+
+  it('keeps a review-rejected fix, because the rejection is an opinion and the branch is its subject', async () => {
+    // Driven separately because a rejection is not something a fixer can report: it takes a reviewer to produce, and the
+    // revision loop means the branch that ends up kept is the last attempt's rather than the first's.
+    const run = await runFix({ reviewFix: () => ({ approved: false, objection: 'misses a case' }) });
+
+    expect(outcomeAt(run, 0).status).toBe('review-rejected');
+    expect(run.result.fix.keepBranches).toContain(outcomeAt(run, 0).branch);
+  });
+});
+
 describe('the report the wrapper formats', () => {
-  it('never claims a finding is fixed by a commit it is not landing', async () => {
-    // The invariant behind all of the above: 'applied' and 'conflict-resolved' are the two statuses the wrapper reports
-    // as fixed, so either must point at a SHA in `commits`. Every gate here drops in the safe direction, and this
-    // asserts the direction rather than any one gate.
+  it('never claims a finding is fixed without a branch the user can go and read', async () => {
+    // The invariant behind all of the above: 'applied' is the one status the wrapper reports as fixed, so it must carry
+    // a SHA and a branch, and that branch must be one teardown is told to keep. Every gate here drops in the safe
+    // direction, and this asserts the direction rather than any one gate.
     //
     // Keyed off the file of the finding the fixer was actually handed, not off `idx`: the script numbers its findings in
     // reviewer order (bug, claude-md, code-quality, consistency, security, test-critique), which is not the order this
     // `issues` list is written in, so an `idx`-keyed fixer hands each behaviour to the wrong finding — `idx` 1 here is
     // the `src/c.ts` finding, not the `src/b.ts` one.
     const staged = {
-      'src/a.ts': ['src/a.ts'], // lands cleanly
-      'src/b.ts': ['src/b.ts', 'dist/server.cjs'], // stages an artifact
-      'src/c.ts': [], // reports no files
+      'src/a.ts': ['src/a.ts'], // an ordinary fix
+      'src/b.ts': ['src/b.ts', 'dist/server.cjs'], // stages an artifact: untidy, still a fix
+      'src/c.ts': [], // reports no files: an unhelpful label, still a fix
       // 'src/d.ts' — the declined finding — is absent, and answered below.
     };
 
     const run = await runFix({
       issues: [
-        issue({ file: 'src/a.ts', description: 'lands cleanly' }),
+        issue({ file: 'src/a.ts', description: 'is fixed plainly' }),
         issue({ file: 'src/b.ts', description: 'stages an artifact', category: 'security' }),
         issue({ file: 'src/c.ts', description: 'reports no files', category: 'code-quality' }),
         issue({ file: 'src/d.ts', description: 'is declined', category: 'consistency' }),
@@ -722,64 +711,73 @@ describe('the report the wrapper formats', () => {
           : { status: 'declined', branch: `rrfix/wf_test/${idx}`, reason: 'judgment call' },
     });
 
-    const landed = new Set(run.result.fix.commits.map((commit) => commit.sha));
-    const claimedFixed = run.result.fix.outcomes.filter((outcome) =>
-      ['applied', 'conflict-resolved'].includes(outcome.status),
-    );
+    const kept = new Set(run.result.fix.keepBranches);
+    const claimedFixed = run.result.fix.outcomes.filter((outcome) => outcome.status === 'applied');
 
-    expect(claimedFixed.map((outcome) => outcome.description)).toEqual(['lands cleanly']);
-    claimedFixed.forEach((outcome) => expect(landed).toContain(outcome.sha));
+    // Three of the four: only the declined finding is unfixed. The other two used to be refused here, for the shape of
+    // their diff and the shape of their file list, and were reported as findings nobody had fixed.
+    expect(claimedFixed.map((outcome) => outcome.description)).toEqual([
+      'is fixed plainly',
+      'reports no files',
+      'stages an artifact',
+    ]);
+
+    claimedFixed.forEach((outcome) => {
+      expect(outcome.sha, `${outcome.description} was reported fixed with no commit`).toBeTruthy();
+      expect(kept, `${outcome.description}'s branch is not on the keep list`).toContain(outcome.branch);
+    });
   });
 
-  it('gives every unlanded commit a reason naming why', async () => {
+  it('gives every unfixed finding a reason naming why', async () => {
     const run = await runFix({
       issues: twoFindings,
-      exclusions: [{ path: 'dist', reason: 'generated build output', generated: true }],
-      fix: fixerClaiming({ 0: ['src/a.ts', 'dist/server.cjs'], 1: ['src/b.ts'] }),
+      fix: (subject, { idx }) =>
+        idx === 0
+          ? { status: 'declined', branch: 'rrfix/wf_test/0', reason: 'not a safe localized edit' }
+          : fixerClaiming({ 1: ['src/b.ts'] })(subject, { idx }),
     });
 
     run.result.fix.outcomes
-      .filter((outcome) => outcome.status === 'conflict-skipped')
+      .filter((outcome) => outcome.status !== 'applied')
       .forEach((outcome) => expect(outcome.reason).toBeTruthy());
   });
 
-  it('lands commits that are pairwise disjoint', async () => {
-    // The property the wrapper's cherry-pick sequence depends on, asserted over the whole returned list.
+  it('keeps two overlapping fixes rather than choosing between them', async () => {
+    // The property the cherry-pick sequence used to depend on was that no two landed commits touched the same file, and
+    // the way it was maintained was by discarding fixes. Two of these three findings sit in `src/b.ts`; all three are
+    // reported, with three distinct branches, and the overlap is stated rather than resolved.
     const run = await runFix({
       issues: [
         issue({ file: 'src/a.ts', description: 'one' }),
         issue({ file: 'src/b.ts', description: 'two', category: 'security' }),
-        issue({ file: 'src/b.ts', description: 'three, colliding with two', category: 'code-quality' }),
+        issue({ file: 'src/b.ts', description: 'three, overlapping two', category: 'code-quality' }),
       ],
     });
 
-    const seen = new Set();
-    run.result.fix.commits.forEach((commit) => {
-      commit.changedFiles.forEach((file) => {
-        expect(seen.has(file), `${file} was written by more than one landed commit`).toBe(false);
-        seen.add(file);
-      });
-    });
+    const outcomes = run.result.fix.outcomes;
 
-    expect(run.result.fix.commits.length).toBeGreaterThan(0);
+    expect(outcomes.map((outcome) => outcome.status)).toEqual(['applied', 'applied', 'applied']);
+    expect(new Set(outcomes.map((outcome) => outcome.branch)).size).toBe(3);
+    expect(run.result.fix.keepBranches).toHaveLength(3);
+
+    // And the collision is visible in the report rather than hidden by it: two rows name the same file.
+    expect(outcomes.filter((outcome) => outcome.changedFiles.includes('src/b.ts'))).toHaveLength(2);
   });
 
-  it('returns the commits in the order of the fixes they were built from', async () => {
-    // Not a shared index: `commits[i]` is not `findings[i]` — a reconciled group collapses several findings into one
-    // commit, and every commit an earlier gate drops shifts the rest — which is why a finding is tied to its commit
-    // by SHA and never by position. What is deterministic is the *relative* order: the surviving commits appear in the
-    // order of the fixes they were built from, which depends on `parallel()` preserving input array order (Promise.all
-    // semantics), so the wrapper's cherry-pick sequence is reproducible rather than whatever order agents finished in.
+  it('reports the outcomes in the order of the fixes they were built from', async () => {
+    // Not a shared index with anything else: an outcome is tied to its finding by the fields it carries, never by
+    // position. What is deterministic is the *relative* order — the outcomes appear in the order of the fixes they were
+    // built from, which depends on `parallel()` preserving input array order (Promise.all semantics), so the branch table
+    // the wrapper prints is reproducible rather than being whatever order the agents finished in.
     const run = await runFix({
       issues: [
         issue({ file: 'src/a.ts', description: 'first' }),
         issue({ file: 'src/b.ts', description: 'second', category: 'security' }),
         issue({ file: 'src/c.ts', description: 'third', category: 'code-quality' }),
       ],
-      // Each fixer claims the file of the finding it was actually handed, so all three commits stay disjoint and each
-      // lands on its own whatever order the script numbers its findings in. Keying the claim off `idx` would attach it
-      // to the wrong subject: `idx` follows the reviewers' order (bug before code-quality before security), not the
-      // order the findings are written above.
+      // Each fixer claims the file of the finding it was actually handed. Keying the claim off `idx` would attach it to
+      // the wrong subject: `idx` follows the reviewers' order (bug before code-quality before security), not the order
+      // the findings are written above.
       fix: (subject, { idx }) => ({
         status: 'applied',
         sha: commitSha(idx),
@@ -789,17 +787,14 @@ describe('the report the wrapper formats', () => {
       }),
     });
 
-    const landedFixes = run.result.fix.outcomes.filter((outcome) => outcome.status === 'applied');
+    const outcomes = run.result.fix.outcomes;
 
-    expect(landedFixes).toHaveLength(3);
-    expect(run.result.fix.commits.map((commit) => commit.sha)).toEqual(landedFixes.map((outcome) => outcome.sha));
+    expect(outcomes).toHaveLength(3);
+    expect(outcomes.map((outcome) => outcome.sha)).toEqual([commitSha(0), commitSha(1), commitSha(2)]);
 
-    // And each of them stands for exactly the one finding whose file it claims — the pairing the report is read
-    // through, stated here so a commit list that merely happened to come back in the right order does not pass.
-    expect(run.result.fix.commits.map((commit) => commit.changedFiles)).toEqual(
-      landedFixes.map((outcome) => [outcome.file]),
-    );
-    expect(run.result.fix.commits.map((commit) => commit.findingCount)).toEqual([1, 1, 1]);
+    // And each row stands for exactly the one finding whose file it claims — the pairing the report is read through,
+    // stated here so an outcome list that merely happened to come back in the right order does not pass.
+    expect(outcomes.map((outcome) => outcome.changedFiles)).toEqual(outcomes.map((outcome) => [outcome.file]));
   });
 });
 

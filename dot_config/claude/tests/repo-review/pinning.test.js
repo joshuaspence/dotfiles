@@ -46,15 +46,6 @@ describe('the pin instruction', () => {
     expect(revision.prompt).toContain(`git switch -c rrfix/<RUN>/0-r1 ${HEAD}`);
   });
 
-  it('pins the reconciler, under its own branch prefix', async () => {
-    const run = await runFix({
-      issues: [issue({ file: 'src/a.ts' }), issue({ file: 'src/a.ts', description: 'a second finding there' })],
-    });
-    const [reconciler] = run.called(/^reconcile:/);
-
-    expect(reconciler.prompt).toContain(`git switch -c rrmerge/<RUN>/0 ${HEAD}`);
-  });
-
   it('derives the run scope from the sandbox branch by one rule every agent can follow', async () => {
     // The prefix cannot come from the script — it has no handle on the workflow id — so each agent derives it from its
     // own sandbox branch name. The rule has to be mechanical: an earlier wording ("extract the wf_<id> token") admitted
@@ -94,10 +85,11 @@ describe('the sandbox the pin is applied inside', () => {
   // `git add` / `git commit`. Deleting it would turn N concurrent fixers loose on the user's live checkout, branching
   // and committing in it — and every prompt assertion above reads identically either way, so without these two tests
   // nothing in the suite would notice.
-  const COMMITTING = /^(fix|revise|reconcile):/;
+  const COMMITTING = /^(fix|revise):/;
 
-  // One run that reaches all three kinds: two findings in the same file collide, so they are reconciled after being
-  // fixed, and rejecting finding 0's first attempt adds a reviser.
+  // One run that reaches both kinds: two findings, and rejecting finding 0's first attempt adds a reviser. The two
+  // findings deliberately sit in the same file, which is the case a fix run now simply allows — each gets its own branch
+  // and the overlap is the user's to resolve if they ever merge both.
   const busy = () =>
     runFix({
       issues: [issue({ file: 'src/a.ts' }), issue({ file: 'src/a.ts', description: 'a second finding there' })],
@@ -107,15 +99,14 @@ describe('the sandbox the pin is applied inside', () => {
           : { approved: true, objection: '' },
     });
 
-  it('is requested by every fixer, reviser and reconciler', async () => {
+  it('is requested by every fixer and reviser', async () => {
     const run = await busy();
     const committing = run.called(COMMITTING);
 
     // Count them first: a renamed label would otherwise leave the loop below iterating an empty list and passing.
     expect(run.called(/^fix:/)).toHaveLength(2);
     expect(run.called(/^revise:/)).toHaveLength(1);
-    expect(run.called(/^reconcile:/)).toHaveLength(1);
-    expect(committing).toHaveLength(4);
+    expect(committing).toHaveLength(3);
 
     for (const call of committing) {
       expect(call.opts.isolation).toBe('worktree');
@@ -138,7 +129,7 @@ describe('the sandbox the pin is applied inside', () => {
 });
 
 describe('capturing the reviewed commit', () => {
-  it('reports the surveyed commit as the base the wrapper must cherry-pick onto', async () => {
+  it('reports the surveyed commit as the base the wrapper diffs every branch against', async () => {
     const run = await runFix();
 
     expect(run.result.fix.base).toBe(HEAD);
@@ -220,11 +211,10 @@ describe('when the reviewed commit cannot be determined at all', () => {
 
   it('refuses to run the Fix phase', async () => {
     // Refusing is the honest outcome. Running unpinned costs the trustworthiness of the whole result: the fixers would
-    // edit whatever the remote default branch holds and hand the wrapper commits it is told are conflict-free.
+    // edit whatever the remote default branch holds and hand the wrapper branches whose diffs answer no live finding.
     const run = await unpinnable();
 
     expect(run.called(/^fix:/)).toHaveLength(0);
-    expect(run.called(/^reconcile:/)).toHaveLength(0);
     expect(run.result.fix).toBeUndefined();
   });
 
@@ -257,7 +247,7 @@ describe('when the reviewed commit cannot be determined at all', () => {
 
 describe('the reviewed commit reaches every prompt that needs it', () => {
   it('pins the branch of every agent that commits, not just the first of each kind', async () => {
-    // The tests above check one fixer and one reconciler; this checks that nothing composing a `git switch` line is
+    // The tests above check one fixer and one reviser; this checks that nothing composing a `git switch` line is
     // left out — the second fixer included. Both halves have to be falsifiable to be worth having: the expected calls
     // are named so a filtered assertion cannot pass by matching nothing, and the pin is matched on the `git switch`
     // line rather than on a bare mention of the SHA, which the survey block appended to every prompt carries anyway.
@@ -271,10 +261,10 @@ describe('the reviewed commit reaches every prompt that needs it', () => {
         reason: 'fixed',
       }),
     });
-    const branching = run.called(/^(fix|reconcile):/);
+    const branching = run.called(/^fix:/);
     const pinned = new RegExp(`git switch -c \\S+ ${HEAD}\``);
 
-    expect(branching.map((call) => call.label)).toEqual(['fix:bug#0', 'fix:bug#1', 'reconcile:bug#0+bug#1']);
+    expect(branching.map((call) => call.label)).toEqual(['fix:bug#0', 'fix:bug#1']);
     expect(branching.filter((call) => !pinned.test(call.prompt)).map((call) => call.label)).toEqual([]);
   });
 });

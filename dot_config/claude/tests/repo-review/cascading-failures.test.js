@@ -8,7 +8,7 @@
  *
  * A single phase failing on its own is pinned by the suite that owns that phase — dedupe returning nothing by
  * `dedupe.test.js`, validation and fix review by `review-gate.test.js`, a fix agent that never returned by
- * `fix-landing.test.js`, an aborting partition by `args.test.js`. What none of those can show is one run losing
+ * `fix-branches.test.js`, an aborting partition by `args.test.js`. What none of those can show is one run losing
  * something at several phases at once, where every gap has to survive the next phase's failure and stay attributed to
  * the finding it was lost on instead of collapsing into a single "the review failed" line. So a scenario here fails
  * more than one phase, and the assertions below are about the whole gap list rather than the presence of one substring
@@ -62,8 +62,6 @@ const GAP = {
       '^(?:The Fix phase did not run: all \\d+|\\d+ of \\d+) fix pipeline\\(s\\) failed before returning, so those ' +
         `findings were never fixed and are \\*\\*not\\*\\* verified as unfixable\\. Cause: ${literal(cause)}$`,
     ),
-
-  reconcile: () => /^Reconciliation failed for \d+ colliding fix\(es\) on .+ — left unfixed\.(?: Cause: .+)?$/,
 };
 
 // --- Gap assertions --------------------------------------------------------------------------------------------------
@@ -115,7 +113,7 @@ describe('dedupe phase failures', () => {
     // Findings should still validate and potentially fix (dedupe failure doesn't block downstream phases).
     expect(run.result.findings).toHaveLength(2);
     // Both findings validated and were fixed successfully (dedupe failure doesn't prevent fixes).
-    expect(run.result.fix.commits).toHaveLength(2);
+    expect(run.result.fix.keepBranches).toHaveLength(2);
   });
 
   it('records a gap when the dedupe agent stalls (throws) but continues to validation', async () => {
@@ -136,7 +134,7 @@ describe('dedupe phase failures', () => {
 
     // Findings should still validate and potentially fix (a stall doesn't block downstream phases either).
     expect(run.result.findings).toHaveLength(2);
-    expect(run.result.fix.commits).toHaveLength(2);
+    expect(run.result.fix.keepBranches).toHaveLength(2);
   });
 });
 
@@ -228,7 +226,7 @@ describe('validation failures cascading into fix', () => {
     expect(run.result.findings).toHaveLength(1);
     expect(run.result.findings[0].file).toBe('src/a.ts');
     // Only src/a.ts validated successfully, so only 1 commit.
-    expect(run.result.fix.commits).toHaveLength(1);
+    expect(run.result.fix.keepBranches).toHaveLength(1);
   });
 });
 
@@ -373,17 +371,24 @@ describe('fix review failures after upstream gaps', () => {
     // The fixer itself returned, so its own failure gap is not among them.
     expectNoGap(run, GAP.fix());
 
-    // Only first finding validated but fix review failed, and nothing lands from an unreviewed fix.
+    // Only the first finding validated, and its fix went unreviewed. That costs the fix its `applied` status, but not
+    // its branch: an unreviewed commit is still the only copy of an attempt at a confirmed finding, so it survives
+    // teardown for the user to read. The branch is the original and not a revision — no reviewer returned, so there was
+    // no objection to revise against, and a review phase that failed outright is not an opinion about the diff.
     expect(run.result.findings.map((subject) => subject.file)).toEqual(['src/a.ts']);
     expect(outcomeAt(run, 0).status).toBe('review-rejected');
-    expect(run.result.fix.commits).toEqual([]);
+    expect(run.result.fix.keepBranches).toEqual(['rrfix/wf_test/0']);
+    expect(run.called(/^revise:/)).toHaveLength(0);
   });
 });
 
-describe('reconcile failures after upstream gaps', () => {
-  it('records reconcile gap on top of dedupe, validation, fix, and review gaps', async () => {
-    // Every phase accumulates a gap: dedupe fails, validation partially fails, fix partially fails, review partially
-    // fails, and then reconcile fails to merge the two approved fixes that collide on one file.
+describe('colliding fixes after upstream gaps', () => {
+  it('records dedupe, validation, fix and review gaps without any of them costing a branch', async () => {
+    // The deepest cascade the script can produce, and the one that used to end in a fifth gap: dedupe fails, validation
+    // partially fails, a fix agent fails, a fix review fails — and the three fixes that did get made all rewrote the
+    // same file. Under the old landing sequence that collision was itself a failure, because the fixes had to be
+    // cherry-picked into one branch and three edits to `src/shared.ts` cannot be. Nothing is landed now, so the
+    // collision is not an event: each fix keeps its own branch and the user merges whichever of them they want.
     const run = await runFix({
       issues: [
         issue({ file: 'src/shared.ts', description: 'first issue', category: 'bug' }),
@@ -398,7 +403,7 @@ describe('reconcile failures after upstream gaps', () => {
         return idx < 4 ? { confirmed: true, rationale: 'confirmed' } : null;
       },
       fix: (subject, { idx }) => {
-        // First three succeed (indices 0-2, all touching the same file so they collide), fourth fails (index 3).
+        // First three succeed (indices 0-2, all touching the same file), fourth fails (index 3).
         if (idx < 3) {
           return {
             status: 'applied',
@@ -414,27 +419,26 @@ describe('reconcile failures after upstream gaps', () => {
         // First two approve (indices 0-1), third doesn't (index 2).
         return idx < 2 ? { approved: true, objection: '' } : null;
       },
-      reconcile: () => null,
     });
 
-    // Exactly the five phase gaps, each naming the finding its phase lost. Five files are in scope, so there is no
+    // Exactly the four phase gaps, each naming the finding its phase lost. Five files are in scope, so there is no
     // architecture-lens gap to account for.
-    expectGapCount(run, 5);
+    expectGapCount(run, 4);
     expectGaps(run, GAP.dedupe({ stalled: 1, scopes: 1, names: 'core' }));
     expectGaps(run, GAP.validation('src/another.ts:10'));
     expectGaps(run, GAP.fix('src/other.ts:10'));
     expectGaps(run, GAP.fixReview('src/shared.ts:10'));
-    expectGaps(run, GAP.reconcile());
 
-    // Four findings validated; the two whose fixes were approved are the ones reconciliation was asked about, and it
-    // left both unlanded.
+    // Four findings validated. Two fixes are reported applied, the third is rejected on the reviewers' word and the
+    // fourth never got made — and the three branches that carry a commit are all kept, collision and rejection alike.
     expect(run.result.findings).toHaveLength(4);
     expect(run.result.fix.outcomes.map((outcome) => outcome.status)).toEqual([
-      'conflict-skipped',
-      'conflict-skipped',
+      'applied',
+      'applied',
       'review-rejected',
       'verify-failed',
     ]);
+    expect(run.result.fix.keepBranches).toEqual(['rrfix/wf_test/0', 'rrfix/wf_test/1', 'rrfix/wf_test/2']);
   });
 });
 
@@ -499,7 +503,7 @@ describe('early abort phases', () => {
     // total subsumes a negative check per downstream phase, and covers the ones nobody thought to name.
     expectGapCount(run, 1);
     expectGaps(run, GAP.partition());
-    expect(run.called(/^(review|dedupe|validate|fix|revise|reconcile)/).map((call) => call.label)).toEqual([]);
+    expect(run.called(/^(review|dedupe|validate|fix|revise)/).map((call) => call.label)).toEqual([]);
     expect(run.result.findings).toEqual([]);
   });
 });

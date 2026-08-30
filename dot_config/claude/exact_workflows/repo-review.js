@@ -7,14 +7,19 @@
  * Inputs arrive on `args` as `{ paths, effort, partitions, validators, loop, fix, reviewers }`, normalized through
  * `normalizeArgs` below because this call site delivers that object JSON-encoded as a string. The return value is
  * `{ reviewedCommit, findings, exclusions, gaps }`, plus a `fix` object
- * (`{ base, sandboxBranches, commits, outcomes }`) when `--fix` was requested. `reviewedCommit` is on every exit,
+ * (`{ base, sandboxBranches, keepBranches, outcomes }`) when `--fix` was requested. `reviewedCommit` is on every exit,
  * including the aborts: it is the commit the whole review is defined against, so the wrapper cites it rather than
  * re-deriving a `HEAD` that may have moved since.
  *
- * Because this script has no git access, everything the `--fix` phases claim about their commits — the base they are
+ * `--fix` is strictly *additive*: each fix is an independent commit on its own branch and nothing is ever landed. Two
+ * fixes may freely touch the same file, because no sequence of cherry-picks is ever attempted — if the user wants them
+ * merged, they (or another agent) resolve the conflicts deliberately. That is what `keepBranches` is for: the branches
+ * carrying a commit worth looking at, which teardown must *not* delete.
+ *
+ * Because this script has no git access, everything the `--fix` phase claims about its commits — the base they are
  * parented on, the files they touch — is self-reported by the agents that made them, and has been wrong in practice
  * (see `pinToReviewHead`). The script pins what it can and drops what it can disprove; `fix.base` is returned so the
- * wrapper can re-establish the invariant against git before it lands anything.
+ * wrapper can report how far the reviewed commit has drifted from the branches it is handed.
  */
 
 export const meta = {
@@ -33,7 +38,6 @@ export const meta = {
     // started, which read as though Review were waiting for every fixer to finish when in fact each fix is reviewed
     // the moment it lands. Verb-first, too: 'Fix Review' reads as fixing a review rather than reviewing a fix.
     { title: 'Review Fix' },
-    { title: 'Reconcile' },
   ],
 };
 
@@ -105,8 +109,8 @@ const scope =
 const lsFiles = paths.length ? `git ls-files -- ${paths.map(shellQuote).join(' ')}` : 'git ls-files';
 
 // Whether a repo-relative path lies within a subtree — the containment relation the pathspec above expresses to `git`,
-// the one `fileInUnit` uses to place a finding in a unit, and the one `isGeneratedPath` uses to refuse a fix commit
-// that staged build output. `p` alone is not a prefix test: `src` must not swallow `srcgen/a.js`.
+// and the one `fileInUnit` uses to place a finding in a unit. `p` alone is not a prefix test: `src` must not swallow
+// `srcgen/a.js`.
 const underPath = (file, p) => file === p || file.startsWith(p.endsWith('/') ? p : `${p}/`);
 
 // The scope, enforced rather than merely described. Everything above this point is prose bound for a prompt, but the
@@ -177,14 +181,15 @@ const LOOP_DEFAULT_ROUNDS = 4;
 const maxRounds = input?.loop === true ? LOOP_DEFAULT_ROUNDS : positiveIntOr(input?.loop, 1);
 const loopEnabled = maxRounds > 1;
 
-// `--fix` turns on the optional Fix + Reconcile phases: after validation, one worktree-isolated agent per finding
-// tries to fix it and commit, then a reconciliation agent merges any fixes that collide on a shared file. Off by
-// default — the review stays strictly read-only unless the wrapper sends `fix: true`.
+// `--fix` turns on the optional Fix phase: after validation, one worktree-isolated agent per finding tries to fix it
+// and commit on a branch of its own. Nothing is landed and no two fixes are required to be compatible, so the findings
+// stay independent from end to end. Off by default — the review stays strictly read-only unless the wrapper sends
+// `fix: true`.
 const fix = input?.fix;
 
 // `--reviewers <n>` gates each applied fix through independent review (approve on a strict majority) with a bounded
-// revision loop. 0 disables the Review Fix phase entirely — applied fixes go straight to Reconcile. Default 1. It
-// accepts 0, so it needs its own non-negative parser rather than `positiveIntOr`.
+// revision loop. 0 disables the Review Fix phase entirely — every applied fix is then reported unreviewed. Default 1.
+// It accepts 0, so it needs its own non-negative parser rather than `positiveIntOr`.
 function nonNegativeIntOr(value, fallback) {
   const n = parseInt(value, 10);
   return Number.isNaN(n) || n < 0 ? fallback : n;
@@ -533,46 +538,12 @@ const FIX_RESULT_SCHEMA = {
     changedFiles: {
       ...STRING_ARRAY,
       description:
-        'Every repo-relative path the fix modified; must be complete and non-empty when applied, since collision ' +
-        'detection keys on it. Empty only when nothing was committed',
+        'Every repo-relative path the fix modified; must be complete and non-empty when applied, since it is what the ' +
+        'fix reviewer and the report are told the commit touches. Empty only when nothing was committed',
     },
     reason: {
       type: 'string',
       description: 'Note on the fix when applied, or why it was declined / failed',
-    },
-  },
-  required: ['status', 'reason'],
-};
-
-// A Reconciliation agent merges a group of colliding fixes into one commit ('resolved') or reports it cannot
-// ('failed'), in which case none of the group's fixes are landed.
-const RECONCILE_RESULT_SCHEMA = {
-  type: 'object',
-  properties: {
-    status: {
-      type: 'string',
-      enum: ['resolved', 'failed'],
-    },
-    sha: {
-      type: 'string',
-      description: 'Merged commit SHA (hex, from `git rev-parse HEAD`) when resolved; empty otherwise',
-    },
-    // As with a fix result: created in step 0, so report it even when reconciliation failed, or it never gets deleted.
-    branch: {
-      type: 'string',
-      description:
-        'The branch you created in step 0. Report it whatever the outcome — including when reconciliation failed — ' +
-        'because it has to be cleaned up afterwards. Empty only if you never created one',
-    },
-    changedFiles: {
-      ...STRING_ARRAY,
-      description:
-        'Repo-relative paths the merged commit modified; must be complete and non-empty when resolved, since ' +
-        'collision detection keys on it. Empty only when nothing was committed',
-    },
-    reason: {
-      type: 'string',
-      description: 'How the fixes were combined, or why reconciliation failed',
     },
   },
   required: ['status', 'reason'],
@@ -591,38 +562,35 @@ const REVIEW_RESULT_SCHEMA = {
   required: ['approved', 'objection'],
 };
 
-// Outcome status constants for Fix and Reconcile phases. These are used internally after processing fix results and are
-// not part of the FIX_RESULT_SCHEMA (which only validates what fixers return: 'applied', 'declined', 'verify-failed').
+// Outcome status for a fix the reviewers threw out. Used internally after processing fix results, and not part of the
+// FIX_RESULT_SCHEMA (which only validates what fixers return: 'applied', 'declined', 'verify-failed').
 const STATUS_REVIEW_REJECTED = 'review-rejected';
-const STATUS_CONFLICT_SKIPPED = 'conflict-skipped';
-const STATUS_CONFLICT_RESOLVED = 'conflict-resolved';
 
 
 // --- Untrusted git identifiers -------------------------------------------------------------------------------------
 // Every commit and branch name this script handles is a model-supplied string that ends up on a `git` command line:
-// interpolated into the `git show` / `git switch` / `git cherry-pick` instructions of downstream prompts, and handed to
-// the wrapper, which cherry-picks under a pre-authorized `Bash(git cherry-pick:*)`. The agents supplying them read the
+// interpolated into the `git show` / `git switch` instructions of downstream prompts, and handed to the wrapper, which
+// deletes branches under a pre-authorized `Bash(git branch --delete --force:*)`. The agents supplying them read the
 // repository under review, so they are untrusted input — a returned `sha` of `HEAD; <command>` reads to the next agent
 // as an instruction to run `<command>`. Accept only a bare hex object name and a plain branch name; anything else is
-// not a commit that can be landed anyway, so the result is refused rather than passed along. These are defined here
+// not a commit anyone can inspect anyway, so the result is refused rather than passed along. These are defined here
 // rather than beside the Fix phase because the survey's `headSha` is checked with them too, long before a fix runs.
 const isCommitSha = (value) => typeof value === 'string' && /^[0-9a-fA-F]{7,40}$/.test(value);
 // The reviewed commit is held to a stricter standard than a returned `sha`. A returned `sha` is only ever an *argument*
-// to `git show` / `git cherry-pick`, which resolve abbreviations themselves, whereas `reviewHead` is the value every
-// fix and reconcile agent — and the wrapper's pre-flight — compares `git rev-parse HEAD` against by *string equality*.
-// An abbreviated object name pins the branch correctly and can then never satisfy that comparison, so every agent
-// declines at step 0 and the whole `--fix` phase silently produces nothing. Require the full 40 characters, and
-// canonicalise to the lower case `git rev-parse` prints so a differently-cased answer is not a permanent mismatch
-// either. Returns the normalised SHA, or `null` when the value is not one.
+// to `git show`, which resolves abbreviations itself, whereas `reviewHead` is the value every fix agent compares
+// `git rev-parse HEAD` against by *string equality*. An abbreviated object name pins the branch correctly and can then
+// never satisfy that comparison, so every agent declines at step 0 and the whole `--fix` phase silently produces
+// nothing. Require the full 40 characters, and canonicalise to the lower case `git rev-parse` prints so a
+// differently-cased answer is not a permanent mismatch either. Returns the normalised SHA, or `null` when it is not one.
 const fullCommitSha = (value) =>
   typeof value === 'string' && /^[0-9a-fA-F]{40}$/.test(value) ? value.toLowerCase() : null;
 const isSafeBranchName = (value) =>
   typeof value === 'string' && /^[0-9A-Za-z][0-9A-Za-z._/-]*$/.test(value) && !value.includes('..');
 
-// The self-reported `changedFiles` lists are untrusted for the same reason and reach the same kind of sink: a group's
-// merged list is handed to the reconciler as its authoritative in-bounds set, printed immediately beside the
-// instructions to run `git add -- <paths>` and `git checkout -- <path>`, so an entry of `src/a.js; <command>` reads as
-// an instruction to run `<command>` — `--` stops option injection, not shell metacharacters. Accept only a plain
+// The self-reported `changedFiles` lists are untrusted for the same reason and reach the same kind of sink: the list is
+// printed to the fix reviewer beside the `git show <sha>` it is told to run, and reaches the wrapper, which prints it in
+// the branch table — so an entry of `src/a.js; <command>` reads to the next reader as an instruction to run
+// `<command>`, and `--` stops option injection, not shell metacharacters. Accept only a plain
 // repo-relative path: no leading `/` or `-`, no `..` segment, and nothing outside the characters a tracked path
 // normally uses. A path holding a space or a metacharacter is refused rather than escaped, which can cost a legitimate
 // fix in a repository with such a filename; that is the conservative direction the rest of the Fix phase takes too,
@@ -637,11 +605,10 @@ const isSafeRepoPath = (value) =>
 // `Bash(git branch --delete --force:*)` — no confirmation prompt. `master` is a perfectly well-shaped branch name, so a
 // fixer that failed or skipped step 0 and reported whatever branch it happened to be on would hand the wrapper a delete
 // instruction for a branch this run never created (recoverable via the reflog, but silent). So require the naming
-// convention step 0 actually asked for — `rrfix/<run-id>/<n>` and `rrmerge/<run-id>/<n>`, exactly three components —
-// which also keeps the wrapper's run-id derivation (it reads `<run-id>` out of these names to scope the teardown)
-// well-defined. Erring this way leaves an off-convention sandbox branch undeleted, which is clutter; erring the other
-// way deletes the user's work.
-const isSandboxBranch = (value) => isSafeBranchName(value) && /^rr(?:fix|merge)\/[^/]+\/[^/]+$/.test(value);
+// convention step 0 actually asked for — `rrfix/<run-id>/<n>`, exactly three components — which also keeps the
+// wrapper's run-id derivation (it reads `<run-id>` out of these names to scope the teardown) well-defined. Erring this
+// way leaves an off-convention sandbox branch undeleted, which is clutter; erring the other way deletes the user's work.
+const isSandboxBranch = (value) => isSafeBranchName(value) && /^rrfix\/[^/]+\/[^/]+$/.test(value);
 
 // Values that are never a real run id, however well-shaped the branch name carrying them. These are what a failed
 // *derivation* leaves behind rather than what a run is called: an agent that could not read `<RUN>` out of its own
@@ -667,7 +634,7 @@ const runIdTally = (branchNames) => {
   const counts = new Map();
 
   branchNames.forEach((name) => {
-    const id = /^rr(?:fix|merge)\/([^/]+)\//.exec(name)?.[1];
+    const id = /^rrfix\/([^/]+)\//.exec(name)?.[1];
 
     if (id && !PLACEHOLDER_RUN_IDS.has(id)) {
       counts.set(id, (counts.get(id) ?? 0) + 1);
@@ -683,8 +650,8 @@ const runIdTally = (branchNames) => {
 // to open `file` (and anything in `otherSites`) and change it, with `Edit` and a worktree of its own. A path that leaves
 // that worktree — `/etc/hosts`, `../../.ssh/config` — aims a write-capable agent at a file outside its sandbox, and the
 // write is then invisible to every check downstream: it cannot be staged from inside the worktree, so it never reaches
-// `changedFiles`, the disjointness gate, or the wrapper's `git show --name-only` pre-flight, and removing the worktree
-// does not undo it. Nothing upstream constrains the shape — the `file` schema is a bare string, and `fileInUnit` only
+// `changedFiles` or the fix reviewer's `git show`, and removing the worktree does not undo it. Nothing upstream
+// constrains the shape — the `file` schema is a bare string, and `fileInUnit` only
 // *classifies* (an unmatched path lands in the `cross-cutting` dedupe bucket and is fixed like any other) — so
 // containment is checked at the point of use: relative, no `..` segment, no `~` to expand.
 //
@@ -734,8 +701,8 @@ const surveyBlock = (survey) =>
 // `knownLine`'s descriptions below, one flow further on: the author has just read (and, for a fixer, edited) the
 // repository under review, so it is untrusted input for the same reason the SHAs above are, and the schema constrains
 // nothing about its contents. Spliced raw, its newlines let it read as fresh instruction lines rather than as the note it
-// is presented as — which matters most at the fix review gate, the only check between a fix commit and the wrapper's
-// cherry-pick, and at reconciliation, whose reader writes the commit that lands. So flatten it to one line and quote it,
+// is presented as — which matters most at the fix review gate, the only check standing between a fix commit and the
+// branch the user is told to go and look at. So flatten it to one line and quote it,
 // exactly as the `JSON.stringify(issue)` beside each of those splices already does for the structured fields, and clamp
 // it so a pathological note cannot crowd out the instructions it is attached to. The note is never the evidence — every
 // prompt that carries one also tells its reader to inspect the commit itself.
@@ -780,7 +747,7 @@ const REVIEW_RULES =
 
 // The read-only guard for the three phases whose own instructions only say *what* to enumerate: Survey, the
 // `CLAUDE.md` scan, and Partition. Like every phase before Fix they run in the user's live checkout —
-// `isolation: 'worktree'` is only ever set on the fixers/revisers and the reconcilers — holding the same tools a
+// `isolation: 'worktree'` is only ever set on the fixers and revisers — holding the same tools a
 // sandboxed fixer holds, and yet each of those three prompts used to say nothing about the tree at all: "enumerate
 // with `git ls-files`" tells an agent how to list files, so quoting it as their guard named no prohibition a later
 // edit could remove. Phrased as forbidden *actions*, and paired with the same "otherwise unrestricted" release the
@@ -1322,7 +1289,7 @@ const surveyPrompt = () =>
   `this review is defined against.\n\n${READ_ONLY_RULE}`;
 
 // Like every phase before Fix, Validate runs in the user's live checkout — `isolation: 'worktree'` is only ever set on
-// the fixers/revisers and the reconcilers — so it needs the execution guard every other un-isolated prompt already
+// the fixers and revisers — so it needs the execution guard every other un-isolated prompt already
 // carries (`REVIEW_RULES` for the reviewers, "do not read files" for dedupe, "do not modify anything" for the fix
 // reviewers). It matters most here: this is the highest fan-out un-isolated phase, each validator holds Bash, and a
 // claim about build or test behaviour is exactly the kind one would be tempted to settle by *running* the build. That
@@ -1357,9 +1324,10 @@ const validatorPrompt = (issue, survey) =>
 //   1. The fixers read and edited 126-commit-stale source while the findings described current source. That is not
 //      recoverable downstream — no later rebase can repair a change reasoned about against text that no longer exists.
 //   2. The bases diverged *unpredictably*, because pinning was left to agent initiative. Some fixers noticed the
-//      mismatch and re-based onto local `master` on their own; most committed straight onto the stale base. "Same
-//      base" plus "disjoint files" is what makes the wrapper's cherry-picks commutative, so scattered bases silently
-//      void the conflict-free guarantee the wrapper is told it can rely on.
+//      mismatch and re-based onto local `master` on their own; most committed straight onto the stale base. Nothing is
+//      landed now, so that no longer voids a merge guarantee — but `fix.base` is one SHA, and the wrapper reports every
+//      branch against it. A branch parented somewhere else shows the reader 126 commits of unrelated churn in the diff
+//      it was told is the fix, which is the same defect as (1) arriving as a report nobody can act on.
 //
 // So the base is pinned explicitly, to a SHA the surveyor captured before any of this ran, and the agent is told to
 // verify the pin took rather than assume it. `<RUN>` makes the branch name unique to this workflow run: the fixers
@@ -1369,7 +1337,8 @@ const pinToReviewHead = (reviewHead, kind, suffix, onFailure) =>
   '0. PIN YOUR BASE — do this before opening a single file. Your worktree is **not** checked out at the commit under ' +
   'review. The harness created it at the *remote* default branch, which can be far behind the local `HEAD` this ' +
   'review actually read (126 commits behind, in one observed run). Every file you would open right now is therefore ' +
-  'potentially a stale copy, and a commit parented here cannot be cherry-picked cleanly.\n' +
+  'potentially a stale copy, and a commit parented here is unreadable as a diff: it carries every commit between that ' +
+  'base and the reviewed one alongside your change.\n' +
   '   a. Read your sandbox branch name with `git rev-parse --abbrev-ref HEAD`. It has the form ' +
   '`worktree-<runId>-<agentNumber>`, e.g. `worktree-wf_4b3a8931-fda-147`. Derive `<RUN>` from it by stripping the ' +
   'leading `worktree-` and the trailing `-<agentNumber>`, leaving the run id itself (`wf_4b3a8931-fda` in that ' +
@@ -1392,17 +1361,20 @@ const pinToReviewHead = (reviewHead, kind, suffix, onFailure) =>
   `read or edit anything. If it does not, ${onFailure}\n` +
   '   Everything below assumes you are on that branch, at that commit.\n';
 
-// Paths the partitioner excluded as generated/build output. A fix that regenerates one of these makes itself collide
-// with every other fix that regenerated the same artifact: in one run four independent fixes each rebuilt
-// `dist/server.cjs`, which union-found them into a single 30-finding reconciliation group whose merged commit then
-// touched 25 files and overlapped three unrelated commits. Naming them in the prompt is the cheap half of the fix; the
-// script also refuses such a commit below, because prose alone did not hold.
+// Paths the partitioner excluded as generated/build output. A fix that stages one buries itself: in one run four
+// independent fixes each rebuilt `dist/server.cjs`, and one of the resulting commits touched 25 files to express a
+// one-line source change. Nothing here is landed any more, so a rebuilt artifact is no longer a *conflict* hazard — it
+// is a review hazard, which is worse in a different way. The fix reviewer judges the commit by reading `git show`, and a
+// regenerated bundle drowns the change it is supposed to be judging; so does the diff the user is pointed at afterwards.
+// Prose is the whole of the mechanism now: the script has no git access with which to rewrite such a commit, and
+// refusing it outright (which this used to do, to protect the landing sequence) would throw away a real fix over a
+// cosmetic defect in its diff.
 const generatedPathsBlock = (generatedPaths) =>
   generatedPaths.length
     ? '\n\nGenerated / build-output paths — NEVER stage these, even if your verification step rewrote them. If your ' +
       'fix cannot be expressed without regenerating one, commit only the source change and say so in `reason`; the ' +
-      'artifact is rebuilt downstream, and committing it makes your fix collide with every other fix that also ' +
-      `rebuilt it:\n${bulletList(generatedPaths, '')}`
+      'artifact is rebuilt downstream, and committing it buries your actual change in a diff nobody can review:' +
+      `\n${bulletList(generatedPaths, '')}`
     : '';
 
 const fixerPrompt = (issue, survey, reviewHead, branchSuffix, generatedPaths, revisionCtx = null) => {
@@ -1460,52 +1432,6 @@ const fixerPrompt = (issue, survey, reviewHead, branchSuffix, generatedPaths, re
   );
 };
 
-const reconcilePrompt = (groupFixes, groupIdx, survey, reviewHead, generatedPaths) => {
-  // The union of what the group's fixes touched. The merged commit must stay inside it: the wrapper's cherry-picks are
-  // only commutative while every commit's file set is disjoint from every other's, and the groups were made disjoint
-  // from each other using exactly these lists. A merged commit that writes a file outside the union — a rebuilt bundle,
-  // say — is disjoint from nothing, and in one observed run that is precisely what aborted the landing sequence.
-  const inBounds = [...new Set(groupFixes.flatMap((groupFix) => groupFix.changedFiles || []))];
-
-  return (
-    'You are a Reconciliation agent in an isolated git worktree. Several independent Fix agents each committed a fix, ' +
-    'but their changes touch overlapping files and cannot all be applied as-is. Produce ONE commit that coherently ' +
-    'applies ALL of their fixes together.\n\n' +
-    'Fixes to combine (inspect each with `git show <sha>`):\n' +
-    groupFixes
-      .map((f) => `- ${f.sha} (${f.branch}) — files: ${(f.changedFiles || []).join(', ')} — ${agentNote(f.reason)}`)
-      .join('\n') +
-    '\n\nProcedure:\n' +
-    pinToReviewHead(
-      reviewHead,
-      'rrmerge',
-      String(groupIdx),
-      'return `{ status: "failed", reason }` naming the SHA you got instead. Do not try to reconcile onto a different ' +
-        'base: the result would not be landable.',
-    ) +
-    "1. Apply each fix in turn (e.g. `git cherry-pick <sha>`), resolving conflicts so every fix's intent is preserved " +
-    'and the result is coherent. Some of those commits may themselves be parented on the wrong base, in which case ' +
-    'their diffs will conflict — resolve in favour of the code as it exists at the reviewed commit you are pinned to. ' +
-    'If two fixes genuinely contradict, prefer the higher-severity intent and note the tradeoff in `reason`.\n' +
-    "2. Verify the combined result in this worktree with the survey's build/test tooling. If it cannot be made to " +
-    'pass, return `{ status: "failed", reason }`.\n' +
-    '3. STAY IN BOUNDS. Your commit may modify only the files the fixes you are merging already touched, listed ' +
-    `below. Writing anything else makes the commit un-landable — the orchestrator proved this group disjoint from ` +
-    'every other group using exactly this list, and one extra file voids that. Stage explicitly with ' +
-    '`git add -- <paths>`, never `git add -A`, and if a verification step rewrote something outside the list, restore ' +
-    'it (`git checkout -- <path>`) before committing.\n' +
-    `In-bounds files (${inBounds.length}):\n${bulletList(inBounds, '(none reported)')}\n` +
-    '4. On success, land the result as a single commit on the branch you created in step 0 and return ' +
-    '`{ status: "resolved", sha, branch, changedFiles, reason }` — `branch` exactly as you created it, and ' +
-    '`changedFiles` matching `git show --name-only` exactly.\n' +
-    `5. Sanity-check before returning: \`git rev-parse HEAD~1\` must still print \`${reviewHead}\` — the merged result ` +
-    'must be a single commit directly on the reviewed commit, not a chain. If you produced several commits, squash ' +
-    'them into one.\n\nReturn only the structured result.\n\n' +
-    surveyBlock(survey) +
-    generatedPathsBlock(generatedPaths)
-  );
-};
-
 const fixReviewPrompt = (issue, fixResult, survey) =>
   'You are a Fix reviewer. An automated Fix agent produced a commit intended to resolve the validated issue below. ' +
   'Judge that commit independently — do NOT trust the fixer. Inspect the change read-only with ' +
@@ -1519,41 +1445,6 @@ const fixReviewPrompt = (issue, fixResult, survey) =>
   `Fixer's note: ${agentNote(fixResult.reason)}\n\n` +
   'Return `{ approved, objection }` — `objection` empty when approved.\n\n' +
   surveyBlock(survey);
-
-// Group applied fixes into connected components by shared changed file (union-find). Two fixes that modify a common
-// file must land together — they would conflict on cherry-pick otherwise — so they go to one reconciliation agent; a
-// fix sharing no file with any other is its own singleton group and passes through untouched. This is only sound for
-// fixes whose file list is actually known: a fix reporting an empty list unions with nothing and so looks disjoint from
-// everything. The caller drops those before grouping (see `refuseUnlandable` below) rather than trusting them here.
-function groupByFileCollision(fixes) {
-  const parent = fixes.map((_, i) => i);
-  const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
-  const unite = (a, b) => {
-    parent[find(a)] = find(b);
-  };
-  const fileOwner = new Map();
-
-  fixes.forEach((fixResult, i) => {
-    (fixResult.changedFiles || []).forEach((file) => {
-      if (fileOwner.has(file)) {
-        unite(i, fileOwner.get(file));
-      } else {
-        fileOwner.set(file, i);
-      }
-    });
-  });
-
-  const groups = new Map();
-  fixes.forEach((_, i) => {
-    const root = find(i);
-    if (!groups.has(root)) {
-      groups.set(root, []);
-    }
-    groups.get(root).push(i);
-  });
-
-  return [...groups.values()];
-}
 
 function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
   let extra = '';
@@ -2125,13 +2016,15 @@ if (!fix || findings.length === 0) {
 // for high-risk categories, Sonnet otherwise, at capped leaf effort). Then, unless `--reviewers 0` disabled it,
 // `reviewers` read-only reviewers judge the commit for correctness and quality and approve on a strict majority. A
 // rejected fix is handed back to a fresh Fix agent — given the rejected diff and the objection — up to
-// `FIX_REVISION_CAP` times, re-reviewing each attempt. Only an approved commit reaches Reconcile; declined,
-// verify-failed, and review-rejected findings are reported unfixed. Findings are independent until Reconcile, so the
-// whole fix→review→revise loop runs concurrently across them; isolation keeps their parallel edits from colliding.
+// `FIX_REVISION_CAP` times, re-reviewing each attempt. An approved commit is reported as a branch for the user to
+// inspect; declined, verify-failed and review-rejected findings are reported unfixed. Findings are independent from end
+// to end — nothing merges them and nothing lands them, so no fix constrains any other — which is what lets the whole
+// fix→review→revise loop run concurrently across them; isolation keeps their parallel edits from colliding.
 phase('Fix');
 
 // Every sandbox below is pinned to `reviewHead`, so without it there is nothing to pin to and no way to check that a
-// returned commit is landable. The surveyor is a Haiku agent answering a long structured question, so it does
+// returned commit describes the code that was reviewed. The surveyor is a Haiku agent answering a long structured
+// question, so it does
 // occasionally drop the field — or abbreviate it, which is no more usable than dropping it, since the pin is verified
 // by string equality; re-ask for just that one value rather than throwing the whole `--fix` run away.
 if (!reviewHead) {
@@ -2141,7 +2034,7 @@ if (!reviewHead) {
   // every Review/Dedupe round and Validate have all completed, and the block below already degrades gracefully — so a
   // throw out of this one-question Haiku agent would discard a finished review instead of returning it unfixed.
   //
-  // Like every phase but Fix/Revise/Reconcile it runs in the user's live checkout — holding Bash, and asked for a git
+  // Like every phase but Fix/Revise it runs in the user's live checkout — holding Bash, and asked for a git
   // answer — so it carries the same execution guard the other un-isolated prompts do. This one reached production
   // without one precisely because it only fires on the degraded path, which no default run takes: `read-only.test.js`
   // now drives that path too, so the table there covers this label rather than never seeing it.
@@ -2167,9 +2060,9 @@ if (!reviewHead) {
 }
 
 // Refusing to fix is the honest outcome here. A sandbox left unpinned is checked out at the *remote* default branch,
-// which has been observed 126 commits behind the reviewed tree — the fixers would edit stale source and return commits
-// on scattered bases that the wrapper is told are conflict-free. Reporting the findings unfixed costs the fix phase;
-// running it unpinned costs the trustworthiness of the whole result.
+// which has been observed 126 commits behind the reviewed tree — the fixers would edit stale source and return branches
+// described to the user as fixes for findings they do not correspond to. Reporting the findings unfixed costs the fix
+// phase; running it unpinned costs the trustworthiness of the whole result.
 if (!reviewHead) {
   gaps.push(
     'The reviewed commit SHA could not be determined, so the Fix phase did **not** run: a fix sandbox is created at ' +
@@ -2182,10 +2075,10 @@ if (!reviewHead) {
   return { reviewedCommit: null, findings, exclusions, gaps };
 }
 
-// Generated/build-output paths, named to the fixers so they do not stage a rebuilt artifact, and used below to refuse a
-// commit that did anyway. Taken from the partitioner's own `generated` flag — it already had to identify generated code
+// Generated/build-output paths, named to the fixers so they do not stage a rebuilt artifact (see
+// `generatedPathsBlock`). Taken from the partitioner's own `generated` flag — it already had to identify generated code
 // to leave it out of the review, so this reuses that judgement instead of hardcoding a path list, and `PARTITION_SCHEMA`
-// asks for it as an explicit flag because both mechanisms below depend on it. `reason` is prose written for a human, and
+// asks for it as an explicit flag because the prompt depends on it. `reason` is prose written for a human, and
 // keying on it classified `{ path: 'dist', reason: 'produced by `npm run build`, not source' }` as hand-written source;
 // it is now only a fallback, for an exclusion that arrived with no flag at all (a partition cached before the field
 // existed) or one whose flag contradicts an unambiguous reason. Both readings err towards listing a path: an extra
@@ -2196,10 +2089,6 @@ const generatedPaths = [
   ...new Set(exclusions.filter(isGeneratedExclusion).map((e) => e.path).filter(Boolean)),
 ];
 
-// A changed file is a generated artifact when it is one of those paths or sits beneath one of them — the same
-// containment relation `underPath` defines, reused rather than restated so a correction there (a `./` prefix, a
-// separator, case folding) cannot fix unit placement and scope narrowing while leaving this gate on the old behaviour.
-const isGeneratedPath = (file) => generatedPaths.some((p) => underPath(file, p));
 
 if (generatedPaths.length) {
   log(`Fixers told to leave ${generatedPaths.length} generated path(s) unstaged.`);
@@ -2277,8 +2166,11 @@ const runFixer = async (issue, attempt, revisionCtx) => {
     attempted.reported = true;
   }
 
-  // An 'applied' fix without a usable commit reference cannot be reviewed or cherry-picked, and its reference must not
-  // reach a command line, so drop the reference and report the finding unfixed.
+  // An 'applied' fix without a usable commit reference cannot be reviewed or reported, and its reference must not reach
+  // a command line, so drop the reference and report the finding unfixed. Clearing `branch` as well as `sha` is what
+  // keeps such a fix off `keepBranches` independently of the status filter there: the name is gone, so there is nothing
+  // for teardown to be told to spare. `createdBranches` above already has the original, which is how the empty sandbox
+  // still gets deleted.
   if (result?.status === 'applied' && !(isCommitSha(result.sha) && isSafeBranchName(result.branch))) {
     return {
       ...result,
@@ -2289,12 +2181,10 @@ const runFixer = async (issue, attempt, revisionCtx) => {
     };
   }
 
-  // The same rule for the file list, which travels further than the SHA does: it is what the reconciler is shown as its
-  // in-bounds set beside a `git add -- <paths>` instruction, and what the fix reviewer and the wrapper are shown as the
-  // files the commit touched. Refuse the whole fix rather than drop the offending entry — a shortened list unions with
-  // fewer fixes in `groupByFileCollision`, which is exactly how a colliding commit reaches the wrapper looking
-  // disjoint. Every surviving reconcile result is a subset of these lists (anything else counts as straying, below), so
-  // checking them here covers the merged commits too.
+  // The same rule for the file list: it is what the fix reviewer is shown beside the `git show` it is told to run, and
+  // what the wrapper prints in the branch table. Refuse the whole fix rather than drop the offending entry — a fix whose
+  // own account of what it touched cannot be trusted is not one to hand a reviewer, and a silently shortened list would
+  // describe the commit inaccurately to everyone downstream while still reading as a clean `applied`.
   const unsafePaths = (result?.changedFiles || []).filter((file) => !isSafeRepoPath(file));
 
   if (result?.status === 'applied' && unsafePaths.length) {
@@ -2306,7 +2196,7 @@ const runFixer = async (issue, attempt, revisionCtx) => {
       changedFiles: [],
       reason:
         `fix agent reported a changed file that is not a plain repo-relative path (${unsafePaths.join(', ')}), so ` +
-        'the fix was discarded rather than named to the reconciler as a file to stage',
+        'the fix was discarded rather than described to its reviewer with a file list that cannot be trusted',
     };
   }
 
@@ -2484,289 +2374,54 @@ if (unreturned) {
   );
 }
 
-// Refuse every applied commit a landing gate cannot prove disjoint from the others, and say so once as a gap. Each gate
-// passes only its own predicate and prose: the rest — including the exemption that a lone commit collides with nothing,
-// so it may land as it is — is policy shared by all of them and belongs in one place. It also has to be *re-derived*
-// per gate rather than decided from one snapshot taken before the first ran, because a gate's refusals shrink the
-// candidate set: the commit left standing after a sibling is dropped is precisely the lone commit the exemption covers,
-// and judging it against the stale count would refuse the only change there was, landing nothing at all.
-const refuseUnlandable = ({ refuse, reason, gap }) => {
-  const candidates = outcomes.filter((outcome) => outcome.status === 'applied' && outcome.sha);
-  const refused = candidates.length > 1 ? candidates.filter(refuse) : [];
-
-  refused.forEach((outcome) => {
-    outcome.reason = `${reason(outcome)} Fixer's note: ${outcome.reason}`;
-    outcome.status = STATUS_CONFLICT_SKIPPED;
-    outcome.sha = undefined;
-  });
-
-  if (refused.length) {
-    gaps.push(gap(refused.length));
-  }
-};
-
-// An `applied` fix that reports no changed files is not disjoint from the others — its file set is *unknown*. It
-// committed something, `changedFiles` is self-reported (the schema cannot make it accurate, and this script has no git
-// access to re-derive it), and `groupByFileCollision` keys collisions solely on those lists: an empty one unions with
-// nothing, so the fix becomes its own singleton group and its commit goes straight into `commits`. If it did touch a
-// file another landed fix touched, the wrapper — told the list is conflict-free by construction — hits an unexpected
-// cherry-pick conflict, aborts, and stops, leaving a half-landed fix branch while the skipped findings still read as
-// `applied`. Such a commit can still land when it is the only one (nothing else is picked, so nothing can conflict with
-// it); alongside others it cannot, so drop it and report the finding honestly as unfixed.
-refuseUnlandable({
-  refuse: (outcome) => !outcome.changedFiles?.length,
-  reason: (outcome) =>
-    `the fix committed ${outcome.sha} but reported no changed files, so it could not be checked for collisions with ` +
-    'the other applied fix(es) and was not landed.',
-  gap: (count) =>
-    `${count} applied fix(es) reported no changed files, so they could not be proven conflict-free against the other ` +
-    'fixes and were left unlanded — those findings are **not** fixed and are **not** verified as unfixable.',
-});
-
-// A fix that committed a regenerated build artifact cannot be landed alongside others. Every fix that rebuilds the same
-// bundle writes the same path, so union-find collapses all of them into one reconciliation group — in one observed run
-// four such fixes pulled 30 findings into a single merged commit that then overlapped three unrelated commits and
-// aborted the landing sequence. The script cannot rewrite a commit to drop the artifact (it has no git access), so the
-// artifact has to be kept out by the fixer; when one slips through anyway, refuse the commit rather than let it poison
-// the grouping.
-refuseUnlandable({
-  refuse: (outcome) => (outcome.changedFiles || []).some(isGeneratedPath),
-  reason: (outcome) =>
-    `the fix committed ${outcome.sha} but staged generated build output ` +
-    `(${(outcome.changedFiles || []).filter(isGeneratedPath).join(', ')}), which every other fix that rebuilt the ` +
-    'same artifact also writes — so it could not be landed as a disjoint change.',
-  gap: (count) =>
-    `${count} applied fix(es) committed generated build output despite being told not to, so they could not be proven ` +
-    'disjoint from the other fixes and were left unlanded — those findings are **not** fixed and are **not** verified ' +
-    'as unfixable.',
-});
-
 const applied = outcomes.filter((outcome) => outcome.status === 'applied' && outcome.sha);
 log(
   `Fix/Review: ${applied.length} approved, ${outcomes.length - applied.length} unfixed ` +
-    '(declined / verify-failed / review-rejected / conflict-skipped).',
+    '(declined / verify-failed / review-rejected).',
 );
 
-// Phase 8 — Reconcile (barrier). Fixes that touch a shared file are merged by a reconciliation agent into one
-// coherent commit; fixes that collide with nothing pass through as-is. The result is a conflict-free, ordered list of
-// commits (each touching a disjoint set of files, all based on HEAD) for the wrapper to cherry-pick without conflict.
-phase('Reconcile');
-const groups = groupByFileCollision(applied);
-const reconciled = await parallel(
-  groups.map((group, gi) => async () => {
-    const groupFixes = group.map((i) => applied[i]);
+// Which sandbox branches survive teardown. Nothing is landed, so a branch *is* the product of `--fix` — deleting one
+// throws away the only copy of the work — while a branch carrying no commit is pure clutter that the next run trips
+// over. So teardown splits rather than sweeping: every sandbox loses its worktree, but only the branches below keep
+// their ref.
+//
+// Both statuses here carry a commit. `applied` is the obvious one. `review-rejected` is the one worth arguing for: the
+// reviewers objected, but the commit exists, and reading it is precisely how the user judges whether the objection was
+// right — a rejection is an opinion, not a proof, and this pipeline has no way to distinguish a fix that was wrong from
+// one whose reviewers were. `declined` and `verify-failed` committed nothing (or reverted what they had), so their
+// branches sit at the base commit and are deleted.
+//
+// An outcome names only its *last* attempt's branch, so the intermediate `-r<n>` branches of a revised fix fall outside
+// this list and are deleted with the rest: a superseded attempt is noise, and the objection that superseded it is in the
+// report. Screened by `isSandboxBranch` for the same reason `createdBranches` is — a name outside this run's namespace is
+// not this run's to make promises about either way.
+//
+// This is still a self-reported claim, and the wrapper is expected to verify it: a branch this list omits but which
+// turns out to carry a commit beyond `fix.base` is kept and reported, rather than deleted on an agent's word. That
+// covers the one case the statuses cannot — an agent that committed and then died before returning, whose branch is
+// reconstructed into `sandboxBranches` below with no outcome to name it.
+const keepBranches = [
+  ...new Set(
+    outcomes
+      .filter((outcome) => outcome.status === 'applied' || outcome.status === STATUS_REVIEW_REJECTED)
+      .map((outcome) => outcome.branch)
+      .filter(isSandboxBranch),
+  ),
+];
 
-    // Singleton group: the fixer's own commit lands unchanged.
-    if (groupFixes.length === 1) {
-      const only = groupFixes[0];
-
-      return {
-        sha: only.sha,
-        branch: only.branch,
-        findings: [only.issue],
-        changedFiles: only.changedFiles,
-      };
-    }
-
-    // As in the Fix phase, a throw here must not escape the thunk: `parallel` would return `null` for this group, the
-    // `filter(Boolean)` below would drop it from `commits`, and its fixes would keep `status: 'applied'` with a SHA
-    // nothing ever cherry-picks — reported as landed while silently lost. Fold it into the failure branch instead.
-    let rr = null;
-    let rrError = '';
-
-    // Name the group by the findings it merges rather than by its position in the group list, which said nothing about
-    // what was being reconciled: `reconcile:bug#3+security#7`.
-    const merging = groupFixes.map((groupFix) => tagOf(groupFix.issue));
-    const mergeTag = merging.slice(0, 3).join('+') + (merging.length > 3 ? `+${merging.length - 3} more` : '');
-
-    // As for a fixer: the branch this reconciler is about to create, registered before it runs so that a throw — which
-    // leaves `rr` null and `rr?.branch` undefined — does not lose it. Only reached for a real group; a singleton
-    // returned above without launching an agent, so it created nothing.
-    const attempted = { kind: 'rrmerge', suffix: String(gi), reported: false };
-
-    attemptedBranches.push(attempted);
-
-    try {
-      rr = await agent(reconcilePrompt(groupFixes, gi, survey, reviewHead, generatedPaths), {
-        label: `reconcile:${mergeTag}`,
-        phase: 'Reconcile',
-        model: 'opus',
-        effort,
-        isolation: 'worktree',
-        schema: RECONCILE_RESULT_SCHEMA,
-      });
-    } catch (error) {
-      rrError = String(error?.message || error).split('\n').slice(0, 3).join(' — ');
-    }
-
-    // Recorded for teardown before the result is judged, exactly as for a fixer's branch — and, exactly as there, only
-    // when the name is inside this run's `rrmerge/<run-id>/<n>` sandbox namespace.
-    if (isSandboxBranch(rr?.branch)) {
-      createdBranches.push(rr.branch);
-      attempted.reported = true;
-    }
-
-    // As with a fix result, a merged commit whose `sha` is not a bare hex object name cannot be cherry-picked and must
-    // not be interpolated into a `git` command, so it counts as a failed reconciliation. The branch is checked with it,
-    // exactly as the fixer gate checks both: it is copied into `commits[].branch`, which reaches the wrapper's `git`
-    // command lines and is what it derives this run's teardown prefix from. Filtering only the teardown list above
-    // would leave that copy unvalidated.
-    if (rr?.status === 'resolved' && !(isCommitSha(rr.sha) && isSafeBranchName(rr.branch))) {
-      rr = { ...rr, status: 'failed', reason: 'reconciliation reported no usable commit SHA / branch' };
-    }
-
-    // `changedFiles` is what every gate below keys on, and the schema's `string[]` is a request to the agent, not a
-    // guarantee — the same reason `sha` is re-checked above. A truthy non-array (`changedFiles: 'src/a.js'`) satisfies
-    // the non-empty refusal below by its character count and then throws at `.filter` in the stray check, escaping the
-    // thunk into exactly the outcome the comment at the top of this block guards against: `parallel` yields `null`, the
-    // group is dropped from `commits`, and its fixes stay `applied` with SHAs nothing cherry-picks. Coerce anything that
-    // is not an array to the empty list so the refusal below judges it as the unusable file list it is.
-    if (rr && !Array.isArray(rr.changedFiles)) {
-      rr = { ...rr, changedFiles: [] };
-    }
-
-    // The `unverifiable` gate above refuses a *fixer* commit that reports no files; a merged commit reporting none is
-    // the same hazard — its file set is unknown, so the stray check below passes vacuously, it claims nothing in the
-    // disjointness gate, and it lands as `conflict-resolved` while overlapping, undetectably, every later commit that
-    // touches whatever it really rewrote. Here the empty list is also provably a misreport: a group exists only because
-    // its fixes share a file, so its union is never empty and a commit that really applied them all wrote something.
-    // Nothing can be salvaged from a self-contradicting report, so refuse it outright rather than sparing it the way a
-    // fixer's lone commit is spared.
-    if (rr?.status === 'resolved' && !rr.changedFiles?.length) {
-      rr = {
-        ...rr,
-        status: 'failed',
-        reason:
-          `the merged commit ${rr.sha} reported no changed files, so it could not be checked for collisions with the ` +
-          `other commits. Reconciler's note: ${rr.reason}`,
-      };
-    }
-
-    // The groups were proven disjoint from one another using the *fixers'* file lists, so a merged commit that writes
-    // anything outside its group's union is disjoint from nothing and voids the guarantee the wrapper relies on. This is
-    // the second premise that broke in the observed run: a 30-finding merge commit touched 25 files, including a rebuilt
-    // bundle, and overlapped three commits later in the sequence. Treat straying as a failed reconciliation — the
-    // alternative is handing the wrapper a commit it will abort on after already landing others.
-    if (rr?.status === 'resolved') {
-      const inBounds = new Set(groupFixes.flatMap((groupFix) => groupFix.changedFiles || []));
-      const strayed = (rr.changedFiles || []).filter((file) => !inBounds.has(file));
-
-      if (strayed.length) {
-        rr = {
-          ...rr,
-          status: 'failed',
-          reason:
-            `the merged commit modified ${strayed.join(', ')}, outside the files its fixes touched, so it could not ` +
-            `be proven disjoint from the other commits. Reconciler's note: ${rr.reason}`,
-        };
-      }
-    }
-
-    if (rr?.status === 'resolved' && rr.sha) {
-      return {
-        sha: rr.sha,
-        branch: rr.branch,
-        findings: groupFixes.map((finding) => finding.issue),
-        changedFiles: rr.changedFiles || [],
-      };
-    }
-
-    // Reconciliation failed: none of the colliding group's fixes can be landed together. Mark them conflict-skipped.
-    const files = [...new Set(groupFixes.flatMap((fix) => fix.changedFiles))].join(', ');
-    groupFixes.forEach((fix) => {
-      const outcome = outcomes.find((outcome) => outcome.issue === fix.issue);
-
-      if (outcome) {
-        outcome.status = STATUS_CONFLICT_SKIPPED;
-        outcome.reason = rr?.reason || rrError || 'reconciliation failed';
-        outcome.sha = undefined;
-      }
-    });
-
-    gaps.push(
-      `Reconciliation failed for ${groupFixes.length} colliding fix(es) on ${files} — left unfixed.${
-        rrError ? ` Cause: ${rrError}` : ''
-      }`,
-    );
-    return null;
-  }),
-);
-
-const candidateCommits = reconciled.filter(Boolean);
-
-// Last gate before the wrapper. Everything above *should* have produced commits with pairwise-disjoint file sets, but
-// every step of that reasoning runs on self-reported file lists from agents this script cannot audit, and the wrapper is
-// told the list is conflict-free "by construction" — so it cherry-picks without expecting a conflict and, when one
-// comes, has already half-landed the branch. Check the property here instead of asserting it: walk the commits in order,
-// keep each one whose files are still unclaimed, and drop any that overlaps a commit already kept. Dropping is the
-// conservative direction — a skipped fix is reported honestly as unfixed, whereas an overlapping one aborts the landing
-// and strands every commit behind it.
-const claimedFiles = new Map();
-const commits = [];
-
-candidateCommits.forEach((commit) => {
-  const overlap = (commit.changedFiles || []).filter((file) => claimedFiles.has(file));
-
-  if (overlap.length) {
-    const blocking = [...new Set(overlap.map((file) => claimedFiles.get(file)))].join(', ');
-    commit.findings.forEach((issue) => {
-      const outcome = outcomes.find((x) => x.issue === issue);
-
-      if (outcome) {
-        outcome.status = STATUS_CONFLICT_SKIPPED;
-        outcome.reason =
-          `the fix committed ${commit.sha} but it overlaps an already-landed commit on ${overlap.join(', ')} ` +
-          `(also written by ${blocking}), so it could not be landed without a conflict`;
-        outcome.sha = undefined;
-      }
-    });
-
-    gaps.push(
-      `A commit was dropped for overlapping ${overlap.join(', ')} with commit ${blocking} — the fix pipeline is ` +
-        'supposed to make these disjoint, so this is a defect in the run, not merely an unfixable finding. ' +
-        `${commit.findings.length} finding(s) are **not** fixed and **not** verified as unfixable.`,
-    );
-    return;
-  }
-
-  (commit.changedFiles || []).forEach((file) => claimedFiles.set(file, commit.sha));
-  commits.push(commit);
-});
-
-// A merged commit carries more than one finding: mark those findings conflict-resolved and point them at the merged
-// commit's SHA *and* the branch that SHA lives on (the individual fixer commits are superseded and never
-// cherry-picked). Both halves have to move together: remapping `sha` while leaving `branch` on the fixer's own
-// `rrfix/...` ref describes a pair that does not exist, and the wrapper's salvage note reads exactly that pair when it
-// tells the user which branch still holds a discarded commit.
-commits.forEach((commit) => {
-  if (commit.findings.length > 1) {
-    commit.findings.forEach((issue) => {
-      const outcome = outcomes.find((x) => x.issue === issue);
-
-      if (outcome?.status === 'applied') {
-        outcome.status = STATUS_CONFLICT_RESOLVED;
-        outcome.sha = commit.sha;
-        outcome.branch = commit.branch;
-      }
-    });
-  }
-});
-
-log(`Reconcile: ${commits.length} conflict-free commit(s) from ${applied.length} applied fix(es).`);
-
-// Every branch this run created, so the wrapper can tear down exactly what it made. Globbing `rrfix/*` was the previous
-// approach and it is wrong in both directions: it would delete a *concurrent* run's sandboxes, and it depends on a
-// naming convention the agents are only asked, not forced, to follow. These names are what the agents reported
-// creating — screened by `isSandboxBranch`, so a self-reported name outside the `rrfix/`/`rrmerge/` namespace never
-// becomes a `git branch -D` target, and the run id read back out of them below is always there to read — plus, for the
-// agents that reported nothing, the name each was told to create.
+// Every branch this run created, so the wrapper can tear down exactly what it made — every worktree, and every branch
+// `keepBranches` above does not vouch for. Globbing `rrfix/*` was the previous approach and it is wrong in both
+// directions: it would delete a *concurrent* run's sandboxes, and it depends on a naming convention the agents are only
+// asked, not forced, to follow. These names are what the agents reported creating — screened by `isSandboxBranch`, so a
+// self-reported name outside the `rrfix/` namespace never becomes a `git branch -D` target, and the run id read back out
+// of them below is always there to read — plus, for the agents that reported nothing, the name each was told to create.
 //
 // That second half exists because an agent's return value is the *only* channel a branch name has into this script, so
 // an agent that died leaves its branch, and the worktree holding it, invisible to teardown. `<RUN>` is legible only
 // inside a sandbox, but every agent derives it by the same rule from its own worktree branch, so reading it back out of
-// any *one* reported name recovers it for all of them, and the missing names follow from `<kind>/<RUN>/<suffix>`. With
-// no reported name there is nothing to read it out of; the list is then whatever was reported (i.e. empty), and the
-// wrapper has no run id either way.
+// any *one* reported name recovers it for all of them, and the missing names follow from `rrfix/<RUN>/<suffix>`. With no
+// reported name there is nothing to read it out of; the list is then whatever was reported (i.e. empty), and the wrapper
+// has no run id either way.
 const runIds = runIdTally(createdBranches);
 const runId = runIds[0]?.[0];
 const unreportedBranches = runId
@@ -2782,11 +2437,10 @@ if (unreportedBranches.length) {
 }
 
 // Agents that disagree about `<RUN>` are a teardown hazard, not a review or fix one, and the distinction matters because
-// the wrapper reads this run's id back out of these names. The `rrfix`/`rrmerge` refs themselves survive the confusion —
-// they go to `git branch --delete --force` by exact name — but the harness's own `worktree-<run-id>-<n>` refs are *not*
-// on this list and can only be matched by pattern, so any belonging to a mis-derived id fall outside the scope the
-// wrapper computes and leak along with the worktree holding them. Say so, rather than let a run that left refs behind
-// read as clean.
+// the wrapper reads this run's id back out of these names. The `rrfix` refs themselves survive the confusion — they are
+// deleted, or kept, by exact name — but the harness's own `worktree-<run-id>-<n>` refs are *not* on this list and can
+// only be matched by pattern, so any belonging to a mis-derived id fall outside the scope the wrapper computes and leak
+// along with the worktree holding them. Say so, rather than let a run that left refs behind read as clean.
 if (runIds.length > 1) {
   const [[chosen, chosenCount], ...rest] = runIds;
 
@@ -2794,35 +2448,39 @@ if (runIds.length > 1) {
     `Fix agents disagreed about this run's id: ${runIds.length} different values appear in the sandbox branch names ` +
       `they reported. Teardown is scoped to \`${chosen}\` (${chosenCount} branch(es)), over ` +
       `${rest.map(([id, n]) => `\`${id}\` (${n})`).join(', ')}. Every reported branch is still on the teardown list ` +
-      'and is deleted by exact name, but the matching `worktree-<run-id>-<n>` refs are found by pattern and those under ' +
+      'and is handled by exact name, but the matching `worktree-<run-id>-<n>` refs are found by pattern and those under ' +
       'another id will survive, so check for leftovers by hand. This is a **teardown** shortfall: every finding was ' +
-      'reviewed and every fix landed or reported as usual.',
+      'reviewed and every fix committed or reported as usual.',
   );
 }
 
 // A branch whose run-id segment is a placeholder is a derivation that failed outright — the agent reported something
-// like `rrfix/undefined/12`. It stays on the teardown list, because the branch and its worktree are real, but it is
-// worth naming: it is the visible symptom of an agent that could not read its own sandbox branch, and its
-// `worktree-<run-id>-<n>` sibling is unreachable by any pattern the wrapper can derive.
+// like `rrfix/undefined/12`. It is handled like any other (kept if it carries a fix, deleted if it does not), because the
+// branch and its worktree are real either way, but it is worth naming: it is the visible symptom of an agent that could
+// not read its own sandbox branch, and its `worktree-<run-id>-<n>` sibling is unreachable by any pattern the wrapper can
+// derive.
 const placeholderBranches = createdBranches.filter((name) =>
-  PLACEHOLDER_RUN_IDS.has(/^rr(?:fix|merge)\/([^/]+)\//.exec(name)?.[1]),
+  PLACEHOLDER_RUN_IDS.has(/^rrfix\/([^/]+)\//.exec(name)?.[1]),
 );
 
 if (placeholderBranches.length) {
   gaps.push(
     `${placeholderBranches.length} sandbox branch(es) were reported with an unusable run id — the agent could not ` +
       'derive `<RUN>` from its own worktree branch and named the branch after a missing value instead (e.g. ' +
-      `\`${placeholderBranches[0]}\`). They are on the teardown list and will be deleted by exact name; their ` +
-      '`worktree-<run-id>-<n>` siblings cannot be matched by pattern and may need deleting by hand. This is a ' +
+      `\`${placeholderBranches[0]}\`). The branches themselves are named by exact name and so are handled correctly; ` +
+      'their `worktree-<run-id>-<n>` siblings cannot be matched by pattern and may need deleting by hand. This is a ' +
       '**teardown** shortfall and affects no finding.',
   );
 }
 
-// The wrapper creates the fix branch off HEAD and cherry-picks `commits` in order. `base` is the commit every one of
-// them should be parented on — `reviewedCommit`, restated inside `fix` under the name the pre-flight checks it by —
-// and `changedFiles` are pairwise disjoint, which together are what make the picks commutative. The wrapper re-checks
-// both against git before landing anything, because this script has no git access and can only take the agents' word
-// for it. `outcomes` carries the per-finding result for the report.
+// The wrapper lands nothing. It removes every sandbox worktree, deletes `sandboxBranches` minus `keepBranches`, and
+// reports the survivors as a table for the user to cherry-pick from at their leisure. `base` is the commit every fix
+// should be parented on — `reviewedCommit`, restated inside `fix` under the name the wrapper checks it by — so it can
+// say how far the branches have drifted from the tree they were written against. Everything here is self-reported and
+// this script has no git access, so the wrapper is expected to verify rather than trust: in particular a branch outside
+// `keepBranches` that turns out to carry a commit is kept, not deleted on an agent's word. `outcomes` carries the
+// per-finding result for the report, including `changedFiles` — which is what the branch actually touches, as distinct
+// from `file`, which is only where the defect was cited.
 return {
   reviewedCommit: reviewHead,
   findings,
@@ -2831,12 +2489,7 @@ return {
   fix: {
     base: reviewHead,
     sandboxBranches,
-    commits: commits.map((commit) => ({
-      sha: commit.sha,
-      branch: commit.branch,
-      changedFiles: commit.changedFiles,
-      findingCount: commit.findings.length,
-    })),
+    keepBranches,
     outcomes: outcomes.map((outcome) => ({
       description: outcome.issue.description,
       category: outcome.issue.category,
@@ -2846,6 +2499,7 @@ return {
       status: outcome.status,
       sha: outcome.sha,
       branch: outcome.branch,
+      changedFiles: outcome.changedFiles,
       reason: outcome.reason,
     })),
   },

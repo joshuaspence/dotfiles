@@ -33,11 +33,9 @@ describe('schemas', () => {
   it('asks for the sandbox branch whatever the outcome, since teardown needs it', async () => {
     // A declined fixer still created a branch in step 0. If the schema only asked for it on success, the branch would
     // survive the run and the next one would trip over it.
-    const { FIX_RESULT_SCHEMA, RECONCILE_RESULT_SCHEMA } = await internals();
+    const { FIX_RESULT_SCHEMA } = await internals();
 
-    for (const schema of [FIX_RESULT_SCHEMA, RECONCILE_RESULT_SCHEMA]) {
-      expect(schema.properties.branch.description).toMatch(/whatever the outcome/);
-    }
+    expect(FIX_RESULT_SCHEMA.properties.branch.description).toMatch(/whatever the outcome/);
   });
 
   it('requires the issues array, and of each issue the fields every later phase reads', async () => {
@@ -58,36 +56,32 @@ describe('schemas', () => {
 
     expect(PARTITION_SCHEMA.required).toEqual(['units', 'exclusions']);
     expect(PARTITION_SCHEMA.properties.units.items.required).toEqual(['name', 'paths']);
-    // `generated` is required, not optional: the Fix phase keys two safety mechanisms off it (fixers are told never to
-    // stage these paths, and a commit that staged one is refused), so a partitioner omitting it would disable both.
+    // `generated` is required, not optional: it is how the Fix phase names the paths a fixer must never stage, so a
+    // partitioner omitting it would silently leave every fixer free to commit a regenerated bundle.
     expect(PARTITION_SCHEMA.properties.exclusions.items.required).toEqual(['path', 'reason', 'generated']);
   });
 
   it('requires both an outcome and its stated reason from every agent that judges', async () => {
     // Each of these is read as a pair: the outcome drives the pipeline, the prose is what a human reads to see why. An
     // optional rationale would let an agent kill a finding, or a fix, without saying anything at all.
-    const { VERDICT_SCHEMA, FIX_RESULT_SCHEMA, RECONCILE_RESULT_SCHEMA, REVIEW_RESULT_SCHEMA } = await internals();
+    const { VERDICT_SCHEMA, FIX_RESULT_SCHEMA, REVIEW_RESULT_SCHEMA } = await internals();
 
     expect(VERDICT_SCHEMA.required).toEqual(['confirmed', 'rationale']);
     expect(FIX_RESULT_SCHEMA.required).toEqual(['status', 'reason']);
-    expect(RECONCILE_RESULT_SCHEMA.required).toEqual(['status', 'reason']);
     expect(REVIEW_RESULT_SCHEMA.required).toEqual(['approved', 'objection']);
   });
 
-  it('pins the outcome vocabularies the Fix and Reconcile phases branch on', async () => {
+  it('pins the outcome vocabulary the Fix phase branches on', async () => {
     // `required` only makes an agent answer; the `enum` is what makes it answer with the one string the pipeline then
-    // compares against. Both phases decide what to land by string equality on `status`, and every other test in this
-    // suite has its fake agents return those strings directly — nothing there goes through the schema. So a rename
+    // compares against. The phase decides which branches to keep by string equality on `status`, and every other test in
+    // this suite has its fake agents return those strings directly — nothing there goes through the schema. So a rename
     // inside the enum ('applied' → 'committed', say, or dropping 'verify-failed') leaves the whole suite green while in
-    // production no result ever satisfies the branch and the phase lands nothing at all.
-    const { FIX_RESULT_SCHEMA, RECONCILE_RESULT_SCHEMA } = await internals();
+    // production no result ever satisfies the branch and teardown deletes every fix the run produced.
+    const { FIX_RESULT_SCHEMA } = await internals();
 
-    // 'applied' is the one the Fix phase gates cherry-picking, the unsafe-path refusal and the final report on; the
-    // other two are the refusals a fixer needs available to decline at all.
+    // 'applied' is the one the phase gates the unsafe-path refusal, `keepBranches` and the final report on; the other
+    // two are the refusals a fixer needs available to decline at all.
     expect(FIX_RESULT_SCHEMA.properties.status.enum).toEqual(['applied', 'declined', 'verify-failed']);
-
-    // 'resolved' is what the group-merge path checks before it validates the merged sha and lands it.
-    expect(RECONCILE_RESULT_SCHEMA.properties.status.enum).toEqual(['resolved', 'failed']);
   });
 
   it('keeps a finding’s severity and category vocabularies aligned with what consumes them', async () => {

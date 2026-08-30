@@ -15,7 +15,6 @@ import { issue, runFix } from './scenario.js';
 const rejectFirst = (subject) => ({ confirmed: subject.description !== 'finding A', rationale: 'r' });
 
 describe('per-finding label handle', () => {
-  // Distinct files, so each fix is its own reconciliation group and nothing is merged.
   const dropFirst = {
     issues: [
       issue({ description: 'finding A', file: 'src/a.ts' }),
@@ -50,8 +49,10 @@ describe('per-finding label handle', () => {
     expect(run.result.fix.outcomes.map((outcome) => outcome.description)).toEqual(['finding B', 'finding C']);
   });
 
-  it('names the merged findings in a reconcile label by the same handle', async () => {
-    // Two survivors fixing the same file collide, so they reconcile as one group — labelled by the findings it merges.
+  it('keeps two findings in one file on separate branches, each under its own handle', async () => {
+    // Fixes are additive: two survivors in the same file are two independent branches, not one merged commit. So the
+    // handle has to stay one-to-one with the finding here too — this is the case the old design collapsed into a single
+    // `reconcile:bug#1+bug#2` agent, where neither finding had a branch of its own to point a reader at.
     const run = await runFix({
       issues: [
         issue({ description: 'finding A' }),
@@ -61,7 +62,11 @@ describe('per-finding label handle', () => {
       validate: rejectFirst,
     });
 
-    expect(run.called(/^reconcile:/).map((call) => call.label)).toEqual(['reconcile:bug#1+bug#2']);
+    expect(run.called(/^fix:/).map((call) => call.label)).toEqual(['fix:bug#1', 'fix:bug#2']);
+    expect(run.result.fix.outcomes.map((outcome) => [outcome.description, outcome.branch])).toEqual([
+      ['finding B', 'rrfix/wf_test/1'],
+      ['finding C', 'rrfix/wf_test/2'],
+    ]);
   });
 
   it('produces no fix agents when all findings are rejected', async () => {

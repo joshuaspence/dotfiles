@@ -1,5 +1,8 @@
 /**
- * Path classification utilities used to distinguish files from directories. The `namesOneFile` function identifies
+ * The script's two path matchers: `namesOneFile`, which distinguishes a file from a directory, and `fileInUnit`, which
+ * decides whether a finding's file belongs to a partition unit.
+ *
+ * The `namesOneFile` function identifies
  * single-file paths by checking for a letter-initial extension, which determines whether a unit path should be counted as
  * a file (for the architecture lens gate). A defect here could cause the gate to misfire: classifying a directory as a
  * file would artificially inflate the file count, while failing to recognize a valid file extension could skip the lens
@@ -146,5 +149,64 @@ describe('namesOneFile', () => {
     // Paths like `1.0` or `.config` where the part after the dot doesn't start with a letter.
     expect(namesOneFile('node_modules/package/1.0')).toBe(false);
     expect(namesOneFile('usr/lib/2.7')).toBe(false);
+  });
+});
+
+describe('fileInUnit', () => {
+  // Tested beside `namesOneFile` because it is the script's other path matcher, and the two share a rule: a unit path
+  // is a whole file or a whole directory, never a prefix of a sibling's name. It scopes already-reported findings to a
+  // unit when feeding later `--loop` rounds, and it routes findings into the dedupe scopes.
+  const fileInUnit = async (file, paths) => (await internals()).fileInUnit(file, { paths });
+
+  it('matches a file listed exactly, or one inside a listed directory', async () => {
+    expect(await fileInUnit('src/a.ts', ['src/a.ts'])).toBe(true);
+    expect(await fileInUnit('src/deep/a.ts', ['src'])).toBe(true);
+    expect(await fileInUnit('src/a.ts', ['src/'])).toBe(true);
+  });
+
+  it('does not match a sibling whose name merely starts the same way', async () => {
+    expect(await fileInUnit('srcx/a.ts', ['src'])).toBe(false);
+    expect(await fileInUnit('src/ab.ts', ['src/a.ts'])).toBe(false);
+  });
+
+  it('is false for a finding with no file, and for a unit with no paths', async () => {
+    // Repo-wide findings can arrive without a primary file; they must not silently match every unit.
+    expect(await fileInUnit('', ['src'])).toBe(false);
+    expect(await fileInUnit(undefined, ['src'])).toBe(false);
+    expect(await fileInUnit('src/a.ts', undefined)).toBe(false);
+  });
+
+  it('correctly filters findings per unit when building dedupe scopes', async () => {
+    // The actual usage: `dedupeScopes` scopes findings to units through `fileInUnit`, so each scope holds only the
+    // indices of findings whose files belong to that unit. Scopes with fewer than 2 findings are dropped by that
+    // function's trailing `scope.indices.length > 1` filter, because dedupe needs at least two findings to compare.
+    const { dedupeScopes, DEDUPE_UNCLAIMED_SLUG } = await internals();
+
+    const findings = [
+      { file: 'src/a.ts', description: 'first in src' },
+      { file: 'src/nested/b.ts', description: 'second nested in src' },
+      { file: 'lib/c.ts', description: 'first in lib' },
+      { file: 'lib/d.ts', description: 'second in lib' },
+      { file: 'docs/readme.md', description: 'first in docs' },
+      { file: undefined, description: 'repo-wide finding' },
+    ];
+
+    const units = [
+      { slug: 'src', paths: ['src'] },
+      { slug: 'lib', paths: ['lib'] },
+    ];
+
+    const scopes = dedupeScopes(findings, units);
+
+    // The `src` unit should contain findings 0 and 1 (both in src/), and the `lib` unit should contain findings 2 and 3.
+    const srcScope = scopes.find((scope) => scope.name === 'src');
+    const libScope = scopes.find((scope) => scope.name === 'lib');
+
+    expect(srcScope?.indices).toEqual([0, 1]);
+    expect(libScope?.indices).toEqual([2, 3]);
+
+    // Findings 4 and 5 (docs/ and repo-wide) are unclaimed and go to a shared bucket since neither matches any unit.
+    const unclaimedScope = scopes.find((scope) => scope.name === DEDUPE_UNCLAIMED_SLUG);
+    expect(unclaimedScope?.indices).toEqual([4, 5]);
   });
 });

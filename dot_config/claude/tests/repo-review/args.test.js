@@ -527,7 +527,7 @@ describe('without --fix', () => {
     expect(run.result.fix).toBeUndefined();
     expect(run.result.findings).toHaveLength(1);
     expect(run.called(/^fix:/)).toHaveLength(0);
-    expect(run.phases).not.toContain('Reconcile');
+    expect(run.phases).not.toContain('Fix');
     expect(run.phases).not.toContain('Review Fix');
   });
 });
@@ -540,7 +540,6 @@ describe('with --fix', () => {
 
     expect(run.phases).toContain('Fix');
     expect(run.phases).toContain('Review Fix');
-    expect(run.phases).toContain('Reconcile');
   });
 });
 
@@ -873,93 +872,41 @@ describe('generated path detection', () => {
     expect(logged).toHaveLength(0);
   });
 
-  it('refuses a fix that stages a file matching a generated path exactly', async () => {
-    // A fix that regenerates a build artifact makes itself collide with every other fix that also regenerated it, so
-    // the script refuses such a commit when multiple fixes are applied. A file matching a generated path exactly must
-    // be caught. The refusal gate only runs when there are multiple applied fixes.
+  it('names every detected path to the fixer, since the prose is now the whole of the mechanism', async () => {
+    // The log line above only says how many paths were found; what acts on them is the list in the fixer's prompt. It
+    // used to be backed up by a refusal gate that read `changedFiles` and downgraded a fix that had staged an artifact,
+    // and that gate is gone — it existed to keep the landing sequence's cherry-picks from colliding on a regenerated
+    // bundle, and nothing is landed now. So an unheeded instruction costs a reviewable diff rather than a fix, and
+    // this assertion is the only thing standing between the fixers and no instruction at all.
     const run = await runFix({
-      issues: [
-        { description: 'Issue 0', severity: 'high', category: 'bug', file: 'src/a.ts', lines: '10', reason: 'bug' },
-        { description: 'Issue 1', severity: 'high', category: 'bug', file: 'src/b.ts', lines: '20', reason: 'bug' },
+      exclusions: [
+        { path: 'dist', reason: 'build output', generated: true },
+        { path: 'docs', reason: 'documentation', generated: false },
       ],
-      exclusions: [{ path: 'dist', reason: 'build output', generated: true }],
-      fix: (issue, { idx }) => ({
-        status: 'applied',
-        sha: `deadbeef0000000000000000000000000000000${idx}`,
-        branch: `rrfix/wf_test/${idx}`,
-        changedFiles: idx === 0 ? ['dist'] : ['src/b.ts'],
-        reason: 'fixed',
-      }),
     });
 
-    const outcome0 = run.result.fix.outcomes[0];
-    expect(outcome0.status).toBe('conflict-skipped');
-    expect(outcome0.reason).toContain('staged generated build output');
-    expect(outcome0.reason).toContain('dist');
+    const [fix] = run.called(/^fix:/);
+    expect(fix.prompt).toContain('NEVER stage these');
+    expect(fix.prompt).toContain('- dist');
+    expect(fix.prompt).not.toContain('- docs');
   });
 
-  it('refuses a fix that stages a file beneath a generated path', async () => {
-    // A file sitting beneath a generated path is also generated, so staging it must also be refused. The containment
-    // check must use path boundaries, not just prefix matching.
-    const run = await runFix({
-      issues: [
-        { description: 'Issue 0', severity: 'high', category: 'bug', file: 'src/a.ts', lines: '10', reason: 'bug' },
-        { description: 'Issue 1', severity: 'high', category: 'bug', file: 'src/b.ts', lines: '20', reason: 'bug' },
-      ],
-      exclusions: [{ path: 'dist', reason: 'build output', generated: true }],
-      fix: (issue, { idx }) => ({
-        status: 'applied',
-        sha: `deadbeef0000000000000000000000000000001${idx}`,
-        branch: `rrfix/wf_test/${idx}`,
-        changedFiles: idx === 0 ? ['dist/bundle.js'] : ['src/b.ts'],
-        reason: 'fixed',
-      }),
-    });
+  it('passes a path through verbatim, trailing slash and all, rather than normalizing it', async () => {
+    // The partitioner may report a directory either way, and the fixer is a model reading prose: `build/` and `build`
+    // both name the same directory to it. Normalizing would only matter to a matcher, and there is no longer one — so
+    // the path is quoted as the partitioner wrote it, which is also how it appears in the exclusions the report prints.
+    const run = await runFix({ exclusions: [{ path: 'build/', reason: 'build output', generated: true }] });
 
-    const outcome0 = run.result.fix.outcomes[0];
-    expect(outcome0.status).toBe('conflict-skipped');
-    expect(outcome0.reason).toContain('staged generated build output');
-    expect(outcome0.reason).toContain('dist/bundle.js');
+    const [fix] = run.called(/^fix:/);
+    expect(fix.prompt).toContain('- build/');
   });
 
-  it('does not refuse a fix when the file is only a prefix match, not contained', async () => {
-    // A path that starts with a generated path name but is not beneath it must not be matched - 'dist-backup' is not
-    // beneath 'dist'. Refusing such a fix would prevent staging legitimate changes to sibling directories.
-    const run = await runFix({
-      exclusions: [{ path: 'dist', reason: 'build output', generated: true }],
-      fix: () => ({
-        status: 'applied',
-        sha: 'deadbeef00000000000000000000000000000002',
-        branch: 'rrfix/wf_test/0',
-        changedFiles: ['dist-backup/file.js'],
-        reason: 'fixed',
-      }),
-    });
+  it('omits the block entirely when nothing was detected, rather than naming an empty list', async () => {
+    // A heading with no paths under it reads as a rule the fixer cannot check itself against, and it is one more thing
+    // between the fixer and the numbered procedure it is meant to be following.
+    const run = await runFix({ exclusions: [{ path: 'docs', reason: 'documentation', generated: false }] });
 
-    const outcome = run.result.fix.outcomes[0];
-    expect(outcome.status).toBe('applied');
-  });
-
-  it('handles generated paths with trailing slashes', async () => {
-    // A generated path may arrive with a trailing slash from the partitioner. The containment check must normalize it
-    // so a file beneath that path is still recognized.
-    const run = await runFix({
-      issues: [
-        { description: 'Issue 0', severity: 'high', category: 'bug', file: 'src/a.ts', lines: '10', reason: 'bug' },
-        { description: 'Issue 1', severity: 'high', category: 'bug', file: 'src/b.ts', lines: '20', reason: 'bug' },
-      ],
-      exclusions: [{ path: 'build/', reason: 'build output', generated: true }],
-      fix: (issue, { idx }) => ({
-        status: 'applied',
-        sha: `deadbeef0000000000000000000000000000003${idx}`,
-        branch: `rrfix/wf_test/${idx}`,
-        changedFiles: idx === 0 ? ['build/output.js'] : ['src/b.ts'],
-        reason: 'fixed',
-      }),
-    });
-
-    const outcome0 = run.result.fix.outcomes[0];
-    expect(outcome0.status).toBe('conflict-skipped');
-    expect(outcome0.reason).toContain('staged generated build output');
+    const [fix] = run.called(/^fix:/);
+    expect(fix.prompt).not.toContain('NEVER stage these');
   });
 });

@@ -1,7 +1,7 @@
 /**
  * The read-only boundary of the un-isolated phases.
  *
- * `isolation: 'worktree'` is set on exactly two kinds of agent — the fixers/revisers and the reconcilers. Every other
+ * `isolation: 'worktree'` is set on exactly one kind of agent — the fixers and revisers. Every other
  * agent runs in the user's live checkout while holding the same tools it would in a sandbox, and the script has no way
  * to take those tools away: the only thing standing between a review and a dirty working tree is the sentence its
  * prompt happens to carry. Stating that per prompt is how Validate — the highest fan-out un-isolated phase — came to be

@@ -2,8 +2,8 @@
  * Scenario fixtures for `repo-review.js`.
  *
  * Reaching the Fix phase means satisfying five earlier phases of agents (survey, CLAUDE.md scan, partition, six
- * reviewers, dedupe, validators), none of which a test about cherry-pick disjointness cares about. `fixScenario`
- * supplies a working default for all of them and lets a test override only the part under examination.
+ * reviewers, dedupe, validators), none of which a test about a fix branch cares about. `fixScenario` supplies a working
+ * default for all of them and lets a test override only the part under examination.
  *
  * Everything is keyed off the agent labels, which encode the finding index, revision attempt and vote — so a scenario
  * can answer per-finding without the test having to know the order agents happen to run in.
@@ -69,7 +69,6 @@ const INTERNALS = [
   'DEDUPE_UNCLAIMED_SLUG',
   'fileInUnit',
   'globalizeGroups',
-  'groupByFileCollision',
   'issueSite',
   'mergeIssueGroups',
   'namesOneFile',
@@ -98,7 +97,6 @@ const INTERNALS = [
   'objectionText',
   'partitionPrompt',
   'pinToReviewHead',
-  'reconcilePrompt',
   'reviewerPrompt',
   'REVIEW_RULES',
   'ROUND_EMPHASIS',
@@ -114,7 +112,6 @@ const INTERNALS = [
   'FIX_RESULT_SCHEMA',
   'ISSUES_SCHEMA',
   'PARTITION_SCHEMA',
-  'RECONCILE_RESULT_SCHEMA',
   'REVIEWERS',
   'REVIEW_RESULT_SCHEMA',
   'SEVERITY_ORDER',
@@ -165,12 +162,6 @@ export function parseLabel(rawLabel = '') {
     return { kind: 'review', unit, key, category: unit === 'arch' ? 'architecture' : key };
   }
 
-  // A reconcile label names the findings being merged, but only the first three: the script abbreviates the rest to
-  // `+N more`, so the label cannot be used to recover the group. The `reconcile` case below reads it from the prompt.
-  if (label.startsWith('reconcile:')) {
-    return { kind: 'reconcile' };
-  }
-
   if (label.startsWith('dedupe')) {
     return { kind: 'dedupe' };
   }
@@ -190,11 +181,6 @@ export function parseLabel(rawLabel = '') {
 // script is really working on, merged severity and absorbed `otherSites` included. The closing brace anchors the match
 // because `JSON.stringify(…, null, 2)` indents everything nested, leaving the top-level `}` the only one at column 0.
 const ISSUE_BLOCK = /^Issue:\n(\{[\s\S]*?^\})$/m;
-
-// The branch a reconciler is told to cut, as `pinToReviewHead` renders step 0b. Its suffix is the script's own group
-// index — the group's position in `groupByFileCollision`'s output — so it is the only place the fixture can learn the
-// number the script is using for this group. `<RUN>` is literal in the prompt: the run id is the agent's to substitute.
-const MERGE_BRANCH = /git switch -c rrmerge\/<RUN>\/(\d+) /;
 
 // A plausible reviewed HEAD, i.e. what the survey reports and every pin instruction has to carry.
 export const HEAD = 'cd976db1f0a94c2f9b7e5d3a8c1e6f40b2d75a93';
@@ -236,7 +222,6 @@ const DEFAULT_SURVEY = {
  *   review(call, { unit, key, category })     → ISSUES_SCHEMA shape
  *   fix(issue, { idx, attempt, call })        → FIX_RESULT_SCHEMA shape, or null for an agent that never returned
  *   reviewFix(issue, { idx, attempt, vote })  → REVIEW_RESULT_SCHEMA shape
- *   reconcile({ indices, fixes, groupIdx })   → RECONCILE_RESULT_SCHEMA shape
  *   validate(issue, { idx, vote })            → VERDICT_SCHEMA shape
  *
  * `review` is what a `--loop` test needs to model a review that keeps finding *new* things: the default re-reports the
@@ -261,7 +246,6 @@ export function fixScenario({
   dedupe,
   fix,
   reviewFix,
-  reconcile,
   validate,
   // How the script narrows the roster the partition agent returned into the partition the reviewers are actually given.
   // Supplied by `runFix`, which knows the run's `args` and borrows the script's own `narrowToScope` for it. The
@@ -295,8 +279,7 @@ export function fixScenario({
     }
   }
 
-  // Every fix result handed out, by finding index — so the reconcile default can compute its group's file union the way
-  // the real reconciler would, and so tests can assert against what the fixers actually claimed.
+  // Every fix result handed out, by finding index, so tests can assert against what the fixers actually claimed.
   const handedOut = new Map();
   const unmatched = [];
 
@@ -409,16 +392,6 @@ export function fixScenario({
     reason: 'fixed',
   });
 
-  const defaultReconcile = ({ indices, fixes, groupIdx }) => ({
-    status: 'resolved',
-    sha: commitSha(900 + groupIdx),
-    branch: `rrmerge/wf_test/${groupIdx}`,
-    reason: `merged ${indices.length} fixes`,
-
-    // Staying inside the group's union is exactly what the script checks, so the cooperative default does.
-    changedFiles: [...new Set(fixes.flatMap((result) => result?.changedFiles || []))],
-  });
-
   const agent = (call) => {
     const label = parseLabel(call.label);
 
@@ -483,56 +456,6 @@ export function fixScenario({
         const subject = subjectOf(call);
         if (!subject) return null;
         return (reviewFix ?? (() => ({ approved: true, objection: '' })))(subject, label);
-      }
-
-      case 'reconcile': {
-        // Which findings are being merged comes from the prompt, not from the label: the label is abbreviated after
-        // three (`reconcile:bug#0+bug#1+bug#2+1 more`), and a group recovered from it would be missing members — the
-        // union of a subset of the fixes is smaller than the one the script bounds the merge against, so the fixture
-        // would model a commit claiming fewer files than it touched, which the real reconciler could not produce. The
-        // prompt lists every fix in the group the way `reconcilePrompt` renders it, which is how the real reconciler
-        // learns its group too, so match those lines against the results actually handed out.
-        const inGroup = (result) =>
-          Boolean(result?.sha) && call.prompt.includes(`\n- ${result.sha} (${result.branch}) `);
-        const indices = [...handedOut.keys()]
-          .filter((idx) => inGroup(handedOut.get(idx)))
-          .sort((left, right) => left - right);
-
-        // Only colliding fixes are reconciled, so a group always has at least two members. Recovering fewer means
-        // `reconcilePrompt` no longer renders its fix list the way the match above expects — say so, rather than
-        // answering for a group this cannot see and silently modelling an impossible merge.
-        if (indices.length < 2) {
-          throw new Error(
-            `The reconcile fixture recovered ${indices.length} of its group's fixes from the prompt, but a group ` +
-              "always holds at least two. `reconcilePrompt`'s fix list ('- <sha> (<branch>) — files: …') must have " +
-              'changed; update fixScenario to match it.',
-          );
-        }
-
-        // And the group's *number* comes from the prompt too, for the same reason. Counting the reconcile agents as
-        // they arrive numbers them 0, 1, 2…, but the script's index is the group's position in
-        // `groupByFileCollision`'s output, which also holds singleton groups — and a singleton lands the fixer's own
-        // commit without ever launching an agent. So a singleton ahead of a colliding group offsets the count from the
-        // index the script actually put in the prompt (`rrmerge/<RUN>/<gi>`), and the default would then report a
-        // branch no real reconciler could have created, having been told to cut a differently-numbered one.
-        const [, minted] = MERGE_BRANCH.exec(call.prompt) || [];
-
-        if (minted === undefined) {
-          throw new Error(
-            "The reconcile fixture could not read its group's number out of the prompt, which `pinToReviewHead` " +
-              "renders as 'git switch -c rrmerge/<RUN>/<n> <sha>'. That instruction must have changed; update " +
-              'fixScenario to match it.',
-          );
-        }
-
-        const groupIdx = Number(minted);
-
-        return (reconcile ?? defaultReconcile)({
-          indices,
-          fixes: indices.map((idx) => handedOut.get(idx)),
-          groupIdx,
-          call,
-        });
       }
 
       default:
