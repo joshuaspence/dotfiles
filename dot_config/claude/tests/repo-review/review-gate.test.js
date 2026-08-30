@@ -10,7 +10,16 @@
 import { describe, expect, it } from 'vitest';
 
 import { runWorkflow } from '../harness.js';
-import { commitSha, fixScenario, internals, issue, outcomeAt, runFix, SCRIPT } from './scenario.js';
+import {
+  commitSha,
+  fixScenario,
+  internals,
+  issue,
+  outcomeAt,
+  runFix,
+  SCRIPT,
+  withFingerprints,
+} from './scenario.js';
 
 // A read-only review in which the reviewers `dropReview` names never return; every other phase keeps the defaults.
 const reviewRun = ({ dropReview = () => false, args = {}, ...config } = {}) => {
@@ -43,7 +52,7 @@ describe('a review round in which every reviewer fails', () => {
     const held = [issue({ description: 'held from an earlier round' })];
     const run = await reviewRun({ args: { round: 2, knownFindings: held }, dropReview: () => true });
 
-    expect(run.result.findings).toEqual(held);
+    expect(run.result.findings).toEqual(withFingerprints(held));
     expect(run.result.newFindings).toBe(0);
     expect(run.result.gaps.join(' ')).toContain('All 6 reviewer(s) in round 2 failed to return');
     expect(run.logged('Round 2 produced no findings')).toHaveLength(0);

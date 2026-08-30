@@ -17,6 +17,7 @@ allowed-tools:
   - Bash(git worktree list:*)
   - Bash(git worktree prune:*)
   - Bash(git worktree remove:*)
+  - Read
   - Workflow
   - Write
 ---
@@ -77,7 +78,15 @@ collect each one as you scan the tokens instead of expecting a single run at eit
   (`--rounds 0`, `--rounds 2.5`, `--rounds auto`) and stop with an error rather than guessing. If omitted, run **one**
   round. Unlike every other numeric flag, this one is not passed to the script and has no key in `args`: the script runs
   exactly one round per invocation, and `--rounds` is *your* loop bound — see
-  [Run the rounds](#run-the-rounds) for the loop it governs. It is a third, orthogonal axis: `--effort` scales how hard
+  [Run the rounds](#run-the-rounds) for the loop it governs.
+
+  It counts the rounds run **in this invocation**, not the round number the review has reached. Those are different
+  numbers now that [the ledger](#the-ledger) carries the count across invocations: running `/repo-review --rounds 2`
+  three times runs rounds 1–2, then 3–4, then 5–6, stopping on the second round of each. So the cap bounds what the user
+  is spending right now, which is the thing they were asking about — a cap on the absolute number would make the fourth
+  invocation of `--rounds 2` do nothing at all and report that it had hit its limit.
+
+  It is a third, orthogonal axis: `--effort` scales how hard
   each agent thinks, `--partitions`/`--validators` scale how many agents run and how often findings are challenged, and
   `--rounds` scales how many times the whole review repeats.
 
@@ -110,6 +119,118 @@ collect each one as you scan the tokens instead of expecting a single run at eit
   through or absent — so take care that consuming `--output` and its filename does not also consume a `path`. Its
   filename is the value of the flag before it and is therefore never one of the `paths`, however path-like it looks.
 
+## The ledger
+
+The script reviews one round per invocation and remembers nothing between them. What makes a second invocation cheaper
+than a first is a file this command owns: **`.claude/repo-review.json`, at the root of the repository under review** (not
+in your config directory). Read it before you build `args`; write it after every round that returns. A round that got
+reported and then went unrecorded is a round the next invocation pays for in full and reports as new.
+
+Every finding carries a `fingerprint`: sixteen hex characters the script derives from the finding's category, its file
+and its description with every digit stripped. That is the **only** field you may key a finding on. It is stable across
+exactly the things that change while the defect does not — the line it was cited at drifting, a second validator judging
+its severity differently, a duplicate being absorbed into it — and nothing else in a finding is: positions change every
+round, `lines` moves with the file, `severity` and `otherSites` are rewritten by a merge, and a description can be
+re-worded by the reviewer that re-reports it.
+
+### The file
+
+```json
+{
+  "version": 1,
+  "updatedAt": "2026-08-30T05:41:00Z",
+  "reviewedCommit": "cd976db1f0a94c2f9b7e5d3a8c1e6f40b2d75a93",
+  "round": 3,
+  "scope": ["src"],
+  "exclusions": [{ "path": "vendor", "reason": "third-party code" }],
+  "findings": [
+    {
+      "fingerprint": "5ad0690d2af6509d",
+      "description": "unchecked frame length",
+      "severity": "high",
+      "category": "bug",
+      "file": "core/wire.py",
+      "lines": "132",
+      "otherSites": [],
+      "reason": "a length prefix is read but never bounded",
+      "firstSeen": { "round": 2, "commit": "a1b2c3d4…" }
+    }
+  ]
+}
+```
+
+- `findings` is the last round's `findings` array **verbatim**, entry for entry, with exactly one key added per entry:
+  `firstSeen`, holding the `round` and `reviewedCommit` of the round that first reported that fingerprint. Add nothing
+  else, and change nothing that was already there: what you store is what the next round is handed back as
+  `knownFindings`, and a finding you re-worded is one dedupe can no longer recognise as the same finding.
+
+  `firstSeen` is inert to the script and comes back by itself. A held finding is passed through as the object it arrived
+  as, so the key you wrote is on it again in the next round's `findings` — read it from there rather than re-joining by
+  fingerprint. Only a finding that is new needs one stamped. The script reads just `category`, `file`, `lines`,
+  `description`, `severity` and `otherSites` off a held finding and renders those into the prompts, so a wrapper-owned key
+  never reaches an agent; it is also why this is the only key to add, since an unknown one is carried rather than
+  validated and a mistake here would be silent.
+- `round` is the last round's `round` — the **absolute** count across every invocation, which the next one continues
+  from. It is not the number of rounds run today; see `--rounds`.
+- `reviewedCommit` is the last round's, so the next report can say how far the checkout has moved since the review.
+- `scope` is the `paths` of the invocation that last wrote the file, or `[]` for a whole-repository run.
+- `exclusions` is the last round's `exclusions`, **overwritten** rather than accumulated: it describes the partition of
+  the scope that was last reviewed, and an older run's exclusions are not true of a different scope.
+- `version` is the format version of this file, not of the review: bump it only when the shape above changes in a way an
+  older reader would mishandle. It is `1`.
+
+### Reading it
+
+1. `Read` the file. **It not existing is the ordinary case**, not an error: it means a cold start. Say "no previous review
+   found" in one line and continue with round 1.
+2. If it exists but cannot be parsed as JSON, or `findings` is not an array, report that plainly — naming the file — and
+   continue as a cold start. Checked before the version, because an unparseable file has no version to read. You will
+   overwrite it at the end of the round, which loses whatever was in it, so the user has to be told before that happens
+   rather than after.
+3. If `version` is a number **greater than 1**, stop. Do not review and do not overwrite — a newer version of this
+   command wrote it, and its findings are not yours to reinterpret or to destroy. Say which version you found, and that
+   deleting the file starts a fresh review. This is the one read failure that is not recovered from: every other one
+   costs a cold start, and this one would cost somebody else's accumulated review.
+4. If `scope` disagrees with this invocation's paths, say so in one line and continue: the script does not scope
+   `knownFindings`, so findings held from a wider scope are still passed and still suppressed as already-known, they are
+   simply not re-examined this time. A finding out of the current scope is neither re-reported nor dropped.
+
+There is deliberately no `--fresh` flag. Deleting `.claude/repo-review.json` is the documented way to start over, and it
+is a thing the user can do without this command's help.
+
+### Writing it
+
+Write the file with `Write` after **each** round, as part of reporting that round and before deciding whether to run
+another — same reasoning as reporting the round itself: a round that returned must not be able to be lost by whatever
+happens next. Set `round`, `reviewedCommit`, `exclusions` and `findings` from what the round just returned, `scope` from
+this invocation's paths, and `updatedAt` to the current time.
+
+A finding that was in the ledger and is **not** in the round's `findings` was absorbed by dedupe as a duplicate of
+another finding. Drop it, and let its `firstSeen` go with it — the survivor has its own, and it is the entry the review
+now holds.
+
+### What this round actually contributed
+
+Because the ledger gives you the exact set you handed over, you can compute the round's contribution rather than trust a
+count: **the findings whose `fingerprint` is not among the fingerprints you passed as `knownFindings`.** Those are the new
+ones, and they are what the report should lead with.
+
+That set's size must equal `newFindings`. It is an invariant, not a coincidence — a merge never changes a surviving
+finding's fingerprint, because neither `severity` nor `otherSites` participates in it — so if the two disagree, say so:
+either two distinct new findings collided on one fingerprint (the second is being suppressed permanently, which no other
+signal reveals) or the round is not returning what it claims. Report the discrepancy and use the set difference, which is
+the one derived from the findings themselves.
+
+The corollary is the part that has to be said out loud in every report after the first: **the held findings were not
+re-examined this round.** They were not re-read, not re-validated and, under `--fix`, not re-offered — that is precisely
+what makes a later round cost about what round 1 cost. So some of them may already be fixed. Say that, and say how many
+findings are held versus new, rather than presenting the whole accumulated list as the current state of the code.
+
+Finally, report the held count as a cost signal. Nothing prunes the ledger, so the list handed to the reviewers and to
+the cross-unit dedupe pass grows with the review's whole history; past roughly 150 findings that pass starts chunking
+(see [Notes](#notes)), which costs `C(m,2)` agent calls rather than `m`. That is measured and reported here, never
+enforced: the remedy is the user's, and it is to fix some findings or delete the file.
+
 ## Run the workflow
 
 Call the `Workflow` tool with:
@@ -129,9 +250,16 @@ Call the `Workflow` tool with:
   Build it from **only the flags the user actually supplied**: add a key for each flag the user gave, and omit the rest.
   The script fills in the documented defaults for anything omitted (whole repository, `--effort high`,
   `--partitions auto`, `--validators 1`, round 1 holding no findings), so do not synthesise default values here, and
-  never include `--output` or `--rounds`. Worked examples — note that every `path` survives every flag combination, that
-  the path-less rows are path-less only because the user gave no path, and that the two wrapper-handled flags leave no
-  trace in `args` at all:
+  never include `--output` or `--rounds`.
+
+  Two keys do not come from a flag at all. `round` and `knownFindings` come from
+  [the ledger](#the-ledger): on a cold start omit both — rather than passing `round: 1` and an empty list, so that the
+  common case sends the same `args` it always did — and otherwise pass `round` set to the ledger's `round` plus one and
+  `knownFindings` set to its `findings` **verbatim**.
+
+  Worked examples — every one of them a cold start, since the two ledger keys are the same in every row and would tell
+  you nothing. Note that every `path` survives every flag combination, that the path-less rows are path-less only because
+  the user gave no path, and that the two wrapper-handled flags leave no trace in `args` at all:
 
   | Invocation                                            | `args`                                                 |
   |-------------------------------------------------------|--------------------------------------------------------|
@@ -173,7 +301,8 @@ The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps 
   given follows the round it ran, not the one you asked for.
 - `findings` — validated issues, and **everything the round was handed as well as what it found**: it is the whole
   accumulated set, already de-duplicated against itself, so it is exactly what the next round's `knownFindings` should
-  be. Each has `description`, `severity` (`critical`/`high`/`medium`/`low`), `category`, `file`, `lines` (may be empty),
+  be — and what [the ledger](#the-ledger) stores. Each has `fingerprint` (see the ledger; the only field to key a finding
+  on), `description`, `severity` (`critical`/`high`/`medium`/`low`), `category`, `file`, `lines` (may be empty),
   `otherSites` (other affected `file:line` or modules, may be empty), and `reason`.
 - `newFindings` — how many of those this round contributed: found by its own reviewers, kept by dedupe as a defect the
   review did not already hold, and confirmed by its validators. This is the number that decides whether to run another
@@ -206,7 +335,11 @@ The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps 
     copy of the work it rejected. These must survive teardown. The script has no git access, so this is the agents'
     self-report: treat it as a floor rather than a census, and keep any *other* branch you find sitting ahead of `base`.
   - `outcomes` — one entry per finding:
-    `{ description, category, severity, file, lines, status, sha, branch, changedFiles, reason }`, where `status` is
+    `{ fingerprint, description, category, severity, file, lines, status, sha, branch, changedFiles, reason }`. The
+    `fingerprint` is the same one on the finding and the same one the fixer was told to write into its commit as a
+    `Repo-Review-Finding:` trailer, so it joins a branch to the finding it answers — and it is the only join that
+    survives a killed run, since `git log --all --grep 'Repo-Review-Finding: <fp>'` finds the commit with no state file at
+    all. `status` is
     `applied` (fixed and committed), `declined` (not a safe, localized fix), `verify-failed` (the fix broke the
     build/tests in its sandbox), or `review-rejected` (reviewers rejected the fix and revisions were exhausted). Only
     `applied` is fixed; every other status is an **unfixed** finding — though a `review-rejected` one still leaves a
@@ -219,32 +352,47 @@ Review and Validate are `parallel()` barriers, so a script-internal loop killed 
 it. One measured four-round run consumed an entire session limit in 41 minutes and returned **nothing**. A round that
 returns is a round that got reported.
 
-With `--rounds` omitted — the default — there is one round and nothing here applies: report the result and stop. When
-more than one round was asked for, loop:
+A round always runs — the loop below runs at least once, and with `--rounds` omitted it runs exactly once. Only step 3's
+cap depends on the flag; everything else, the ledger write included, applies to a single-round invocation too.
 
-1. Call `Workflow` with the `args` you built. That is round 1; omit `round` and `knownFindings` rather than passing
-   `round: 1` and an empty list, so the common case sends the same `args` it always did.
-2. **Report the round before deciding anything** — the whole [Produce the output](#produce-the-output) section, including
-   the branch table when `--fix` was given, and including its teardown. Do not accumulate rounds and report once at the
-   end: that reintroduces exactly the failure this design removes, since a run interrupted between rounds then has
-   nothing to show for the rounds that did finish. Say which round it was and how many were asked for.
+1. Call `Workflow` with the `args` you built, ledger keys included.
+2. **Report the round before deciding anything, and write the ledger** — the whole
+   [Produce the output](#produce-the-output) section, including the branch table when `--fix` was given, including its
+   teardown, and including [writing the ledger](#writing-it). Do not accumulate rounds and report once at the end: that
+   reintroduces exactly the failure this design removes, since a run interrupted between rounds then has nothing to show
+   for the rounds that did finish — and now nothing persisted for the *next invocation* to build on either, which makes
+   an interrupted multi-round run cost the same as never having run it. Say which round it was, and how many rounds this
+   invocation is running.
 3. Stop if any of these holds, and say which one:
    - `newFindings` is `0` — the review has gone dry. This is the ordinary, good ending.
-   - `round` has reached `--rounds`. Report that the cap was reached **while the review was still finding things**, so
-     the user knows the review is incomplete and can re-run with a higher `--rounds`. Treat it as a coverage gap.
+   - This invocation has now run `--rounds` rounds. Count the rounds *you* have run, not the `round` the script echoed:
+     that one continues from the ledger, so a fifth-invocation round 9 has run one round, not nine. Report that the cap
+     was reached **while the review was still finding things**, so the user knows the review is incomplete and can re-run
+     — plainly, re-running is now enough, since the ledger means a fresh invocation resumes rather than starts over.
+     Treat it as a coverage gap.
    - A `gaps` entry says the reviewers failed to return. A round nobody reviewed also reports `newFindings: 0`, and that
      is not convergence — report it as a failed round and do not describe the review as dry.
-4. Otherwise call `Workflow` again with the same `args` plus two keys: `round` set to the previous `round` **plus one**,
-   and `knownFindings` set to the previous round's `findings` **verbatim**. Pass that array through untouched — do not
-   re-sort it, prune it, re-word a description, or drop the ones you judged low value. The script merges this round's
-   raw findings against it, which is what turns a re-report into an absorbed duplicate rather than a second entry, and a
-   finding you edited is one it can no longer recognise as the same finding. It also skips re-validating and re-fixing
-   everything on that list, so a finding you drop from it comes back as new and is paid for twice.
+   - The round aborted: a `gaps` entry says the review was aborted, and `newFindings` is `0`. It hands back everything it
+     was holding, so the ledger is safe to write and the accumulated review is intact, but nothing was reviewed. Do not
+     spend another round on it — the survey or the partition failed, and a retry is the user's call.
+4. Otherwise call `Workflow` again with the same `args` plus the two ledger keys updated: `round` set to the previous
+   `round` **plus one**, and `knownFindings` set to the previous round's `findings` **verbatim**. Pass that array through
+   untouched — do not re-sort it, prune it, re-word a description, or drop the ones you judged low value. The script
+   merges this round's raw findings against it, which is what turns a re-report into an absorbed duplicate rather than a
+   second entry, and a finding you edited is one it can no longer recognise as the same finding. It also skips
+   re-validating and re-fixing everything on that list, so a finding you drop from it comes back as new and is paid for
+   twice.
 
 Each round is a separate `Workflow` call and so a separate `/workflows` tree; the survey and partition run again in each
 one, which is the price of a round being self-contained. Later rounds are handed what is already held and are pushed to
 look elsewhere, so they cost about the same as round 1 and find less — that is the point at which to stop, not a reason
 to raise the cap.
+
+The `--rounds` loop and the ledger are two mechanisms for one thing, and the ledger is the stronger of the two: it makes
+a round durable across invocations, where the loop only makes it durable within one. So `--rounds 4` and running
+`/repo-review` four times reach the same place, and the second is strictly safer — each invocation is reported and
+persisted before the next begins, and nothing is lost if the session ends between them. Prefer suggesting a re-run over
+suggesting a higher `--rounds`.
 
 ## Produce the output
 
@@ -252,11 +400,18 @@ From the returned result, produce a summary to the terminal, ordered by severity
 putting security and correctness findings ahead of consistency, architecture, code-quality, test, and `CLAUDE.md`
 findings):
 
+- Open with the round's contribution, in one line: how many findings are **new this round** (the set difference described
+  under [What this round actually contributed](#what-this-round-actually-contributed)) and how many were already held.
+  Lead with the new ones in the list below, since they are the only part of it this round looked at.
 - If findings were returned, list each with its severity, a brief description, the file and line (or the set of files
   and modules involved, for repository-wide findings), and why it was flagged. Link each to its source with the
-  permalink format below, and note any `otherSites`.
+  permalink format below, and note any `otherSites`. Mark each as new this round or held, and for a held one give the
+  round it was first seen in — a finding outstanding since round 1 of four reads very differently from one found minutes
+  ago. Then say once, plainly, that the held findings were **not re-examined this round** and some may already be fixed.
 - If none were returned, state: "No issues found. Checked for bugs, security, consistency, code quality, architecture,
-  test coverage and quality, and `CLAUDE.md` compliance."
+  test coverage and quality, and `CLAUDE.md` compliance." Only say that when the *accumulated* set is empty. A later
+  round returning nothing at all means dedupe merged away or validation rejected everything the review held, which is a
+  surprising result worth naming as such rather than reporting as a clean repository.
 - In both cases, state which parts of the repository were excluded (`exclusions`), and report every entry in `gaps` —
   no gap may read as "clean". Label each one by its kind (above), which the entry's own wording tells you: a **coverage**
   gap is **not reviewed / not validated**; a **dedupe** gap was reviewed and validated but may be **reported twice**; a
@@ -426,6 +581,11 @@ Without `--fix`, this command only reports: do not create GitHub issues, do not 
 do not commit anything. With `--fix`, the *only* actions it takes are the read-only verification above and the teardown
 of the empty `rrfix/*` sandboxes it created — it still does not edit, commit, merge, push, comment, or open PRs.
 
+The two files this command writes are not exceptions to that. `--output` writes where the user pointed it, and
+[the ledger](#the-ledger) is this command's own state, at a fixed path, holding only what it just reported. Neither is a
+source file and neither is committed — if the user does not want the ledger tracked, `.claude/` belongs in their
+`.gitignore`, which is their decision and not one to make for them.
+
 ## Notes
 
 - The script enforces what this command depends on, so you do not manage it here: it sets each agent's `model` tier
@@ -558,10 +718,14 @@ of the empty `rrfix/*` sandboxes it created — it still does not edit, commit, 
   and validators can `Read`, `Grep`, `Glob`, and `git ls-files`, and the `--fix` agents can `Edit` and commit in their
   own worktrees, regardless of this list; you neither need to nor can provision their tools from here. This list is
   therefore minimal, and every entry in it is read-only *or* deletes something this run created: `Workflow` to run the
-  review, `Write` for `--output`, `git remote get-url` and `git rev-parse` to build permalinks and to check the fix
+  review, `Read` for [the ledger](#the-ledger), `Write` for the ledger and for `--output`, `git remote get-url` and
+  `git rev-parse` to build permalinks and to check the fix
   branches against git, and `git worktree list`/`remove`/`prune` plus `git branch --delete --force` to tear down the
-  sandboxes. There is deliberately **no** way to write to the repository from here — no `git switch`, no `git checkout`,
-  no `git cherry-pick`, no `git commit`. The report-only design is enforced by the absence of those entries, not by the
+  sandboxes. There is deliberately **no** way to change the code under review or the repository's git state from here —
+  no `git switch`, no `git checkout`, no `git cherry-pick`, no `git commit`. `Write` is the one entry that puts bytes on
+  disk, and its two uses are named above: a report the user asked for by name, and this command's own state file.
+  Neither touches a source file, and neither is committed. The report-only design is enforced by the absence of those
+  entries, not by the
   prose asking for it, because prose and a permission pattern are two enforcement layers and the pattern wins silently
   when they disagree.
 - Seven entries were removed when landing was removed (`git cherry-pick:*`, `git checkout --:*`, `git status:*`,

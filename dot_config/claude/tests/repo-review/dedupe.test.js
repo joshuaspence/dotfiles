@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { commitSha, internals, issue, runFix } from './scenario.js';
+import { commitSha, internals, issue, runFix, withFingerprints } from './scenario.js';
 
 const findings = [
   issue({ description: 'frame length unchecked', file: 'wire.py', lines: '132-139', severity: 'high' }),
@@ -468,19 +468,24 @@ describe('dedupe malformed responses', () => {
   // prompt and to the JSON the run returns, but not to `toEqual`. So compare what a reader of the result would see.
   const reported = (run) => JSON.parse(JSON.stringify(run.result.findings));
 
+  // The same two findings the fixture handed in, plus the fingerprint the script names each of them by. A malformed
+  // dedupe response must leave both findings untouched, and "untouched" now includes keeping the identity they came in
+  // with — a merge is the one thing allowed to change what a finding holds, and none of these responses is one.
+  const intact = withFingerprints(pair);
+
   it('treats groups as a non-array (string) as "nothing collided"', async () => {
     // Schema violation: groups must be an array. The merge logic treats non-arrays as invalid, preserving all findings.
     const run = await runFix({ issues: pair, dedupe: () => ({ groups: 'not an array' }) });
 
     expect(run.result.findings).toHaveLength(pair.length);
-    expect(reported(run)).toEqual(pair);
+    expect(reported(run)).toEqual(intact);
   });
 
   it('treats groups as a non-array (object) as "nothing collided"', async () => {
     const run = await runFix({ issues: pair, dedupe: () => ({ groups: { nested: 'object' } }) });
 
     expect(run.result.findings).toHaveLength(pair.length);
-    expect(reported(run)).toEqual(pair);
+    expect(reported(run)).toEqual(intact);
   });
 
   it('treats groups containing non-arrays at the top level as "nothing collided"', async () => {
@@ -488,7 +493,7 @@ describe('dedupe malformed responses', () => {
     const run = await runFix({ issues: pair, dedupe: () => ({ groups: [1, 2, 3] }) });
 
     expect(run.result.findings).toHaveLength(pair.length);
-    expect(reported(run)).toEqual(pair);
+    expect(reported(run)).toEqual(intact);
   });
 
   it('processes valid groups and ignores invalid mixed-in elements', async () => {
@@ -514,7 +519,7 @@ describe('dedupe malformed responses', () => {
     });
 
     expect(run.result.findings).toHaveLength(pair.length);
-    expect(reported(run)).toEqual(pair);
+    expect(reported(run)).toEqual(intact);
   });
 
   it('never invents findings when the agent returns garbage', async () => {

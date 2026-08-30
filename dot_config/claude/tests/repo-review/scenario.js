@@ -21,6 +21,11 @@ export const SCRIPT = workflowScript('repo-review');
 // test touches is covering nothing, so listing it would just make renaming a private helper fail every suite that
 // imports this fixture.
 const INTERNALS = [
+  // The content-addressed name a finding keeps across invocations — the ledger's key and a fix commit's trailer.
+  'fingerprint',
+  'fingerprintKey',
+  'withFingerprint',
+
   // Argument handling and the config knobs derived from it.
   'capEffort',
   'dedupeEfforts',
@@ -127,10 +132,21 @@ const INTERNALS = [
 // The script's declarations, evaluated against `args` — the config knobs are themselves derived from it.
 export const internals = (args = {}) => loadInternals(SCRIPT, { names: INTERNALS, args });
 
-// How a unit is named in a label and which files belong to it are the script's rules, and a fixture that re-derives
-// them is a mirror free to drift — so borrow the two functions themselves. Loaded once, at module scope, because the
-// fake agent answers synchronously.
-const { fileInUnit, withUnitSlugs } = await internals();
+// How a unit is named in a label, which files belong to it, and what a finding is called are the script's rules, and a
+// fixture that re-derives them is a mirror free to drift — so borrow the functions themselves. Loaded once, at module
+// scope, because the fake agent answers synchronously.
+const { fileInUnit, withFingerprint, withUnitSlugs } = await internals();
+
+/**
+ * The findings a scenario handed in, as the run reports them back.
+ *
+ * Every finding the script touches is stamped with a `fingerprint` on the way in (see `withFingerprint`), so a test
+ * comparing what came back against its own fixtures has to account for it or it is asserting that the script does not
+ * name its findings. Borrowed from the script rather than recomputed here for the usual reason, and for one specific to a
+ * hash: what these assertions are about is that a finding came back intact, not what it hashes to, so changing the hash
+ * must not require a new expected value in every suite. `fingerprint.test.js` is where the value itself is pinned.
+ */
+export const withFingerprints = (issues) => issues.map(withFingerprint);
 
 // --- Label parsing --------------------------------------------------------------------------------------------------
 // The script encodes which finding, revision attempt and vote an agent belongs to in its label, so a fake agent can

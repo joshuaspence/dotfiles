@@ -17,7 +17,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { issue, runFix } from './scenario.js';
+import { issue, runFix, withFingerprints } from './scenario.js';
 
 const held = [
   issue({ description: 'unchecked frame length', file: 'core/wire.py', lines: '132' }),
@@ -114,8 +114,37 @@ describe('what a round does not do again', () => {
     expect(run.called(/^dedupe/)).toHaveLength(0);
     expect(run.called(/^validate/)).toHaveLength(0);
     expect(run.result.newFindings).toBe(0);
-    expect(run.result.findings).toEqual(held);
+    expect(run.result.findings).toEqual(withFingerprints(held));
     expect(run.logged('Round 2 produced no findings — the review is dry.')).toHaveLength(1);
+  });
+});
+
+describe('a round that aborts', () => {
+  // Every abort hands back what it was given. The caller writes `findings` straight into its ledger and into the next
+  // round's `knownFindings`, so a round that aborted and reported nothing held would not merely lose its own work: it
+  // would delete every round before it, the whole accumulated review destroyed by one Haiku agent that failed to answer.
+  // Aborting means this round added nothing, which is `newFindings: 0` plus the gap — not that the review found nothing.
+  //
+  // Each case below is a separate `return` statement in the script rather than a shared exit, which is exactly why they
+  // are asserted one at a time. Two of the three used to return `findings: []`, and the survey one carried no `round` and
+  // no `newFindings` at all — leaving the wrapper's stop conditions reading `undefined` and its round counter `NaN`.
+  const expectHeld = (run) => {
+    expect(run.result.findings).toEqual(withFingerprints(held));
+    expect(run.result.newFindings).toBe(0);
+    expect(run.result.round).toBe(2);
+    expect(run.result.gaps.join(' ')).toMatch(/review aborted/);
+  };
+
+  it('keeps what it was handed when the survey never returns', async () => {
+    expectHeld(await round({}, { survey: null }));
+  });
+
+  it('keeps what it was handed when the partition returns no usable units', async () => {
+    expectHeld(await round({}, { units: [] }));
+  });
+
+  it('keeps what it was handed when the whole partition falls outside the requested scope', async () => {
+    expectHeld(await round({ paths: ['docs'] }));
   });
 });
 

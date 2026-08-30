@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { runWorkflow } from '../harness.js';
-import { fixScenario, internals, issue, runFix, SCRIPT } from './scenario.js';
+import { fixScenario, internals, issue, runFix, SCRIPT, withFingerprints } from './scenario.js';
 
 describe('args arriving as a JSON string', () => {
   it('is recovered, so the knobs inside it still take effect', async () => {
@@ -195,9 +195,14 @@ describe('knobs', () => {
     // `knownFindings` is the one input that made a full round trip through the wrapper: this round returns findings as
     // JSON and the next round is given them again. A `null` or a bare string in that list reaches `issueSite` while the
     // first reviewer prompt is being built, and it throws there — discarding a whole round before an agent runs.
+    //
+    // The survivor comes back fingerprinted, which is the second half of the same sanitising step: what the wrapper
+    // stored is re-derived rather than trusted, so an entry it hand-edited cannot come back unrecognisable to itself.
     const kept = { category: 'bug', file: 'a.ts', description: 'x' };
 
-    expect((await internals({ knownFindings: [null, undefined, 'a', 7, kept] })).knownFindings).toEqual([kept]);
+    expect((await internals({ knownFindings: [null, undefined, 'a', 7, kept] })).knownFindings).toEqual(
+      withFingerprints([kept]),
+    );
     expect((await internals({ knownFindings: 'not a list' })).knownFindings).toEqual([]);
     expect((await internals({})).knownFindings).toEqual([]);
   });

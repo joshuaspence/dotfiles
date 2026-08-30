@@ -19,6 +19,11 @@
  * back, which is what steers the new round past what the last one already found (`emphasisBlock`,
  * `knownFindingsBlock`). `newFindings` is the count that decides it — the round went dry when that reaches zero.
  *
+ * Every finding in `findings` carries a `fingerprint`, a content-addressed name for the defect (see `fingerprint`).
+ * Nothing in this script keys on it: it exists for the two things that outlive one invocation — the ledger the wrapper
+ * persists between them, and the trailer each `--fix` commit carries — and it is what lets the wrapper tell what a round
+ * contributed from what it handed over without diffing free prose.
+ *
  * `--fix` is strictly *additive*: each fix is an independent commit on its own branch and nothing is ever landed. Two
  * fixes may freely touch the same file, because no sequence of cherry-picks is ever attempted — if the user wants them
  * merged, they (or another agent) resolve the conflicts deliberately. That is what `keepBranches` is for: the branches
@@ -150,6 +155,92 @@ const narrowToScope = (unitPaths) => {
 };
 
 
+// --- Finding identity ------------------------------------------------------------------------------------------------
+// A finding's fingerprint: the stable name the two things that outlive a run are keyed by — the ledger the wrapper
+// persists between invocations, and the `Repo-Review-Finding:` trailer on a fix commit, which is what makes a `--fix`
+// run killed before it returned recoverable from `git log --all --grep` with no state file at all. Array indices remain
+// the *in-run* wire format (the dedupe agent returns indices and `mergeIssueGroups` does the copying), and nothing here
+// changes that: this is a persistence format, declared this high only because its first consumer is `knownFindings` two
+// sections down.
+//
+// It *names* a finding; it does not *match* one. Two reviewers describing the same defect in different words get
+// different fingerprints, and deciding that they are the same defect is the dedupe agent's job and always will be — a
+// hash cannot read code. What it buys is that a finding surviving the round trip through the wrapper's JSON comes back
+// recognisable, so the wrapper can tell what a round contributed from what it handed over (the fingerprints in
+// `findings` that are not in the `knownFindings` it sent, whose count must equal `newFindings`), and can carry
+// per-entry ledger metadata — when a finding was first seen, and at which commit — across a list whose order and length
+// change every round.
+//
+// Three fields, chosen as much for what they leave out as for what they include:
+//   `category`  — the reviewer's own key, stamped by the script rather than chosen by the agent.
+//   `file`      — the primary site, without `lines`. An edit above a defect moves it without changing it, and an
+//                 identity that moved with it would report the same defect as new in every later round.
+//   description — with every digit dropped, for that same reason: descriptions quote line numbers, counts and offsets.
+// `severity` is left out because a finding re-reported as `high` rather than `medium` is the same defect differently
+// judged, and `otherSites` because `mergeIssueGroups` *appends* to it when a duplicate is absorbed — including it would
+// change a survivor's identity at the moment it absorbed one, which is precisely when it must not.
+//
+// Digits are dropped rather than replaced by a placeholder, so "the retry loop runs 3 times" and "the retry loop runs 5
+// times" are one finding — the intended reading, since they are one defect described against two versions of the code.
+// The cost is that two genuinely distinct defects differing *only* in a number, in one file, under one category, are
+// treated as one. Everything that is not a letter collapses to a single space, so `parse_frame` and `parse frame` agree
+// and no punctuation choice is load-bearing; `\p{L}` rather than `a-z` so a description not written in English keeps its
+// letters instead of normalising to nothing, which would make every finding in one file and category identical.
+const fingerprintKey = (issue) =>
+  [
+    String(issue?.category ?? '')
+      .toLowerCase()
+      .trim(),
+
+    // Not lowercased: paths are case-sensitive on the filesystems this runs against, so `Core/Wire.py` and
+    // `core/wire.py` are two files and must not become one finding.
+    String(issue?.file ?? '')
+      .trim()
+      .replace(/^\.\//, ''),
+    String(issue?.description ?? '')
+      .toLowerCase()
+      .replace(/[^\p{L}]+/gu, ' ')
+      .trim(),
+
+    // Joined on NUL, not a space: a space is a character two of the three fields can contain, so a file named
+    // `a b` with the description `c` and a file named `a` with the description `b c` would concatenate to one key.
+    // NUL is the one byte a POSIX path cannot hold, and the description is normalised down to letters and spaces,
+    // so neither field can forge the separator.
+  ].join('\u0000');
+
+// FNV-1a and djb2, concatenated to 16 hex characters. Neither is cryptographic and neither needs to be — a repository
+// that could forge a collision would only suppress its own second finding, and would have to control both descriptions
+// to the letter. What the pair buys is width. A single 32-bit hash collides with even odds at ~77k findings and at
+// roughly one in ten thousand for a few hundred of them, and a collision here is not a wrong number in a report: two
+// distinct defects become one ledger entry and the second is suppressed for good. Two structurally different mixes
+// (multiply-xor and multiply-add) are uncorrelated enough in practice to put that out of reach, and the second
+// accumulator costs one more expression inside a loop that already runs.
+//
+// `Math.imul` rather than `*`, because JavaScript numbers are doubles: a 32-bit multiply overflows into the mantissa and
+// silently loses the low bits a hash's avalanche depends on. `>>> 0` renders each accumulator back as unsigned.
+const fingerprint = (issue) => {
+  const key = fingerprintKey(issue);
+  let fnv = 0x811c9dc5;
+  let djb = 5381;
+
+  for (let i = 0; i < key.length; i++) {
+    const code = key.charCodeAt(i);
+
+    fnv = Math.imul(fnv ^ code, 0x01000193);
+    djb = (Math.imul(djb, 33) + code) >>> 0;
+  }
+
+  return (fnv >>> 0).toString(16).padStart(8, '0') + djb.toString(16).padStart(8, '0');
+};
+
+// Stamped on every finding the run touches, so that the value a fixer is told to write into its commit trailer and the
+// value the wrapper persists are the same one by construction rather than by two call sites agreeing. Recomputed on the
+// findings the wrapper hands back rather than trusting the stored value: it is idempotent, and an entry whose ledger
+// copy was hand-edited — or that predates this format — would otherwise come back unrecognisable to itself and be
+// counted as newly found.
+const withFingerprint = (issue) => ({ ...issue, fingerprint: fingerprint(issue) });
+
+
 // --- Configuration knobs ------------------------------------------------------------------------------------------
 // Each knob tolerates missing or malformed input. `partitions` (review units) and `validators` (validators per finding)
 // accept the sentinel 'auto' or a positive integer. `effort` must be a known level or absent (defaults to 'high').
@@ -197,9 +288,12 @@ const round = positiveIntOr(input?.round, 1);
 // Sanitised rather than trusted, because it makes a full round trip through the wrapper's JSON and back: a non-object
 // entry would reach `issueSite`, `fileInUnit` and the dedupe digest, and the first of those throws. An entry with no
 // `category` is kept — `knownLine` renders it as `[undefined]`, which is ugly but is still a finding worth suppressing.
-const knownFindings = (Array.isArray(input?.knownFindings) ? input.knownFindings : []).filter(
-  (issue) => issue && typeof issue === 'object',
-);
+// Fingerprinted on the way in rather than on the way out, so that every finding in the run carries one from its first
+// line to its last: the value the wrapper stores is then the same one a fixer was told to write into its commit trailer,
+// and `findings` carries one on every exit including the aborts.
+const knownFindings = (Array.isArray(input?.knownFindings) ? input.knownFindings : [])
+  .filter((issue) => issue && typeof issue === 'object')
+  .map(withFingerprint);
 
 // `--fix` turns on the optional Fix phase: after validation, one worktree-isolated agent per finding tries to fix it
 // and commit on a branch of its own. Nothing is landed and no two fixes are required to be compatible, so the findings
@@ -1467,8 +1561,13 @@ const fixerPrompt = (issue, survey, reviewHead, branchSuffix, generatedPaths, re
     'repository has no runnable typecheck or test suite, skip this step and say so in `reason`.\n' +
     '4. On success, stage ONLY the files your fix edited — `git add -- <paths>`, never `git add -A`, so that build ' +
     'output, logs, generated fixtures or any other artifact the verification step left in the worktree stay out of ' +
-    'the commit — and `git commit` with a concise message. You are already on the branch you created in step 0; do ' +
-    'not create another one. Do NOT push. Return `{ status: "applied", sha, branch, changedFiles, reason }` — `sha` ' +
+    'the commit — and commit it with a concise subject line and this trailer as its own last paragraph:\n' +
+    `      git commit -m '<subject>' -m 'Repo-Review-Finding: ${issue?.fingerprint}'\n` +
+    '   Copy that identifier exactly, and put nothing else on the trailer line. It is the only durable link from this ' +
+    'commit back to the finding it fixes: the orchestrator has no git access and learns your branch name only from the ' +
+    'value you return, so a run killed before you report — or before it reports — leaves the trailer as the sole way to ' +
+    'tell which branch answers which finding (`git log --all --grep`). You are already on the branch you created in ' +
+    'step 0; do not create another one. Do NOT push. Return `{ status: "applied", sha, branch, changedFiles, reason }` — `sha` ' +
     'from `git rev-parse HEAD`, `branch` the name you actually created in step 0 (report it exactly, since it is what ' +
     'gets torn down afterwards), and `changedFiles` listing every repo-relative path you modified, which must match ' +
     'the commit exactly (check with `git show --name-only`). Accurate `changedFiles` is critical: the orchestrator ' +
@@ -1674,10 +1773,18 @@ const [survey, claudeMd] = await parallel([
     }),
 ]);
 
+// An abort still returns what the round was *handed*, not an empty list. This is the shape every exit below shares and
+// it is load-bearing rather than tidy: the caller writes `findings` straight into its ledger and into the next round's
+// `knownFindings`, so a round that aborts and reports nothing held would delete every round before it — the whole
+// accumulated review destroyed by one Haiku agent that failed to answer. Aborting means this round added nothing, which
+// is `newFindings: 0` plus the gap; it does not mean the review found nothing. (The one exception is the `args` abort at
+// the top of the file, which could not read `knownFindings` in the first place and says so.)
 if (!survey) {
   return {
     reviewedCommit: null,
-    findings: [],
+    round,
+    findings: knownFindings,
+    newFindings: 0,
     exclusions: [],
     gaps: ['Survey agent did not return — review aborted (no repository context to work from).'],
   };
@@ -1750,7 +1857,7 @@ if (!partition?.units?.length) {
   return {
     reviewedCommit: reviewHead,
     round,
-    findings: [],
+    findings: knownFindings,
     newFindings: 0,
     exclusions: partition?.exclusions ?? [],
     gaps: ['Partition agent did not return usable units — review aborted.'],
@@ -1782,7 +1889,7 @@ if (!units.length) {
   return {
     reviewedCommit: reviewHead,
     round,
-    findings: [],
+    findings: knownFindings,
     newFindings: 0,
     exclusions,
     gaps: [
@@ -1931,7 +2038,9 @@ const roundIssues = reviewResults.flatMap((result, i) => {
 
   reviewersReturned += 1;
 
-  return result.issues.map((issue) => ({ ...issue, category: spec.category }));
+  // Fingerprinted here, after the category is stamped and never before: `category` is one of the three fields the
+  // identity is built from, and the reviewer's own answer for it is overwritten by the roster's key on this very line.
+  return result.issues.map((issue) => withFingerprint({ ...issue, category: spec.category }));
 });
 
 log(
@@ -2606,6 +2715,10 @@ return {
     sandboxBranches,
     keepBranches,
     outcomes: outcomes.map((outcome) => ({
+      // The same identifier the fixer was told to put in its commit trailer, so the wrapper can match a branch it finds
+      // in git against the outcome that claims it — and can record in the ledger which findings this run has a branch
+      // for, keyed by something that survives the finding's position changing in the next round.
+      fingerprint: outcome.issue.fingerprint,
       description: outcome.issue.description,
       category: outcome.issue.category,
       severity: outcome.issue.severity,
