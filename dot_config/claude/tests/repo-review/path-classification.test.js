@@ -155,7 +155,7 @@ describe('namesOneFile', () => {
 describe('fileInUnit', () => {
   // Tested beside `namesOneFile` because it is the script's other path matcher, and the two share a rule: a unit path
   // is a whole file or a whole directory, never a prefix of a sibling's name. It scopes already-reported findings to a
-  // unit when feeding later `--loop` rounds, and it routes findings into the dedupe scopes.
+  // unit when feeding a later round, and it routes findings into the dedupe scopes.
   const fileInUnit = async (file, paths) => (await internals()).fileInUnit(file, { paths });
 
   it('matches a file listed exactly, or one inside a listed directory', async () => {

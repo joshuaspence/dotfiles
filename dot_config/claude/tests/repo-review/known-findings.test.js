@@ -191,21 +191,25 @@ describe('what a reviewer is told across rounds', () => {
     { name: 'api', summary: 'the request surface', paths: ['api/handler.py'] },
   ];
 
-  const looped = (over = {}) => runFix({ issues, units, args: { fix: false, loop: 2 }, ...over });
+  // A later round is its own invocation now, so what it holds arrives on `args` rather than being accumulated by a loop
+  // that ran inside the same run. That makes these tests direct: state what the review already holds and read the prompt
+  // it produces, with no round 1 to stage first. `issues` is what *this* round's fake reviewers return, which the
+  // prompts under assertion are built before ever seeing.
+  const round2 = () => runFix({ issues, units, args: { fix: false, round: 2, knownFindings: issues } });
 
-  it('tells a round-2 reviewer what the other reviewers found in its unit', async () => {
+  it('tells a later round’s reviewer what the other reviewers found in its unit', async () => {
     // The regression this whole change exists for: the Bug reviewer used to be blind to Security's finding on the very
     // lines it was about to re-report.
-    const run = await looped();
-    const [bug] = run.called('review:core:bug round 2/2');
+    const run = await round2();
+    const [bug] = run.called('review:core:bug');
 
     expect(bug.prompt).toContain(OTHER);
     expect(bug.prompt.slice(bug.prompt.indexOf(OTHER))).toContain('parse_frame trusts the peer');
   });
 
   it('still tells it which of those findings are its own to look past', async () => {
-    const run = await looped();
-    const [bug] = run.called('review:core:bug round 2/2');
+    const run = await round2();
+    const [bug] = run.called('review:core:bug');
     const own = bug.prompt.slice(bug.prompt.indexOf(OWN), bug.prompt.indexOf(OTHER));
 
     expect(own).toContain('parse_frame skips the length check');
@@ -214,26 +218,43 @@ describe('what a reviewer is told across rounds', () => {
 
   it('scopes the list to the reviewer\'s own unit', async () => {
     // Widening from one category to all of them must not also widen from one unit to the repository: a reviewer cannot
-    // act on a finding in files it was not given, and the block is the largest part of a round-2 prompt.
-    const run = await looped();
-    const [bug] = run.called('review:core:bug round 2/2');
+    // act on a finding in files it was not given, and the block is the largest part of a later round's prompt.
+    const run = await round2();
+    const [bug] = run.called('review:core:bug');
 
     expect(bug.prompt).not.toContain('handler swallows the error');
   });
 
-  it('gives round 1 no list at all', async () => {
-    const run = await looped();
-    const [bug] = run.called('review:core:bug round 1/2');
+  it('gives a round that holds nothing no list at all', async () => {
+    // Round 1 with an empty ledger is the common case and its prompts must stay byte-identical to a review that never
+    // runs a second round — the emphasis and this list are the only two things a round number can add.
+    const run = await runFix({ issues, units, args: { fix: false } });
+    const [bug] = run.called('review:core:bug');
 
     expect(bug.prompt).not.toContain(OWN);
     expect(bug.prompt).not.toContain(OTHER);
   });
 
+  it('ignores a malformed entry rather than failing the round over it', async () => {
+    // `knownFindings` makes a full round trip through the wrapper's JSON, so its shape is not this script's to
+    // guarantee. A `null` in the list reaches `issueSite`, which throws — and it would throw while building the very
+    // first reviewer prompt, discarding a whole round before an agent ran.
+    const run = await runFix({
+      issues,
+      units,
+      args: { fix: false, round: 2, knownFindings: [null, 'not a finding', issues[0]] },
+    });
+    const [bug] = run.called('review:core:bug');
+
+    expect(bug.prompt).toContain('parse_frame skips the length check');
+    expect(bug.prompt).not.toContain('not a finding');
+  });
+
   it('tells an architecture lens about the findings that are not architecture', async () => {
     // A lens reads the whole repository, so it has no unit to scope by — and the measured architecture duplicates were
     // against `code-quality`, `consistency` and `bug`, which a category filter is exactly what hides.
-    const run = await looped();
-    const [lens] = run.called('review:arch:layering-and-boundaries round 2/2');
+    const run = await round2();
+    const [lens] = run.called('review:arch:layering-and-boundaries');
     const other = lens.prompt.slice(lens.prompt.indexOf(OTHER));
 
     expect(lens.prompt).toContain('wire is four contracts');

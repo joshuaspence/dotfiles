@@ -177,10 +177,29 @@ describe('knobs', () => {
     expect((await internals({})).reviewers).toBe(1);
   });
 
-  it('treats a bare --loop as the default round cap and no --loop as a single pass', async () => {
-    expect((await internals({ loop: true })).maxRounds).toBe(4);
-    expect((await internals({ loop: 7 })).maxRounds).toBe(7);
-    expect((await internals({})).maxRounds).toBe(1);
+  it('reads the round number off args, defaulting to the baseline pass', async () => {
+    expect((await internals({ round: 3 })).round).toBe(3);
+    expect((await internals({})).round).toBe(1);
+  });
+
+  it('falls back to round 1 on a round number it cannot read', async () => {
+    // The round is not a cap and multiplies nothing — it selects an emphasis directive. So an unreadable value costs the
+    // run its steering and must not cost it anything else: round 1 is the baseline, whose prompts are the ones a review
+    // that never runs a second round sends.
+    for (const round of [0, -1, 'two', '', null, true, NaN, Infinity, {}]) {
+      expect((await internals({ round })).round, `round: ${String(round)}`).toBe(1);
+    }
+  });
+
+  it('keeps only object entries from the known findings it is handed back', async () => {
+    // `knownFindings` is the one input that made a full round trip through the wrapper: this round returns findings as
+    // JSON and the next round is given them again. A `null` or a bare string in that list reaches `issueSite` while the
+    // first reviewer prompt is being built, and it throws there — discarding a whole round before an agent runs.
+    const kept = { category: 'bug', file: 'a.ts', description: 'x' };
+
+    expect((await internals({ knownFindings: [null, undefined, 'a', 7, kept] })).knownFindings).toEqual([kept]);
+    expect((await internals({ knownFindings: 'not a list' })).knownFindings).toEqual([]);
+    expect((await internals({})).knownFindings).toEqual([]);
   });
 
   it('spends three validators only on the high-risk categories under --validators auto', async () => {
@@ -211,18 +230,6 @@ describe('knobs', () => {
     const { validatorCount } = await internals({ validators: 'three' });
 
     expect(validatorCount({ category: 'bug' })).toBe(1);
-  });
-
-  it('reads a non-positive or malformed --loop as a single pass, not the default cap', async () => {
-    // `--loop` is the one knob that multiplies the cost of the whole run, so a value that is not a positive integer has
-    // to fall back to the conservative single pass rather than escalating to the default 4 rounds.
-    for (const loop of [0, -1, 'none', '', false]) {
-      expect((await internals({ loop })).maxRounds).toBe(1);
-      expect((await internals({ loop })).loopEnabled).toBe(false);
-    }
-
-    expect((await internals({ loop: 1 })).loopEnabled).toBe(false);
-    expect((await internals({ loop: 2 })).loopEnabled).toBe(true);
   });
 
   it('sizes the auto partition range to the code in scope', async () => {
@@ -563,7 +570,7 @@ describe('round emphasis escalation', () => {
   it('leaves round 1 unemphasised, so a single pass still reads as a baseline', async () => {
     // The other half of the same contract, and the half the cap test above cannot see: the list is 1-based, so index 0
     // is unused and round 1 is the baseline. Both leading entries look like padding — delete them and `roundEmphasis(1)`
-    // returns the round-2 directive instead, which every reviewer in an ordinary non-`--loop` run would then be given,
+    // returns the round-2 directive instead, which every reviewer in an ordinary single-round run would then be given,
     // telling it to look *past* exactly the issues a first read is there to catch.
     const { emphasisBlock, roundEmphasis, ROUND_EMPHASIS } = await internals();
 
@@ -584,14 +591,14 @@ describe('utility functions for parsing user input', () => {
   describe('positiveIntOr', () => {
     it('returns fallback for NaN', async () => {
       expect((await internals({ validators: NaN })).validators).toBe(1);
-      expect((await internals({ loop: NaN })).maxRounds).toBe(1);
+      expect((await internals({ round: NaN })).round).toBe(1);
     });
 
     it('returns fallback for Infinity and -Infinity', async () => {
       expect((await internals({ validators: Infinity })).validators).toBe(1);
       expect((await internals({ validators: -Infinity })).validators).toBe(1);
-      expect((await internals({ loop: Infinity })).maxRounds).toBe(1);
-      expect((await internals({ loop: -Infinity })).maxRounds).toBe(1);
+      expect((await internals({ round: Infinity })).round).toBe(1);
+      expect((await internals({ round: -Infinity })).round).toBe(1);
     });
 
     it('accepts very large positive numbers beyond safe integer range', async () => {
@@ -599,14 +606,14 @@ describe('utility functions for parsing user input', () => {
       // still produces an integer that passes the positive check.
       const veryLarge = Number.MAX_SAFE_INTEGER * 10;
       expect((await internals({ validators: veryLarge })).validators).toBe(veryLarge);
-      expect((await internals({ loop: veryLarge })).maxRounds).toBe(veryLarge);
+      expect((await internals({ round: veryLarge })).round).toBe(veryLarge);
     });
 
     it('returns fallback for non-numeric strings', async () => {
       expect((await internals({ validators: 'abc' })).validators).toBe(1);
       expect((await internals({ validators: 'NaN' })).validators).toBe(1);
       expect((await internals({ validators: 'Infinity' })).validators).toBe(1);
-      expect((await internals({ loop: 'abc' })).maxRounds).toBe(1);
+      expect((await internals({ round: 'abc' })).round).toBe(1);
     });
 
     it('parses strings with leading numbers then stops at non-numeric characters', async () => {
@@ -614,13 +621,13 @@ describe('utility functions for parsing user input', () => {
       expect((await internals({ validators: '12.34.56' })).validators).toBe(12);
       expect((await internals({ validators: '42abc' })).validators).toBe(42);
       // parseInt('0x10', 10) returns 0 (stops at 'x' in base 10), which is < 1, so fallback is used.
-      expect((await internals({ loop: '0x10' })).maxRounds).toBe(1);
+      expect((await internals({ round: '0x10' })).round).toBe(1);
     });
 
     it('returns fallback for zero and negative numbers', async () => {
       expect((await internals({ validators: 0 })).validators).toBe(1);
       expect((await internals({ validators: -5 })).validators).toBe(1);
-      expect((await internals({ loop: -1 })).maxRounds).toBe(1);
+      expect((await internals({ round: -1 })).round).toBe(1);
     });
 
     it('returns fallback for edge case strings and objects', async () => {

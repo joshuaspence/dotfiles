@@ -13,9 +13,9 @@ const SPEC_EXAMPLES = [
   { invocation: '/repo-review', args: {} },
   { invocation: '/repo-review src --partitions 6', args: { paths: ['src'], partitions: 6 } },
   { invocation: '/repo-review src lib', args: { paths: ['src', 'lib'] } },
-  { invocation: '/repo-review --loop', args: { loop: true } },
-  { invocation: '/repo-review src --loop 3', args: { paths: ['src'], loop: 3 } },
-  { invocation: '/repo-review src lib --loop 3', args: { paths: ['src', 'lib'], loop: 3 } },
+  { invocation: '/repo-review --rounds 3', args: {} },
+  { invocation: '/repo-review src --rounds 3', args: { paths: ['src'] } },
+  { invocation: '/repo-review 2024 --rounds 3', args: { paths: ['2024'] } },
   { invocation: '/repo-review --fix', args: { fix: true } },
   { invocation: '/repo-review --fix --reviewers 2', args: { fix: true, reviewers: 2 } },
   { invocation: '/repo-review src/a.js --fix', args: { paths: ['src/a.js'], fix: true } },
@@ -123,12 +123,14 @@ describe('command specification examples', () => {
       expect(fixWithPath.args).toEqual({ paths: ['src/a.js'], fix: true });
     });
 
-    it('demonstrates --loop can be bare or take a value', () => {
-      const loopBare = SPEC_EXAMPLES.find((ex) => ex.invocation === '/repo-review --loop');
-      const loopWithValue = SPEC_EXAMPLES.find((ex) => ex.invocation === '/repo-review src --loop 3');
-
-      expect(loopBare.args).toEqual({ loop: true });
-      expect(loopWithValue.args).toEqual({ paths: ['src'], loop: 3 });
+    it('leaves no trace of `--rounds` in the args, however it was combined', () => {
+      // `--rounds` bounds the wrapper's own round loop, so it belongs to the wrapper the way `--output` does. Sending it
+      // to the script would be harmless but wrong in the way that matters here: the script has no such knob, so the key
+      // would be silently ignored and the loop would never actually be bounded.
+      for (const { invocation, args } of SPEC_EXAMPLES.filter((ex) => ex.invocation.includes('--rounds'))) {
+        expect(args.rounds, invocation).toBeUndefined();
+        expect(args.loop, invocation).toBeUndefined();
+      }
     });
   });
 
@@ -164,13 +166,13 @@ describe('command specification examples', () => {
     it('covers all documented flags except --validators and --partitions auto', () => {
       const hasEffort = SPEC_EXAMPLES.some((ex) => ex.args.effort);
       const hasPartitions = SPEC_EXAMPLES.some((ex) => ex.args.partitions);
-      const hasLoop = SPEC_EXAMPLES.some((ex) => ex.args.loop);
+      const hasRounds = SPEC_EXAMPLES.some((ex) => ex.invocation.includes('--rounds'));
       const hasFix = SPEC_EXAMPLES.some((ex) => ex.args.fix);
       const hasReviewers = SPEC_EXAMPLES.some((ex) => ex.args.reviewers);
 
       expect(hasEffort).toBe(true);
       expect(hasPartitions).toBe(true);
-      expect(hasLoop).toBe(true);
+      expect(hasRounds).toBe(true);
       expect(hasFix).toBe(true);
       expect(hasReviewers).toBe(true);
     });
@@ -194,13 +196,13 @@ describe('parsing rule consistency', () => {
     expect(multiPath.args.paths).toEqual(['src/a.js', 'src/b.js']);
   });
 
-  it('demonstrates loop can be boolean or integer', () => {
-    // Lines 83-90 describe --loop taking either no value (bare flag) or an integer
-    const loopBoolean = SPEC_EXAMPLES.find((ex) => ex.args.loop === true);
-    const loopInteger = SPEC_EXAMPLES.find((ex) => typeof ex.args.loop === 'number');
+  it('lets a path that begins with a digit follow a flag that takes a value', () => {
+    // The rule `--rounds` replaced consumed the token after it only when that token began with a digit, which made a
+    // directory named `2024` unpassable after a bare `--loop`. A mandatory value fixes that by construction: the token
+    // after `--rounds` is its value and the one after that is a path, whatever either looks like.
+    const digitPath = SPEC_EXAMPLES.find((ex) => ex.invocation === '/repo-review 2024 --rounds 3');
 
-    expect(loopBoolean).toBeDefined();
-    expect(loopInteger).toBeDefined();
+    expect(digitPath.args.paths).toEqual(['2024']);
   });
 });
 
@@ -234,5 +236,5 @@ function extractPaths(tokens) {
 
 // Flags that take a value (from the spec)
 function takesValue(flag) {
-  return ['--effort', '--partitions', '--validators', '--loop', '--reviewers', '--output'].includes(flag);
+  return ['--effort', '--partitions', '--validators', '--reviewers', '--rounds', '--output'].includes(flag);
 }

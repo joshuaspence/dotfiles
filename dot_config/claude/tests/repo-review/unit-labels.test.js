@@ -297,7 +297,7 @@ describe('reading a unit back out of a label', () => {
 describe('parseLabel edge cases', () => {
   it('throws on null rawLabel, despite the default parameter', () => {
     // Default parameters only apply when the argument is undefined, not when it is null. If a null label reaches here,
-    // `null.replace()` will throw, rather than falling through to the catch-all that returns `{ kind: label }`.
+    // `null.startsWith()` will throw, rather than falling through to the catch-all that returns `{ kind: label }`.
     expect(() => parseLabel(null)).toThrow();
   });
 
@@ -328,10 +328,14 @@ describe('parseLabel edge cases', () => {
     });
   });
 
-  it('strips round tags before parsing, so a round-tagged label still parses', () => {
-    // The `ROUND_TAG` regex matches ` round k/n` at the end of a label. It is stripped before any other parsing, so a
-    // well-formed label with a round tag still matches the pattern it would without one.
-    expect(parseLabel('fix:bug#1 round 2/4')).toMatchObject({ kind: 'fix', category: 'bug', idx: 1, attempt: 0 });
-    expect(parseLabel('review:unit:key round 1/3')).toMatchObject({ kind: 'review', unit: 'unit', key: 'key' });
+  it('no longer tolerates a round tag, so a label that grew one cannot route silently', () => {
+    // The fixture used to strip ` round k/n` before parsing, from when a looped run tagged every label with its round.
+    // One round per invocation means one tree per round, so the tag is gone and the strip with it — and it was worth
+    // removing rather than keeping as insurance. Tolerated, a tag that came back would be absorbed into the last colon
+    // segment (`review:unit:key round 1/3` → category `key round 1/3`), matching no finding and routing nothing, with
+    // the fixture's own leniency hiding it. Now it falls to the catch-all, which no case answers, so the scenario's
+    // unanswered-agent post-condition names the label.
+    expect(parseLabel('fix:bug#1 round 2/4')).toEqual({ kind: 'fix:bug#1 round 2/4' });
+    expect(parseLabel('review:unit:key round 1/3')).toMatchObject({ kind: 'review', category: 'key round 1/3' });
   });
 });

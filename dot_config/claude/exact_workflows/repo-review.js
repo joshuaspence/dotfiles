@@ -4,12 +4,20 @@
  * (which need `git`) and writing `--output` — is the wrapper's job, because workflow scripts have no filesystem or git
  * access.
  *
- * Inputs arrive on `args` as `{ paths, effort, partitions, validators, loop, fix, reviewers }`, normalized through
- * `normalizeArgs` below because this call site delivers that object JSON-encoded as a string. The return value is
- * `{ reviewedCommit, findings, exclusions, gaps }`, plus a `fix` object
+ * Inputs arrive on `args` as `{ paths, effort, partitions, validators, round, knownFindings, fix, reviewers }`,
+ * normalized through `normalizeArgs` below because this call site delivers that object JSON-encoded as a string. The
+ * return value is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps }`, plus a `fix` object
  * (`{ base, sandboxBranches, keepBranches, outcomes }`) when `--fix` was requested. `reviewedCommit` is on every exit,
  * including the aborts: it is the commit the whole review is defined against, so the wrapper cites it rather than
  * re-deriving a `HEAD` that may have moved since.
+ *
+ * **One round per invocation.** The multi-round `--loop` used to live here as a `for` loop around Review+Dedupe, and it
+ * is why the run this design replaces produced nothing at all: Review and Validate are `parallel()` barriers, so a run
+ * killed in round 3 — by a session limit, a stall, or the user — discarded rounds 1 and 2 along with it. Rounds are now
+ * the *caller's* loop. Each invocation is one complete review that returns, gets reported and gets persisted, and the
+ * wrapper decides whether to run another: it re-invokes with `round` incremented and `knownFindings` set to what came
+ * back, which is what steers the new round past what the last one already found (`emphasisBlock`,
+ * `knownFindingsBlock`). `newFindings` is the count that decides it — the round went dry when that reaches zero.
  *
  * `--fix` is strictly *additive*: each fix is an independent commit on its own branch and nothing is ever landed. Two
  * fixes may freely touch the same file, because no sequence of cherry-picks is ever attempted — if the user wants them
@@ -72,7 +80,9 @@ if (typeof args === 'string' && (!input || typeof input !== 'object')) {
     // Explicitly null, not absent: `reviewedCommit` is on every exit, and null is the documented signal for "the
     // script never learned it, fall back to `git rev-parse HEAD`". This abort is before the survey, so it never could.
     reviewedCommit: null,
+    round: 1,
     findings: [],
+    newFindings: 0,
     exclusions: [],
     gaps: [
       '`args` arrived as a string that is not a JSON object, so no argument could be read and **nothing was ' +
@@ -151,6 +161,8 @@ const effort = input?.effort
         return {
           findings: [],
           exclusions: [],
+          round: 1,
+          newFindings: 0,
           gaps: [
             `\`--effort\` must be one of ${EFFORT_ORDER.join(', ')} but received '${input.effort}'. ` +
               'Review aborted — re-run with a valid effort level.',
@@ -172,14 +184,22 @@ function positiveIntOr(value, fallback) {
 const partitions = input?.partitions === 'auto' ? 'auto' : positiveIntOr(input?.partitions, 'auto');
 const validators = input?.validators === 'auto' ? 'auto' : positiveIntOr(input?.validators, 1);
 
-// `--loop` turns on multi-round "loop-until-dry" reviewing. The wrapper sends `loop: true` for a bare `--loop` and an
-// integer for `--loop <n>`; anything absent means a single pass. `maxRounds` caps how many times the Review+Dedupe body
-// repeats; the loop stops earlier the first time a round adds no new findings. Only `true` and a positive integer turn
-// looping on: `0`, a negative and a non-numeric value all read as the single pass, because this is the one knob that
-// multiplies the cost of the entire run, so a malformed value must not escalate to the default cap.
-const LOOP_DEFAULT_ROUNDS = 4;
-const maxRounds = input?.loop === true ? LOOP_DEFAULT_ROUNDS : positiveIntOr(input?.loop, 1);
-const loopEnabled = maxRounds > 1;
+// Which round this invocation is. It is not a cap and it multiplies nothing: the round drives only how the reviewers are
+// steered (`emphasisBlock`), because the *caller* owns the loop now. A missing, zero, negative or non-numeric value is
+// round 1, the baseline pass, whose prompts are byte-identical to a single-pass run — so an unreadable round number
+// costs a run its steering and never its correctness.
+const round = positiveIntOr(input?.round, 1);
+
+// What earlier rounds already found, as the wrapper hands it back. Two things key on it and both are about not paying
+// twice: the reviewers are shown it so they look elsewhere, and dedupe merges this round's raw findings *against* it so
+// a re-report is absorbed rather than reported again. It is also why round 2 need not re-validate — see `NEW_THIS_ROUND`.
+//
+// Sanitised rather than trusted, because it makes a full round trip through the wrapper's JSON and back: a non-object
+// entry would reach `issueSite`, `fileInUnit` and the dedupe digest, and the first of those throws. An entry with no
+// `category` is kept — `knownLine` renders it as `[undefined]`, which is ugly but is still a finding worth suppressing.
+const knownFindings = (Array.isArray(input?.knownFindings) ? input.knownFindings : []).filter(
+  (issue) => issue && typeof issue === 'object',
+);
 
 // `--fix` turns on the optional Fix phase: after validation, one worktree-isolated agent per finding tries to fix it
 // and commit on a branch of its own. Nothing is landed and no two fixes are required to be compatible, so the findings
@@ -764,11 +784,15 @@ const SEVERITY_RUBRIC =
   'real defect with limited blast radius), "low" (a minor quality issue).';
 
 
-// --- Loop-until-dry fragments ------------------------------------------------------------------------------------
-// With `--loop`, the Review+Dedupe body repeats. Round 1 is the baseline pass — it gets no emphasis and an empty
-// feedback list, so its prompts are byte-identical to a single-pass run. Rounds 2+ are steered toward what earlier
-// passes missed by two additions: an escalating emphasis directive, and a scoped list of already-reported findings.
-// `ROUND_EMPHASIS` is indexed by 1-based round; rounds past the last entry reuse the deepest directive.
+// --- Round steering ------------------------------------------------------------------------------------------------
+// Round 1 is the baseline pass — no emphasis and an empty feedback list, so its prompts are byte-identical to a review
+// that never runs a second round. Rounds 2+ are steered toward what earlier ones missed by two additions: an escalating
+// emphasis directive, and a scoped list of already-reported findings. Both survive the loop having moved out to the
+// caller, because both are computed from `round` and `knownFindings` alone — neither needed the `for` loop that used to
+// supply them, which is what makes a round a self-contained invocation.
+//
+// `ROUND_EMPHASIS` is indexed by 1-based round; rounds past the last entry reuse the deepest directive, so the caller
+// can keep going without the steering degrading back towards the baseline.
 const ROUND_EMPHASIS = [
   '', // index 0 — unused (rounds are 1-based)
   '', // round 1 — baseline pass, no emphasis
@@ -1054,10 +1078,10 @@ const survivingMember = (issues, members) =>
 
 // Symbol-keyed marks describe a *position* in the list being merged, not the content of the finding sitting there, so
 // they come from the group's lowest-indexed member rather than from the member `survivingMember` kept. The only such
-// mark is the `--loop` novelty flag (`foundThisRound`), which answers "is this a defect the review did not already
-// hold?" — and only the lowest index can answer it, because the union puts everything accumulated ahead of this round's
-// reports. Left to `{ ...primary }`, a re-report that wins the risk decision over the copy it is absorbed into would
-// carry its own flag onto the merged finding, and a round that added nothing would still read as net-positive.
+// mark is `NEW_THIS_ROUND`, which answers "is this a defect the review did not already hold?" — and only the lowest
+// index can answer it, because the union puts everything accumulated ahead of this round's reports. Left to
+// `{ ...primary }`, a re-report that wins the risk decision over the copy it is absorbed into would carry its own flag
+// onto the merged finding, and would then be validated and offered to `--fix` a second time.
 const withMarksOf = (merged, source) => {
   for (const mark of Object.getOwnPropertySymbols(merged)) delete merged[mark];
   for (const mark of Object.getOwnPropertySymbols(source || {})) merged[mark] = source[mark];
@@ -1165,15 +1189,15 @@ const globalizeGroups = (groups, indices) =>
 // that was 42 of 43 agents done got discarded whole. So each rung is wrapped, at both stages. Note that the stage-1
 // callers additionally sit inside `parallel()`, where a rejection resolves to `null`: one unit going un-deduped must
 // not cost the round the work every other unit already did.
-const dedupeAgent = async (issues, { label, roundTag, round }) => {
+const dedupeAgent = async (issues, { label }) => {
   const rungs = dedupeRungs(issues.length);
   const skipped = dedupeEfforts.filter((rung) => !rungs.includes(rung));
 
   // Never silently: a rung not attempted is a decision the reader should see, the same as a rung that failed.
   if (skipped.length) {
     log(
-      `${label} in round ${round}: ${issues.length} findings is over the ceiling for ${skipped.join(', ')}, so it ` +
-        `starts at ${rungs[0]} instead of spending ~18 minutes per rung finding that out.`,
+      `${label}: ${issues.length} findings is over the ceiling for ${skipped.join(', ')}, so it starts at ` +
+        `${rungs[0]} instead of spending ~18 minutes per rung finding that out.`,
     );
   }
 
@@ -1183,9 +1207,8 @@ const dedupeAgent = async (issues, { label, roundTag, round }) => {
         // Every rung names its effort, the first one included. A step-down leaves the failed rung on screen in
         // `/workflows` permanently with nothing tying it to the row that recovered, so `dedupe:cross (retry 5) FAILED`
         // sitting above `dedupe:cross:medium` reads as a lost review rather than as a ladder working — it has misread
-        // that way in practice. Naming both makes the pair legible. The effort goes before the round tag: the rung is
-        // part of the agent's identity, and the round counter comes last, as always.
-        label: `${label}:${dedupeEffort}${roundTag}`,
+        // that way in practice. Naming both makes the pair legible.
+        label: `${label}:${dedupeEffort}`,
         phase: 'Dedupe',
         model: 'opus',
         effort: dedupeEffort,
@@ -1195,7 +1218,7 @@ const dedupeAgent = async (issues, { label, roundTag, round }) => {
       // `groups: []` is a real answer — "nothing collided" — so test for the key, not for a truthy array.
       if (dd?.groups) return dd.groups;
     } catch (err) {
-      log(`${label} in round ${round} stalled at effort ${dedupeEffort}: ${err?.message || err}`);
+      log(`${label} stalled at effort ${dedupeEffort}: ${err?.message || err}`);
     }
   }
 
@@ -1203,12 +1226,12 @@ const dedupeAgent = async (issues, { label, roundTag, round }) => {
 };
 
 // --- Chunking: the one bound on a dedupe digest, at both stages ----------------------------------------------------
-// Stage 2 is where the need showed up first, because it sees every survivor accumulated so far. Measured on one `--loop`
-// run: the cross pass was handed 116 findings in round 1, 209 in round 2 and 262 in round 3, while the largest single
-// unit scope in that whole run was 68. So the fan-in grows with the round count however well the units are split, and
-// the effort ladder just delays the wall — 209 exhausted `high`, and `medium` has no rung below it. Chunking is what
-// actually bounds it, and `chunkScopes` below applies the same cap to stage 1, whose scopes are only as small as the
-// partitioner happened to make its units.
+// Stage 2 is where the need showed up first, because it sees every survivor accumulated so far. Measured on one
+// four-round run: the cross pass was handed 116 findings in round 1, 209 in round 2 and 262 in round 3, while the
+// largest single unit scope in that whole run was 68. So the fan-in grows with what a round is handed, however well the
+// units are split, and the effort ladder just delays the wall — 209 exhausted `high`, and `medium` has no rung below it.
+// Chunking is what actually bounds it, and `chunkScopes` below applies the same cap to stage 1, whose scopes are only as
+// small as the partitioner happened to make its units.
 //
 // Chunking naively would be worse than not chunking. The union is built unit-major, so a contiguous slice of it is
 // mostly one unit's findings — the duplicates stage 1 already merged — while the cross-unit pairs this stage exists to
@@ -1264,7 +1287,7 @@ const chunkScopes = (scopes) =>
 
 // Run the cross-unit pass to convergence. Returns the surviving findings plus what the caller needs to report: how
 // many chunks never came back, and whether the loop converged or ran out of passes.
-const crossDedupe = async (issues, { roundTag, round }) => {
+const crossDedupe = async (issues) => {
   let survivors = issues;
   let stalled = 0;
 
@@ -1281,7 +1304,7 @@ const crossDedupe = async (issues, { roundTag, round }) => {
         const label = [`dedupe:${DEDUPE_CROSS_SLUG}`, pass > 1 ? `p${pass}` : '', chunk.name].filter(Boolean).join(':');
         const digest = chunk.indices.map((i) => survivors[i]);
 
-        return dedupeAgent(digest, { label, roundTag, round }).then((groups) =>
+        return dedupeAgent(digest, { label }).then((groups) =>
           groups ? globalizeGroups(groups, chunk.indices) : null,
         );
       }),
@@ -1294,7 +1317,7 @@ const crossDedupe = async (issues, { roundTag, round }) => {
     survivors = mergeIssueGroups(survivors, results.filter(Boolean).flat());
 
     log(
-      `Cross-dedupe round ${round} pass ${pass}: ${before} finding(s) over ${chunks.length} chunk(s) of at most ` +
+      `Cross-dedupe pass ${pass}: ${before} finding(s) over ${chunks.length} chunk(s) of at most ` +
         `${Math.max(...chunks.map((chunk) => chunk.indices.length))} -> ${survivors.length}.`,
     );
 
@@ -1625,8 +1648,9 @@ const attemptTag = (attempt) => (attempt > 0 ? ` attempt ${attempt + 1}` : '');
 const gaps = [];
 
 log(
-  `Config — effort: ${effort}, partitions: ${partitions}, validators: ${validators}, maxRounds: ${maxRounds}, ` +
-    `fix: ${fix ? 'on' : 'off'}, reviewers: ${reviewers}, scope: ${paths.join(', ') || 'whole repo'}.`,
+  `Config — effort: ${effort}, partitions: ${partitions}, validators: ${validators}, round: ${round} ` +
+    `(${knownFindings.length} finding(s) already held), fix: ${fix ? 'on' : 'off'}, reviewers: ${reviewers}, ` +
+    `scope: ${paths.join(', ') || 'whole repo'}.`,
 );
 
 // Phase 1 — Survey: the repository survey and the CLAUDE.md scan, concurrently (both Haiku, full requested effort).
@@ -1725,7 +1749,9 @@ try {
 if (!partition?.units?.length) {
   return {
     reviewedCommit: reviewHead,
+    round,
     findings: [],
+    newFindings: 0,
     exclusions: partition?.exclusions ?? [],
     gaps: ['Partition agent did not return usable units — review aborted.'],
   };
@@ -1755,7 +1781,9 @@ const exclusions = partition.exclusions || [];
 if (!units.length) {
   return {
     reviewedCommit: reviewHead,
+    round,
     findings: [],
+    newFindings: 0,
     exclusions,
     gaps: [
       `Partition agent returned ${partition.units.length} unit(s) but no path within ${scope} — review aborted ` +
@@ -1801,14 +1829,28 @@ const unitFiles = unitPaths.every(namesOneFile) ? unitPaths.length : 0;
 
 log(`Partitioned into ${units.length} unit(s) over ${unitPaths.length} path(s); ${exclusions.length} exclusion(s).`);
 
-// Phases 3 & 4 — Review + Dedupe, looped until dry. With `--loop` this body repeats up to `maxRounds` times,
-// accumulating de-duplicated findings across rounds; without it (`maxRounds === 1`) it runs exactly once — today's
-// single pass. Survey and Partition above are computed once and reused; validation below runs once at the end over
-// the accumulated set. Round 1 is the baseline pass; rounds 2+ feed each reviewer an escalating emphasis and a
-// scoped list of already-reported findings so they look where earlier passes did not. A round that adds no new
-// findings after dedup means the review has gone dry.
-let deduped = [];
-let converged = true;
+// Phases 3 & 4 — Review + Dedupe, for this round. Round 1 is the baseline pass; a later round feeds each reviewer an
+// escalating emphasis and a scoped list of what is already held, so it looks where earlier rounds did not.
+//
+// `deduped` starts holding what those rounds found rather than empty, because both dedupe stages merge this round's raw
+// findings *against* it — that is what turns a re-report into an absorbed duplicate instead of a second entry, and it is
+// the whole reason a round can be a self-contained invocation. It also makes the accumulated set what this round returns:
+// the caller gets back exactly what it handed over, plus whatever survived here.
+let deduped = knownFindings;
+
+// The mark this round's own findings carry through both dedupe stages, so everything below can tell them from the ones
+// that arrived on `args` without comparing content. A symbol-keyed own property survives `mergeIssueGroups`, which
+// carries a merged group's marks over from its lowest-indexed member (`withMarksOf`), while staying out of every prompt
+// digest, out of the JSON the run returns, and out of reach of any field name a reviewer might use. Nothing on
+// `knownFindings` can carry it either way: those made a round trip through the wrapper's JSON, which has no symbols.
+//
+// Three things read it, and the last two are why it is not merely a counter. `newFindings` is the number the caller
+// stops on. Validate runs only over the marked findings, because a finding that arrived on `args` was already confirmed
+// by the round that produced it — re-judging it would make round 4 pay for rounds 1 through 3 again, which is the cost
+// shape moving the loop out was meant to remove. Fix likewise only fixes what this round found. The mark surviving from
+// the *lowest* index is what makes both safe: the known findings sit below this round's in the union, so a re-report
+// merged into a copy already held loses the mark and is neither re-judged nor re-fixed, which is exactly right.
+const NEW_THIS_ROUND = Symbol('found in this round');
 
 // The architecture lenses assess repository-level structure, so on a scope of one or two files there is nothing
 // structural to assess — three whole-repo Opus agents would return noise at best. Skip them below that threshold and
@@ -1819,214 +1861,195 @@ if (!runLenses) {
   gaps.push(`Architecture lenses not run: only ${unitFiles} file(s) in scope — too small for a structural review.`);
 }
 
-for (let round = 1; round <= maxRounds; round++) {
-  // Round marker on every agent label in the round, in the shape the per-finding phases below already use for a
-  // which-of-many counter: a space-delimited ` round k/n` after the colon-delimited identity, suppressed when there is
-  // only one — the rule `voteTag` applies to `vote 1/1`. So a single pass keeps bare labels (which also keeps them out
-  // of the resume cache key, part of which is the label) and a looped run reads `dedupe round 1/4`, saying what
-  // `dedupe:r2` did not: that rounds are counted, how many there may be, and that round 1 is one of them rather than
-  // the un-suffixed default. `n` is the cap, not a promise — the loop stops early once a round comes back dry.
-  const roundTag = maxRounds > 1 ? ` round ${round}/${maxRounds}` : '';
+// Labels carry no round marker. They used to — ` round k/n` after the colon-delimited identity, suppressed when there
+// was only one round — because a single `/workflows` tree held every round of a looped run and two rounds' `dedupe:core`
+// rows were otherwise indistinguishable. One round per invocation is one tree per round, so the marker now says only
+// what the tree it is drawn in already says, and dropping it restores the bare labels the single-pass run always had.
+// That matters beyond legibility: a label is part of the resume cache key, so an un-tagged label is one a resumed run
+// can still match.
 
-  // Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full effort.
-  // This must complete before dedup, which reasons over every finding, so it runs as a single `parallel()` barrier.
-  phase('Review');
-  const reviewSpecs = [
-    ...units.flatMap((unit) =>
-      activeReviewers.map((reviewer) => ({
-        label: `review:${unit.slug}:${reviewer.key}${roundTag}`,
-        model: reviewer.model,
-        effort: leafEffort,
-        category: reviewer.key,
-        prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths, {
+// Review (barrier). Per unit: Agents 1-6 at capped leaf effort. Whole repo: 3 architecture lenses at full effort.
+// This must complete before dedup, which reasons over every finding, so it runs as a single `parallel()` barrier.
+phase('Review');
+const reviewSpecs = [
+  ...units.flatMap((unit) =>
+    activeReviewers.map((reviewer) => ({
+      label: `review:${unit.slug}:${reviewer.key}`,
+      model: reviewer.model,
+      effort: leafEffort,
+      category: reviewer.key,
+      prompt: reviewerPrompt(reviewer, unit, survey, claudeMdPaths, {
+        round,
+
+        // Scoped by unit, not by category: a reviewer that cannot see the other five reviewers' findings for its own
+        // unit re-reports them, and `mergeIssueGroups` then pays for that at full review cost.
+        known: deduped.filter((f) => fileInUnit(f.file, unit)),
+      }),
+    })),
+  ),
+  ...(runLenses
+    ? ARCHITECTURAL_LENSES.map((lens) => ({
+        label: `review:arch:${lens.key}`,
+        model: 'opus',
+        effort,
+        category: ARCHITECTURE_CATEGORY,
+        prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
           round,
 
-          // Scoped by unit, not by category: a reviewer that cannot see the other five reviewers' findings for its own
-          // unit re-reports them, and `mergeIssueGroups` then pays for that at full review cost.
-          known: deduped.filter((f) => fileInUnit(f.file, unit)),
+          // A lens reads the whole repository, so there is no unit to scope by and it sees everything held. That is
+          // the largest known-findings block the run produces, and deliberately so: the measured architecture
+          // duplicates were against `code-quality`, `consistency` and `bug`, none of which a category filter shows.
+          known: deduped,
         }),
-      })),
-    ),
-    ...(runLenses
-      ? ARCHITECTURAL_LENSES.map((lens) => ({
-          label: `review:arch:${lens.key}${roundTag}`,
-          model: 'opus',
-          effort,
-          category: ARCHITECTURE_CATEGORY,
-          prompt: architecturalLensPrompt(lens, survey, claudeMdPaths, {
-            round,
+      }))
+    : []),
+];
 
-            // A lens reads the whole repository, so there is no unit to scope by and it sees everything held. That is
-            // the largest known-findings block the run produces, and deliberately so: the measured architecture
-            // duplicates were against `code-quality`, `consistency` and `bug`, none of which a category filter shows.
-            known: deduped,
-          }),
-        }))
-      : []),
-  ];
+const reviewResults = await parallel(
+  reviewSpecs.map((spec) => () =>
+    agent(spec.prompt, {
+      label: spec.label,
+      phase: 'Review',
+      model: spec.model,
+      effort: spec.effort,
+      schema: ISSUES_SCHEMA,
+    }),
+  ),
+);
 
-  const reviewResults = await parallel(
-    reviewSpecs.map((spec) => () =>
-      agent(spec.prompt, {
-        label: spec.label,
-        phase: 'Review',
-        model: spec.model,
-        effort: spec.effort,
-        schema: ISSUES_SCHEMA,
-      }),
-    ),
-  );
+// Counted apart from the findings: a reviewer that came back with an empty list is evidence its unit is clean, and
+// one that never came back is no evidence at all. Only the first kind can make an empty round mean the review is dry.
+let reviewersReturned = 0;
 
-  // Counted apart from the findings: a reviewer that came back with an empty list is evidence its unit is clean, and
-  // one that never came back is no evidence at all. Only the first kind can make an empty round mean the review is dry.
-  let reviewersReturned = 0;
+const roundIssues = reviewResults.flatMap((result, i) => {
+  const spec = reviewSpecs[i];
 
-  const roundIssues = reviewResults.flatMap((result, i) => {
-    const spec = reviewSpecs[i];
-
-    if (!result?.issues) {
-      gaps.push(`Reviewer did not complete: ${spec.label}`);
-      return [];
-    }
-
-    reviewersReturned += 1;
-
-    return result.issues.map((issue) => ({ ...issue, category: spec.category }));
-  });
-
-  log(
-    `Round ${round}: ${roundIssues.length} raw finding(s) from ${reviewersReturned} of ${reviewSpecs.length} ` +
-      'reviewer(s).',
-  );
-
-  if (roundIssues.length === 0) {
-    // An empty round only means the review went dry if somebody actually looked. When every reviewer failed, the round
-    // says nothing about the code, and the per-reviewer gaps above do not add up to that: read one at a time they look
-    // like partial coverage, while the loop stops here as if the set had converged. Say it once, plainly, so an empty
-    // `findings` list cannot be reported as "No issues found".
-    if (reviewersReturned === 0) {
-      gaps.push(
-        `All ${reviewSpecs.length} reviewer(s) in round ${round} failed to return, so nothing was reviewed in it — ` +
-          'this round found nothing because of that, not because the code is clean. Re-run the review.',
-      );
-      log(`Round ${round}: no reviewer returned — stopping, with nothing reviewed.`);
-    } else {
-      log(`Round ${round} produced no findings — stopping.`);
-    }
-
-    break;
+  if (!result?.issues) {
+    gaps.push(`Reviewer did not complete: ${spec.label}`);
+    return [];
   }
 
-  // Dedupe (Opus). A deterministic script cannot reason over findings, so this is delegated. Merge this round's raw
-  // findings into everything accumulated so far; how many of them survive is the round's novelty signal.
-  //
-  // Two stages: one agent per unit in parallel, then a pass over what survives. See `dedupeScopes` for why the union is
-  // split rather than handed over whole — in short, one agent's share of the work has to stop growing with the size of
-  // the review, or the no-progress watchdog eventually wins whatever effort it is asked for. `chunkScopes` is what makes
-  // that a guarantee rather than a hope: a unit big enough to overwhelm an agent is split like a stage-2 chunk.
-  phase('Dedupe');
-  const prevCount = deduped.length;
+  reviewersReturned += 1;
 
-  // A mark this round's findings carry through both stages, so the convergence test below can count them instead of
-  // inferring them from the total. A symbol-keyed own property survives `mergeIssueGroups`, which carries a merged
-  // group's marks over from its lowest-indexed member (`withMarksOf`), while staying out of every prompt digest, out of
-  // the JSON the run returns, and out of reach of any field name a reviewer might use. Created per round, so the marks
-  // earlier rounds left on the accumulated findings are invisible here.
-  const foundThisRound = Symbol('found in this round');
-  const union = [...deduped, ...roundIssues.map((issue) => ({ ...issue, [foundThisRound]: true }))];
+  return result.issues.map((issue) => ({ ...issue, category: spec.category }));
+});
 
-  const scopes = chunkScopes(dedupeScopes(union, units));
-  const scopeGroups = await parallel(
-    scopes.map(
-      (scope) => () =>
-        dedupeAgent(
-          scope.indices.map((i) => union[i]),
-          { label: `dedupe:${scope.name}`, roundTag, round },
-        ).then((groups) => (groups ? globalizeGroups(groups, scope.indices) : null)),
-    ),
-  );
+log(
+  `Round ${round}: ${roundIssues.length} raw finding(s) from ${reviewersReturned} of ${reviewSpecs.length} ` +
+    'reviewer(s).',
+);
 
-  const stalledScopes = scopes.filter((_, i) => !scopeGroups[i]).map((scope) => scope.name);
-
-  if (stalledScopes.length) {
+// A round that raised nothing has nothing to dedupe against what is held, nothing to validate and nothing to fix, and
+// the set it holds is the one it was handed — already deduped and already confirmed by the rounds that produced it. So
+// return it here rather than paying a dedupe pass to re-merge a settled set and a Validate pass to re-confirm it.
+// `newFindings: 0` is what tells the caller the review has gone dry and there is no round after this one.
+if (roundIssues.length === 0) {
+  // An empty round only means the review went dry if somebody actually looked. When every reviewer failed, the round
+  // says nothing about the code, and the per-reviewer gaps above do not add up to that: read one at a time they look
+  // like partial coverage, while `newFindings: 0` reads as convergence. Say it once, plainly, so an empty `findings`
+  // list cannot be reported as "No issues found" — and so a caller does not stop looping on a review that never ran.
+  if (reviewersReturned === 0) {
     gaps.push(
-      `Dedupe did not return for ${stalledScopes.length} of ${scopes.length} scope(s) in round ${round} ` +
-        `(${stalledScopes.join(', ')}) — those findings were kept raw, so one defect may be reported more than once.`,
+      `All ${reviewSpecs.length} reviewer(s) in round ${round} failed to return, so nothing was reviewed in it — ` +
+        'this round found nothing because of that, not because the code is clean. Re-run the review.',
     );
+    log(`Round ${round}: no reviewer returned — nothing was reviewed.`);
+  } else {
+    log(`Round ${round} produced no findings — the review is dry.`);
   }
 
-  // Both stages merge against the list the agents were shown, so `afterUnits` is the union minus the intra-unit
-  // duplicates, still in reviewer order — which is the order the per-finding validator and fixer labels index into.
-  const afterUnits = mergeIssueGroups(union, scopeGroups.filter(Boolean).flat());
-
-  // The second stage exists to catch one defect reported under two different units, so it has nothing to add when a
-  // single scope already compared everything: re-asking would only spend a rung of the ladder on a settled question.
-  // "Already compared everything" means one *unchunked* scope, which is what a lone scope now is — `chunkScopes` leaves
-  // several, so an over-cap round always reaches `crossDedupe` and the passes that close the chains chunking splits up.
-  const wholeUnionScoped = scopes.length === 1 && scopes[0].indices.length === union.length;
-  const cross =
-    wholeUnionScoped || afterUnits.length < 2
-      ? { issues: afterUnits, stalled: 0, converged: true }
-      : await crossDedupe(afterUnits, { roundTag, round });
-
-  if (cross.stalled) {
-    gaps.push(
-      `${cross.stalled} chunk(s) of the cross-unit dedupe pass did not return in round ${round} — duplicates inside ` +
-        'a unit were still merged, but one defect reported under two different units may appear twice.',
-    );
-  }
-
-  // Running out of passes is not the same as a stall: every chunk answered, but a chain of duplicates may still be
-  // partly unmerged, because one pass closes one link of it.
-  if (!cross.converged) {
-    gaps.push(
-      `The cross-unit dedupe pass was still merging findings after ${DEDUPE_CHUNK_PASSES} passes in round ${round} — ` +
-        'a defect reported under three or more units may appear twice.',
-    );
-  }
-
-  deduped = cross.issues;
-
-  log(
-    `Deduped round ${round}: ${union.length} -> ${deduped.length} finding(s) over ${scopes.length} scope(s) ` +
-      `(${prevCount} before this round).`,
-  );
-
-  // "Dry" = none of this round's findings survived dedupe as a finding of its own. Only evaluated when looping; a single
-  // pass never checks it. If we exhaust `maxRounds` while a round was still net-positive, the review did not converge.
-  //
-  // Counted from the marks rather than differenced against `prevCount`, because the total also shrinks when dedupe
-  // merges two findings from *earlier* rounds — which the chunked cross pass above leaves for a later round by design,
-  // since `DEDUPE_CHUNK_PASSES` bounds how much of a duplicate chain one round can close. Differenced, three such late
-  // merges cancel two genuine new defects, and a productive round reads as convergence: the loop stops and the rounds
-  // the user asked for never run. A merged group takes its marks from its lowest index — not from the member that won
-  // the risk decision, which may well be the re-report (`withMarksOf`) — and this round's findings sit above everything
-  // accumulated, so a re-reported defect is absorbed by the copy already held and loses the mark, exactly as novelty
-  // requires.
-  if (maxRounds > 1) {
-    const netNew = deduped.filter((issue) => issue[foundThisRound]).length;
-
-    if (netNew <= 0) {
-      log(`Round ${round} added no new findings — converged, stopping.`);
-      break;
-    }
-
-    if (round === maxRounds) {
-      converged = false;
-    }
-  }
+  return { reviewedCommit: reviewHead, round, findings: knownFindings, newFindings: 0, exclusions, gaps };
 }
 
-if (!converged) {
+// Dedupe (Opus). A deterministic script cannot reason over findings, so this is delegated. Merge this round's raw
+// findings into everything accumulated so far; how many of them survive is the round's novelty signal.
+//
+// Two stages: one agent per unit in parallel, then a pass over what survives. See `dedupeScopes` for why the union is
+// split rather than handed over whole — in short, one agent's share of the work has to stop growing with the size of
+// the review, or the no-progress watchdog eventually wins whatever effort it is asked for. `chunkScopes` is what makes
+// that a guarantee rather than a hope: a unit big enough to overwhelm an agent is split like a stage-2 chunk.
+phase('Dedupe');
+const prevCount = deduped.length;
+
+// This round's raw findings go *above* everything already held, which is the ordering `NEW_THIS_ROUND` depends on.
+const union = [...deduped, ...roundIssues.map((issue) => ({ ...issue, [NEW_THIS_ROUND]: true }))];
+
+const scopes = chunkScopes(dedupeScopes(union, units));
+const scopeGroups = await parallel(
+  scopes.map(
+    (scope) => () =>
+      dedupeAgent(
+        scope.indices.map((i) => union[i]),
+        { label: `dedupe:${scope.name}` },
+      ).then((groups) => (groups ? globalizeGroups(groups, scope.indices) : null)),
+  ),
+);
+
+const stalledScopes = scopes.filter((_, i) => !scopeGroups[i]).map((scope) => scope.name);
+
+if (stalledScopes.length) {
   gaps.push(
-    `Loop hit the ${maxRounds}-round cap while still finding new issues — the review did not converge, so more ` +
-      'findings may exist. Re-run with a higher `--loop` cap to keep going.',
+    `Dedupe did not return for ${stalledScopes.length} of ${scopes.length} scope(s) in round ${round} ` +
+      `(${stalledScopes.join(', ')}) — those findings were kept raw, so one defect may be reported more than once.`,
   );
 }
+
+// Both stages merge against the list the agents were shown, so `afterUnits` is the union minus the intra-unit
+// duplicates, still in reviewer order — which is the order the per-finding validator and fixer labels index into.
+const afterUnits = mergeIssueGroups(union, scopeGroups.filter(Boolean).flat());
+
+// The second stage exists to catch one defect reported under two different units, so it has nothing to add when a
+// single scope already compared everything: re-asking would only spend a rung of the ladder on a settled question.
+// "Already compared everything" means one *unchunked* scope, which is what a lone scope now is — `chunkScopes` leaves
+// several, so an over-cap round always reaches `crossDedupe` and the passes that close the chains chunking splits up.
+const wholeUnionScoped = scopes.length === 1 && scopes[0].indices.length === union.length;
+const cross =
+  wholeUnionScoped || afterUnits.length < 2
+    ? { issues: afterUnits, stalled: 0, converged: true }
+    : await crossDedupe(afterUnits);
+
+if (cross.stalled) {
+  gaps.push(
+    `${cross.stalled} chunk(s) of the cross-unit dedupe pass did not return in round ${round} — duplicates inside ` +
+      'a unit were still merged, but one defect reported under two different units may appear twice.',
+  );
+}
+
+// Running out of passes is not the same as a stall: every chunk answered, but a chain of duplicates may still be
+// partly unmerged, because one pass closes one link of it.
+if (!cross.converged) {
+  gaps.push(
+    `The cross-unit dedupe pass was still merging findings after ${DEDUPE_CHUNK_PASSES} passes in round ${round} — ` +
+      'a defect reported under three or more units may appear twice.',
+  );
+}
+
+deduped = cross.issues;
+
+log(
+  `Deduped round ${round}: ${union.length} -> ${deduped.length} finding(s) over ${scopes.length} scope(s) ` +
+    `(${prevCount} before this round).`,
+);
+
+// This round's own survivors: the findings it raised that dedupe kept as findings of their own rather than absorbing
+// into a copy already held. Everything from here to the end of the run is scoped by this list rather than by `deduped`.
+//
+// Read off the marks rather than differenced against `prevCount`, because the total also shrinks when dedupe merges two
+// findings from *earlier* rounds — which the chunked cross pass leaves for a later round by design, since
+// `DEDUPE_CHUNK_PASSES` bounds how much of a duplicate chain one round can close. Differenced, three such late merges
+// cancel two genuine new defects and a productive round reads as dry, so the caller stops and the rounds the user asked
+// for never run.
+const newThisRound = deduped.filter((issue) => issue[NEW_THIS_ROUND]);
+
+log(`Round ${round}: ${newThisRound.length} of the round's finding(s) survived dedupe as new.`);
 
 // Phase 5 — Validate (barrier). Per issue, run `--validators` independent validators; keep on a strict majority of those
 // that return. High-risk categories (`HIGH_RISK`, declared with the dedupe merge that has to preserve them) validate
 // with Opus, the rest with Sonnet; both at capped leaf effort.
+//
+// Only over `newThisRound` — see `NEW_THIS_ROUND`. A finding that arrived on `args` came from a round that already put
+// it through this gate, and validation is the second-largest fan-out in the run (`findings × --validators`), so
+// re-judging the accumulated set every round is the multiplier this redesign exists to remove.
 phase('Validate');
 
 // The run's one quorum rule, owned here and used by both majority gates — Validate (is the finding real?) and Review Fix
@@ -2055,7 +2078,7 @@ const findingNumbers = new Map(deduped.map((issue, idx) => [issue, idx]));
 const tagOf = (issue) => findingTag(issue, findingNumbers.get(issue));
 
 const verdicts = await parallel(
-  deduped.map((issue) => async () => {
+  newThisRound.map((issue) => async () => {
     const count = validatorCount(issue);
     const model = isHighRisk(issue) ? 'opus' : 'sonnet';
     const votes = await parallel(
@@ -2081,13 +2104,24 @@ const verdicts = await parallel(
   }),
 );
 
-const findings = verdicts.filter(Boolean);
+// What the review holds after this round: everything it was handed that dedupe kept, plus this round's confirmed
+// additions. Filtered out of `deduped` rather than concatenated, so the order — and with it every `findingTag` number
+// already minted from `findingNumbers` — is the one the phases above were labelled against. Only the *new* findings can
+// be dropped here, because only they were judged; a known finding is carried whether or not it would pass again.
+const confirmed = new Set(verdicts.filter(Boolean));
+const newlyConfirmed = deduped.filter((issue) => issue[NEW_THIS_ROUND] && confirmed.has(issue));
+const findings = deduped.filter((issue) => !issue[NEW_THIS_ROUND] || confirmed.has(issue));
 
-log(`Validated ${findings.length} finding(s); ${gaps.length} gap(s).`);
+log(
+  `Round ${round}: ${newlyConfirmed.length} new finding(s) confirmed of ${newThisRound.length} judged; ` +
+    `${findings.length} held in total; ${gaps.length} gap(s).`,
+);
 
-// Without `--fix`, or with nothing to fix, the review is strictly read-only — return here.
-if (!fix || findings.length === 0) {
-  return { reviewedCommit: reviewHead, findings, exclusions, gaps };
+// Without `--fix`, or with nothing this round found to fix, the review is strictly read-only — return here. The gate is
+// on `newlyConfirmed`, not on `findings`: an earlier round's findings were already offered to `--fix` by the round that
+// confirmed them, so fixing them again would spend a worktree and a fixer per round to produce a duplicate branch.
+if (!fix || newlyConfirmed.length === 0) {
+  return { reviewedCommit: reviewHead, round, findings, newFindings: newlyConfirmed.length, exclusions, gaps };
 }
 
 // Phases 6 & 7 — Fix, then Fix review, per finding and concurrent. Each validated finding runs its own pipeline: a
@@ -2151,7 +2185,7 @@ if (!reviewHead) {
 
   // `reviewedCommit` is null here by definition — the script never learned it, so the wrapper has nothing to anchor
   // permalinks to and has to fall back to its own `git rev-parse HEAD`.
-  return { reviewedCommit: null, findings, exclusions, gaps };
+  return { reviewedCommit: null, round, findings, newFindings: newlyConfirmed.length, exclusions, gaps };
 }
 
 // Generated/build-output paths, named to the fixers so they do not stage a rebuilt artifact (see
@@ -2418,7 +2452,7 @@ const fixAndReview = async (issue) => {
 // but the workflow's return value is what the wrapper reports, and the log is not in it.
 const pipelineErrors = [];
 const rawOutcomes = await parallel(
-  findings.map((issue) => async () => {
+  newlyConfirmed.map((issue) => async () => {
     try {
       return await fixAndReview(issue);
     } catch (error) {
@@ -2430,7 +2464,7 @@ const rawOutcomes = await parallel(
 
 const outcomes = rawOutcomes.map((outcome, idx) =>
   outcome ?? {
-    issue: findings[idx],
+    issue: newlyConfirmed[idx],
     status: 'verify-failed',
     reason: 'fix/review pipeline did not return',
     changedFiles: [],
@@ -2444,9 +2478,9 @@ const unreturned = rawOutcomes.filter((outcome) => !outcome).length;
 if (unreturned) {
   const causes = [...new Set(pipelineErrors)].slice(0, 2);
   gaps.push(
-    (unreturned === findings.length
+    (unreturned === newlyConfirmed.length
       ? `The Fix phase did not run: all ${unreturned} fix pipeline(s) failed before returning`
-      : `${unreturned} of ${findings.length} fix pipeline(s) failed before returning`) +
+      : `${unreturned} of ${newlyConfirmed.length} fix pipeline(s) failed before returning`) +
       `, so those findings were never fixed and are **not** verified as unfixable.${
         causes.length ? ` Cause: ${causes.join(' | ')}` : ''
       }`,
@@ -2562,7 +2596,9 @@ if (placeholderBranches.length) {
 // from `file`, which is only where the defect was cited.
 return {
   reviewedCommit: reviewHead,
+  round,
   findings,
+  newFindings: newlyConfirmed.length,
   exclusions,
   gaps,
   fix: {

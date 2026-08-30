@@ -35,13 +35,16 @@ describe('a review round in which every reviewer fails', () => {
     expect(run.logged('produced no findings')).toHaveLength(0);
   });
 
-  it('does not let a later round of a loop stop early as if the review had gone dry', async () => {
-    const run = await reviewRun({
-      args: { loop: 2 },
-      dropReview: (label) => label.endsWith('round 2/2'),
-    });
+  it('does not let a later round tell the caller the review has gone dry', async () => {
+    // A round whose reviewers all failed returns `newFindings: 0`, which is the very signal the caller stops looping on
+    // — so on a later round the gap is the only thing separating "nothing left to find" from "nobody looked". It has to
+    // survive the early return an empty round takes, and the findings the round was handed have to come back with it,
+    // or a collapsed round 4 would also discard rounds 1 through 3.
+    const held = [issue({ description: 'held from an earlier round' })];
+    const run = await reviewRun({ args: { round: 2, knownFindings: held }, dropReview: () => true });
 
-    expect(run.result.findings).toHaveLength(1);
+    expect(run.result.findings).toEqual(held);
+    expect(run.result.newFindings).toBe(0);
     expect(run.result.gaps.join(' ')).toContain('All 6 reviewer(s) in round 2 failed to return');
     expect(run.logged('Round 2 produced no findings')).toHaveLength(0);
   });

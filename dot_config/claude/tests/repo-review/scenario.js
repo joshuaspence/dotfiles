@@ -35,12 +35,12 @@ const INTERNALS = [
   'fix',
   'input',
   'leafEffort',
-  'loopEnabled',
+  'knownFindings',
   'lsFiles',
-  'maxRounds',
   'narrowToScope',
   'paths',
   'reviewers',
+  'round',
   'scope',
   'underPath',
   'validators',
@@ -137,13 +137,11 @@ const { fileInUnit, withUnitSlugs } = await internals();
 // answer per-finding from the label alone. Mirrors `findingTag` / `attemptTag` / `voteTag`.
 const PER_FINDING = /^(fix|revise|review-fix|validate):(.+?)#(\d+)(?: attempt (\d+))?(?: vote (\d+)\/(\d+))?$/;
 
-// A `--loop` round appends ` round k/n` to every label in the round. Strip it first: no scenario answers differently by
-// round, and left on it would land inside the last colon segment a review label is split into — silently reading as the
-// category `bug round 2/4`, which matches no finding.
-const ROUND_TAG = / round \d+\/\d+$/;
-
-export function parseLabel(rawLabel = '') {
-  const label = rawLabel.replace(ROUND_TAG, '');
+// Labels carry no round marker: one round is one invocation, so a `/workflows` tree holds a single round and the ` round
+// k/n` suffix a looped run needed is gone. This used to strip it, and the strip was worth removing rather than keeping
+// as insurance — a suffix that came back would land inside the last colon segment a review label is split into, reading
+// as the category `bug round 2/4`, which matches no finding and routes nothing.
+export function parseLabel(label = '') {
   const perFinding = PER_FINDING.exec(label);
 
   if (perFinding) {
@@ -229,11 +227,10 @@ const DEFAULT_SURVEY = {
  *   reviewFix(issue, { idx, attempt, vote })  → REVIEW_RESULT_SCHEMA shape
  *   validate(issue, { idx, vote })            → VERDICT_SCHEMA shape
  *
- * `review` is what a `--loop` test needs to model a review that keeps finding *new* things: the default re-reports the
- * same `issues` every round, so non-convergence under it only ever means "dedupe merged nothing". It takes the raw
- * `call` rather than the parsed label because the round counter lives in the untrimmed label (` round k/n`), and it
- * answers for the whole scope it was labelled with — the unit routing `inUnit` performs for the default is the
- * default's business, so an override is trusted to return findings its unit could plausibly own.
+ * `review` takes the raw `call` rather than the parsed label, so an override can read the prompt — which is where a
+ * round's own inputs are, `knownFindingsBlock` and the emphasis included. It answers for the whole scope it was labelled
+ * with: the unit routing `inUnit` performs for the default is the default's business, so an override is trusted to
+ * return findings its unit could plausibly own.
  */
 export function fixScenario({
   headSha = HEAD,
@@ -298,9 +295,10 @@ export function fixScenario({
   // to `null`, which would read as a unit that found nothing.
   const unroutable = [];
 
-  // Every finding the script numbered, keyed by the number its labels carry. Validate runs exactly once over the whole
-  // de-duplicated union — the `--loop` rounds wrap Review and Dedupe only — so this ends a run holding one entry per
-  // numbered finding, which is what lets `outcomeAt` tell which of them validation then dropped.
+  // Every finding the script numbered, keyed by the number its labels carry. Validate runs once over the findings this
+  // round contributed, so this ends a run holding one entry per finding that was *judged* — which is what lets
+  // `outcomeAt` tell which of them validation then dropped. On a round given `knownFindings` it therefore holds less
+  // than `findings`, deliberately: a finding the round was handed has no outcome of its own here to line up.
   const numbered = new Map();
 
   // The checks live with the state they guard, so every way of driving this fixture gets them: `runFix`, and a test that

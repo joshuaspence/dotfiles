@@ -4,10 +4,10 @@ description: Review an entire repository
 argument-hint: >-
   [--effort <low|medium|high|xhigh|max>]
   [--fix]
-  [--loop [<max-rounds>]]
   [--output <file>]
   [--partitions <n|auto>]
   [--reviewers <n>]
+  [--rounds <n>]
   [--validators <n|auto>]
   [path ...]
 allowed-tools:
@@ -73,19 +73,19 @@ collect each one as you scan the tokens instead of expecting a single run at eit
   `--partitions` and `--validators` are orthogonal to `--effort`: they scale how many agents run and how many times
   findings are challenged, whereas `--effort` scales how hard each individual agent thinks.
 
-- `--loop [<max-rounds>]` turns on multi-round *loop-until-dry* reviewing. The script repeats its review-and-dedupe
-  pass, accumulating de-duplicated findings and steering later rounds toward what earlier ones missed, and stops as soon
-  as a round surfaces nothing new (or when it reaches the cap). Bare `--loop` uses the script's default cap; an explicit
-  positive integer overrides that cap. It is the only flag whose value is optional, so it needs its own rule for telling
-  that value from a `path`: **`--loop` consumes the token after it only when that token begins with a digit.** Otherwise
-  `--loop` is bare and that token is parsed on its own terms — as a flag, or, per the invariant above, as a path. So
-  `/repo-review --loop src` is `{ "loop": true, "paths": ["src"] }`: neither a parse error nor a dropped path. A token it
-  does consume must be a positive integer; reject anything else (`--loop 0`, `--loop 2.5`) and stop with an error rather
-  than guessing. That is also why a path whose name begins with a digit cannot follow a bare `--loop` — write it before
-  the flag instead. If omitted, the script runs a single pass. Pass it as `loop`: `true` for a bare flag, or the integer
-  when one is given. `--loop` is a third, orthogonal axis: `--effort` scales how hard each agent thinks,
-  `--partitions`/`--validators` scale how many agents run and how often findings are challenged, and `--loop` scales how
-  many times the whole review repeats.
+- `--rounds <n>` sets how many review rounds to run at most. Must be a positive integer; reject any other value
+  (`--rounds 0`, `--rounds 2.5`, `--rounds auto`) and stop with an error rather than guessing. If omitted, run **one**
+  round. Unlike every other numeric flag, this one is not passed to the script and has no key in `args`: the script runs
+  exactly one round per invocation, and `--rounds` is *your* loop bound — see
+  [Run the rounds](#run-the-rounds) for the loop it governs. It is a third, orthogonal axis: `--effort` scales how hard
+  each agent thinks, `--partitions`/`--validators` scale how many agents run and how often findings are challenged, and
+  `--rounds` scales how many times the whole review repeats.
+
+  It replaced a `--loop [<max-rounds>]` whose value was optional, which is worth knowing because the shape was the
+  problem. An optional value cannot be told from a `path` by position, so it needed a rule of its own — consume the next
+  token only if it begins with a digit — which then made a directory named `2024` unpassable after a bare `--loop`, and
+  made `true` and `3` both legal values of one key. A mandatory value removes all of that: `--rounds` parses exactly like
+  `--partitions`.
 
 - `--fix` (boolean, no value) makes the review **act**: after validation, the script runs its Fix and Review Fix phases
   — one isolated agent per validated finding attempts a clean, verified fix and commits it on a branch of its own, and
@@ -94,7 +94,8 @@ collect each one as you scan the tokens instead of expecting a single run at eit
   merge yourself, and tears down only the sandboxes that hold no work (see
   [Report the fix branches](#report-the-fix-branches)). If omitted, the review is strictly read-only, as before. Pass it
   as `fix`: `true` when present; omit it otherwise. `--fix` is independent of the other flags (it fixes whatever the
-  review, at whatever partitions/validators/effort/loop, validated).
+  review, at whatever partitions/validators/effort/rounds, validated). Each round fixes only the findings *it* confirmed,
+  so a multi-round `--fix` run produces branches as it goes rather than a batch at the end.
 
 - `--reviewers <n>` sets how many independent reviewers judge each fix in the Review Fix phase (only meaningful with
   `--fix`). Must be a non-negative integer; reject any other value and stop with an error rather than guessing. If
@@ -127,18 +128,19 @@ Call the `Workflow` tool with:
 
   Build it from **only the flags the user actually supplied**: add a key for each flag the user gave, and omit the rest.
   The script fills in the documented defaults for anything omitted (whole repository, `--effort high`,
-  `--partitions auto`, `--validators 1`, a single review pass), so do not synthesise default values here, and never
-  include `--output`. Worked examples — note that every `path` survives every flag combination, and that the path-less
-  rows are path-less only because the user gave no path:
+  `--partitions auto`, `--validators 1`, round 1 holding no findings), so do not synthesise default values here, and
+  never include `--output` or `--rounds`. Worked examples — note that every `path` survives every flag combination, that
+  the path-less rows are path-less only because the user gave no path, and that the two wrapper-handled flags leave no
+  trace in `args` at all:
 
   | Invocation                                            | `args`                                                 |
   |-------------------------------------------------------|--------------------------------------------------------|
   | `/repo-review`                                        | `{}`                                                   |
   | `/repo-review src --partitions 6`                     | `{ "paths": ["src"], "partitions": 6 }`                |
   | `/repo-review src lib`                                | `{ "paths": ["src", "lib"] }`                          |
-  | `/repo-review --loop`                                 | `{ "loop": true }`                                     |
-  | `/repo-review src --loop 3`                           | `{ "paths": ["src"], "loop": 3 }`                      |
-  | `/repo-review src lib --loop 3`                       | `{ "paths": ["src", "lib"], "loop": 3 }`               |
+  | `/repo-review --rounds 3`                             | `{}`                                                   |
+  | `/repo-review src --rounds 3`                         | `{ "paths": ["src"] }`                                 |
+  | `/repo-review 2024 --rounds 3`                        | `{ "paths": ["2024"] }`                                |
   | `/repo-review --fix`                                  | `{ "fix": true }`                                      |
   | `/repo-review --fix --reviewers 2`                    | `{ "fix": true, "reviewers": 2 }`                      |
   | `/repo-review src/a.js --fix`                         | `{ "paths": ["src/a.js"], "fix": true }`               |
@@ -160,21 +162,30 @@ argument you could have set at launch (a run already under way is not wrong just
 omitted, a value explicitly). The only reason to stop a run is a genuine wedge — most agents done, a few idle for many
 minutes — after which you may re-run, watching progress in `/workflows`, optionally at a lower `--effort`.
 
-The result is `{ reviewedCommit, findings, exclusions, gaps }`:
+The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps }`:
 
 - `reviewedCommit` — the commit SHA the review was defined against: the `HEAD` the survey read before any agent ran.
   Cite this in permalinks (see the format below) rather than asking git for `HEAD` yourself — a long run can outlive the
   `HEAD` it started on, and links built from a moved `HEAD` point at text no reviewer saw. It is `null` only when the
   survey never reported it, which is the one case where you fall back to `git rev-parse HEAD`.
-- `findings` — validated issues. Each has `description`, `severity` (`critical`/`high`/`medium`/`low`), `category`,
-  `file`, `lines` (may be empty), `otherSites` (other affected `file:line` or modules, may be empty), and `reason`.
+- `round` — which round this was, echoed back from `args.round`. Read the round number off this rather than off your own
+  counter: if the value you passed was unusable the script fell back to 1, and the emphasis its reviewers were actually
+  given follows the round it ran, not the one you asked for.
+- `findings` — validated issues, and **everything the round was handed as well as what it found**: it is the whole
+  accumulated set, already de-duplicated against itself, so it is exactly what the next round's `knownFindings` should
+  be. Each has `description`, `severity` (`critical`/`high`/`medium`/`low`), `category`, `file`, `lines` (may be empty),
+  `otherSites` (other affected `file:line` or modules, may be empty), and `reason`.
+- `newFindings` — how many of those this round contributed: found by its own reviewers, kept by dedupe as a defect the
+  review did not already hold, and confirmed by its validators. This is the number that decides whether to run another
+  round, and it is not `findings.length` minus what you passed in — dedupe can merge two findings from *earlier* rounds,
+  which makes the total fall on a round that genuinely found something.
 - `exclusions` — `{ path, reason }` entries for everything the partitioner left out (vendored/third-party code,
   generated code, lock files, binaries).
 - `gaps` — strings recording every way the run fell short of a complete, clean pass. They come in three kinds, and each
   entry states in prose which it is:
 
-  - **coverage** — a reviewer, lens, or validation that did not complete, or (with `--loop`) the loop hitting its round
-    cap without going dry. Findings may be *missing*.
+  - **coverage** — a reviewer, lens, or validation that did not complete, or a partition folded down to the unit ceiling.
+    Findings may be *missing*.
   - **dedupe** — a dedupe stage that stalled or did not converge. Every finding here *was* reviewed and validated; one
     defect may simply be listed twice.
   - **fix** — present only with `--fix`: a fix that could not be produced, reviewed or verified. This is about fixing
@@ -200,6 +211,40 @@ The result is `{ reviewedCommit, findings, exclusions, gaps }`:
     build/tests in its sandbox), or `review-rejected` (reviewers rejected the fix and revisions were exhausted). Only
     `applied` is fixed; every other status is an **unfixed** finding — though a `review-rejected` one still leaves a
     branch behind for you to look at.
+
+## Run the rounds
+
+A round used to be a `for` loop inside the script, and the round loop is yours now. This is not a refactor for tidiness:
+Review and Validate are `parallel()` barriers, so a script-internal loop killed in round 3 discarded rounds 1 and 2 with
+it. One measured four-round run consumed an entire session limit in 41 minutes and returned **nothing**. A round that
+returns is a round that got reported.
+
+With `--rounds` omitted — the default — there is one round and nothing here applies: report the result and stop. When
+more than one round was asked for, loop:
+
+1. Call `Workflow` with the `args` you built. That is round 1; omit `round` and `knownFindings` rather than passing
+   `round: 1` and an empty list, so the common case sends the same `args` it always did.
+2. **Report the round before deciding anything** — the whole [Produce the output](#produce-the-output) section, including
+   the branch table when `--fix` was given, and including its teardown. Do not accumulate rounds and report once at the
+   end: that reintroduces exactly the failure this design removes, since a run interrupted between rounds then has
+   nothing to show for the rounds that did finish. Say which round it was and how many were asked for.
+3. Stop if any of these holds, and say which one:
+   - `newFindings` is `0` — the review has gone dry. This is the ordinary, good ending.
+   - `round` has reached `--rounds`. Report that the cap was reached **while the review was still finding things**, so
+     the user knows the review is incomplete and can re-run with a higher `--rounds`. Treat it as a coverage gap.
+   - A `gaps` entry says the reviewers failed to return. A round nobody reviewed also reports `newFindings: 0`, and that
+     is not convergence — report it as a failed round and do not describe the review as dry.
+4. Otherwise call `Workflow` again with the same `args` plus two keys: `round` set to the previous `round` **plus one**,
+   and `knownFindings` set to the previous round's `findings` **verbatim**. Pass that array through untouched — do not
+   re-sort it, prune it, re-word a description, or drop the ones you judged low value. The script merges this round's
+   raw findings against it, which is what turns a re-report into an absorbed duplicate rather than a second entry, and a
+   finding you edited is one it can no longer recognise as the same finding. It also skips re-validating and re-fixing
+   everything on that list, so a finding you drop from it comes back as new and is paid for twice.
+
+Each round is a separate `Workflow` call and so a separate `/workflows` tree; the survey and partition run again in each
+one, which is the price of a round being self-contained. Later rounds are handed what is already held and are pushed to
+look elsewhere, so they cost about the same as round 1 and find less — that is the point at which to stop, not a reason
+to raise the cap.
 
 ## Produce the output
 
@@ -421,9 +466,9 @@ of the empty `rrfix/*` sandboxes it created — it still does not edit, commit, 
 - **Chunking is what actually bounds this phase, and it bounds both stages.** Splitting the union by unit is a partition,
   not a bound: unit sizes are the partitioner's choice, so a repository whose code sits mostly in one unit would hand
   that whole scope to one agent. Stage two has no partition at all and sees every survivor accumulated so far — on one
-  measured `--loop` run the cross pass was handed 116 findings in round 1, 209 in round 2 and 262 in round 3, while the
-  largest single unit scope in that entire run was 68, so the fan-in grows with the round count however well the units
-  are split. So any scope over 150 findings — under the 163 the top rung was measured answering — is chunked, at either
+  measured four-round run the cross pass was handed 116 findings in round 1, 209 in round 2 and 262 in round 3, while
+  the largest single unit scope in that entire run was 68, so the fan-in grows with what a round is handed however well
+  the units are split. So any scope over 150 findings — under the 163 the top rung was measured answering — is chunked, at either
   stage. Because a contiguous slice of the union is mostly one unit's findings (the ones stage one already merged) while
   cross-unit pairs sit far apart in that order, the chunks are built as every unordered *pair* of half-chunk blocks. That
   way any two findings share at least one chunk, so a chunked stage sees every pair a single agent would have, at
@@ -438,7 +483,7 @@ of the empty `rrfix/*` sandboxes it created — it still does not edit, commit, 
   Protocol Layer" appears as `review:wire-protocol:bug` and `dedupe:wire-protocol`. `/workflows` clips a label at around
   40 columns from the right, and with a title-cased name it was clipping the *category* — the one segment saying which
   of six reviewers a row is. The script caps the slug at 16 characters so `review:` plus the slug plus the longest
-  category still fits, leaving only the `--loop` round tag to overflow, and it numbers slugs that collide
+  category still fits, and it numbers slugs that collide
   (`wire-protocol-2`) so two units are never one indistinguishable row. Reviewers are still told the prose name, so use
   that when you describe a unit in the output — the slug is for reading the progress tree, not for the report.
 - The Review phase costs roughly `units × 6 reviewers`, plus 3 architecture lenses, per round — so the unit count is
@@ -449,10 +494,13 @@ of the empty `rrfix/*` sandboxes it created — it still does not edit, commit, 
   `null` rather than rejecting the batch, and every dropped reviewer, lens, validation, dedupe stage or fix pipeline is
   recorded in `gaps`. Surface those gaps in the output, each under its own kind — only the dropped reviewers, lenses and
   validations are lost *review coverage*.
-- With `--loop`, only the review-and-dedupe phases repeat; the survey and partition run once (stable context — and
-  re-partitioning between rounds would move findings and defeat cross-round dedup), and validation runs once at the end
-  over the accumulated set. Later rounds are told which findings are already known and are pushed to look elsewhere, so
-  cost grows roughly per round until the run goes dry or hits the cap. Because looping multiplies the high-fan-out
+- A round is a whole invocation of the script, survey and partition included, and validation and `--fix` run inside it
+  over **only what that round contributed** — not over the accumulated set. That is what makes a round cost about the
+  same as round 1 instead of as much as every round before it put together: the old in-script loop re-validated and
+  re-fixed everything held, so round 4 paid for rounds 1 through 3 again. The price of the new shape is re-surveying and
+  re-partitioning each round, which is two agents against a fan-out of dozens. Re-partitioning does move unit
+  boundaries between rounds, which no longer defeats cross-round dedupe: the round is handed the findings already held
+  and merges its own against them whatever units it drew this time. Because each round multiplies the high-fan-out
   review phase, watch `/workflows` as with any long run.
 - That "already known" list is scoped by **unit, not by category**, and this matters more than it sounds. When it was
   category-scoped, the Bug reviewer could not see that Security had already reported the same defect on the same lines,

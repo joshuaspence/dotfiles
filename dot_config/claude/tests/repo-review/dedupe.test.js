@@ -132,20 +132,20 @@ describe('dedupe merge', () => {
   });
 
   it('takes a merged group’s symbol marks from its lowest index, not from the member that survives', async () => {
-    // How `--loop` knows a round went dry: it marks the round's own findings with a symbol and counts the marks still
-    // standing after dedupe (see `foundThisRound`). A mark answers "is this a defect the review did not already hold?",
-    // which only position can answer — the union puts everything accumulated ahead of this round's reports. So on a
-    // group spanning risk tiers, the mark has to come from the lowest index even though the high-risk member is the one
-    // kept. Taken from the survivor instead, a round that merely re-reported a known defect through a higher tier reads
-    // as net-positive: the loop burns every remaining round on a converged review and then reports it as unconverged.
+    // How a round knows what it contributed: it marks its own findings with a symbol and counts the marks still standing
+    // after dedupe (see `NEW_THIS_ROUND`). A mark answers "is this a defect the review did not already hold?", which
+    // only position can answer — the union puts everything the round was handed ahead of what it reported. So on a group
+    // spanning risk tiers, the mark has to come from the lowest index even though the high-risk member is the one kept.
+    // Taken from the survivor instead, a round that merely re-reported a known defect through a higher tier reads as
+    // net-positive: the caller keeps looping over a converged review, re-judging and re-fixing what it already holds.
     const { mergeIssueGroups } = await internals();
-    const foundThisRound = Symbol('found in this round');
+    const newThisRound = Symbol('found in this round');
 
     const spanning = [
       issue({ category: 'code-quality', description: 'a.ts:10 escapes the query by hand', file: 'src/a.ts' }),
       {
         ...issue({ category: 'bug', description: 'a.ts:10 mis-escapes the query', file: 'src/a.ts' }),
-        [foundThisRound]: true,
+        [newThisRound]: true,
       },
     ];
 
@@ -155,22 +155,22 @@ describe('dedupe merge', () => {
 
     // The risk decision itself is unchanged: the `bug` member is still what survives.
     expect(merged[0].category).toBe('bug');
-    expect(merged[0][foundThisRound]).toBeUndefined();
+    expect(merged[0][newThisRound]).toBeUndefined();
   });
 
   it('keeps the mark when every member of a merged group was found this round', async () => {
     // The other half of the contract: two reviewers reporting one defect the review did not hold is still one new
-    // defect, so the merged finding stays marked. Stripping the mark here would read as convergence and stop a `--loop`
-    // run on its first productive round.
+    // defect, so the merged finding stays marked. Stripping the mark here would report the round as dry and stop the
+    // caller on its first productive round.
     const { mergeIssueGroups } = await internals();
-    const foundThisRound = Symbol('found in this round');
+    const newThisRound = Symbol('found in this round');
 
     const bothNew = [
-      { ...issue({ category: 'code-quality', file: 'src/a.ts' }), [foundThisRound]: true },
-      { ...issue({ category: 'bug', file: 'src/b.ts' }), [foundThisRound]: true },
+      { ...issue({ category: 'code-quality', file: 'src/a.ts' }), [newThisRound]: true },
+      { ...issue({ category: 'bug', file: 'src/b.ts' }), [newThisRound]: true },
     ];
 
-    expect(mergeIssueGroups(bothNew, [[0, 1]])[0][foundThisRound]).toBe(true);
+    expect(mergeIssueGroups(bothNew, [[0, 1]])[0][newThisRound]).toBe(true);
   });
 
   it('keeps the lowest-indexed member when every member sits in the same risk tier', async () => {
@@ -833,128 +833,15 @@ describe('dedupe scopes', () => {
 });
 
 describe('round labels', () => {
-  // Every agent in a round carries the same round marker, so the two rules below are one convention. The round is read
-  // out of the prompt rather than the label, since the label is what is under test.
-  const unionSize = (call) => Number(/Findings \((\d+)\)/.exec(call.prompt)[1]);
-
-  // Converge on the second round: round 1's two findings are novel, round 2 re-reports both and dedupe collapses each
-  // against its original. `pair` rather than one finding, because a lone finding is never scoped to an agent at all.
-  const convergeOnRound2 = (call) => ({ groups: unionSize(call) > 2 ? [[0, 2], [1, 3]] : [] });
-
-  it('counts every round of a looped run, including the first', async () => {
-    // `dedupe` then `dedupe:r2` labelled the same agent two ways inside one run, and read as though round 1 were the
-    // odd one out rather than simply the first. The counter names the cap too, like `vote k/n`.
-    const run = await runFix({ issues: pair, args: { loop: 2 }, dedupe: convergeOnRound2 });
-
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual([
-      'dedupe:core:high round 1/2',
-      'dedupe:core:high round 2/2',
-    ]);
-    expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual([
-      'review:core:bug round 1/2',
-      'review:core:bug round 2/2',
-    ]);
-  });
-
-  it('puts a stepped-down dedupe rung before the round, keeping colons for identity', async () => {
-    const run = await runFix({
-      issues: pair,
-      args: { loop: 2 },
-      dedupe: (call) => {
-        if (call.opts.effort === 'high') throw new Error('agent stalled');
-
-        return convergeOnRound2(call);
-      },
-    });
-
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual([
-      'dedupe:core:high round 1/2',
-      'dedupe:core:medium round 1/2',
-      'dedupe:core:high round 2/2',
-      'dedupe:core:medium round 2/2',
-    ]);
-  });
-
-  it('leaves a single pass unmarked, where there is no other round to tell it apart from', async () => {
-    const run = await runFix({ issues: pair });
+  it('carries no round marker, however late the round', async () => {
+    // Labels used to end in ` round k/n`, because one `/workflows` tree held every round of a looped run and two
+    // rounds' `dedupe:core` rows were otherwise the same row twice. A round is its own invocation now, so the tree
+    // already says which round it is and the marker would only repeat it. Worth pinning rather than leaving to drift:
+    // a label is part of the resume cache key, so a round-tagged label is one a resumed run cannot match.
+    const run = await runFix({ issues: pair, args: { round: 4, knownFindings: pair } });
 
     expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high']);
     expect(run.called(/^review:core:bug/).map((call) => call.label)).toEqual(['review:core:bug']);
-  });
-
-  it('applies the round tag conditional (maxRounds > 1) at the exact threshold', async () => {
-    // Directly tests the `roundTag` condition at the top of the `--loop` round loop: `maxRounds > 1 ? ... : ''`.
-    // A bug changing > to >=, or > 1 to > 0, would fail here rather than merely look odd in labels.
-
-    // maxRounds === 1: condition is false, tag suppressed
-    const singlePass = await runFix({ issues: pair });
-    expect(singlePass.called(/^dedupe/).every((call) => !call.label.includes(' round '))).toBe(true);
-    expect(singlePass.called(/^review:core:bug/).every((call) => !call.label.includes(' round '))).toBe(true);
-
-    // maxRounds === 2: condition is true, tag present
-    const twoRounds = await runFix({ issues: pair, args: { loop: 2 }, dedupe: convergeOnRound2 });
-    expect(twoRounds.called(/^dedupe/).every((call) => call.label.includes(' round '))).toBe(true);
-    expect(twoRounds.called(/^review:core:bug/).every((call) => call.label.includes(' round '))).toBe(true);
-  });
-});
-
-describe('loop termination', () => {
-  // The actual dry-round detection and loop exit logic that prevents wasted rounds. A round that adds no new findings
-  // after dedupe means the review has converged, so the loop stops early rather than burning the remaining rounds.
-  it('stops when a round adds no new findings after dedupe', async () => {
-    // Round 1 finds two issues, round 2 re-reports both and dedupe collapses them — netNew is 0, so the loop stops.
-    const run = await runFix({
-      issues: pair,
-      args: { loop: 4 },
-      dedupe: (call) => {
-        const unionSize = Number(/Findings \((\d+)\)/.exec(call.prompt)[1]);
-
-        // Round 2 sees four findings (two from round 1 + two from round 2) and collapses each pair.
-        return { groups: unionSize > 2 ? [[0, 2], [1, 3]] : [] };
-      },
-    });
-
-    // Only two rounds ran despite `loop: 4`, because round 2 added no net-new findings.
-    expect(run.called(/^review:/).map((call) => call.label).filter((label) => label.includes('round 3'))).toHaveLength(
-      0,
-    );
-    expect(run.logged('added no new findings — converged, stopping').length).toBe(1);
-  });
-
-  it('does not record a gap when the loop converges naturally', async () => {
-    const run = await runFix({
-      issues: pair,
-      args: { loop: 4 },
-      dedupe: (call) => {
-        const unionSize = Number(/Findings \((\d+)\)/.exec(call.prompt)[1]);
-
-        return { groups: unionSize > 2 ? [[0, 2], [1, 3]] : [] };
-      },
-    });
-
-    expect(run.result.gaps.some((gap) => gap.includes('did not converge'))).toBe(false);
-  });
-
-  it('records a gap when hitting maxRounds while still finding new issues', async () => {
-    const run = await runFix({
-      issues: pair,
-      args: { loop: 2 },
-      dedupe: () => ({ groups: [] }),
-    });
-
-    // Every round found two issues, dedupe never collapsed them, so we hit the 2-round cap still finding things.
-    expect(run.result.gaps.some((gap) => gap.includes('Loop hit the 2-round cap while still finding new issues'))).toBe(
-      true,
-    );
-    expect(run.result.gaps.some((gap) => gap.includes('the review did not converge'))).toBe(true);
-  });
-
-  it('never checks for convergence on a single-pass run', async () => {
-    // Without `--loop`, maxRounds is 1 and the dry-round check is gated behind `maxRounds > 1`, so the logic never runs.
-    const run = await runFix({ issues: pair, dedupe: () => ({ groups: [] }) });
-
-    expect(run.result.gaps.some((gap) => gap.includes('converge'))).toBe(false);
-    expect(run.logged('converged')).toHaveLength(0);
   });
 });
 
@@ -969,7 +856,7 @@ describe('dedupe schema', () => {
 
 describe('cross-pass chunking', () => {
   // Stage 1 bounds each agent by unit size; stage 2 sees every survivor accumulated so far, which on one measured
-  // `--loop` run went 116 -> 209 -> 262 while the largest unit scope stayed at 68. These chunks bound stage 2 too.
+  // four-round run went 116 -> 209 -> 262 while the largest unit scope stayed at 68. These chunks bound stage 2 too.
   it('leaves a set that fits the cap as one unnamed chunk', async () => {
     const { crossChunks, DEDUPE_CHUNK_CAP } = await internals();
 
@@ -1025,63 +912,6 @@ describe('cross-pass chunking', () => {
     const covered = new Set(crossChunks(262).flatMap((chunk) => chunk.indices));
 
     expect(covered.size).toBe(262);
-  });
-});
-
-describe('loop convergence', () => {
-  it('records a gap when the loop hits maxRounds while still finding new issues', async () => {
-    // The round loop sets `converged = false` when round === maxRounds and the last round was net-positive. This is
-    // distinct from early convergence (tested above): the review exhausted its budget before running dry, signaling that
-    // more findings likely exist. The gap tells the user to re-run with a higher cap.
-    const run = await runFix({
-      issues: pair,
-      args: { loop: 2 },
-      review: (call) => {
-        // Return different findings on each round so it never converges. Extract round number from label.
-        const roundMatch = / round (\d+)\//.exec(call.label);
-        const round = roundMatch ? Number(roundMatch[1]) : 1;
-
-        return {
-          issues:
-            round === 1
-              ? [issue({ description: 'round 1 finding', file: 'a.py' })]
-              : [issue({ description: 'round 2 finding', file: 'b.py' })],
-        };
-      },
-    });
-
-    // The premise, asserted rather than assumed: round 2 reported something round 1 did not, so the cap was hit by a
-    // review that was still finding new things. Without this the test passes on the *other* route to non-convergence —
-    // reviewers re-reporting one finding that dedupe never merges, which the `loop: 2` case above already covers — and
-    // would go on passing if the `review` override were dropped again, which is how it came to be inert.
-    const descriptions = new Set(run.result.findings.map((finding) => finding.description));
-
-    expect(descriptions).toEqual(new Set(['round 1 finding', 'round 2 finding']));
-
-    expect(run.result.gaps.some((gap) => gap.includes('Loop hit the 2-round cap while still finding new issues'))).toBe(
-      true,
-    );
-    expect(run.result.gaps.some((gap) => gap.includes('did not converge'))).toBe(true);
-    expect(run.result.gaps.some((gap) => gap.includes('Re-run with a higher `--loop` cap'))).toBe(true);
-  });
-
-  it('does not record a non-convergence gap when the loop converges early', async () => {
-    // Early convergence (netNew <= 0) is the normal outcome and is already tested in "round labels", but explicitly
-    // confirming the gap is *not* recorded when convergence happens before maxRounds guards against false positives.
-    const run = await runFix({
-      issues: pair,
-      args: { loop: 3 },
-      dedupe: (call) => {
-        const roundMatch = / round (\d+)\//.exec(call.label);
-        const round = roundMatch ? Number(roundMatch[1]) : 1;
-
-        // Round 1: two findings. Round 2: same two findings, dedupe collapses them. No round 3.
-        return round === 2 ? { groups: [[0, 2], [1, 3]] } : { groups: [] };
-      },
-    });
-
-    expect(run.result.gaps.some((gap) => gap.includes('did not converge'))).toBe(false);
-    expect(run.logged('Round 2 added no new findings — converged, stopping.').length).toBe(1);
   });
 });
 
@@ -1336,42 +1166,80 @@ describe('cross-pass convergence', () => {
   });
 });
 
-describe('what makes a `--loop` round dry', () => {
-  // Three findings in one unit, so every round runs exactly one dedupe agent: a single scope covering the whole union
-  // has already compared every pair, and the script skips the cross pass for it.
-  const trio = [
+describe('what dedupe contributes to the round’s novelty count', () => {
+  // The count the caller loops on is read off the marks that survived dedupe, not differenced against the size of the
+  // set the round was handed — and this is where the difference is observable, because dedupe is the only phase that can
+  // shrink that set. `runFix` is driven at round 2 throughout: the accumulated findings arrive on `args` now, so a test
+  // states what the review already holds instead of staging a first round to accumulate it. See `rounds.test.js` for the
+  // rest of the round contract.
+  //
+  // Three held findings plus this round's, all in one unit, so every arrangement runs exactly one dedupe agent whose
+  // indices are union indices: a single scope covering the whole union has already compared every pair, and the script
+  // skips the cross pass for it.
+  const held = [
     issue({ description: 'unchecked frame length', file: 'core/wire.py', lines: '132' }),
     issue({ description: 'partial read treated as EOF', file: 'core/frame.py', lines: '44' }),
     issue({ description: 'handshake timeout ignored', file: 'core/handshake.py', lines: '7' }),
   ];
 
-  const roundOf = (call) => Number(/ round (\d+)\//.exec(call.label)[1]);
-  const dedupeLabels = (run) => run.called(/^dedupe/).map((call) => call.label);
-  const looped = (dedupe) => runFix({ issues: trio, args: { fix: false, loop: 3 }, dedupe });
+  const found = [
+    issue({ description: 'length is re-read after the check', file: 'core/wire.py', lines: '140' }),
+    issue({ description: 'EOF is retried forever', file: 'core/frame.py', lines: '51' }),
+  ];
 
-  it('counts the findings this round contributed, not the change in the accumulated total', async () => {
-    // Round 2 does two things at once. It merges the three findings round 1 accumulated into one — the leftover merge a
-    // chunk-bounded cross pass is expected to land a round late, since `DEDUPE_CHUNK_PASSES` closes one link of a
-    // duplicate chain per round — and it keeps two of its own findings as distinct defects. So the total is unchanged
-    // while the round contributed two new findings. Differenced, that reads as convergence and the paid-for third round
-    // never runs.
-    const run = await looped((call) => ({ groups: roundOf(call) === 1 ? [] : [[0, 1, 2], [3, 4]] }));
+  // One unit spanning every file either list cites, so nothing lands in the unclaimed cross-cutting scope.
+  const units = [
+    { name: 'core', summary: 'the protocol', paths: ['core/wire.py', 'core/frame.py', 'core/handshake.py'] },
+  ];
 
-    expect(dedupeLabels(run)).toEqual([
-      'dedupe:core:high round 1/3',
-      'dedupe:core:high round 2/3',
-      'dedupe:core:high round 3/3',
-    ]);
-    expect(run.logged('Round 2 added no new findings')).toHaveLength(0);
+  const round2 = (dedupe) =>
+    runFix({ issues: found, units, args: { fix: false, round: 2, knownFindings: held }, dedupe });
+
+  it('counts the findings the round contributed, not the change in the accumulated total', async () => {
+    // Round 2 does two things at once. It merges the three findings it was handed into one — the leftover merge a
+    // chunk-bounded cross pass is expected to land a round late, since `DEDUPE_CHUNK_PASSES` bounds how much of a
+    // duplicate chain one round can close — and it keeps one of its own findings as a distinct defect. So the total
+    // *falls*, from three to two, on a round that genuinely found something. Differenced, that reads as convergence and
+    // the caller stops on a productive round.
+    const run = await round2(() => ({ groups: [[0, 1, 2], [3, 4]] }));
+
+    expect(run.result.findings).toHaveLength(2);
+    expect(run.result.newFindings).toBe(1);
   });
 
-  it('still stops on a round whose every finding was already held', async () => {
-    // The other half of the contract: each of round 2's findings is merged into the copy round 1 already had, so none
-    // of them survives as a finding of its own and the loop is right to stop.
-    const run = await looped((call) => ({ groups: roundOf(call) === 1 ? [] : [[0, 3], [1, 4], [2, 5]] }));
+  it('counts a finding merged into another of the round’s own once, not twice', async () => {
+    // Two reviewers reporting one defect the review did not hold is one new defect, and the mark survives the merge
+    // (see `dedupe merge`), so the count follows the survivors rather than the reports.
+    const run = await round2(() => ({ groups: [[3, 4]] }));
 
-    expect(dedupeLabels(run)).toEqual(['dedupe:core:high round 1/3', 'dedupe:core:high round 2/3']);
-    expect(run.logged('Round 2 added no new findings').length).toBe(1);
-    expect(run.result.gaps.some((gap) => gap.includes('did not converge'))).toBe(false);
+    expect(run.result.findings).toHaveLength(4);
+    expect(run.result.newFindings).toBe(1);
+  });
+
+  it('counts nothing on a round whose every finding was already held', async () => {
+    // Each of the round's findings is merged into the copy the review was handed, so none survives as a finding of its
+    // own. This is the signal the caller stops on, and what comes back is the set the round was handed — each survivor
+    // having absorbed its re-report as an `otherSites` entry, which is the merge working, not a finding added.
+    const run = await round2(() => ({ groups: [[0, 3], [1, 4]] }));
+
+    expect(run.result.newFindings).toBe(0);
+    expect(run.result.findings.map((finding) => finding.description)).toEqual(held.map((one) => one.description));
+  });
+
+  it('does not judge a finding that was merged into one already held', async () => {
+    // The cost half of the same rule: a re-report loses its mark, and everything after dedupe is scoped by the marks. A
+    // round that re-found what it was handed must spend no validator on it — otherwise round 4 pays to re-judge rounds
+    // 1 through 3, which is the multiplier moving the loop out to the caller exists to remove.
+    const run = await round2(() => ({ groups: [[0, 3], [1, 4]] }));
+
+    expect(run.called(/^validate/)).toHaveLength(0);
+  });
+
+  it('judges only the survivors that were marked, whatever else dedupe merged', async () => {
+    const run = await round2(() => ({ groups: [[0, 1, 2], [3, 4]] }));
+    const judged = run.called(/^validate/);
+
+    expect(judged).toHaveLength(1);
+    expect(judged[0].prompt).toContain('length is re-read after the check');
   });
 });
