@@ -32,14 +32,19 @@
 
 export const meta = {
   name: 'repo-review',
-  description: 'Review an entire repository across many subagents, then validate the findings',
+  description: 'Review an entire repository across many subagents, then adjudicate the findings',
   whenToUse: 'When a review of the entire repository is requested',
   phases: [
     { title: 'Survey' },
     { title: 'Partition' },
     { title: 'Review' },
+
+    // One phase where there were two. Merging the duplicates and judging whether a finding is real used to be `Dedupe`
+    // and `Validate`; both are questions the same reading of the same code answers, so one agent per scope answers both.
+    { title: 'Adjudicate' },
+
+    // Still `Dedupe`, because the cross-unit pass genuinely is only that: everything new has a verdict before it starts.
     { title: 'Dedupe' },
-    { title: 'Validate' },
   ],
 };
 
@@ -581,6 +586,37 @@ const DEDUPE_SCHEMA = {
   required: ['groups'],
 };
 
+// What an adjudicator answers: the same merge question as above, plus a verdict on each finding it was asked to judge.
+// `groups` is taken from `DEDUPE_SCHEMA` rather than restated, because the cross-unit pass still asks that question on
+// its own and the two contracts have to stay the same one — an adjudicator numbering its groups differently from a
+// cross-pass agent would be a merge `globalizeGroups` cannot catch, since every wrong index is also a valid index.
+//
+// Verdicts are keyed by `index` and not by position, because the list an adjudicator is shown holds findings it must not
+// judge — the ones an earlier round already confirmed, which are there to be merged against. A positional array would
+// make "the third verdict" mean the third *judged* finding under one reading and the third *listed* one under another,
+// and the two coincide exactly when there is nothing held, which is round 1 and no round after it.
+const ADJUDICATION_SCHEMA = {
+  type: 'object',
+  properties: {
+    groups: DEDUPE_SCHEMA.properties.groups,
+    verdicts: {
+      type: 'array',
+      description:
+        'One entry per finding marked `[judge]` in the numbered list, and no entry for any finding marked `[held]`.',
+      items: {
+        type: 'object',
+        properties: {
+          index: { type: 'integer', description: 'The number the finding carries in the list you were shown.' },
+          confirmed: { type: 'boolean' },
+          rationale: { type: 'string' },
+        },
+        required: ['index', 'confirmed', 'rationale'],
+      },
+    },
+  },
+  required: ['groups', 'verdicts'],
+};
+
 const SURVEY_SCHEMA = {
   type: 'object',
   properties: {
@@ -664,15 +700,6 @@ const PARTITION_SCHEMA = {
     },
   },
   required: ['units', 'exclusions'],
-};
-
-const VERDICT_SCHEMA = {
-  type: 'object',
-  properties: {
-    confirmed: { type: 'boolean' },
-    rationale: { type: 'string' },
-  },
-  required: ['confirmed', 'rationale'],
 };
 
 
@@ -987,14 +1014,22 @@ const issueDescription = (issue, budget) => {
   return last >= 0xd800 && last <= 0xdbff ? truncated.slice(0, -1) : truncated;
 };
 
-const dedupeDigest = (issues) =>
-  issues
+// The numbered list every agent that reasons over a set of findings is shown. `judged` is the indices an adjudicator
+// owes a verdict on; passing it marks each entry `[judge]` or `[held]`. Omitted — the cross-unit pass, which only ever
+// merges — the marks are left out entirely rather than rendered as a column of `[judge]`, so that pass's prompt is the
+// one it has always been and a change here cannot move it.
+const dedupeDigest = (issues, judged) => {
+  const marked = judged && new Set(judged);
+
+  return issues
     .map((issue, i) => {
       const description = issueDescription(issue, DEDUPE_DESCRIPTION_BUDGET);
+      const mark = marked ? (marked.has(i) ? '[judge] ' : '[held] ') : '';
 
-      return `${i}. [${issue?.severity}/${issue?.category}] ${issueSite(issue)} — ${description}`;
+      return `${i}. ${mark}[${issue?.severity}/${issue?.category}] ${issueSite(issue)} — ${description}`;
     })
     .join('\n');
+};
 
 // One finding, as a `gaps` entry names it. A gap is frequently the *only* surviving trace of the finding it is about —
 // a finding whose validation never completed is reported nowhere else — so it has to say which file and lines, or the
@@ -1005,14 +1040,24 @@ const GAP_DESCRIPTION_BUDGET = 80;
 const gapFinding = (issue) =>
   `${issue?.category} finding at ${issueSite(issue)} — ${issueDescription(issue, GAP_DESCRIPTION_BUDGET)}`;
 
-const dedupePrompt = (issues) =>
-  'Identify the genuine duplicates among the following review findings. Two findings are duplicates when they share ' +
-  'a root cause, or name the same file, line, and category. When in doubt, keep them separate — a false merge hides ' +
-  'a real defect behind an unrelated one.\n\n' +
+// What counts as a duplicate, and how the answer is shaped. Both stages ask this same question — the per-unit
+// adjudicator below asks it alongside a verdict, the cross-unit pass asks it alone — and they have to ask it in the same
+// words. Not for tidiness: `globalizeGroups` can only drop an index outside the range an agent was shown, and every
+// wrong index inside that range is also a valid one, so a stage whose merge rule had drifted would silently collapse
+// unrelated findings rather than failing.
+const DUPLICATE_RULE =
+  'Two findings are duplicates when they share a root cause, or name the same file, line, and category. When in ' +
+  'doubt, keep them separate — a false merge hides a real defect behind an unrelated one.';
+
+const MERGE_CONTRACT =
   'Return `groups`: one array of indices per set of duplicates, using the numbers in the list below. Every index in ' +
   'a group must refer to the same underlying defect. Give a group only when it has two or more members, never list ' +
   'an index in more than one group, and leave out every finding that has no duplicate — a finding you do not ' +
-  'mention is kept exactly as it is. Do not restate the findings themselves; the indices are the whole answer.\n\n' +
+  'mention is kept exactly as it is. Do not restate the findings themselves; the indices are the whole answer.';
+
+const dedupePrompt = (issues) =>
+  `Identify the genuine duplicates among the following review findings. ${DUPLICATE_RULE}\n\n` +
+  `${MERGE_CONTRACT}\n\n` +
   'Answer from the list alone: do not read files and do not run any commands, since everything you need is below.\n\n' +
   `Findings (${issues.length}):\n${dedupeDigest(issues)}`;
 
@@ -1052,15 +1097,42 @@ const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 const survivingMember = (issues, members) =>
   members.reduce((keep, j) => (isHighRisk(issues[j]) && !isHighRisk(issues[keep]) ? j : keep));
 
-// Symbol-keyed marks describe a *position* in the list being merged, not the content of the finding sitting there, so
-// they come from the group's lowest-indexed member rather than from the member `survivingMember` kept. The only such
-// mark is `NEW_THIS_ROUND`, which answers "is this a defect the review did not already hold?" — and only the lowest
-// index can answer it, because the union puts everything accumulated ahead of this round's reports. Left to
-// `{ ...primary }`, a re-report that wins the risk decision over the copy it is absorbed into would carry its own flag
-// onto the merged finding, and would then be validated and offered to `/repo-review-fix` a second time.
-const withMarksOf = (merged, source) => {
+// --- The two marks a finding carries through the merges ------------------------------------------------------------
+// Both are symbol-keyed own properties, which is what lets them survive `mergeIssueGroups` while staying out of every
+// prompt digest, out of the JSON the run returns, and out of reach of any field name a reviewer might use. Nothing on
+// `knownFindings` can carry either one: those made a round trip through the wrapper's JSON, which has no symbols.
+
+// Which findings this round raised, so everything below can tell them from the ones that arrived on `args` without
+// comparing content.
+//
+// Three things read it, and the last two are why it is not merely a counter. Adjudication judges only the marked
+// findings, because a finding that arrived on `args` was already confirmed by the round that produced it — re-judging it
+// would make round 4 pay for rounds 1 through 3 again, which is the cost shape moving the loop out was meant to remove.
+// `newFindings` is the number the caller stops on, and is what the wrapper reports as this round's contribution.
+const NEW_THIS_ROUND = Symbol('found in this round');
+
+// Which of those an adjudicator confirmed. Only a marked-new finding is ever judged, so this is set on exactly the
+// findings `NEW_THIS_ROUND` selected, and the gate at the end of the run reads the pair together: a new finding without
+// it is dropped, a held finding is carried whether or not it has one.
+const CONFIRMED = Symbol('confirmed by adjudication');
+
+// A mark on a merged finding comes from the group's lowest-indexed member rather than from the member `survivingMember`
+// kept, because `NEW_THIS_ROUND` describes a *position* in the list being merged and not the content of the finding
+// sitting there. Only the lowest index can answer "is this a defect the review did not already hold?", because the union
+// puts everything accumulated ahead of this round's reports. Left to `{ ...primary }`, a re-report that wins the risk
+// decision over the copy it is absorbed into would carry its own flag onto the merged finding, and would then be
+// re-judged and offered to `/repo-review-fix` a second time.
+//
+// `CONFIRMED` is the exception, and is OR-ed across the whole group: it is a judgement about the *defect* and not about
+// a position. Two adjudicators reaching opposite verdicts on the same defect under two different units are not
+// disagreeing over the same evidence — the reports name different sites, so they read different code — and the run has
+// already paid for both. Taken from the lowest index alone, one unit's rejection would bury another's confirmation, and
+// which of the two that is would be decided by the order the partitioner happened to emit its units in.
+const withMarksOf = (merged, source, members = []) => {
   for (const mark of Object.getOwnPropertySymbols(merged)) delete merged[mark];
   for (const mark of Object.getOwnPropertySymbols(source || {})) merged[mark] = source[mark];
+
+  if (members.some((member) => member?.[CONFIRMED])) merged[CONFIRMED] = true;
 
   return merged;
 };
@@ -1113,6 +1185,7 @@ const mergeIssueGroups = (issues, groups) => {
       withMarksOf(
         { ...primary, severity: members.map((j) => issues[j].severity).reduce(worstSeverity), otherSites },
         issue,
+        members.map((j) => issues[j]),
       ),
     ];
   });
@@ -1162,13 +1235,22 @@ const globalizeGroups = (groups, indices) =>
       .map((i) => indices[i]),
   );
 
-// One dedupe agent, run down the effort ladder; returns its groups, or `null` once every rung has failed.
+// One dedupe or adjudication agent, run down the effort ladder; returns its answer, or `null` once every rung has
+// failed. `verb` names the phase-and-label prefix, `build` renders the prompt and `schema` is what the answer is checked
+// against; everything else is the same machinery, because the thing the ladder defends against is the size of the
+// digest and both agents are handed one.
+//
+// The ladder matters more for adjudication than it ever did for dedupe, even though an adjudicator is the safer of the
+// two on the watchdog — it opens files, so it reports progress, while dedupe is told not to and thinks in silence. What
+// changed is the blast radius. A lost dedupe agent costs a scope its merges and says so; a lost adjudicator costs that
+// scope every verdict as well, and an unjudged finding is dropped. So one stall now takes out a unit's whole
+// contribution to the round rather than making it slightly redundant, and the retries are what keep that survivable.
 //
 // A stalled agent *throws* rather than resolving to `null`, and an unguarded throw out of a bare `await` is how a round
 // that was 42 of 43 agents done got discarded whole. So each rung is wrapped, at both stages. Note that the stage-1
-// callers additionally sit inside `parallel()`, where a rejection resolves to `null`: one unit going un-deduped must
+// callers additionally sit inside `parallel()`, where a rejection resolves to `null`: one unit going un-adjudicated must
 // not cost the round the work every other unit already did.
-const dedupeAgent = async (issues, { label }) => {
+const dedupeAgent = async (issues, { label, tail = '', verb = 'Dedupe', build = dedupePrompt, schema }) => {
   const rungs = dedupeRungs(issues.length);
   const skipped = dedupeEfforts.filter((rung) => !rungs.includes(rung));
 
@@ -1182,22 +1264,23 @@ const dedupeAgent = async (issues, { label }) => {
 
   for (const dedupeEffort of rungs) {
     try {
-      const dd = await agent(dedupePrompt(issues), {
+      const dd = await agent(build(issues), {
         // Every rung names its effort, the first one included. A step-down leaves the failed rung on screen in
         // `/workflows` permanently with nothing tying it to the row that recovered, so `dedupe:cross (retry 5) FAILED`
         // sitting above `dedupe:cross:medium` reads as a lost review rather than as a ladder working — it has misread
-        // that way in practice. Naming both makes the pair legible.
-        label: `${label}:${dedupeEffort}`,
-        phase: 'Dedupe',
+        // that way in practice. Naming both makes the pair legible. `tail` goes after the effort rather than before it,
+        // so a panel member's rungs sort together under one `vote k/n` instead of interleaving with its siblings'.
+        label: `${label}:${dedupeEffort}${tail}`,
+        phase: verb,
         model: 'opus',
         effort: dedupeEffort,
-        schema: DEDUPE_SCHEMA,
+        schema: schema ?? DEDUPE_SCHEMA,
       });
 
       // `groups: []` is a real answer — "nothing collided" — so test for the key, not for a truthy array.
-      if (dd?.groups) return dd.groups;
+      if (dd?.groups) return dd;
     } catch (err) {
-      log(`${label} stalled at effort ${dedupeEffort}: ${err?.message || err}`);
+      log(`${label}${tail} stalled at effort ${dedupeEffort}: ${err?.message || err}`);
     }
   }
 
@@ -1264,7 +1347,7 @@ const crossChunks = (count, cap = DEDUPE_CHUNK_CAP) => {
 // sends the caller on to `crossDedupe` and its passes.
 const scopeDedupe = async (issues, name) => {
   // One finding has nothing to be compared against, so an agent here could only answer `groups: []`, at Opus prices.
-  if (issues.length < 2) return { issues, stalled: [], chunks: 0, largest: 0, whole: true };
+  if (issues.length < 2) return { issues, stalled: [], chunks: 0, agents: 0, largest: 0, whole: true, unjudged: [] };
 
   const chunks = crossChunks(issues.length);
   const nameOf = (chunk) => [name, chunk.name].filter(Boolean).join(':');
@@ -1276,7 +1359,7 @@ const scopeDedupe = async (issues, name) => {
       dedupeAgent(
         chunk.indices.map((i) => issues[i]),
         { label: `dedupe:${nameOf(chunk)}` },
-      ).then((groups) => (groups ? globalizeGroups(groups, chunk.indices) : null)),
+      ).then((answer) => (answer ? globalizeGroups(answer.groups, chunk.indices) : null)),
     ),
   );
 
@@ -1284,13 +1367,219 @@ const scopeDedupe = async (issues, name) => {
     issues: mergeIssueGroups(issues, results.filter(Boolean).flat()),
     stalled: chunks.filter((_chunk, i) => !results[i]).map(nameOf),
     chunks: chunks.length,
+
+    // How many agents this scope actually spent, which is its chunk count here and its chunk count times its panel size
+    // under `scopeAdjudicate`. Reported as the denominator of the stalled-agent gap, where `chunks` would understate it.
+    agents: chunks.length,
     largest: Math.max(...chunks.map((chunk) => chunk.indices.length)),
 
     // Whether one agent compared everything in this scope, chains included — the only condition under which there is
     // nothing left for a further pass to find.
     whole: chunks.length === 1,
+
+    // Nothing here is judged, so nothing here goes unjudged: this shape is the one the per-unit pipeline hands on, and
+    // both scope functions have to fill it.
+    unjudged: [],
   };
 };
+
+// --- Adjudication: one agent decides both what collides and what is real -------------------------------------------
+// These used to be two phases. Stage-1 dedupe asked one Opus agent per unit which of that unit's findings were the same
+// defect; Validate then spent one to three more agents *per surviving finding* asking whether it was real. On a unit with
+// ten new findings, four of them high-risk, that was 1 + (4x3 + 6x1) = 19 agents. It is 1 now, or 3 under
+// `--validators auto`.
+//
+// The count is not the whole of it, and not even the interesting part. Those per-finding validators were each told to
+// open the files and check the claim themselves, and ten of them judging ten findings from one unit therefore read
+// substantially the same code ten times over — the unit is file-disjoint by construction, so their reading lists
+// overlapped by design. One adjudicator reads it once and answers about all ten.
+//
+// The merge and the verdict also want the same context, which is why fusing them costs less than doing either twice.
+// Deciding that two reports are the same defect is most of the work of deciding whether either is real: both come down to
+// reading the cited code and working out what it actually does.
+//
+// One thing genuinely gets worse. Judging ten findings is serial work inside a single agent, so the wall-clock of a unit
+// is now that whole sequence rather than the slowest of ten concurrent validators, and a stall costs the unit its
+// verdicts as well as its merges (see `dedupeAgent`, which is why the effort ladder covers this stage too).
+
+// How many adjudicators a scope gets. `--validators auto` buys the redundant panel when the scope holds any high-risk
+// finding to judge, and one otherwise; an explicit count applies uniformly. `validators` was normalized to 'auto' or a
+// positive integer at the top, so no parsing here. `HIGH_RISK` / `isHighRisk` are declared up beside `mergeIssueGroups`,
+// which also has to reason about risk to decide which member of a duplicate group survives.
+//
+// Lifted from a per-finding decision to a per-scope one, because the panel is now a panel over a scope. That rounds
+// upward: one high-risk finding in a unit buys three adjudicators, and the low-risk findings sharing that unit get three
+// verdicts they would not have bought alone. They cost nothing extra — the agents were already reading the whole scope —
+// and the alternative, splitting a scope by risk tier, would hand each half a partial list to merge against, which is the
+// one thing a merge cannot be given.
+const adjudicatorCount = (issues) =>
+  validators === 'auto' ? (issues.some((issue) => isHighRisk(issue)) ? 3 : 1) : validators;
+
+// Name a member of a redundant group only when the group has more than one member. `vote 1/1` is noise, and under the
+// default `--validators 1` every label would carry it — which is how `validate:bug:3:0` came to end in a constant `:0`
+// that looked like it meant something.
+const voteTag = (k, count) => (count > 1 ? ` vote ${k + 1}/${count}` : '');
+
+// The run's one quorum rule: a redundant panel deciding whether a finding is real. Only the agents that actually
+// returned get a vote, and passing needs a *strict* majority of them (>, not >=, so 1-of-2 does not pass).
+// `completed: false` means nothing returned at all: the gate could not run, which is a gap for the caller to record
+// rather than a verdict — and `passed` is false there too, so a gate that never ran can never read as an approval.
+// `/repo-review-fix` carries its own copy of this rule for its fix-review gate; the two cannot share code, since a
+// workflow script has no imports.
+const quorum = (votes, isYes) => {
+  const returned = votes.filter(Boolean);
+
+  return {
+    returned,
+    completed: returned.length > 0,
+    passed: returned.filter(isYes).length > returned.length / 2,
+  };
+};
+
+// The judged findings in full, keyed by the number the digest gave them. The digest is one truncated line per finding,
+// which is right for deciding what collides and wrong for deciding what is true: a reviewer's evidence is in its
+// description, and `DEDUPE_DESCRIPTION_BUDGET` cuts that at 300 characters. So the findings a verdict is owed on are
+// restated whole — which is what the per-finding validator this replaces was given, one at a time.
+//
+// Only those. A held finding is merge context and an earlier round already judged it, so paying for its full text would
+// grow this prompt with the ledger rather than with the round, which is the cost shape the redesign exists to remove.
+const judgedBlock = (issues, judged) =>
+  JSON.stringify(
+    judged.map((i) => ({ index: i, ...issues[i] })),
+    null,
+    2,
+  );
+
+// Like every phase of this workflow, adjudication runs in the user's live checkout, so it needs the execution guard every
+// other prompt already carries (`REVIEW_RULES` for the reviewers, "do not read files" for the cross pass,
+// `READ_ONLY_RULE` for the enumerating three). It matters here because this is where the run holds Bash over unverified
+// claims, and a claim about build or test behaviour is exactly the kind one would be tempted to settle by *running* the
+// build. That would leave `node_modules/`, `dist/` or coverage output in the tree, breaking the read-only contract this
+// command's whole posture rests on — and leaving `/repo-review-fix`, which runs next over the same checkout, unable to
+// tell its own sandboxes' output from a dirty tree it inherited. The guard is phrased as forbidden *actions*, not as an
+// exhaustive toolkit: read-only search is how a repository-wide claim gets confirmed at all, and an adjudicator that read
+// this as "no searching" would abstain, which on a strict-majority gate silently drops real findings.
+// `read-only.test.js` holds this invariant for every phase.
+const adjudicatorPrompt = (issues, judged, survey) =>
+  'You are adjudicating the findings several reviewers raised over the same code. You have two jobs and both are ' +
+  'about the one numbered list below.\n\n' +
+  `**1. Merge the duplicates.** ${DUPLICATE_RULE}\n\n${MERGE_CONTRACT}\n\n` +
+  '**2. Judge whether each finding marked `[judge]` is real**, with high confidence. Open the actual file(s) ' +
+  'yourself — or, for repository-wide findings, the relevant files and structure — rather than trusting the ' +
+  'report\'s excerpt. Confirm the specific claim: e.g. if "variable is not defined" was flagged, verify that is ' +
+  'actually true in the code; for a `CLAUDE.md` issue, confirm the cited rule is scoped for the file and is actually ' +
+  `violated. Confirm only if the issue is truly an issue and significant today; note that ${PRE_EXISTING_NOTE}\n\n` +
+  'Return `verdicts`: one `{ index, confirmed, rationale }` per `[judge]` finding, where `index` is the number that ' +
+  'finding carries below. Judge every one of them, the ones you merged included — a merged group is confirmed if any ' +
+  'of its members is, so the two jobs are independent and a finding you leave out of `verdicts` is discarded ' +
+  'unreported rather than treated as rejected. Return no verdict for a `[held]` finding: an earlier round already ' +
+  "confirmed those, and they are listed only so this round's reports can be merged into them.\n\n" +
+  'You are working in the live checkout, not a sandbox, so judge each claim from the source as written: do not modify, ' +
+  'create, or delete any file, and do not build, typecheck, lint, or test the repository. Read-only inspection is ' +
+  'otherwise unrestricted — read any file, and search and enumerate as widely as the claims need (prefer ' +
+  '`git ls-files` over `find`) — and you may consult authoritative upstream documentation for how an external API, ' +
+  'library, or framework behaves. When a claim is itself about build or test behaviour, settle it from the source and ' +
+  'the build/test configuration, and say in `rationale` what only running them could have settled.\n\n' +
+  `Findings (${issues.length}, of which ${judged.length} to judge):\n${dedupeDigest(issues, judged)}\n\n` +
+  `The findings to judge, in full:\n${judgedBlock(issues, judged)}\n\n${surveyBlock(survey)}`;
+
+// One scope, adjudicated: chunked exactly as `scopeDedupe` chunks it, then a panel of `--validators` independent
+// adjudicators over those chunks. Returns the merged findings, whatever never came back, and the findings that reached
+// the end of it without a verdict.
+//
+// Verdicts and groups are aggregated differently, and deliberately so.
+//
+// A verdict is a question about the code with a right answer, which is what a majority is for, so every returning agent
+// that was shown a finding votes on it. Chunking hands out that redundancy for free: an over-cap scope is cut into
+// pair-covering chunks, so each finding appears in every chunk built from its own block, and a 262-finding scope
+// therefore judges each of its findings three times per panel member without spending an agent on it.
+//
+// The merge is one panel member's answer rather than the panel's. Which findings collide has never been voted on and
+// cannot be without changing what a merge means: `mergeIssueGroups` is first-claim-wins and deliberately not transitive,
+// so reconciling three members' groups would take union-find, and a chain of {A,B} and {B,C} that today leaves C for a
+// later pass to look at again would collapse all three in one step. So the first member that came back decides and the
+// rest of the panel's groups are discarded — which under the default `--validators 1` is not a choice at all, since
+// there is only ever one.
+const scopeAdjudicate = async (issues, name, survey) => {
+  const judged = issues.flatMap((issue, i) => (issue[NEW_THIS_ROUND] ? [i] : []));
+
+  // Nothing new in this scope, so there is nothing to judge and nothing to merge: its held findings were deduped and
+  // confirmed by the rounds that produced them, and re-asking a settled question costs a full Opus agent to be told
+  // `groups: []`. Under the shared union this ran anyway, once per unit, on every round after the first.
+  if (judged.length === 0) return { issues, stalled: [], chunks: 0, agents: 0, largest: 0, whole: true, unjudged: [] };
+
+  const chunks = crossChunks(issues.length);
+  const nameOf = (chunk) => [name, chunk.name].filter(Boolean).join(':');
+  const panel = adjudicatorCount(judged.map((i) => issues[i]));
+  const isJudged = new Set(judged);
+
+  // One `dedupeAgent` per chunk per panel member: the chunks bound the digest, the panel is `--validators`. Both loops
+  // are `parallel()`, where a rejection resolves to `null`, so neither a stalled chunk nor a stalled panel member costs
+  // this scope what the others found.
+  const runs = await parallel(
+    Array.from({ length: panel }, (_, k) => () =>
+      parallel(
+        chunks.map((chunk) => () => {
+          const shown = chunk.indices.map((i) => issues[i]);
+          const localJudged = chunk.indices.flatMap((i, local) => (isJudged.has(i) ? [local] : []));
+
+          return dedupeAgent(shown, {
+            label: `adjudicate:${nameOf(chunk)}`,
+            tail: voteTag(k, panel),
+            verb: 'Adjudicate',
+            build: (list) => adjudicatorPrompt(list, localJudged, survey),
+            schema: ADJUDICATION_SCHEMA,
+          });
+        }),
+      ),
+    ),
+  );
+
+  // Every verdict cast on each judged finding, gathered across the panel and across the chunks it appeared in. An
+  // `index` outside what the agent was shown is dropped here, because nothing downstream could catch it: every
+  // chunk-local index is also a valid scope index, so a stray would land a verdict on an unrelated finding.
+  const cast = new Map(judged.map((i) => [i, []]));
+
+  for (const answers of runs.filter(Boolean)) {
+    answers.forEach((answer, c) => {
+      for (const verdict of Array.isArray(answer?.verdicts) ? answer.verdicts : []) {
+        const global = Number.isInteger(verdict?.index) ? chunks[c].indices[verdict.index] : undefined;
+
+        if (cast.has(global)) cast.get(global).push(verdict);
+      }
+    });
+  }
+
+  const unjudged = [];
+
+  for (const [i, votes] of cast) {
+    const { completed, passed } = quorum(votes, (verdict) => verdict.confirmed);
+
+    // Stamped on the finding itself, and before the merge, so `withMarksOf` can OR the mark across a group whose
+    // members were judged by different agents. Only this round's own findings are ever judged, so nothing read off
+    // `args` is mutated here.
+    if (!completed) unjudged.push(issues[i]);
+    else if (passed) issues[i][CONFIRMED] = true;
+  }
+
+  const merger = runs.filter(Boolean).find((answers) => answers.some(Boolean));
+  const groups = (merger || []).flatMap((answer, c) =>
+    answer ? globalizeGroups(answer.groups, chunks[c].indices) : [],
+  );
+
+  return {
+    issues: mergeIssueGroups(issues, groups),
+    stalled: Array.from({ length: panel }, (_, k) =>
+      chunks.filter((_chunk, c) => !runs[k]?.[c]).map((chunk) => `${nameOf(chunk)}${voteTag(k, panel)}`),
+    ).flat(),
+    chunks: chunks.length,
+    agents: chunks.length * panel,
+    largest: Math.max(...chunks.map((chunk) => chunk.indices.length)),
+    whole: chunks.length === 1,
+    unjudged,
+  };
+};
+
 
 // Run the cross-unit pass to convergence. Returns the surviving findings plus what the caller needs to report: how
 // many chunks never came back, and whether the loop converged or ran out of passes.
@@ -1333,32 +1622,6 @@ const surveyPrompt = () =>
   'directory. The last two are different numbers whenever a scope narrower than the repository is in effect. ' +
   'Finally, run `git rev-parse HEAD` and return its full 40-character output as `headSha` — the commit the rest of ' +
   `this review is defined against.\n\n${READ_ONLY_RULE}`;
-
-// Like every phase of this workflow, Validate runs in the user's live checkout, so it needs the execution guard every
-// other prompt already carries (`REVIEW_RULES` for the reviewers, "do not read files" for dedupe, `READ_ONLY_RULE` for
-// the enumerating three). It matters most here: this is the highest fan-out phase, each validator holds Bash, and a
-// claim about build or test behaviour is exactly the kind one would be tempted to settle by *running* the build. That
-// would leave `node_modules/`, `dist/` or coverage output in the tree, breaking the read-only contract this command's
-// whole posture rests on — and leaving `/repo-review-fix`, which runs next over the same checkout, unable to tell its
-// own sandboxes' output from a dirty tree it inherited. The guard is phrased as forbidden *actions*, not as an
-// exhaustive toolkit: read-only search is how a repository-wide claim gets confirmed at all, and a validator that read
-// this as "no searching" would abstain, which on a strict-majority gate silently drops real findings.
-// `read-only.test.js` holds this invariant for every phase.
-const validatorPrompt = (issue, survey) =>
-  'Independently validate whether the following reported issue is real, with high confidence. Open the actual ' +
-  'file(s) yourself — or, for repository-wide findings, the relevant files and structure — rather than trusting the ' +
-  'report\'s excerpt. Confirm the specific claim: e.g. if "variable is not defined" was flagged, verify that is ' +
-  'actually true in the code; for a `CLAUDE.md` issue, confirm the cited rule is scoped for the file and is actually ' +
-  'violated. Confirm only if the issue is truly an issue and significant today; note that ' +
-  `${PRE_EXISTING_NOTE}\n\n` +
-  'You are working in the live checkout, not a sandbox, so judge the claim from the source as written: do not modify, ' +
-  'create, or delete any file, and do not build, typecheck, lint, or test the repository. Read-only inspection is ' +
-  'otherwise unrestricted — read any file, and search and enumerate as widely as the claim needs (prefer ' +
-  '`git ls-files` over `find`) — and you may consult authoritative upstream documentation for how an external API, ' +
-  'library, or framework behaves. When the claim is itself about build or test behaviour, settle it from the source ' +
-  'and the build/test configuration, and say in `rationale` what only running them could have settled.\n\n' +
-  `Return \`{ confirmed, rationale }\`.\n\n` +
-  `Issue:\n${JSON.stringify(issue, null, 2)}\n\n${surveyBlock(survey)}`;
 
 function architecturalLensPrompt(lens, survey, claudeMdPaths, roundCtx = {}) {
   let extra = '';
@@ -1534,29 +1797,6 @@ function groupPrompt(group, unit, survey, claudeMdPaths, roundCtx = {}) {
     )
   );
 }
-
-
-// --- Validator risk model ------------------------------------------------------------------------------------------
-// `HIGH_RISK` / `isHighRisk` — the categories where a wrong verdict is expensive, and so validate with the stronger
-// model and a redundant panel of it — are declared up beside `mergeIssueGroups`, which also has to reason about risk to
-// decide which member of a duplicate group survives.
-//
-// With `--validators auto`, high-risk categories get 3 independent validators and the rest get 1; an explicit count
-// applies uniformly. `validators` was normalized to 'auto' or a positive integer at the top, so no parsing here.
-const validatorCount = (issue) =>
-  validators === 'auto' ? (isHighRisk(issue) ? 3 : 1) : validators;
-
-
-// --- Agent labels for the per-finding phases -----------------------------------------------------------------------
-// One handle per finding, shared by every agent that touches it, so a single finding can be followed across phases in
-// the progress tree. Only the validators use it now that fixing is `/repo-review-fix`, but the shape is the same one
-// that command's fixer labels take, so a finding reads the same in both progress trees.
-const findingTag = (issue, idx) => `${issue.category}#${idx}`;
-
-// Name a member of a redundant group only when the group has more than one member. `vote 1/1` is noise, and under the
-// default `--validators 1` every label would carry it — which is how `validate:bug:3:0` came to end in a constant `:0`
-// that looked like it meant something.
-const voteTag = (k, count) => (count > 1 ? ` vote ${k + 1}/${count}` : '');
 
 
 // --- Orchestration ------------------------------------------------------------------------------------------------
@@ -1775,21 +2015,6 @@ log(`Partitioned into ${units.length} unit(s) over ${unitPaths.length} path(s); 
 // the caller gets back exactly what it handed over, plus whatever survived here.
 let deduped = knownFindings;
 
-// The mark this round's own findings carry through both dedupe stages, so everything below can tell them from the ones
-// that arrived on `args` without comparing content. A symbol-keyed own property survives `mergeIssueGroups`, which
-// carries a merged group's marks over from its lowest-indexed member (`withMarksOf`), while staying out of every prompt
-// digest, out of the JSON the run returns, and out of reach of any field name a reviewer might use. Nothing on
-// `knownFindings` can carry it either way: those made a round trip through the wrapper's JSON, which has no symbols.
-//
-// Three things read it, and the last two are why it is not merely a counter. `newFindings` is the number the caller
-// stops on. Validate runs only over the marked findings, because a finding that arrived on `args` was already confirmed
-// by the round that produced it — re-judging it would make round 4 pay for rounds 1 through 3 again, which is the cost
-// shape moving the loop out was meant to remove. And `newFindings` is what the wrapper reports as this round's
-// contribution. The mark surviving from the *lowest* index is what makes both safe: the known findings sit below this
-// round's in the union, so a re-report merged into a copy already held loses the mark and is neither re-judged nor
-// re-counted, which is exactly right.
-const NEW_THIS_ROUND = Symbol('found in this round');
-
 // The architecture lenses assess repository-level structure, so on a scope of one or two files there is nothing
 // structural to assess — three whole-repo Opus agents would return noise at best. Skip them below that threshold and
 // record it: a lens that never ran must not read as "architecture: clean". An unknown scope size still runs them.
@@ -1961,24 +2186,18 @@ const [unitScopes, lensIssues] = await parallel([
       // Stage 1 — this unit's reviewers, at capped leaf effort.
       (unit) => reviewIssues(unitSpecs(unit)),
 
-      // Stage 2 — this unit's dedupe, as soon as its own reviewers are in and not a moment later.
+      // Stage 2 — this unit's adjudication, as soon as its own reviewers are in and not a moment later.
       async (raw, unit, u) => {
-        // A reviewer may cite a file outside the unit it was given. That finding cannot be deduped here — the unit that
-        // owns the file may already have finished — so anything this unit does not claim is handed to the leftovers
-        // scope after the barrier. Nothing is lost by that: `crossDedupe` compares every surviving pair, so a misrouted
-        // finding still meets the copy already held, one stage later than it would have.
+        // A reviewer may cite a file outside the unit it was given. That finding cannot be adjudicated here — the unit
+        // that owns the file may already have finished — so anything this unit does not claim is handed to the leftovers
+        // scope after the barrier, where it is merged *and judged*. Nothing is lost by that: `crossDedupe` compares
+        // every surviving pair, so a misrouted finding still meets the copy already held, one stage later than it would
+        // have.
         const mine = new Set(claimUnits(raw, units).perUnit[u]);
         const strays = raw.filter((issue) => !mine.has(issue));
 
         // Held findings first, this round's after — the ordering `NEW_THIS_ROUND` depends on, here within one scope.
-        const scope = [...held.perUnit[u], ...mine];
-
-        // A unit that found nothing new has nothing to merge: its held findings were deduped by the round that produced
-        // them, and re-comparing a settled set is a full Opus agent spent to be told `groups: []`. Under the shared
-        // union this ran anyway, once per unit, on every round after the first.
-        if (mine.size === 0) return { issues: scope, strays, stalled: [], chunks: 0, whole: true };
-
-        return { strays, ...(await scopeDedupe(scope, unit.slug)) };
+        return { strays, ...(await scopeAdjudicate([...held.perUnit[u], ...mine], unit.slug, survey)) };
       },
     ),
 
@@ -1997,11 +2216,11 @@ const scopes = units.map((unit, u) => {
   if (scope) return scope;
 
   gaps.push(
-    `Review and dedupe of unit '${unit.slug}' in round ${round} failed outright, so it contributed nothing — the ` +
-      `${held.perUnit[u].length} finding(s) already held for it are carried unchanged. Re-run the review.`,
+    `Review and adjudication of unit '${unit.slug}' in round ${round} failed outright, so it contributed nothing — ` +
+      `the ${held.perUnit[u].length} finding(s) already held for it are carried unchanged. Re-run the review.`,
   );
 
-  return { issues: held.perUnit[u], strays: [], stalled: [], chunks: 0, whole: true };
+  return { issues: held.perUnit[u], strays: [], stalled: [], chunks: 0, agents: 0, whole: true, unjudged: [] };
 });
 
 log(
@@ -2009,10 +2228,10 @@ log(
     `reviewer(s) over ${units.length} unit(s).`,
 );
 
-// A round that raised nothing has nothing to dedupe against what is held and nothing to validate, and
-// the set it holds is the one it was handed — already deduped and already confirmed by the rounds that produced it. So
-// return it here rather than paying a cross pass to re-merge a settled set and a Validate pass to re-confirm it. Every
-// per-unit scope skipped its own agent for the same reason, so a dry round now costs nothing beyond the reviewers.
+// A round that raised nothing has nothing to merge against what is held and nothing to judge, and the set it holds is
+// the one it was handed — already deduped and already confirmed by the rounds that produced it. So return it here
+// rather than paying a cross pass to re-merge a settled set. Every per-unit scope skipped its own adjudicator for the
+// same reason, so a dry round now costs nothing beyond the reviewers.
 // `newFindings: 0` is what tells the caller the review has gone dry and there is no round after this one.
 if (rawFound === 0) {
   // An empty round only means the review went dry if somebody actually looked. When every reviewer failed, the round
@@ -2032,11 +2251,11 @@ if (rawFound === 0) {
   return { reviewedCommit: reviewHead, round, findings: knownFindings, newFindings: 0, exclusions, gaps };
 }
 
-// Dedupe, stage 2 (Opus). A deterministic script cannot reason over findings, so this is delegated. Stage 1 already ran
-// inside the pipeline above, one scope per unit; what is left is the scope no unit owns, and then the pass that compares
-// findings *across* units — which is the one part of this phase that genuinely needs every reviewer's answer, and
-// therefore the only barrier left between Review and Validate.
-phase('Dedupe');
+// The barrier, and the only one left after Review. Adjudication already ran inside the pipeline above, one scope per
+// unit; what is left is the scope no unit owns — which does need judging, since the architecture lenses report into it —
+// and then the pass that compares findings *across* units, the one part of this phase that genuinely needs every
+// reviewer's answer. That pass only ever merges: everything new has a verdict by the time it gets there.
+phase('Adjudicate');
 const prevCount = deduped.length;
 
 // The leftovers: everything no unit claimed. The repo-wide lens findings, the strays a reviewer cited outside its own
@@ -2044,17 +2263,25 @@ const prevCount = deduped.length;
 // compared against each other rather than skipped — they are the likeliest triplicates in the round, one per lens.
 // Held first here too, so a lens re-reporting a held finding is absorbed into the copy the ledger already knows.
 const unclaimed = [...held.unclaimed, ...scopes.flatMap((scope) => scope.strays), ...(lensIssues ?? [])];
-const leftovers = await scopeDedupe(unclaimed, DEDUPE_UNCLAIMED_SLUG);
+const leftovers = await scopeAdjudicate(unclaimed, DEDUPE_UNCLAIMED_SLUG, survey);
 
 const allScopes = [...scopes, leftovers];
 const stalledScopes = allScopes.flatMap((scope) => scope.stalled);
 const scopeCount = allScopes.reduce((total, scope) => total + scope.chunks, 0);
+const agentCount = allScopes.reduce((total, scope) => total + scope.agents, 0);
 
 if (stalledScopes.length) {
   gaps.push(
-    `Dedupe did not return for ${stalledScopes.length} of ${scopeCount} scope(s) in round ${round} ` +
+    `Adjudication did not return for ${stalledScopes.length} of ${agentCount} agent(s) in round ${round} ` +
       `(${stalledScopes.join(', ')}) — those findings were kept raw, so one defect may be reported more than once.`,
   );
+}
+
+// Said separately, and per finding, because it is the more expensive failure of the two. A scope whose merge never
+// arrived reports a duplicate; a finding whose verdict never arrived is *dropped*, so the gap is the only surviving
+// trace of it and has to name the site the way every other list does.
+for (const issue of allScopes.flatMap((scope) => scope.unjudged)) {
+  gaps.push(`Adjudication did not complete for a ${gapFinding(issue)}`);
 }
 
 // Every scope merged its own list; concatenating them gives the round minus its intra-unit duplicates, in unit order —
@@ -2071,7 +2298,12 @@ const afterUnits = [
   ...merged.filter((issue) => issue[NEW_THIS_ROUND]),
 ];
 
-// The cross pass exists to catch one defect reported under two different units, so it has nothing to add when a single
+// The cross pass is the last thing in the run, and the one phase that is still only a dedupe: everything new carries a
+// verdict by now, so all this can do is merge. Named as its own phase for that reason — a `dedupe:cross` row sitting
+// under `Adjudicate` would read as an adjudicator that answered nothing.
+phase('Dedupe');
+
+// It exists to catch one defect reported under two different units, so it has nothing to add when a single
 // scope already compared everything: re-asking would only spend a rung of the ladder on a settled question. It takes one
 // *unchunked* scope for that, so an over-cap round always reaches `crossDedupe` and the passes that close the chains
 // chunking splits up — and so does a round whose findings landed in more than one scope, however small.
@@ -2105,87 +2337,26 @@ log(
     `(${prevCount} before this round).`,
 );
 
-// This round's own survivors: the findings it raised that dedupe kept as findings of their own rather than absorbing
-// into a copy already held. Everything from here to the end of the run is scoped by this list rather than by `deduped`.
+// This round's own survivors: the findings it raised that the merges kept as findings of their own rather than absorbing
+// into a copy already held.
 //
-// Read off the marks rather than differenced against `prevCount`, because the total also shrinks when dedupe merges two
-// findings from *earlier* rounds — which the chunked cross pass leaves for a later round by design, since
+// Read off the marks rather than differenced against `prevCount`, because the total also shrinks when the cross pass
+// merges two findings from *earlier* rounds — which the chunked pass leaves for a later round by design, since
 // `DEDUPE_CHUNK_PASSES` bounds how much of a duplicate chain one round can close. Differenced, three such late merges
 // cancel two genuine new defects and a productive round reads as dry, so the caller stops and the rounds the user asked
 // for never run.
 const newThisRound = deduped.filter((issue) => issue[NEW_THIS_ROUND]);
 
-log(`Round ${round}: ${newThisRound.length} of the round's finding(s) survived dedupe as new.`);
-
-// Phase 5 — Validate (barrier). Per issue, run `--validators` independent validators; keep on a strict majority of those
-// that return. High-risk categories (`HIGH_RISK`, declared with the dedupe merge that has to preserve them) validate
-// with Opus, the rest with Sonnet; both at capped leaf effort.
+// What the review holds after this round: everything it was handed that the merges kept, plus this round's confirmed
+// additions. Filtered out of `deduped` rather than concatenated, so the order is the one the wrapper reports against.
 //
-// Only over `newThisRound` — see `NEW_THIS_ROUND`. A finding that arrived on `args` came from a round that already put
-// it through this gate, and validation is the second-largest fan-out in the run (`findings × --validators`), so
-// re-judging the accumulated set every round is the multiplier this redesign exists to remove.
-phase('Validate');
-
-// The run's one quorum rule: Validate's redundant panel deciding whether a finding is real. Only the agents that
-// actually returned get a vote, and passing needs a *strict* majority of them (>, not >=, so 1-of-2 does not pass).
-// `completed: false` means nothing returned at all: the gate could not run, which is a gap for the caller to record
-// rather than a verdict — and `passed` is false there too, so a gate that never ran can never read as an approval.
-// `/repo-review-fix` carries its own copy of this rule for its fix-review gate; the two cannot share code, since a
-// workflow script has no imports.
-const quorum = (votes, isYes) => {
-  const returned = votes.filter(Boolean);
-
-  return {
-    returned,
-    completed: returned.length > 0,
-    passed: returned.filter(isYes).length > returned.length / 2,
-  };
-};
-
-// A finding's number is its position in `deduped`, read off the finding itself rather than off whichever loop is
-// iterating it. Validate runs only over `newThisRound`, which is a *subset* of `deduped`, so numbering by loop position
-// would give the same finding a different number depending on how much of the ledger this round happened to re-find —
-// and the returned `findings` array, which the wrapper reports against, is `deduped` order.
-const findingNumbers = new Map(deduped.map((issue, idx) => [issue, idx]));
-
-// The only place a finding's number is supplied to `findingTag`, so no call site can label a finding by its loop
-// position instead. `findingTag` itself stays a pure declaration above the marker, where a unit test can reach it.
-const tagOf = (issue) => findingTag(issue, findingNumbers.get(issue));
-
-const verdicts = await parallel(
-  newThisRound.map((issue) => async () => {
-    const count = validatorCount(issue);
-    const model = isHighRisk(issue) ? 'opus' : 'sonnet';
-    const votes = await parallel(
-      Array.from({ length: count }, (_, k) => () =>
-        agent(validatorPrompt(issue, survey), {
-          label: `validate:${tagOf(issue)}${voteTag(k, count)}`,
-          phase: 'Validate',
-          model,
-          effort: leafEffort,
-          schema: VERDICT_SCHEMA,
-        }),
-      ),
-    );
-
-    const { completed, passed } = quorum(votes, (v) => v.confirmed);
-
-    if (!completed) {
-      gaps.push(`Validation did not complete for a ${gapFinding(issue)}`);
-      return null;
-    }
-
-    return passed ? issue : null;
-  }),
-);
-
-// What the review holds after this round: everything it was handed that dedupe kept, plus this round's confirmed
-// additions. Filtered out of `deduped` rather than concatenated, so the order — and with it every `findingTag` number
-// already minted from `findingNumbers` — is the one the phases above were labelled against. Only the *new* findings can
-// be dropped here, because only they were judged; a known finding is carried whether or not it would pass again.
-const confirmed = new Set(verdicts.filter(Boolean));
-const newlyConfirmed = deduped.filter((issue) => issue[NEW_THIS_ROUND] && confirmed.has(issue));
-const findings = deduped.filter((issue) => !issue[NEW_THIS_ROUND] || confirmed.has(issue));
+// Only the *new* findings can be dropped here, because only they were judged; a known finding is carried whether or not
+// it would pass again. The mark it is judged by was set by whichever adjudicator held the scope the finding landed in,
+// which is why this is a filter over marks rather than a set built from a verdict phase's return value — the verdicts
+// are gone by now, spread across one agent per scope, and the cross pass has since merged some of those findings into
+// each other (see `withMarksOf`, which OR-es this mark across a merged group for exactly that reason).
+const newlyConfirmed = newThisRound.filter((issue) => issue[CONFIRMED]);
+const findings = deduped.filter((issue) => !issue[NEW_THIS_ROUND] || issue[CONFIRMED]);
 
 log(
   `Round ${round}: ${newlyConfirmed.length} new finding(s) confirmed of ${newThisRound.length} judged; ` +

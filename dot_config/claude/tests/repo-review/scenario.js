@@ -1,14 +1,17 @@
 /**
  * Scenario fixtures for `repo-review.js`.
  *
- * Reaching a finding in the return value means satisfying five phases of agents (survey, CLAUDE.md scan, partition, six
- * reviewers per unit, dedupe, validators), none of which a test about one of them cares about. `reviewScenario` supplies
- * a working default for all of them and lets a test override only the part under examination.
+ * Reaching a finding in the return value means satisfying five phases of agents (survey, CLAUDE.md scan, partition, the
+ * reviewers for each unit, that unit's adjudicators, the cross-unit dedupe pass), none of which a test about one of them
+ * cares about. `reviewScenario` supplies a working default for all of them and lets a test override only the part under
+ * examination.
  *
- * Everything is keyed off the agent labels, which encode the unit and the finding index and vote — so a scenario can
- * answer per-finding without the test having to know the order agents happen to run in.
+ * Everything is keyed off the agent labels, which encode the unit and the panel vote — so a scenario can answer per
+ * agent without the test having to know the order agents happen to run in. A *finding* is no longer named by a label,
+ * because no phase is per-finding any more: an adjudicator is told which of the findings in its scope to judge, and the
+ * fixture reads that list back out of the prompt (see `JUDGED_BLOCK`) to answer about them one at a time.
  *
- * Nothing here fixes anything. This script's phases end at Validate and its return value is a report; the agents that
+ * Nothing here fixes anything. This script's phases end at Dedupe and its return value is a report; the agents that
  * write commits live in `repo-review-fix.js` and are driven by the fixtures under `tests/repo-review-fix/`.
  */
 
@@ -51,11 +54,16 @@ const INTERNALS = [
   'underPath',
   'validators',
 
-  // The risk model `--validators auto` resolves through, and the label grammar every per-finding agent is keyed off.
-  'findingTag',
+  // The risk model `--validators auto` resolves through, the gate it feeds, and the label suffix a panel member carries.
+  'adjudicatorCount',
   'HIGH_RISK',
-  'validatorCount',
+  'quorum',
   'voteTag',
+
+  // The two symbol-keyed marks a finding carries through the merges. A test comparing marks has to use the script's own
+  // symbols: a `Symbol('found in this round')` of its own making is a different key that would silently match nothing.
+  'CONFIRMED',
+  'NEW_THIS_ROUND',
 
   // The one untrusted-input guard left here: `headSha` is the only model-supplied string this script hands on to
   // something that builds a command line from it. The path and branch guards moved out with the fixing.
@@ -102,9 +110,12 @@ const INTERNALS = [
   'ROUND_EMPHASIS',
   'roundEmphasis',
   'SEVERITY_RUBRIC',
+  'adjudicatorPrompt',
+  'DUPLICATE_RULE',
+  'judgedBlock',
+  'MERGE_CONTRACT',
   'surveyBlock',
   'surveyPrompt',
-  'validatorPrompt',
 
   // Agent rosters and schemas.
   'ARCHITECTURAL_LENSES',
@@ -115,8 +126,8 @@ const INTERNALS = [
   'REVIEWERS',
   'reviewerGroups',
   'SEVERITY_ORDER',
+  'ADJUDICATION_SCHEMA',
   'SURVEY_SCHEMA',
-  'VERDICT_SCHEMA',
 ];
 
 // The script's declarations, evaluated against `args` — the config knobs are themselves derived from it.
@@ -139,32 +150,28 @@ const { fileInUnit, REVIEWERS, reviewerGroups, withFingerprint, withUnitSlugs } 
 export const withFingerprints = (issues) => issues.map(withFingerprint);
 
 // --- Label parsing --------------------------------------------------------------------------------------------------
-// The script encodes which finding and which vote an agent belongs to in its label, so a fake agent can answer
-// per-finding from the label alone. Mirrors `findingTag` / `voteTag`.
+// The script encodes which scope, which chunk, which effort rung and which panel member an agent is in its label, so a
+// fake agent can answer from the label alone. Only the panel member is parsed out: the rest is a scope name a test that
+// cares about it matches on directly, and mixing it into this shape would give every suite a second way to spell it.
 //
-// `validate` is the only per-finding kind left. The grammar used to also cover `fix` / `revise` / `review-fix`, which is
-// why it still carries an `attempt` clause — a revision loop is a thing only a fixer has, and `/repo-review-fix` keeps
-// its own copy of this pattern for exactly that reason.
-const PER_FINDING = /^validate:(.+?)#(\d+)(?: vote (\d+)\/(\d+))?$/;
+// The vote suffix is `voteTag`'s, and only an adjudicator ever carries one — the cross-unit dedupe pass is a single
+// agent per chunk, never a panel. Anchored at the end because a scope name can hold anything a unit slug can.
+const VOTE = / vote (\d+)\/(\d+)$/;
+
+// `voteTag` renders vote N as "vote N+1", and omits the suffix entirely for a panel of one.
+const voteOf = (label) => {
+  const [, k, n] = VOTE.exec(label) || [];
+
+  return { vote: k ? Number(k) - 1 : 0, panel: n ? Number(n) : 1 };
+};
 
 // Labels carry no round marker: one round is one invocation, so a `/workflows` tree holds a single round and the ` round
 // k/n` suffix a looped run needed is gone. This used to strip it, and the strip was worth removing rather than keeping
 // as insurance — a suffix that came back would land inside the last colon segment a review label is split into, reading
 // as the category `bug round 2/4`, which matches no finding and routes nothing.
 export function parseLabel(label = '') {
-  const perFinding = PER_FINDING.exec(label);
-
-  if (perFinding) {
-    const [, category, idx, vote] = perFinding;
-
-    return {
-      kind: 'validate',
-      category,
-      idx: Number(idx),
-
-      // `voteTag` renders vote N as "vote N+1", and omits it entirely for a single-vote finding.
-      vote: vote ? Number(vote) - 1 : 0,
-    };
+  if (label.startsWith('adjudicate:')) {
+    return { kind: 'adjudicate', ...voteOf(label) };
   }
 
   if (label.startsWith('review:')) {
@@ -181,17 +188,17 @@ export function parseLabel(label = '') {
   return { kind: label };
 }
 
-// --- The finding a per-finding agent was actually asked about --------------------------------------------------------
-// The label's index numbers the script's *own* list — the de-duplicated union `mergeIssueGroups` produces, numbered once
-// and never renumbered afterwards. It is therefore not an index into the `issues` a scenario supplied: one merge
-// collapses two findings into one and shifts every later index left. Resolving `issues[idx]` answers about the wrong
-// finding, silently, in exactly the tests that exercise merging.
+// --- The findings an adjudicator was actually asked to judge ----------------------------------------------------------
+// Which findings an adjudicator owes a verdict on is the script's decision, not the scenario's: the scope it is handed
+// holds this round's reports *and* whatever the ledger already held for the same unit, and only the former are judged.
+// A fixture that answered about `issues` instead would be answering about a list the script never assembled — one merge
+// collapses two findings into one, and every scope is a subset of the round to begin with.
 //
-// `validatorPrompt` embeds its subject as `Issue:\n<JSON>`, so reading it back out of the prompt is authoritative: an
-// override sees the finding the script is really working on, merged severity and absorbed `otherSites` included. The
-// closing brace anchors the match because `JSON.stringify(…, null, 2)` indents everything nested, leaving the top-level
-// `}` the only one at column 0.
-const ISSUE_BLOCK = /^Issue:\n(\{[\s\S]*?^\})$/m;
+// So the prompt is authoritative. `adjudicatorPrompt` restates the findings to judge as `{ index, ...issue }` under a
+// fixed heading, which gives the fixture both the numbers the verdicts must be keyed by and the findings themselves as
+// the script is really working on them — merged severity and absorbed `otherSites` included. The closing bracket anchors
+// the match because `JSON.stringify(…, null, 2)` indents everything nested, leaving the top-level `]` alone at column 0.
+const JUDGED_BLOCK = /^The findings to judge, in full:\n(\[[\s\S]*?^\])$/m;
 
 // A plausible reviewed HEAD, i.e. what the survey reports and what the run anchors its findings to.
 export const HEAD = 'cd976db1f0a94c2f9b7e5d3a8c1e6f40b2d75a93';
@@ -241,12 +248,18 @@ const DEFAULT_SURVEY = {
 /**
  * Build a fake agent for a review run.
  *
- * Overridable behaviours, each receiving the parsed label so it can answer per-finding. `issue` is read back out of the
- * prompt (see `ISSUE_BLOCK`), so it is the finding the script is working on and not `issues[idx]`, which the label's
- * index only agrees with while nothing has been merged or dropped:
+ * Overridable behaviours, each receiving the parsed label so it can answer per panel member:
  *
- *   review(call, { unit, key, categories })   → ISSUES_SCHEMA shape
- *   validate(issue, { idx, vote })            → VERDICT_SCHEMA shape
+ *   review(call, { unit, key, categories })       → ISSUES_SCHEMA shape
+ *   dedupe(call)                                  → `{ groups }`, for the cross-unit pass
+ *   adjudicate(call, { subjects, vote, panel })   → ADJUDICATION_SCHEMA shape
+ *   validate(issue, { index, vote, panel })       → `{ confirmed, rationale }`, per judged finding
+ *
+ * `validate` is the finer of the last two and is what a test about the gate wants: the default `adjudicate` merges
+ * nothing and applies `validate` to each finding the prompt asked about, keyed by the index the script gave it. Returning
+ * `null` from it *omits* that finding's verdict, which is the adjudicator answering about everything except this one —
+ * distinct from `adjudicate: () => null`, which is the agent not answering at all. Reach for `adjudicate` only to
+ * control the merge, or to have the whole agent fail.
  *
  * `review` takes the raw `call` rather than the parsed label, so an override can read the prompt — which is where a
  * round's own inputs are, `knownFindingsBlock` and the emphasis included. It answers for the whole scope it was labelled
@@ -266,6 +279,7 @@ export function reviewScenario({
   claudeMd = { paths: ['CLAUDE.md'] },
   review,
   dedupe,
+  adjudicate,
   validate,
   // How the script narrows the roster the partition agent returned into the partition the reviewers are actually given.
   // Supplied by `runReview`, which knows the run's `args` and borrows the script's own `narrowToScope` for it. The
@@ -332,9 +346,9 @@ export function reviewScenario({
 
     if (unreadable.length) {
       throw new Error(
-        `Could not read the \`Issue:\` block out of the prompt for: ${[...new Set(unreadable)].join(', ')}. A ` +
-          'per-finding prompt no longer embeds its subject the way `ISSUE_BLOCK` expects, so the scenario cannot tell ' +
-          'which finding it is being asked about — update the pattern to match the prompt.',
+        `Could not read the findings-to-judge block out of the prompt for: ${[...new Set(unreadable)].join(', ')}. An ` +
+          'adjudicator prompt no longer restates them the way `JUDGED_BLOCK` expects, so the scenario cannot tell ' +
+          'which findings it is being asked to judge — update the pattern to match the prompt.',
       );
     }
 
@@ -404,11 +418,17 @@ export function reviewScenario({
     return fileInUnit(subject.file, unit);
   };
 
-  const subjectOf = (call) => {
-    const [, json] = ISSUE_BLOCK.exec(call.prompt) || [];
+  const judgedOf = (call) => {
+    const [, json] = JUDGED_BLOCK.exec(call.prompt) || [];
 
     try {
-      return JSON.parse(json);
+      const parsed = JSON.parse(json);
+
+      // An adjudicator is only ever spawned for a scope with something to judge, so an empty list here is a prompt that
+      // no longer says which findings those are rather than a scope that had none.
+      if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('no findings to judge');
+
+      return parsed;
     } catch {
       unreadable.push(call.label);
 
@@ -444,18 +464,34 @@ export function reviewScenario({
         return { issues: issues.filter((subject) => mine.includes(subject.category) && inUnit(subject, label.unit)) };
       }
 
-      // Standing in for a real dedupe. The agent only reports which findings collide, so "no duplicates" is the whole
-      // answer here: the script keeps the union in the order the reviewers produced it, which is the order the
-      // per-finding labels index into. An override receives the `call`, whose `opts.effort` names the ladder rung — and
-      // it may throw, which is how the real harness surfaces an agent killed by the no-progress watchdog.
+      // Standing in for the cross-unit dedupe pass. The agent only reports which findings collide, so "no duplicates" is
+      // the whole answer here, and it leaves the union in the order the scopes were concatenated in. An override receives
+      // the `call`, whose `opts.effort` names the ladder rung — and it may throw, which is how the real harness surfaces
+      // an agent killed by the no-progress watchdog.
       case 'dedupe':
         return (dedupe ?? (() => ({ groups: [] })))(call);
 
-      case 'validate': {
-        const subject = subjectOf(call);
-        if (!subject) return null;
+      // Standing in for an adjudicator, which answers both questions at once. The default merges nothing and confirms
+      // everything it was asked about, keyed by the indices the prompt supplied — so a scenario that overrides neither
+      // hook gets every finding its reviewers raised, which is what almost every suite here is built on.
+      case 'adjudicate': {
+        const subjects = judgedOf(call);
+        if (!subjects) return null;
 
-        return (validate ?? (() => ({ confirmed: true, rationale: 'confirmed' })))(subject, label);
+        if (adjudicate) return adjudicate(call, { ...label, subjects });
+
+        const verdict = validate ?? (() => ({ confirmed: true, rationale: 'confirmed' }));
+
+        return {
+          groups: [],
+          verdicts: subjects.flatMap(({ index, ...subject }) => {
+            const answer = verdict(subject, { ...label, index });
+
+            // A `null` verdict is one the adjudicator left out of its answer, not one it rejected. The script drops an
+            // unjudged finding and records a gap, which is a different path from a rejection and the one this expresses.
+            return answer ? [{ index, ...answer }] : [];
+          }),
+        };
       }
 
       default:

@@ -4,8 +4,8 @@
  * Nothing in this command sets `isolation: 'worktree'` — the agents that commit live in `/repo-review-fix`. So every
  * agent here runs in the user's live checkout while holding the same tools it would in a sandbox, and the script has no
  * way to take those tools away: the only thing standing between a review and a dirty working tree is the sentence its
- * prompt happens to carry. Stating that per prompt is how Validate — the highest fan-out phase — came to be the one
- * prompt with no execution guard at all, invisibly.
+ * prompt happens to carry. Stating that per prompt is how Validate — then the highest fan-out phase, since absorbed into
+ * adjudication — came to be the one prompt with no execution guard at all, invisibly.
  *
  * So the table below is where that invariant lives. It must name a guard for every agent a run produces, so deleting a
  * guard, or adding a phase without one, fails here rather than waiting for a review. That only holds if the fixture is
@@ -30,7 +30,7 @@ const GUARDS = [
   { phase: 'partition', label: /^partition\b/, guard: 'do not modify, create, or delete any file' },
   { phase: 'review', label: /^review:/, guard: 'Do not build, typecheck, lint, or test the repository' },
   { phase: 'dedupe', label: /^dedupe\b/, guard: 'do not read files and do not run any commands' },
-  { phase: 'validate', label: /^validate:/, guard: 'do not build, typecheck, lint, or test the repository' },
+  { phase: 'adjudicate', label: /^adjudicate:/, guard: 'do not build, typecheck, lint, or test the repository' },
 ];
 
 // A run wide enough to reach every phase at once: two units, so the per-unit and the cross-unit dedupe agents both run,
@@ -78,29 +78,29 @@ describe('every agent is told not to write to the checkout', () => {
   });
 });
 
-describe('the validators specifically', () => {
+describe('the adjudicators specifically', () => {
   it('run in the live checkout, and are told not to build or test it', async () => {
-    // Validate is `findings × validators` agents deep, each holding Bash and several asked to confirm a claim that is
-    // itself about build or test behaviour. One that settles such a claim by running the build leaves `node_modules/` or
-    // coverage output behind, which breaks this command's read-only contract outright — and then costs a second time,
-    // because `/repo-review-fix` runs next over the same checkout and cannot tell its own sandboxes' output from a dirty
-    // tree it inherited.
+    // This is the one phase that holds Bash over claims nothing has verified yet, and some of those claims are themselves
+    // about build or test behaviour — exactly the kind one would be tempted to settle by *running* the build. That leaves
+    // `node_modules/` or coverage output behind, which breaks this command's read-only contract outright — and then costs
+    // a second time, because `/repo-review-fix` runs next over the same checkout and cannot tell its own sandboxes'
+    // output from a dirty tree it inherited.
     const run = await wideRun();
-    const [validator] = run.called(/^validate:/);
+    const [adjudicator] = run.called(/^adjudicate:/);
 
-    expect(validator.opts.isolation).toBeUndefined();
-    expect(validator.prompt).toContain('do not modify, create, or delete any file');
-    expect(validator.prompt).toContain('do not build, typecheck, lint, or test the repository');
+    expect(adjudicator.opts.isolation).toBeUndefined();
+    expect(adjudicator.prompt).toContain('do not modify, create, or delete any file');
+    expect(adjudicator.prompt).toContain('do not build, typecheck, lint, or test the repository');
   });
 
   it('are not left thinking read-only search is off limits too', async () => {
-    // The guard has to forbid actions, not declare an exhaustive toolkit. A validator that read it as "reading files is
-    // all you may do" would abstain on a repository-wide finding rather than grep for it — and on a strict-majority
+    // The guard has to forbid actions, not declare an exhaustive toolkit. An adjudicator that read it as "reading files
+    // is all you may do" would abstain on a repository-wide finding rather than grep for it — and on a strict-majority
     // gate, two abstentions silently drop a real defect.
     const run = await wideRun();
-    const [validator] = run.called(/^validate:/);
+    const [adjudicator] = run.called(/^adjudicate:/);
 
-    expect(validator.prompt).toContain('Read-only inspection is otherwise unrestricted');
-    expect(validator.prompt).toContain('search and enumerate as widely as the claim needs');
+    expect(adjudicator.prompt).toContain('Read-only inspection is otherwise unrestricted');
+    expect(adjudicator.prompt).toContain('search and enumerate as widely as the claims need');
   });
 });

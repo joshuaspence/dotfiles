@@ -34,7 +34,7 @@ const DRIVERS = {
     const { reviewScenario } = await import('./repo-review/scenario.js');
 
     // Every phase this script declares is unconditional once the partition returns a unit, so the default one-finding
-    // scenario enters all five; `validators: 1` is the minimum that still spawns a validator and so enters Validate.
+    // scenario enters all five; `validators: 1` is the minimum panel that still spawns an adjudicator.
     return { agent: reviewScenario().agent, args: { validators: 1 } };
   },
 

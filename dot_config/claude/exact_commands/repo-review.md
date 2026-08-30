@@ -26,10 +26,10 @@ could only ever see the findings *that round* confirmed. So there is no `--fix` 
 `/repo-review-fix`.
 
 The review runs as a committed **workflow** — `repo-review`, referenced by name — which fans it out across subagents
-(survey → partition → review → dedup → validate) and returns validated findings. This command is a thin wrapper: parse
-the arguments below, run that workflow via the `Workflow` tool, and format what it returns. The algorithm itself — the
-phases, the per-step model tiers, the effort cap, the strict-majority rule, and the reviewer instructions — lives in the
-script; do not re-implement it here, and do not launch review subagents any other way.
+(survey → partition → review → adjudicate → cross-unit dedupe) and returns adjudicated findings. This command is a thin
+wrapper: parse the arguments below, run that workflow via the `Workflow` tool, and format what it returns. The algorithm
+itself — the phases, the per-step model tiers, the effort cap, the strict-majority rule, and the reviewer instructions —
+lives in the script; do not re-implement it here, and do not launch review subagents any other way.
 
 ## Parse arguments
 
@@ -73,12 +73,19 @@ so collect each one as you scan the tokens instead of expecting a single run at 
   its own agent. This is the run's largest single cost — `units × reviewers-per-unit` leaf agents per round — and `6`
   is the older, more expensive arm, kept so that the two can be compared on a real repository. Pass `6` when the user
   asks for the most thorough review available and is willing to pay three times the reviewer cost for it.
-- `--validators <n|auto>` sets how many independent validators run per issue. Must be a positive integer or `auto`;
-  reject any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` — do not
-  pass `auto` yourself; `auto` applies only when the user explicitly asks for it. A fixed `n > 1` keeps an issue only on
-  a strict majority of its validators (≥2 of 3, ≥3 of 5); `auto` scales the count by risk (more for bugs, security,
-  consistency, and architecture; a single validator for code-quality, test-critique, and `CLAUDE.md`). The script
-  applies this rule — you only pass the value through.
+- `--validators <n|auto>` sets how many independent **adjudicators** run per review unit. Must be a positive integer or
+  `auto`; reject any other value and stop with an error rather than guessing. If omitted, the script defaults it to `1` —
+  do not pass `auto` yourself; `auto` applies only when the user explicitly asks for it. A fixed `n > 1` keeps an issue
+  only on a strict majority of the adjudicators that voted on it (≥2 of 3, ≥3 of 5); `auto` scales the count by risk,
+  reading that risk over the unit rather than the finding — a unit holding anything high-risk (bug, security,
+  consistency, architecture) buys three, and a unit holding only code-quality, test-critique and `CLAUDE.md` findings
+  buys one. The script applies this rule — you only pass the value through.
+
+  It is per unit, not per issue, because judging a finding and deciding what it duplicates are one agent's job now: the
+  adjudicator reads a unit's whole scope, returns the groups that collide *and* a verdict on each finding the round
+  contributed, and every member of its panel judges every one of them. So the flag no longer multiplies by the finding
+  count. A four-finding unit of mixed risk cost `3 + 1 + 3 + 1 = 8` validators under the old per-issue reading and costs
+  three adjudicators now, with each of its findings judged three times rather than once.
 
   `--partitions` and `--validators` are orthogonal to `--effort`: they scale how many agents run and how many times
   findings are challenged, whereas `--effort` scales how hard each individual agent thinks.
@@ -119,7 +126,7 @@ reported and then went unrecorded is a round the next invocation pays for in ful
 
 Every finding carries a `fingerprint`: sixteen hex characters the script derives from the finding's category, its file
 and its description with every digit stripped. That is the **only** field you may key a finding on. It is stable across
-exactly the things that change while the defect does not — the line it was cited at drifting, a second validator judging
+exactly the things that change while the defect does not — the line it was cited at drifting, an adjudicator judging
 its severity differently, a duplicate being absorbed into it — and nothing else in a finding is: positions change every
 round, `lines` moves with the file, `severity` and `otherSites` are rewritten by a merge, and a description can be
 re-worded by the reviewer that re-reports it.
@@ -220,7 +227,7 @@ signal reveals) or the round is not returning what it claims. Report the discrep
 the one derived from the findings themselves.
 
 The corollary is the part that has to be said out loud in every report after the first: **the held findings were not
-re-examined this round.** They were not re-read and not re-validated — that is precisely what makes a later round cost
+re-examined this round.** They were not re-read and not re-judged — that is precisely what makes a later round cost
 about what round 1 cost. So some of them may already be fixed. Say that, and say how many findings are held versus new,
 rather than presenting the whole accumulated list as the current state of the code.
 
@@ -296,13 +303,13 @@ The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps 
 - `round` — which round this was, echoed back from `args.round`. Read the round number off this rather than off your own
   counter: if the value you passed was unusable the script fell back to 1, and the emphasis its reviewers were actually
   given follows the round it ran, not the one you asked for.
-- `findings` — validated issues, and **everything the round was handed as well as what it found**: it is the whole
+- `findings` — adjudicated issues, and **everything the round was handed as well as what it found**: it is the whole
   accumulated set, already de-duplicated against itself, so it is exactly what the next round's `knownFindings` should
   be — and what [the ledger](#the-ledger) stores. Each has `fingerprint` (see the ledger; the only field to key a finding
   on), `description`, `severity` (`critical`/`high`/`medium`/`low`), `category`, `file`, `lines` (may be empty),
   `otherSites` (other affected `file:line` or modules, may be empty), and `reason`.
-- `newFindings` — how many of those this round contributed: found by its own reviewers, kept by dedupe as a defect the
-  review did not already hold, and confirmed by its validators. This is the number that decides whether to run another
+- `newFindings` — how many of those this round contributed: found by its own reviewers, kept by the merge as a defect
+  the review did not already hold, and confirmed by its adjudicators. This is the number that decides whether to run another
   round, and it is not `findings.length` minus what you passed in — dedupe can merge two findings from *earlier* rounds,
   which makes the total fall on a round that genuinely found something.
 - `exclusions` — `{ path, reason }` entries for everything the partitioner left out (vendored/third-party code,
@@ -310,11 +317,19 @@ The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps 
 - `gaps` — strings recording every way the run fell short of a complete, clean pass. They come in two kinds, and each
   entry states in prose which it is:
 
-  - **coverage** — a reviewer, lens, or validation that did not complete, a whole review unit whose pipeline failed
+  - **coverage** — a reviewer, lens, or verdict that did not complete, a whole review unit whose pipeline failed
     outright (that unit contributed nothing this round; what earlier rounds found for it is carried unchanged), or a
-    partition folded down to the unit ceiling. Findings may be *missing*.
-  - **dedupe** — a dedupe stage that stalled or did not converge. Every finding here *was* reviewed and validated; one
-    defect may simply be listed twice.
+    partition folded down to the unit ceiling. Findings may be *missing*. A missing verdict is the sharpest case: an
+    unjudged finding is not reported at all, so its gap — `Adjudication did not complete for a …`, which names the
+    finding's category and site — is the only surviving trace of it.
+  - **dedupe** — a merge that stalled or did not converge, at either stage. Every finding here *was* reviewed and
+    judged; one defect may simply be listed twice.
+
+  One phase now records both kinds, which is the thing to read carefully. An adjudicator owes a merge and a set of
+  verdicts in one answer, so an adjudicator that never returned is reported twice over: `Adjudication did not return for
+  n of m agent(s)` is the **dedupe** loss (those findings were kept raw), and one `Adjudication did not complete` line
+  per finding is the **coverage** loss (those findings are gone). File each under its own kind even though both name the
+  same agent.
 
   There is no third kind any more: fixing gaps belong to `/repo-review-fix` and are reported by it, so nothing in this
   result is about work that was attempted and failed rather than coverage that was lost.
@@ -322,8 +337,8 @@ The result is `{ reviewedCommit, round, findings, newFindings, exclusions, gaps 
 ## Run the rounds
 
 A round used to be a `for` loop inside the script, and the round loop is yours now. This is not a refactor for tidiness:
-Review and Validate are `parallel()` barriers, so a script-internal loop killed in round 3 discarded rounds 1 and 2 with
-it. One measured four-round run consumed an entire session limit in 41 minutes and returned **nothing**. A round that
+Review and Validate were `parallel()` barriers, so a script-internal loop killed in round 3 discarded rounds 1 and 2
+with it. One measured four-round run consumed an entire session limit in 41 minutes and returned **nothing**. A round that
 returns is a round that got reported.
 
 A round always runs — the loop below runs at least once, and with `--rounds` omitted it runs exactly once. Only step 3's
@@ -487,44 +502,56 @@ source file and neither is committed — if the user does not want the ledger tr
 ## Notes
 
 - The script enforces what this command depends on, so you do not manage it here: it sets each agent's `model` tier
-  (`haiku`/`sonnet`/`opus`) and its `effort`, and it caps the high-fan-out reviewers and validators at `xhigh`, clamping
-  `max` down. That cap is a deliberate reliability tradeoff — those agents run at high multiplicity (roughly
-  `--partitions` × `--reviewers-per-unit`, plus validators per issue), and launching that many concurrent `max` Opus
+  (`haiku`/`sonnet`/`opus`) and its `effort`, and it caps the high-fan-out reviewers and adjudicators at `xhigh`,
+  clamping `max` down. That cap is a deliberate reliability tradeoff — those agents run at high multiplicity (roughly
+  `--partitions` × `--reviewers-per-unit`, plus `--validators` adjudicators per unit), and launching that many `max` Opus
   inferences has been observed to intermittently stall (an agent gets its tool result and its next turn never arrives).
   A hung reviewer no longer wedges the whole review — the units run as a `pipeline()`, so only its own unit waits —
-  but it still costs that unit's findings and its dedupe; the cap keeps the many leaf agents off `max`, the only level
-  observed to stall. A *silent* hang has no timeout to recover from — hence watching `/workflows` above.
-- The dedupe agents are capped harder still, and never run at `max`, for a related but distinct reason. The harness
-  kills an agent that reports no progress for 180s, and dedupe calls no tools, so it reports nothing while it thinks. At
-  `max` that killed all six attempts of a 155-finding round — and a stalled agent *throws*, so it failed a run that was
-  42 of 43 agents done. The script now starts dedupe at `high` (107s to first token on that same round), steps down to
-  `medium` on a stall, and catches the throw. Deciding *which* findings collide is shallow work — it returns indices and
-  the script does the merging — so the lower rung costs little.
-- **A `dedupe:…:high … (retry 5) FAILED` row is normal and is not a failed review.** Every rung names its effort, so a
-  step-down appears as two rows: the exhausted `dedupe:cross:high` stays on screen permanently, marked FAILED, and
-  `dedupe:cross:medium` beneath it is the one that answered. `/workflows` draws nothing connecting them. Before calling
-  a run lost, check for a lower rung and check `gaps` — the script only gives up on a merge after every rung fails, and
-  it says so there. Losing a rung costs deduplication, never findings.
+  but it still costs that unit's findings and its adjudication; the cap keeps the many leaf agents off `max`, the only
+  level observed to stall. A *silent* hang has no timeout to recover from — hence watching `/workflows` above.
+- The merging agents — the adjudicators and the cross-unit pass — are capped harder still, and never run at `max`, for a
+  related but distinct reason. The harness kills an agent that reports no progress for 180s, and the cross pass calls no
+  tools, so it reports nothing while it thinks. At `max` that killed all six attempts of a 155-finding round — and a
+  stalled agent *throws*, so it failed a run that was 42 of 43 agents done. Both stages now start at `high` (107s to
+  first token on that same round), step down to `medium` on a stall, and catch the throw. Deciding *which* findings
+  collide is shallow work — it returns indices and the script does the merging — so the lower rung costs little. The
+  adjudicator does read files, which makes the watchdog less of a threat to it, but it shares the same ladder and is the
+  more expensive of the two to lose: a cross chunk that never answers costs deduplication, and an adjudicator that never
+  answers costs its scope's verdicts as well.
+- **An `adjudicate:…:high … (retry 5) FAILED` row is normal and is not a failed review.** Every rung names its effort,
+  so a step-down appears as two rows: the exhausted `adjudicate:core:high` stays on screen permanently, marked FAILED,
+  and `adjudicate:core:medium` beneath it is the one that answered. `/workflows` draws nothing connecting them. Before
+  calling a run lost, check for a lower rung and check `gaps` — the script only gives up after every rung fails, and it
+  says so there. Losing a rung on the cross pass costs deduplication only; losing every rung on an adjudicator costs
+  that scope's verdicts too, which is why it records two gaps.
 - Rungs a digest is known to overwhelm are skipped rather than attempted, because exhausting one costs six attempts at
   180s — 18 minutes in which the run emits nothing and looks hung. `high` was measured answering 116 findings in 96s
   and 163 in ~2 minutes, then killed on all six attempts at 209 and at 253; `medium` answered both, in ~140s. So a
   digest above 180 findings starts at `medium`, and the script logs that it did — a guard the 150-finding chunk cap
-  below now keeps out of reach, since one mechanism deduplicates every scope and so caps stage one's too, and no agent is
-  handed more than one chunk. So do not go looking for that skip log to explain a wedged run: a step-down at any label,
-  `dedupe:<unit>` or a chunked `dedupe:cross:1+2` alike, is an agent that stalled *under* its rung's own ceiling rather
-  than one skipped over it. A skip log at all would mean a scope escaped chunking.
-- Dedupe runs in two stages, because think time tracks how many findings one agent was handed. Stage one is one agent
-  per unit (`dedupe:<unit>`), and it runs *inside* the review pipeline: a unit deduplicates the moment its own reviewers
-  are in, so a `dedupe:` row appearing while other units are still reviewing is the expected shape and not a phase
-  starting early. It catches the common case — the same defect reported once per angle by the reviewers reading one unit,
-  whether those are two agents or six. A unit that found nothing new this round spends no agent there at all, since what
-  it holds was deduplicated by the round that produced it. Stage two then compares what survived across units, and with it
-  `dedupe:cross-cutting`, the one scope that cannot be done per unit: the repo-wide lens findings, plus anything a
+  below now keeps out of reach, since one mechanism chunks every scope and so caps the per-unit stage's too, and no agent
+  is handed more than one chunk. So do not go looking for that skip log to explain a wedged run: a step-down at any label,
+  `adjudicate:<unit>` or a chunked `dedupe:cross:1+2` alike, is an agent that stalled *under* its rung's own ceiling
+  rather than one skipped over it. A skip log at all would mean a scope escaped chunking.
+- Merging runs in two stages, because think time tracks how many findings one agent was handed. Stage one is the
+  **adjudicator**: `--validators` agents per unit (`adjudicate:<unit>`), running *inside* the review pipeline, so a unit
+  is adjudicated the moment its own reviewers are in and an `adjudicate:` row appearing while other units are still
+  reviewing is the expected shape rather than a phase starting early. Each one is asked for two things in a single answer
+  — which of the unit's findings collide, and a verdict on each finding this round contributed — because both questions
+  need the same read of the same scope, and asking twice meant one agent per unit *plus* `--validators` agents per
+  finding. It catches the common duplicate case: the same defect reported once per angle by the reviewers reading one
+  unit, whether those are two agents or six. A unit that found nothing new this round spends no agent at all, since what
+  it holds was adjudicated by the round that produced it. Stage two then compares what survived across units, and with it
+  `adjudicate:cross-cutting`, the one scope that cannot be done per unit: the repo-wide lens findings, plus anything a
   reviewer cited outside the unit it was given. Both stages are `parallel()` fan-outs, so a stalled agent costs only its
-  own merges, and each partial failure is its own `gaps` entry — a lost unit repeats a defect *within* one unit, a lost
+  own scope, and each partial failure is its own `gaps` entry — a lost unit repeats a defect *within* one unit, a lost
   cross chunk repeats one *across* two. Stage two is skipped entirely when a single scope held everything *and* fitted
   in one chunk, since then one agent already compared every pair; a unit too big for one chunk always reaches stage two
   instead, whose passes close the chains splitting a scope costs stage one.
+
+  The asymmetry between the two halves of an adjudicator's answer is worth holding on to when reading `gaps`. A merge that
+  never arrived leaves the findings raw, so a defect may be reported twice; a *verdict* that never arrived drops the
+  finding outright. A scope of one finding therefore still buys an adjudicator, where the old stage one skipped it — it
+  has nothing to compare but a verdict to give.
 - **Chunking is what actually bounds this phase, and it bounds both stages.** Splitting the union by unit is a partition,
   not a bound: unit sizes are the partitioner's choice, so a repository whose code sits mostly in one unit would hand
   that whole scope to one agent. Stage two has no partition at all and sees every survivor accumulated so far — on one
@@ -534,7 +561,8 @@ source file and neither is committed — if the user does not want the ledger tr
   stage. Because a contiguous slice of the union is mostly one unit's findings (the ones stage one already merged) while
   cross-unit pairs sit far apart in that order, the chunks are built as every unordered *pair* of half-chunk blocks. That
   way any two findings share at least one chunk, so a chunked stage sees every pair a single agent would have, at
-  `C(m,2)` calls instead of `m`. Chunks appear as `dedupe:cross:1+2`, and a split unit as `dedupe:<unit>:1+2`.
+  `C(m,2)` calls instead of `m`. Chunks appear as `dedupe:cross:1+2`, and a split unit as `adjudicate:<unit>:1+2`. A panel
+  of `n > 1` multiplies that again, and each member is named: `adjudicate:<unit>:1+2 vote 2/3`.
 - The chunked pass repeats until it converges, because merging is first-claim-wins rather than transitive: chunks
   reporting `{A,B}` and `{B,C}` leave C unmerged, since B is already claimed by the time the second group is read. Each
   pass closes one link of such a chain, so later passes are marked `dedupe:cross:p2:1+2`, and the loop stops as soon as
@@ -542,7 +570,7 @@ source file and neither is committed — if the user does not want the ledger tr
   passes is the budget; still merging after that records a `gaps` entry, which means a defect reported under three or
   more units may appear twice. That is the only remaining degradation, and it is bounded and reported.
 - Both phases label a unit by a short slug rather than the prose name the partition agent chose, so a unit named "Wire
-  Protocol Layer" appears as `review:wire-protocol:bug` and `dedupe:wire-protocol`. `/workflows` clips a label at around
+  Protocol Layer" appears as `review:wire-protocol:bug` and `adjudicate:wire-protocol`. `/workflows` clips a label at around
   40 columns from the right, and with a title-cased name it was clipping the *category* — the one segment saying which
   reviewer or model a row is. The script caps the slug at 16 characters so `review:` plus the slug plus the longest
   category still fits, and it numbers slugs that collide
@@ -553,12 +581,12 @@ source file and neither is committed — if the user does not want the ledger tr
   files or fewer, skips the three whole-repo architecture lenses entirely, recording that skip in `gaps`. Report it like
   any other coverage gap: architecture was **not reviewed**, not "clean".
 - The script resolves failures it can see: each fan-out runs under `parallel()`, which resolves a failed agent to
-  `null` rather than rejecting the batch, and every dropped reviewer, lens, validation or dedupe stage is recorded in
-  `gaps`. Surface those gaps in the output, each under its own kind — only the dropped reviewers, lenses and validations
-  are lost *review coverage*.
-- A round is a whole invocation of the script, survey and partition included, and validation runs inside it
+  `null` rather than rejecting the batch, and every dropped reviewer, lens, verdict or merge stage is recorded in
+  `gaps`. Surface those gaps in the output, each under its own kind — only the dropped reviewers, lenses and verdicts are
+  lost *review coverage*.
+- A round is a whole invocation of the script, survey and partition included, and adjudication runs inside it
   over **only what that round contributed** — not over the accumulated set. That is what makes a round cost about the
-  same as round 1 instead of as much as every round before it put together: the old in-script loop re-validated and
+  same as round 1 instead of as much as every round before it put together: the old in-script loop re-judged and
   re-fixed everything held, so round 4 paid for rounds 1 through 3 again. The price of the new shape is re-surveying and
   re-partitioning each round, which is two agents against a fan-out of dozens. Re-partitioning does move unit
   boundaries between rounds, which no longer defeats cross-round dedupe: the round is handed the findings already held
@@ -574,8 +602,8 @@ source file and neither is committed — if the user does not want the ledger tr
   category's, to look past, and the other reviewers', to recognise and not restate. The architecture lenses read the
   whole repository and so have no unit to scope by; they see everything, which is the largest such list a run builds.
 - `allowed-tools` governs only this wrapper — running the workflow and formatting the result — not the subagents the
-  workflow launches. Those carry their own default tool pool, so reviewers and validators can `Read`, `Grep`, `Glob`, and
-  `git ls-files` regardless of this list; you neither need to nor can provision their tools from here. This list is
+  workflow launches. Those carry their own default tool pool, so reviewers and adjudicators can `Read`, `Grep`, `Glob`,
+  and `git ls-files` regardless of this list; you neither need to nor can provision their tools from here. This list is
   therefore minimal, and every entry in it is read-only: `Workflow` to run the review, `Read` for
   [the ledger](#the-ledger), `Write` for the ledger and for `--output`, and `git remote get-url` plus `git rev-parse` to
   build permalinks. There is deliberately **no** way to change the code under review or the repository's git state from

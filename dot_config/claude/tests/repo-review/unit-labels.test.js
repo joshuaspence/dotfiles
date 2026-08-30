@@ -179,24 +179,24 @@ describe('unit slug collisions', () => {
   });
 });
 
-describe('labels built from a finding', () => {
+describe('labels built from a panel member', () => {
   it('round-trips through the parser every scenario reads them with', async () => {
-    // `parseLabel` restates this grammar as a regex, which it has to — parsing is not something the builders can do.
+    // `parseLabel` restates this grammar as a regex, which it has to — parsing is not something the builder can do.
     // Asserting the two against each other is what stops the restatement drifting: a builder that started emitting
-    // `vote 1 of 3` would leave every fake agent answering for finding 0, and the scenarios would fail far from here.
-    const { findingTag, voteTag } = await internals();
-    const tag = findingTag(issue({ category: 'bug' }), 3);
+    // `vote 1 of 3` would leave every fake adjudicator answering as vote 1, and the scenarios would fail far from here.
+    const { voteTag } = await internals();
 
-    expect(parseLabel(`validate:${tag}${voteTag(2, 3)}`)).toMatchObject({
-      kind: 'validate',
-      category: 'bug',
-      idx: 3,
+    expect(parseLabel(`adjudicate:wire-protocol:high${voteTag(2, 3)}`)).toEqual({
+      kind: 'adjudicate',
       vote: 2,
+      panel: 3,
     });
 
-    // A single validator carries no vote segment at all — the default the parser fills in has to be the one the
-    // omission means, or `runReview({ args: { validators: 1 } })` would answer every finding as vote 1 of many.
-    expect(parseLabel(`validate:${tag}${voteTag(0, 1)}`)).toMatchObject({ kind: 'validate', idx: 3, vote: 0 });
+    // A panel of one carries no vote segment at all, and the defaults the parser fills in for its absence have to be the
+    // ones the omission means — otherwise `runReview`, which pins `--validators 1`, would answer every scope as one vote
+    // of an unknown many, and a scenario keying anything off `panel` would be reading a number no label carried.
+    expect(voteTag(0, 1)).toBe('');
+    expect(parseLabel('adjudicate:wire-protocol:high')).toEqual({ kind: 'adjudicate', vote: 0, panel: 1 });
   });
 });
 
@@ -204,13 +204,14 @@ describe('labels built from a unit', () => {
   const units = [{ name: 'Wire Protocol Layer', summary: 'framing', paths: ['wire'] }];
   const issues = [issue({ file: 'wire/frame.py' }), issue({ file: 'wire/parse.py' })];
 
-  it('labels both the reviewers and the dedupe scope with the slug', async () => {
+  it('labels both the reviewers and the adjudicator with the slug', async () => {
     // Both phases have to agree, since they are read as one tree in `/workflows`. Asserting them together is what
-    // catches one of them still interpolating `unit.name`.
+    // catches one of them still interpolating `unit.name`. The cross-unit pass does not run here — one unit holding
+    // everything means one scope, and a single scope is already whole — so the adjudicator is the only later agent.
     const run = await runReview({ issues, units });
 
     expect(run.called(/^review:/).map((call) => call.label)).toContain('review:wire-protocol:sonnet');
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:wire-protocol:high']);
+    expect(run.called(/^adjudicate/).map((call) => call.label)).toEqual(['adjudicate:wire-protocol:high']);
     expect(run.called(/^review:Wire/)).toHaveLength(0);
   });
 

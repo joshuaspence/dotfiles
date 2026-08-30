@@ -123,34 +123,46 @@ describe('knobs', () => {
     expect((await internals({})).knownFindings).toEqual([]);
   });
 
-  it('spends three validators only on the high-risk categories under --validators auto', async () => {
-    // `auto` is what decides whether a finding is judged by one Opus validator or by a panel of three. Getting it
+  it('spends three adjudicators only on the scopes holding a high-risk finding under --validators auto', async () => {
+    // `auto` is what decides whether a scope is judged by one Opus adjudicator or by a panel of three. Getting it
     // backwards is invisible in a result: the review still returns findings, it just pays three times over for the
-    // cheap categories, or accepts a single verdict on a security hole.
-    const { validatorCount, HIGH_RISK } = await internals({ validators: 'auto' });
+    // cheap ones, or accepts a single verdict on a security hole.
+    const { adjudicatorCount, HIGH_RISK } = await internals({ validators: 'auto' });
 
     for (const category of HIGH_RISK) {
-      expect(validatorCount({ category })).toBe(3);
+      expect(adjudicatorCount([{ category }])).toBe(3);
     }
 
-    expect(validatorCount({ category: 'code-quality' })).toBe(1);
+    expect(adjudicatorCount([{ category: 'code-quality' }])).toBe(1);
 
     // A category no reviewer is expected to report — a model can still invent one — is treated as low risk, not as a
     // crash.
-    expect(validatorCount({ category: undefined })).toBe(1);
+    expect(adjudicatorCount([{ category: undefined }])).toBe(1);
   });
 
-  it('applies an explicit validator count uniformly, high risk or not', async () => {
-    const { validatorCount } = await internals({ validators: 2 });
+  it('rounds a mixed scope up to the panel its riskiest finding buys', async () => {
+    // The risk model used to be per finding, and a panel is per scope now, so the two only agree on a scope of one
+    // tier. Rounding down would judge a security hole on a single verdict because it happened to share a unit with a
+    // formatting nit; rounding up spends nothing extra, since an adjudicator reads the whole scope either way.
+    const { adjudicatorCount } = await internals({ validators: 'auto' });
 
-    expect(validatorCount({ category: 'security' })).toBe(2);
-    expect(validatorCount({ category: 'code-quality' })).toBe(2);
+    expect(adjudicatorCount([{ category: 'code-quality' }, { category: 'security' }])).toBe(3);
+
+    // And a scope with nothing to judge asks for no panel at all rather than for the default one.
+    expect(adjudicatorCount([])).toBe(1);
   });
 
-  it('falls back to a single validator when the count is unusable', async () => {
-    const { validatorCount } = await internals({ validators: 'three' });
+  it('applies an explicit adjudicator count uniformly, high risk or not', async () => {
+    const { adjudicatorCount } = await internals({ validators: 2 });
 
-    expect(validatorCount({ category: 'bug' })).toBe(1);
+    expect(adjudicatorCount([{ category: 'security' }])).toBe(2);
+    expect(adjudicatorCount([{ category: 'code-quality' }])).toBe(2);
+  });
+
+  it('falls back to a single adjudicator when the count is unusable', async () => {
+    const { adjudicatorCount } = await internals({ validators: 'three' });
+
+    expect(adjudicatorCount([{ category: 'bug' }])).toBe(1);
   });
 
   it('sizes the auto partition range to the code in scope', async () => {

@@ -1,9 +1,9 @@
 /**
- * Review and the first dedupe stage as one `pipeline()` over the units.
+ * Review and adjudication as one `pipeline()` over the units.
  *
- * The two phases used to be a `parallel()` pair, which made every unit's dedupe wait on the slowest reviewer in the
+ * The two phases used to be a `parallel()` pair, which made every unit's second stage wait on the slowest reviewer in the
  * *whole round* — and a run killed anywhere in that window produced nothing at all. They are now one pipeline item per
- * unit, so a unit deduplicates the moment its own reviewers are in.
+ * unit, so a unit is adjudicated the moment its own reviewers are in.
  *
  * Three of the four tests here are about arrangement rather than results: which agents ran, in what order, and what
  * happened when an item died. That is deliberate. The measured lesson from the earlier phases is that cost-shaped
@@ -22,8 +22,8 @@ import { describe, expect, it } from 'vitest';
 import { pipelineImpl } from '../harness.js';
 import { issue, runReview } from './scenario.js';
 
-// Two findings per unit, which is the smallest scope a dedupe agent runs for at all — one finding has nothing to be
-// compared against, so a unit holding one spends no agent and would make the ordering below unobservable.
+// Two findings per unit. An adjudicator runs for a scope of one — it has a verdict to give either way — so this is no
+// longer the minimum that spends an agent, but a pair is what gives the merge half of its job something to do.
 const spread = [
   issue({ description: 'frame length unchecked', file: 'api/handler.py' }),
   issue({ description: 'retry loop is unbounded', file: 'api/routes.py' }),
@@ -60,6 +60,7 @@ describe('per-unit review pipeline', () => {
     // drains before the first `api` answer exists. Under a barrier `dedupe:core` is unreachable until `api` has returned,
     // so this is the one assertion that tells the two structures apart.
     const order = [];
+    const noted = (call) => order.push(call.label);
 
     const run = await runReview({
       issues: spread,
@@ -75,28 +76,35 @@ describe('per-unit review pipeline', () => {
         return { issues: spread.filter((f) => categories.includes(f.category) && f.file.startsWith(`${unit}/`)) };
       },
       dedupe: (call) => {
-        order.push(call.label);
+        noted(call);
 
         return { groups: [] };
       },
+      // Stated in full rather than through `validate`, because what this test reads is the *label*, which only the
+      // whole-agent hook is handed. Confirms everything it was asked about, as the default does.
+      adjudicate: (call, { subjects }) => {
+        noted(call);
+
+        return { groups: [], verdicts: subjects.map(({ index }) => ({ index, confirmed: true, rationale: 'ok' })) };
+      },
     });
 
-    const coreDedupe = order.indexOf('dedupe:core:high');
+    const coreAdjudicated = order.indexOf('adjudicate:core:high');
     const firstApiReview = order.findIndex((label) => label.startsWith('review:api:'));
 
-    expect(coreDedupe).toBeGreaterThan(-1);
+    expect(coreAdjudicated).toBeGreaterThan(-1);
     expect(firstApiReview).toBeGreaterThan(-1);
-    expect(coreDedupe).toBeLessThan(firstApiReview);
+    expect(coreAdjudicated).toBeLessThan(firstApiReview);
 
     // And the round still ends up with everything, which is what makes the ordering a saving rather than a shortcut.
     expect(run.result.findings).toHaveLength(spread.length);
   });
 
-  it('runs no dedupe agent for a unit that found nothing new this round', async () => {
-    // A unit whose scope is all held findings has nothing to merge: they were deduped by the round that produced them,
-    // and re-comparing a settled set is a full Opus agent spent to be told `groups: []`. Under the shared union this ran
-    // once per unit on every round after the first, which is a per-round cost proportional to the partition rather than
-    // to what the round found.
+  it('runs no adjudicator for a unit that found nothing new this round', async () => {
+    // A unit whose scope is all held findings has nothing to judge and nothing to merge: those findings were adjudicated
+    // by the round that produced them, and re-comparing a settled set is a full Opus agent spent to be told `groups: []`
+    // and to re-confirm what is already confirmed. Under the shared union this ran once per unit on every round after the
+    // first, which is a per-round cost proportional to the partition rather than to what the round found.
     const held = spread.slice(2);
     const run = await runReview({
       issues: spread.slice(0, 2),
@@ -104,11 +112,12 @@ describe('per-unit review pipeline', () => {
       args: { round: 2, knownFindings: held },
     });
 
-    expect(run.called(/^dedupe:core/)).toEqual([]);
+    expect(run.called(/^adjudicate:core/)).toEqual([]);
 
-    // `api` found a pair, so it deduplicates; the cross pass still runs, because the two units' findings have only ever
+    // `api` found a pair, so it is adjudicated; the cross pass still runs, because the two units' findings have only ever
     // been compared within their own scopes and that is the duplicate this phase cannot see.
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:api:high', 'dedupe:cross:high']);
+    expect(run.called(/^adjudicate/).map((call) => call.label)).toEqual(['adjudicate:api:high']);
+    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:cross:high']);
   });
 
   it('hands a finding cited outside the reviewing unit to the leftovers scope rather than dropping it', async () => {
@@ -135,14 +144,20 @@ describe('per-unit review pipeline', () => {
       },
     });
 
-    // Not the reporting unit's to merge: `api`'s own scope is one finding, so it spends no agent, and the two strays are
-    // compared in the leftovers scope instead — which is also where they meet any copy the ledger already holds.
-    const deduped = run.called(/^dedupe/);
+    // Not the reporting unit's to merge: the two strays are adjudicated in the leftovers scope instead — which is also
+    // where they meet any copy the ledger already holds — and `api`'s own adjudicator never sees them.
+    const [leftovers] = run.called(/^adjudicate:cross-cutting/);
+    const [api] = run.called(/^adjudicate:api/);
 
-    expect(deduped.map((call) => call.label)).toEqual(['dedupe:cross-cutting:high', 'dedupe:cross:high']);
-    expect(deduped[0].prompt).toContain(strays[0].description);
-    expect(deduped[0].prompt).toContain(strays[1].description);
-    expect(deduped[0].prompt).not.toContain(apiFinding.description);
+    expect(run.called(/^adjudicate/).map((call) => call.label).sort()).toEqual([
+      'adjudicate:api:high',
+      'adjudicate:core:high',
+      'adjudicate:cross-cutting:high',
+    ]);
+    expect(leftovers.prompt).toContain(strays[0].description);
+    expect(leftovers.prompt).toContain(strays[1].description);
+    expect(leftovers.prompt).not.toContain(apiFinding.description);
+    expect(api.prompt).not.toContain(strays[0].description);
 
     // And all four survive the round: nothing was lost on the way between the scopes.
     expect(run.result.findings).toHaveLength(4);
@@ -196,8 +211,9 @@ describe('cross-scope ordering', () => {
 
     expect(run.result.findings.map((finding) => finding.description)).toEqual([known.description]);
 
-    // The two halves of what the marks are for: nothing new to report to the caller, and nothing to re-judge.
+    // The two halves of what the marks are for: nothing new to report to the caller, and `core`, whose whole scope is a
+    // finding an earlier round already judged, spends no adjudicator at all.
     expect(run.result.newFindings).toBe(0);
-    expect(run.called(/^validate/)).toEqual([]);
+    expect(run.called(/^adjudicate:core/)).toEqual([]);
   });
 });

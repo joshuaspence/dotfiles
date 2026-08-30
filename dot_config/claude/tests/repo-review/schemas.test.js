@@ -57,11 +57,22 @@ describe('schemas', () => {
   });
 
   it('requires both a verdict and its stated reason from the agents that judge', async () => {
-    // The two are read as a pair: the verdict drives the pipeline, the prose is what a human reads to see why. An
-    // optional rationale would let a validator kill a finding without saying anything at all.
-    const { VERDICT_SCHEMA } = await internals();
+    // The three are read together: `index` says which finding the verdict is about, the verdict drives the pipeline, and
+    // the prose is what a human reads to see why. An optional rationale would let an adjudicator kill a finding without
+    // saying anything at all, and an optional index would leave a verdict attached to nothing.
+    const { ADJUDICATION_SCHEMA } = await internals();
 
-    expect(VERDICT_SCHEMA.required).toEqual(['confirmed', 'rationale']);
+    expect(ADJUDICATION_SCHEMA.required).toEqual(['groups', 'verdicts']);
+    expect(ADJUDICATION_SCHEMA.properties.verdicts.items.required).toEqual(['index', 'confirmed', 'rationale']);
+  });
+
+  it('asks an adjudicator for its merge in exactly the words the cross-unit pass is asked in', async () => {
+    // `globalizeGroups` can only drop an index outside the range an agent was shown, and every wrong index inside that
+    // range is also a valid one — so a stage whose merge contract had drifted would silently collapse unrelated findings
+    // rather than failing. Shared by reference for that reason, and asserted so that inlining it again is a test failure.
+    const { ADJUDICATION_SCHEMA, DEDUPE_SCHEMA } = await internals();
+
+    expect(ADJUDICATION_SCHEMA.properties.groups).toBe(DEDUPE_SCHEMA.properties.groups);
   });
 
   it('keeps a finding’s severity and category vocabularies aligned with what consumes them', async () => {

@@ -1,8 +1,14 @@
 /**
- * The validators' majority gate: whether a finding is real enough to report. A finding survives on a *strict* majority
- * of the validators that actually returned, so a tie drops it and a phase where nothing returned is a gap rather than a
+ * The adjudication majority gate: whether a finding is real enough to report. A finding survives on a *strict* majority
+ * of the adjudicators that actually voted on it, so a tie drops it and a finding nothing voted on is a gap rather than a
  * silent pass — the asymmetry being that a reported finding costs a user's attention, and `/repo-review-fix` will spend
  * an Opus agent on it, while a dropped one costs a round.
+ *
+ * What a vote *is* changed when validation fused into adjudication, and the arithmetic did not. There used to be one
+ * agent per finding per vote, so a panel of three was three agents judging one finding. A panel of three is now three
+ * agents each judging the whole scope, and the quorum is taken per finding over whichever of them answered about it. So
+ * every case below is written as "n votes on this finding", and the fixture's `validate` hook — one call per finding per
+ * panel member — is the seam that keeps that readable.
  *
  * The Review phase's own gate is here for the same reason: a round with no findings only ends the review if the
  * reviewers actually came back, so a round where they all failed must not read as the review having gone dry.
@@ -114,70 +120,68 @@ describe('CLAUDE.md scan', () => {
   });
 });
 
-describe('validation', () => {
-  it('drops a finding that only half its validators confirm', async () => {
+describe('adjudication', () => {
+  // A run whose one finding is voted on by a panel of `panel` adjudicators, `confirmed` deciding each member's vote from
+  // its index. Returning `null` from `confirmed` is that member leaving this finding out of its answer, which is what a
+  // panel member that failed amounts to from the gate's point of view — the vote is simply not there to be counted.
+  const votes = (panel, confirmed) =>
+    runReview({ args: { validators: panel }, validate: (subject, { vote }) => {
+      const yes = confirmed(vote);
+
+      return yes === null ? null : { confirmed: yes, rationale: `vote ${vote}` };
+    } });
+
+  // How many adjudicators the round actually spawned. The panel is per scope now, so this is the panel size itself
+  // rather than `findings × validators` — and asserting it is what catches a panel that silently collapsed to one, which
+  // no verdict assertion can see when every member votes the same way.
+  const panelSize = (run) => run.called(/^adjudicate:/).length;
+
+  it('drops a finding that only half its panel confirms', async () => {
     // 1-of-2 is not a majority. Keeping it would put an unconfirmed finding in front of a fix agent.
-    const run = await runReview({ args: { validators: 2 }, validate: (subject, { vote }) => ({
-      confirmed: vote === 0,
-      rationale: 'split',
-    }) });
+    const run = await votes(2, (vote) => vote === 0);
 
-    expect(run.called(/^validate:/)).toHaveLength(2);
+    expect(panelSize(run)).toBe(2);
     expect(run.result.findings).toEqual([]);
   });
 
-  it('keeps a finding two of three validators confirm', async () => {
-    const run = await runReview({ args: { validators: 3 }, validate: (subject, { vote }) => ({
-      confirmed: vote !== 2,
-      rationale: 'mostly agreed',
-    }) });
+  it('keeps a finding two of three adjudicators confirm', async () => {
+    const run = await votes(3, (vote) => vote !== 2);
 
+    expect(panelSize(run)).toBe(3);
     expect(run.result.findings).toHaveLength(1);
   });
 
-  it('drops a finding that only 2-of-4 validators confirm', async () => {
+  it('drops a finding that only 2-of-4 adjudicators confirm', async () => {
     // 2-of-4 = 50%, which is not a strict majority (needs >50%). Another tie configuration.
-    const run = await runReview({ args: { validators: 4 }, validate: (subject, { vote }) => ({
-      confirmed: vote < 2,
-      rationale: 'evenly split',
-    }) });
+    const run = await votes(4, (vote) => vote < 2);
 
-    expect(run.called(/^validate:/)).toHaveLength(4);
+    expect(panelSize(run)).toBe(4);
     expect(run.result.findings).toEqual([]);
   });
 
-  it('keeps a finding that 3-of-4 validators confirm', async () => {
+  it('keeps a finding that 3-of-4 adjudicators confirm', async () => {
     // 3-of-4 = 75%, which is a strict majority. Confirms the rule works above the threshold.
-    const run = await runReview({ args: { validators: 4 }, validate: (subject, { vote }) => ({
-      confirmed: vote < 3,
-      rationale: 'strong majority',
-    }) });
+    const run = await votes(4, (vote) => vote < 3);
 
     expect(run.result.findings).toHaveLength(1);
   });
 
-  it('drops a finding that only 3-of-6 validators confirm', async () => {
+  it('drops a finding that only 3-of-6 adjudicators confirm', async () => {
     // 3-of-6 = 50%, which is not a strict majority. Another even-split tie.
-    const run = await runReview({ args: { validators: 6 }, validate: (subject, { vote }) => ({
-      confirmed: vote < 3,
-      rationale: 'evenly split',
-    }) });
+    const run = await votes(6, (vote) => vote < 3);
 
-    expect(run.called(/^validate:/)).toHaveLength(6);
+    expect(panelSize(run)).toBe(6);
     expect(run.result.findings).toEqual([]);
   });
 
-  it('keeps a finding that 4-of-6 validators confirm', async () => {
+  it('keeps a finding that 4-of-6 adjudicators confirm', async () => {
     // 4-of-6 = 66.7%, which is a strict majority. Confirms the rule works for larger pools.
-    const run = await runReview({ args: { validators: 6 }, validate: (subject, { vote }) => ({
-      confirmed: vote < 4,
-      rationale: 'clear majority',
-    }) });
+    const run = await votes(6, (vote) => vote < 4);
 
     expect(run.result.findings).toHaveLength(1);
   });
 
-  it('records a gap when no validator returns, rather than dropping the finding quietly', async () => {
+  it('records a gap when no adjudicator votes on a finding, rather than dropping it quietly', async () => {
     // The gap is the only surviving trace of this finding: it is in no other list, so it has to name the site the way
     // every other list does, and stay on one line — `gaps` is rendered as a bullet list, and reviewer prose routinely
     // arrives with newlines in it.
@@ -188,15 +192,20 @@ describe('validation', () => {
 
     expect(run.result.findings).toEqual([]);
 
-    const gap = run.result.gaps.find((entry) => entry.startsWith('Validation did not complete'));
+    const gap = run.result.gaps.find((entry) => entry.startsWith('Adjudication did not complete'));
 
     expect(gap).toContain('core/wire.py:10-20');
     expect(gap).toContain('first line second line');
     expect(gap).not.toContain('\n');
   });
 
-  it('scales validators by category when set to auto', async () => {
-    // High-risk categories (architecture, bug, consistency, security) get 3 validators, others get 1.
+  it('scales the panel by risk when set to auto, over the scope rather than the finding', async () => {
+    // `auto` used to be read per finding: a high-risk category bought 3 validators and a low-risk one bought 1, so this
+    // scope cost 3 + 1 + 3 + 1 = 8 agents. The panel is per scope now, so the question is per scope too — does anything
+    // here need the redundant read? — and the answer rounds *upward*: one high-risk finding buys three adjudicators and
+    // the low-risk findings sharing the unit are judged three times for nothing extra, because those agents were reading
+    // the whole scope regardless. Three agents in place of eight, and every finding judged at least as many times as
+    // before.
     const run = await runReview({
       args: { validators: 'auto' },
       issues: [
@@ -208,89 +217,72 @@ describe('validation', () => {
       validate: () => ({ confirmed: true, rationale: 'valid' }),
     });
 
-    const validators = run.called(/^validate:/);
-    // Bug (high-risk): 3 validators, code-quality (low-risk): 1, security (high-risk): 3, test-critique (low-risk): 1
-    // Total: 3 + 1 + 3 + 1 = 8 validators
-    expect(validators).toHaveLength(8);
-
-    // Matched on the category alone rather than on `<category>#<idx>`. The index is a position in the round's deduplicated
-    // union, and that order follows the order the reviewers returned in — which the default arm changes, since one agent
-    // returns `bug` and `security` together before another returns `code-quality` and `test-critique`. What this test is
-    // about is how many validators a category buys, and pinning the position as well made it also assert an arrangement
-    // that `--reviewers-per-unit` is free to change.
-    const forCategory = (category) => validators.filter((call) => call.label.includes(`${category}#`));
-
-    expect(forCategory('bug')).toHaveLength(3);
-    expect(forCategory('code-quality')).toHaveLength(1);
-    expect(forCategory('security')).toHaveLength(3);
-    expect(forCategory('test-critique')).toHaveLength(1);
-
+    expect(run.called(/^adjudicate:/)).toHaveLength(3);
     expect(run.result.findings).toHaveLength(4);
+
+    // Every finding really was put to all three, which is the half of the rounding that has to hold for the saving to be
+    // a saving: a scope whose panel was three but whose low-risk findings were shown to one of them would be cheaper
+    // still and would have quietly narrowed the gate.
+    const asked = run.called(/^adjudicate:/).map((call) => call.prompt);
+
+    for (const file of ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts']) {
+      expect(asked.filter((prompt) => prompt.includes(file))).toHaveLength(3);
+    }
+
+    // And a scope with nothing high-risk in it still buys one, which is what makes the rounding a rounding rather than a
+    // flat three.
+    const cheap = await runReview({
+      issues: [issue({ file: 'src/a.ts', description: 'nit', category: 'code-quality' })],
+      args: { validators: 'auto' },
+    });
+
+    expect(cheap.called(/^adjudicate:/)).toHaveLength(1);
   });
 
-  it('applies majority vote correctly with auto-scaling and partial validator failures', async () => {
-    // High-risk findings get 3 validators, low-risk get 1. When some validators fail, the majority vote should still
-    // work correctly based on the validators that actually returned.
+  it('takes the quorum per finding, so one panel decides several findings differently', async () => {
+    // The gate is per finding and the panel is per scope, so one adjudicator's answer carries a verdict on each of
+    // several findings and a member that omitted one has not abstained on the others. That is what makes this arithmetic
+    // reachable at all: the same three agents produce a 2-of-2 pass, a 1-of-2 tie and a 1-of-1 pass in one run.
     const run = await runReview({
-      args: { validators: 'auto' },
+      args: { validators: 3 },
       issues: [
-        issue({ file: 'src/a.ts', description: 'security flaw', category: 'security' }), // High-risk: 3 validators
-        issue({ file: 'src/b.ts', description: 'another bug', category: 'bug' }), // High-risk: 3 validators
-        issue({ file: 'src/c.ts', description: 'code quality', category: 'code-quality' }), // Low-risk: 1 validator
+        issue({ file: 'src/a.ts', description: 'security flaw', category: 'security' }),
+        issue({ file: 'src/b.ts', description: 'another bug', category: 'bug' }),
+        issue({ file: 'src/c.ts', description: 'code quality', category: 'code-quality' }),
       ],
       validate: (subject, { vote }) => {
-        const label = subject.category;
-        // Security finding (index 0): validator #1 fails, validators #0 and #2 both confirm
-        // 2 > 2/2 is true, so the finding is kept.
-        if (label === 'security') {
-          if (vote === 1) return null;
-          return { confirmed: true, rationale: 'valid security issue' };
-        }
-        // Bug finding (index 1): validator #1 fails, validator #0 confirms, validator #2 rejects
-        // 1 > 2/2 is false, so the finding is dropped.
-        if (label === 'bug') {
-          if (vote === 1) return null;
-          return { confirmed: vote === 0, rationale: vote === 0 ? 'yes' : 'no' };
-        }
-        // Code-quality finding (index 2): single validator confirms
-        return { confirmed: true, rationale: 'valid' };
+        // Member #1 stays silent about everything except the last finding, so the first two are decided 2-of-2 and
+        // 1-of-2 while the third is decided by it alone.
+        if (subject.category === 'code-quality') return vote === 1 ? { confirmed: true, rationale: 'yes' } : null;
+        if (vote === 1) return null;
+        if (subject.category === 'security') return { confirmed: true, rationale: 'yes' };
+
+        return { confirmed: vote === 0, rationale: vote === 0 ? 'yes' : 'no' };
       },
     });
 
-    const validators = run.called(/^validate:/);
-    // Security: 3, bug: 3, code-quality: 1 = 7 total
-    expect(validators).toHaveLength(7);
+    expect(run.called(/^adjudicate:/)).toHaveLength(3);
 
-    // Security finding kept (2 of 2 confirmed), bug finding dropped (1 of 2 confirmed), code-quality kept (1 of 1 confirmed)
-    expect(run.result.findings).toHaveLength(2);
-    const categories = run.result.findings.map(f => f.category);
-    expect(categories).toContain('security');
-    expect(categories).toContain('code-quality');
-    expect(categories).not.toContain('bug');
+    // Security: 2 of 2 confirmed, so kept. Bug: 1 of 2, which is not a strict majority, so dropped. Code-quality: 1 of
+    // 1, so kept — a single vote is a majority of the votes cast, and a finding one agent judged is not a gap.
+    expect(run.result.findings.map((finding) => finding.category).sort()).toEqual(['code-quality', 'security']);
+    expect(run.result.gaps.filter((gap) => gap.startsWith('Adjudication did not complete'))).toEqual([]);
   });
 
-  it('drops a finding when only 1 of 2 validators return and confirms (partial validator failure)', async () => {
-    // Three validators configured, but validator #1 throws. Of the 2 that returned, only 1 confirms.
-    // 1 > 2/2 is false, so the finding is dropped. This defensive behavior prevents an insufficiently-validated
-    // finding from reaching a fix agent.
-    const run = await runReview({ args: { validators: 3 }, validate: (subject, { vote }) => {
-      if (vote === 1) return null; // Simulates parallel() catching a throw and returning null.
-      return { confirmed: vote === 0, rationale: vote === 0 ? 'yes' : 'no' };
-    } });
+  it('drops a finding when only 1 of 2 votes cast confirms it', async () => {
+    // Three adjudicators, but member #1 leaves this finding out. Of the 2 votes cast, only 1 confirms: 1 > 2/2 is false,
+    // so the finding is dropped. This is what keeps an insufficiently-judged finding away from a fix agent.
+    const run = await votes(3, (vote) => (vote === 1 ? null : vote === 0));
 
-    expect(run.called(/^validate:/)).toHaveLength(3);
+    expect(panelSize(run)).toBe(3);
     expect(run.result.findings).toEqual([]);
   });
 
-  it('keeps a finding when 2 of 2 validators return and both confirm (partial validator failure)', async () => {
-    // Three validators configured, but validator #1 throws. Of the 2 that returned, both confirm.
-    // 2 > 2/2 is true, so the finding is kept.
-    const run = await runReview({ args: { validators: 3 }, validate: (subject, { vote }) => {
-      if (vote === 1) return null;
-      return { confirmed: true, rationale: 'yes' };
-    } });
+  it('keeps a finding when both votes cast confirm it', async () => {
+    // The same panel, and member #1 is silent again, but the 2 votes cast both confirm: 2 > 2/2 is true.
+    const run = await votes(3, (vote) => (vote === 1 ? null : true));
 
-    expect(run.called(/^validate:/)).toHaveLength(3);
+    expect(panelSize(run)).toBe(3);
     expect(run.result.findings).toHaveLength(1);
   });
 });

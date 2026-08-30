@@ -3,10 +3,15 @@
  *
  * The old contract — return the merged findings — made the agent reproduce every finding verbatim: ~50k output tokens
  * on a 178-finding round, from a prompt 3x the size of the digest that replaced it. That was not why the phase kept
- * failing (a 180s no-progress watchdog was, covered by `dedupe effort` and `dedupe stall` below), but restating
+ * failing (a 180s no-progress watchdog was, covered by `the effort ladder` and `a stall on a rung` below), but restating
  * findings is a copy a model can silently get wrong. So these tests guard two things: that the merge is correct and
  * total — no finding invented, reworded, reordered, or dropped — and that the prompt keeps asking for indices rather
  * than drifting back to asking for findings.
+ *
+ * Two stages ask this same question and both go through the one `dedupeAgent`, so the ladder, the chunking and the merge
+ * are shared and are asserted here once, against whichever stage a given fixture reaches. The per-unit stage is the
+ * *adjudicator* — it asks for a verdict in the same message, which is why its answers here carry `verdicts` — and the
+ * cross-unit pass is a merge and nothing else. `review-gate.test.js` owns the verdict half.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -19,9 +24,18 @@ const findings = [
   issue({ description: 'unrelated nit', category: 'code-quality', file: 'protocol.py', lines: '7', severity: 'low' }),
 ];
 
-// The smallest review a dedupe agent runs at all for: findings are scoped per unit and a scope of one has nothing to
-// compare, so a one-finding review now spends no agent on the question.
+// Two findings in one unit: one adjudicator, and no cross-unit pass at all, since a single scope of two has already
+// compared every pair it holds. The smallest fixture that reaches the shared machinery.
 const pair = [issue({ file: 'a.py' }), issue({ file: 'b.py' })];
+
+// An adjudicator's whole answer: the merge a test is about, plus a yes on every finding it was asked to judge. Stated
+// through a helper because the verdicts are not what these tests are about and leaving them out is not neutral — an
+// override replaces the fixture's default verdicts as well as its merge, and an unjudged finding is dropped. `groups` may
+// be a function of the call, for the tests that answer one scope differently from another.
+const confirming = (groups) => (call, { subjects }) => ({
+  groups: typeof groups === 'function' ? groups(call) : groups,
+  verdicts: subjects.map(({ index }) => ({ index, confirmed: true, rationale: 'confirmed' })),
+});
 
 describe('issueSite', () => {
   it('formats a finding with both file and lines', async () => {
@@ -289,6 +303,34 @@ describe('dedupe merge', () => {
       expect(findings.some((original) => original.description === subject.description)).toBe(true);
     }
   });
+
+  it('carries a confirmation onto the survivor from any member of the group', async () => {
+    // The one mark that does *not* follow position. `NEW_THIS_ROUND` answers "did the review already hold this?", which
+    // only the lowest index can answer; `CONFIRMED` answers "is this real?", and two agents that read two different sites
+    // may answer it differently. Adjudication is per unit, so a defect reported under two units is judged twice — and the
+    // merge then keeps one copy, chosen by risk tier and position, which are facts about the order the partitioner
+    // emitted its units in. Taking that copy's verdict would make whether a confirmed defect is reported depend on it.
+    //
+    // Read through the script's own symbol: a `Symbol('confirmed')` made here is a different key and would match nothing.
+    const { CONFIRMED, mergeIssueGroups } = await internals();
+
+    const disputed = [
+      issue({ category: 'code-quality', description: 'rejected under one unit', file: 'src/a.ts' }),
+      { ...issue({ category: 'code-quality', description: 'confirmed under the other', file: 'src/b.ts' }),
+        [CONFIRMED]: true },
+    ];
+
+    // Same tier, so the lowest index survives — and it is the *rejected* copy.
+    const merged = mergeIssueGroups(disputed, [[0, 1]]);
+
+    expect(merged[0].description).toBe('rejected under one unit');
+    expect(merged[0][CONFIRMED]).toBe(true);
+
+    // And nothing is invented: a group no member of which was confirmed stays unconfirmed, so the OR is an OR and not a
+    // blanket. Without this half, every merged finding would pass the gate.
+    expect(mergeIssueGroups([disputed[0], issue({ file: 'src/c.ts', category: 'code-quality' })], [[0, 1]])[0][CONFIRMED])
+      .toBeUndefined();
+  });
 });
 
 describe('dedupe prompt', () => {
@@ -395,72 +437,85 @@ describe('dedupe effort', () => {
 
   it('actually hands the first rung to the agent', async () => {
     // The ladder being right is worthless if the call site still passes the uncapped `effort` — a one-word edit that
-    // every value-level assertion above still survives.
+    // every value-level assertion above still survives. Read off the adjudicator, since both stages share the one
+    // `dedupeAgent` and the adjudicator is the stage a two-finding round in one unit actually spawns.
     const run = await runReview({ issues: pair, args: { effort: 'max' } });
-    const [call] = run.called(/^dedupe/);
+    const [call] = run.called(/^adjudicate/);
 
     expect(call.opts.effort).toBe('high');
     expect(call.opts.model).toBe('opus');
   });
 });
 
-describe('dedupe stall', () => {
+describe('a stall on a rung', () => {
   it('steps down to the next rung when the agent is killed mid-think', async () => {
     // The real harness throws `agent stalled on all 6 attempts (no progress for 180000ms each)`, so a throw is the
     // faithful stand-in. The lower rung's answer must still be applied.
     const run = await runReview({
       issues: pair,
-      dedupe: (call) => {
+      adjudicate: (call, ctx) => {
         if (call.opts.effort === 'high') throw new Error('agent stalled on all 6 attempts');
 
-        return { groups: [[0, 1]] };
+        return confirming([[0, 1]])(call, ctx);
       },
     });
 
-    expect(run.called(/^dedupe/).map((call) => call.opts.effort)).toEqual(['high', 'medium']);
+    expect(run.called(/^adjudicate/).map((call) => call.opts.effort)).toEqual(['high', 'medium']);
     expect(run.result.findings).toHaveLength(1);
   });
 
   it('names the fallback rung in its label so a step-down is visible in /workflows', async () => {
     const run = await runReview({
       issues: pair,
-      dedupe: (call) => {
+      adjudicate: (call, ctx) => {
         if (call.opts.effort === 'high') throw new Error('agent stalled');
 
-        return { groups: [] };
+        return confirming([])(call, ctx);
       },
     });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high', 'dedupe:core:medium']);
+    expect(run.called(/^adjudicate/).map((call) => call.label)).toEqual([
+      'adjudicate:core:high',
+      'adjudicate:core:medium',
+    ]);
   });
 
   it('survives a stall on every rung instead of discarding the whole review', async () => {
-    // This is the guarantee that matters most: an unguarded throw here failed a run that was 42 of 43 agents done.
-    // The round must degrade to un-deduplicated findings and record a gap, not take the review down with it.
+    // This is the guarantee that matters most: an unguarded throw here failed a run that was 42 of 43 agents done. The
+    // round has to record what it lost and return, not take the review down with it.
+    //
+    // What it loses grew when validation fused into this stage. A stage-1 dedupe that stalled cost the round its merging
+    // and kept its findings, because a separate validator would judge them anyway; there is no separate validator now, so
+    // an unanswered scope is an unjudged scope. Hence two gaps rather than one, and `cascading-failures.test.js` pins
+    // their whole composition — what this asserts is that the run came back at all.
     const run = await runReview({
       issues: pair,
-      dedupe: () => {
+      adjudicate: () => {
         throw new Error('agent stalled on all 6 attempts (no progress for 180000ms each)');
       },
     });
 
-    expect(run.result.findings).toHaveLength(pair.length);
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
+    expect(run.result.findings).toEqual([]);
+    expect(run.result.gaps.some((gap) => gap.includes('Adjudication did not return for 1 of 1 agent(s)'))).toBe(true);
     expect(run.logged(/stalled at effort high/).length).toBe(1);
   });
 
   it('still degrades gracefully when the agent merely returns nothing', async () => {
     // The pre-existing null path has to keep working alongside the new throw path.
-    const run = await runReview({ issues: pair, dedupe: () => null });
+    const run = await runReview({ issues: pair, adjudicate: () => null });
 
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Adjudication did not return for 1 of 1 agent(s)'))).toBe(true);
   });
 });
 
-describe('dedupe malformed responses', () => {
+describe('malformed responses', () => {
   // The agent's structured output is untrusted. It can return partial data, wrong types, or schema violations without
   // throwing or returning null. These intermediate failure modes must degrade to "no merge" instead of crashing or
   // corrupting findings, since `mergeIssueGroups` treats malformed groups as invalid.
+  //
+  // Read off the adjudicator, which is the stage this fixture reaches: a single scope of two has already compared every
+  // pair it holds, so the cross pass is skipped and a `dedupe` override here would never be called at all — every one of
+  // these would then pass by asserting that findings nothing touched are untouched.
   const pair = [issue({ file: 'a.py' }), issue({ file: 'b.py' })];
 
   // The findings as the run reports them. Each round marks its own findings with a symbol-keyed property so the
@@ -475,14 +530,14 @@ describe('dedupe malformed responses', () => {
 
   it('treats groups as a non-array (string) as "nothing collided"', async () => {
     // Schema violation: groups must be an array. The merge logic treats non-arrays as invalid, preserving all findings.
-    const run = await runReview({ issues: pair, dedupe: () => ({ groups: 'not an array' }) });
+    const run = await runReview({ issues: pair, adjudicate: confirming('not an array') });
 
     expect(run.result.findings).toHaveLength(pair.length);
     expect(reported(run)).toEqual(intact);
   });
 
   it('treats groups as a non-array (object) as "nothing collided"', async () => {
-    const run = await runReview({ issues: pair, dedupe: () => ({ groups: { nested: 'object' } }) });
+    const run = await runReview({ issues: pair, adjudicate: confirming({ nested: 'object' }) });
 
     expect(run.result.findings).toHaveLength(pair.length);
     expect(reported(run)).toEqual(intact);
@@ -490,7 +545,7 @@ describe('dedupe malformed responses', () => {
 
   it('treats groups containing non-arrays at the top level as "nothing collided"', async () => {
     // Schema violation: groups should be an array of arrays, not an array of integers. Each non-array element is ignored.
-    const run = await runReview({ issues: pair, dedupe: () => ({ groups: [1, 2, 3] }) });
+    const run = await runReview({ issues: pair, adjudicate: confirming([1, 2, 3]) });
 
     expect(run.result.findings).toHaveLength(pair.length);
     expect(reported(run)).toEqual(intact);
@@ -498,7 +553,7 @@ describe('dedupe malformed responses', () => {
 
   it('processes valid groups and ignores invalid mixed-in elements', async () => {
     // Mixed types: one valid group plus string and object elements. The valid group merges, invalid ones are ignored.
-    const run = await runReview({ issues: pair, dedupe: () => ({ groups: [[0, 1], 'string', { key: 'value' }] }) });
+    const run = await runReview({ issues: pair, adjudicate: confirming([[0, 1], 'string', { key: 'value' }]) });
 
     expect(run.result.findings).toHaveLength(1);
     expect(run.result.findings[0].file).toBe('a.py');
@@ -506,16 +561,16 @@ describe('dedupe malformed responses', () => {
 
   it('treats undefined return the same as null', async () => {
     // Different from an explicit null: the agent returned nothing at all. Must produce the same gap as null.
-    const run = await runReview({ issues: pair, dedupe: () => undefined });
+    const run = await runReview({ issues: pair, adjudicate: () => undefined });
 
-    expect(run.result.gaps.some((gap) => gap.includes('Dedupe did not return for 1 of 1 scope(s)'))).toBe(true);
+    expect(run.result.gaps.some((gap) => gap.includes('Adjudication did not return for 1 of 1 agent(s)'))).toBe(true);
   });
 
   it('survives groups containing arrays with non-integer elements', async () => {
     // Within a group array: strings, floats, nulls, objects all violate the schema but must not crash.
     const run = await runReview({
       issues: pair,
-      dedupe: () => ({ groups: [[0, 'x'], [1, 2.5], [null, undefined]] }),
+      adjudicate: confirming([[0, 'x'], [1, 2.5], [null, undefined]]),
     });
 
     expect(run.result.findings).toHaveLength(pair.length);
@@ -526,7 +581,7 @@ describe('dedupe malformed responses', () => {
     // The contract: output is a subset of input. Malformed groups must degrade to "all kept", never "new issues added".
     const run = await runReview({
       issues: pair,
-      dedupe: () => ({ groups: [[999], [-1], [0, 0], 'junk', { completely: 'wrong' }] }),
+      adjudicate: confirming([[999], [-1], [0, 0], 'junk', { completely: 'wrong' }]),
     });
 
     for (const finding of run.result.findings) {
@@ -603,19 +658,23 @@ describe('dedupe rung ceilings', () => {
     // covered directly by `dedupeRungs` above. What the run must not do is pay a rung to discover its own size.
     const { DEDUPE_RUNG_CEILING, DEDUPE_CHUNK_CAP } = await internals();
     const many = Array.from({ length: DEDUPE_RUNG_CEILING.high + 1 }, (_, i) => issue({ file: `src/f${i}.ts` }));
-    const run = await runReview({ issues: many, dedupe: () => ({ groups: [] }) });
-    const digests = run.called(/^dedupe/).map((call) => Number(/Findings \((\d+)\)/.exec(call.prompt)[1]));
+    const run = await runReview({ issues: many, adjudicate: confirming([]), dedupe: () => ({ groups: [] }) });
+
+    // Both stages, since both are capped by the same constant and either could regress alone. The adjudicator's header
+    // carries a second number — how many of those are its to judge — so the digest count is read up to the comma.
+    const agents = run.called(/^(dedupe|adjudicate)/);
+    const digests = agents.map((call) => Number(/Findings \((\d+)[,)]/.exec(call.prompt)[1]));
 
     expect(DEDUPE_CHUNK_CAP).toBeLessThanOrEqual(DEDUPE_RUNG_CEILING.high);
     expect(Math.max(...digests)).toBeLessThanOrEqual(DEDUPE_CHUNK_CAP);
-    expect(run.called(/^dedupe/).every((call) => call.opts.effort === 'high')).toBe(true);
+    expect(agents.every((call) => call.opts.effort === 'high')).toBe(true);
     expect(run.logged(/is over the ceiling/)).toHaveLength(0);
   });
 
   it('leaves a round under the ceiling starting at the top rung, with nothing logged', async () => {
-    const run = await runReview({ issues: pair, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: pair, adjudicate: confirming([]) });
 
-    expect(run.called(/^dedupe/).map((call) => call.opts.effort)).toEqual(['high']);
+    expect(run.called(/^adjudicate/).map((call) => call.opts.effort)).toEqual(['high']);
     expect(run.logged(/is over the ceiling/)).toHaveLength(0);
   });
 });
@@ -688,15 +747,19 @@ describe('dedupe scopes', () => {
     expect(claimUnits([spread[2]], overlapping)).toEqual({ perUnit: [[spread[2]], []], unclaimed: [] });
   });
 
-  it('runs no agent for a scope holding one finding, which has nothing to compare it against', async () => {
-    // An agent there could only ever answer `groups: []`, at Opus prices. The scope used to be dropped before stage 1
-    // fanned out; the guard now sits in `scopeDedupe`, so the cross pass and the leftovers scope get it too.
+  it('asks for no merge on a scope holding one finding, but still judges it', async () => {
+    // A *merge* agent on a scope of one could only ever answer `groups: []`, at Opus prices, so the guard in `scopeDedupe`
+    // keeps the cross pass and the leftovers scope off it. The per-unit stage is no longer such an agent: the adjudicator
+    // owes a verdict as well as a merge, and a verdict on one finding is the whole reason it is reported at all. So it
+    // runs, and the saving that used to come from skipping the scope now comes from there being one agent instead of two.
     const alone = await runReview({ issues: [spread[0]] });
 
     expect(alone.called(/^dedupe/)).toEqual([]);
+    expect(alone.called(/^adjudicate/)).toHaveLength(1);
+    expect(alone.result.findings).toHaveLength(1);
 
-    // One finding per unit: neither unit has a pair, so stage 1 runs nothing at all — but the two findings could still be
-    // duplicates of each other across units, which is exactly what the cross pass is for.
+    // One finding per unit: neither unit has a pair, so neither adjudicator has a merge to make — but the two findings
+    // could still be duplicates of each other across units, which is exactly what the cross pass is for.
     const apiece = await runReview({ issues: [spread[0], spread[2]], units });
 
     expect(apiece.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:cross:high']);
@@ -719,11 +782,11 @@ describe('dedupe scopes', () => {
   });
 
   it('runs one agent per unit and then a single pass over the survivors', async () => {
-    const run = await runReview({ issues: spread, units, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: spread, units, adjudicate: confirming([]), dedupe: () => ({ groups: [] }) });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual([
-      'dedupe:api:high',
-      'dedupe:core:high',
+    expect(run.called(/^(adjudicate|dedupe)/).map((call) => call.label)).toEqual([
+      'adjudicate:api:high',
+      'adjudicate:core:high',
       'dedupe:cross:high',
     ]);
     expect(run.result.findings).toHaveLength(spread.length);
@@ -735,17 +798,17 @@ describe('dedupe scopes', () => {
     // scope for that to hold; `stage-1 scope chunking` below covers the round too big for one agent to have seen it all.
     const run = await runReview({ issues: pair });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high']);
+    expect(run.called(/^dedupe/)).toEqual([]);
+    expect(run.called(/^adjudicate/).map((call) => call.label)).toEqual(['adjudicate:core:high']);
   });
 
   it('sizes each scope to its unit rather than to the whole round', async () => {
     // The point of the split, stated as an assertion: no agent sees all four findings.
-    const run = await runReview({ issues: spread, units, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: spread, units, adjudicate: confirming([]) });
 
-    expect(run.called(/^dedupe:(api|core):high$/).map((call) => /Findings \((\d+)\)/.exec(call.prompt)[1])).toEqual([
-      '2',
-      '2',
-    ]);
+    expect(
+      run.called(/^adjudicate:(api|core):high$/).map((call) => /Findings \((\d+)/.exec(call.prompt)[1]),
+    ).toEqual(['2', '2']);
   });
 
   it('shows the second pass the survivors, not the round it started from', async () => {
@@ -755,7 +818,8 @@ describe('dedupe scopes', () => {
     const run = await runReview({
       issues: spread,
       units,
-      dedupe: (call) => ({ groups: call.label === 'dedupe:core:high' ? [[0, 1]] : [] }),
+      adjudicate: confirming((call) => (call.label === 'adjudicate:core:high' ? [[0, 1]] : [])),
+      dedupe: () => ({ groups: [] }),
     });
 
     const [cross] = run.called('dedupe:cross:high');
@@ -770,81 +834,79 @@ describe('dedupe scopes', () => {
     const run = await runReview({
       issues: spread,
       units,
-      dedupe: (call) => {
-        if (call.label.startsWith('dedupe:api')) throw new Error('agent stalled on all 6 attempts');
+      adjudicate: (call, ctx) => {
+        if (call.label.startsWith('adjudicate:api')) throw new Error('agent stalled on all 6 attempts');
 
-        return { groups: call.label.startsWith('dedupe:core') ? [[0, 1]] : [] };
+        return confirming([[0, 1]])(call, ctx);
       },
+      dedupe: () => ({ groups: [] }),
     });
 
-    // `core` merged its pair; `api` kept both of its findings, and the gap names the unit whose answer was lost.
-    expect(run.result.findings.map((subject) => subject.file)).toEqual([
-      'api/handler.py',
-      'api/routes.py',
-      'core/wire.py',
-    ]);
-    expect(run.result.gaps.some((gap) => gap.includes('1 of 2 scope(s)') && gap.includes('api'))).toBe(true);
+    // `core` merged its pair and reported the survivor. `api`'s two findings are gone — an unanswered scope is now an
+    // unjudged scope, which `a stall on a rung` above pins — but they were the whole casualty, and that is the guarantee
+    // this test is for: one stall costs one unit, not the round. The gap names which unit.
+    expect(run.result.findings.map((subject) => subject.file)).toEqual(['core/wire.py']);
+    expect(run.result.gaps.some((gap) => gap.includes('1 of 2 agent(s)') && gap.includes('api'))).toBe(true);
   });
 
   it('reports a stalled cross pass separately, since the per-unit merges still happened', async () => {
     // Two different partial outcomes with two different consequences: a lost unit repeats a defect inside one unit, a
-    // lost cross pass repeats one across two. Reporting both as "dedupe failed" would hide which findings to distrust.
+    // lost cross pass repeats one across two. Reporting both as one failure would hide which findings to distrust.
     const run = await runReview({
       issues: spread,
       units,
-      dedupe: (call) => {
-        if (call.label.startsWith('dedupe:cross')) throw new Error('agent stalled on all 6 attempts');
-
-        return { groups: [[0, 1]] };
+      adjudicate: confirming([[0, 1]]),
+      dedupe: () => {
+        throw new Error('agent stalled on all 6 attempts');
       },
     });
 
     expect(run.result.findings).toHaveLength(2);
     expect(run.result.gaps.some((gap) => gap.includes('cross-unit dedupe pass did not return'))).toBe(true);
-    expect(run.result.gaps.some((gap) => gap.includes('scope(s) in round'))).toBe(false);
+    expect(run.result.gaps.some((gap) => gap.includes('agent(s) in round'))).toBe(false);
   });
 
-  it('keeps reviewer order through both stages, which the per-finding labels index into', async () => {
+  it('accumulates the absorbed sites through both stages, in reviewer order', async () => {
     // Two merges, one per stage: `core` collapses its own pair, then the cross pass folds that survivor into an `api`
-    // finding. The absorbed sites have to accumulate through both, or the second merge loses the first one's evidence.
+    // finding. The absorbed sites have to accumulate through both, or the second merge loses the first one's evidence —
+    // and their order is reviewer order, which is what makes the report's "also at" list readable.
     const run = await runReview({
       issues: spread,
       units,
-      dedupe: (call) => {
-        if (call.label === 'dedupe:core:high') return { groups: [[0, 1]] };
-        if (call.label === 'dedupe:cross:high') return { groups: [[0, 2]] };
-
-        return { groups: [] };
-      },
+      adjudicate: confirming((call) => (call.label === 'adjudicate:core:high' ? [[0, 1]] : [])),
+      dedupe: (call) => ({ groups: call.label === 'dedupe:cross:high' ? [[0, 2]] : [] }),
     });
 
     expect(run.result.findings.map((subject) => subject.file)).toEqual(['api/handler.py', 'api/routes.py']);
     expect(run.result.findings[0].otherSites).toEqual(['core/wire.py:10', 'core/frame.py:10']);
   });
 
-  it('asks the validator at each index about the survivor it names, not the finding it displaced', async () => {
-    // The other side of the same order contract, and the one a scenario can get wrong quietly: a merge renumbers every
-    // finding after it, so `validate:bug#1` here is `core/wire.py` and not the `api/routes.py` that used to sit at index
-    // 1. Reading the index against the pre-merge list would spend a validator on a duplicate already folded away — and,
-    // downstream, hand `/repo-review-fix` a ledger whose branch numbers name the wrong findings.
+  it('judges the scope it was shown, which is the list before its own merge is applied', async () => {
+    // The other side of the order contract. Both halves of an adjudicator's answer are numbered against the scope as it
+    // was handed over, so `api`'s answer merges away the very finding it also gave a verdict on. Renumbering the verdicts
+    // against the survivors would make the two halves of one message disagree, and that is unrecoverable: every
+    // chunk-local index is also a valid scope index, so nothing downstream could tell which numbering was meant.
     const asked = [];
     const run = await runReview({
       issues: spread,
       units,
-      dedupe: (call) => ({ groups: call.label === 'dedupe:api:high' ? [[0, 1]] : [] }),
-      validate: (subject, { idx }) => {
-        asked[idx] = subject.file;
+      adjudicate: (call, ctx) => {
+        asked.push(...ctx.subjects.map((subject) => subject.file));
 
-        return { confirmed: true, rationale: 'confirmed' };
+        return confirming(call.label.startsWith('adjudicate:api') ? [[0, 1]] : [])(call, ctx);
       },
+      dedupe: () => ({ groups: [] }),
     });
 
+    expect(asked.sort()).toEqual(['api/handler.py', 'api/routes.py', 'core/frame.py', 'core/wire.py']);
+
+    // `api/routes.py` was judged and then merged away by the same answer, and its verdict rides onto the survivor — the
+    // alternative, judging only what survives, cannot be done in one message.
     expect(run.result.findings.map((subject) => subject.file)).toEqual([
       'api/handler.py',
       'core/wire.py',
       'core/frame.py',
     ]);
-    expect(asked).toEqual(['api/handler.py', 'core/wire.py', 'core/frame.py']);
   });
 });
 
@@ -856,7 +918,7 @@ describe('round labels', () => {
     // a label is part of the resume cache key, so a round-tagged label is one a resumed run cannot match.
     const run = await runReview({ issues: pair, args: { round: 4, knownFindings: pair } });
 
-    expect(run.called(/^dedupe/).map((call) => call.label)).toEqual(['dedupe:core:high']);
+    expect(run.called(/^adjudicate/).map((call) => call.label)).toEqual(['adjudicate:core:high']);
     expect(run.called(/^review:core:opus/).map((call) => call.label)).toEqual(['review:core:opus']);
   });
 });
@@ -942,8 +1004,8 @@ describe('stage-1 scope chunking', () => {
     // choice and nothing upstream bounds it.
     const { DEDUPE_CHUNK_CAP } = await internals();
     const many = Array.from({ length: DEDUPE_CHUNK_CAP + 10 }, (_, i) => issue({ file: `src/f${i}.ts` }));
-    const run = await runReview({ issues: many, dedupe: () => ({ groups: [] }) });
-    const sizes = run.called(/^dedupe:core/).map((call) => Number(/Findings \((\d+)\)/.exec(call.prompt)[1]));
+    const run = await runReview({ issues: many, adjudicate: confirming([]) });
+    const sizes = run.called(/^adjudicate:core/).map((call) => Number(/Findings \((\d+)/.exec(call.prompt)[1]));
 
     expect(sizes.length).toBeGreaterThan(1);
     expect(Math.max(...sizes)).toBeLessThanOrEqual(DEDUPE_CHUNK_CAP);
@@ -954,6 +1016,7 @@ describe('stage-1 scope chunking', () => {
     // and a small unit must not be silently folded in with the chunks of a large one.
     const { DEDUPE_CHUNK_CAP } = await internals();
     const run = await runReview({
+      adjudicate: confirming([]),
       dedupe: () => ({ groups: [] }),
       units: [
         { name: 'api', slug: 'api', summary: 'the request surface', paths: ['api'] },
@@ -965,23 +1028,23 @@ describe('stage-1 scope chunking', () => {
       ],
     });
 
-    expect(run.called(/^dedupe:api/).map((call) => call.label)).toEqual(['dedupe:api:high']);
-    expect(run.called(/^dedupe:core/).map((call) => call.label)).toEqual([
-      'dedupe:core:1+2:high',
-      'dedupe:core:1+3:high',
-      'dedupe:core:2+3:high',
+    expect(run.called(/^adjudicate:api/).map((call) => call.label)).toEqual(['adjudicate:api:high']);
+    expect(run.called(/^adjudicate:core/).map((call) => call.label)).toEqual([
+      'adjudicate:core:1+2:high',
+      'adjudicate:core:1+3:high',
+      'adjudicate:core:2+3:high',
     ]);
   });
 
   it('fans an over-cap unit out into chunked stage-1 agents', async () => {
     const { DEDUPE_CHUNK_CAP } = await internals();
     const many = Array.from({ length: DEDUPE_CHUNK_CAP + 10 }, (_, i) => issue({ file: `src/f${i}.ts` }));
-    const run = await runReview({ issues: many, dedupe: () => ({ groups: [] }) });
+    const run = await runReview({ issues: many, adjudicate: confirming([]) });
 
-    expect(run.called(/^dedupe:core/).map((call) => call.label)).toEqual([
-      'dedupe:core:1+2:high',
-      'dedupe:core:1+3:high',
-      'dedupe:core:2+3:high',
+    expect(run.called(/^adjudicate:core/).map((call) => call.label)).toEqual([
+      'adjudicate:core:1+2:high',
+      'adjudicate:core:1+3:high',
+      'adjudicate:core:2+3:high',
     ]);
   });
 
@@ -1180,16 +1243,17 @@ describe('cross-pass convergence', () => {
   });
 });
 
-describe('what dedupe contributes to the round’s novelty count', () => {
-  // The count the caller loops on is read off the marks that survived dedupe, not differenced against the size of the
-  // set the round was handed — and this is where the difference is observable, because dedupe is the only phase that can
+describe('what the merge contributes to the round’s novelty count', () => {
+  // The count the caller loops on is read off the marks that survived the merge, not differenced against the size of the
+  // set the round was handed — and this is where the difference is observable, because merging is the only thing that can
   // shrink that set. `runReview` is driven at round 2 throughout: the accumulated findings arrive on `args` now, so a test
   // states what the review already holds instead of staging a first round to accumulate it. See `rounds.test.js` for the
   // rest of the round contract.
   //
-  // Three held findings plus this round's, all in one unit, so every arrangement runs exactly one dedupe agent whose
-  // indices are union indices: a single scope covering the whole union has already compared every pair, and the script
-  // skips the cross pass for it.
+  // Three held findings plus this round's, all in one unit, so every arrangement runs exactly one adjudicator whose
+  // indices are indices into the whole scope: a single scope covering everything has already compared every pair, and the
+  // script skips the cross pass for it. So the merge under test and the verdicts arrive in the same answer, which is why
+  // `round2` reports back what was put up for judgement alongside the run.
   const held = [
     issue({ description: 'unchecked frame length', file: 'core/wire.py', lines: '132' }),
     issue({ description: 'partial read treated as EOF', file: 'core/frame.py', lines: '44' }),
@@ -1206,8 +1270,23 @@ describe('what dedupe contributes to the round’s novelty count', () => {
     { name: 'core', summary: 'the protocol', paths: ['core/wire.py', 'core/frame.py', 'core/handshake.py'] },
   ];
 
-  const round2 = (dedupe) =>
-    runReview({ issues: found, units, args: { round: 2, knownFindings: held }, dedupe });
+  // The run, plus the descriptions the adjudicator was asked for a verdict on. That list is half of what this section is
+  // about: a held finding appearing in it is a round paying to re-judge what an earlier round settled.
+  const round2 = async (groups) => {
+    const judged = [];
+    const run = await runReview({
+      issues: found,
+      units,
+      args: { round: 2, knownFindings: held },
+      adjudicate: (call, ctx) => {
+        judged.push(...ctx.subjects.map((subject) => subject.description));
+
+        return confirming(groups)(call, ctx);
+      },
+    });
+
+    return { ...run, judged };
+  };
 
   it('counts the findings the round contributed, not the change in the accumulated total', async () => {
     // Round 2 does two things at once. It merges the three findings it was handed into one — the leftover merge a
@@ -1215,7 +1294,7 @@ describe('what dedupe contributes to the round’s novelty count', () => {
     // duplicate chain one round can close — and it keeps one of its own findings as a distinct defect. So the total
     // *falls*, from three to two, on a round that genuinely found something. Differenced, that reads as convergence and
     // the caller stops on a productive round.
-    const run = await round2(() => ({ groups: [[0, 1, 2], [3, 4]] }));
+    const run = await round2([[0, 1, 2], [3, 4]]);
 
     expect(run.result.findings).toHaveLength(2);
     expect(run.result.newFindings).toBe(1);
@@ -1224,7 +1303,7 @@ describe('what dedupe contributes to the round’s novelty count', () => {
   it('counts a finding merged into another of the round’s own once, not twice', async () => {
     // Two reviewers reporting one defect the review did not hold is one new defect, and the mark survives the merge
     // (see `dedupe merge`), so the count follows the survivors rather than the reports.
-    const run = await round2(() => ({ groups: [[3, 4]] }));
+    const run = await round2([[3, 4]]);
 
     expect(run.result.findings).toHaveLength(4);
     expect(run.result.newFindings).toBe(1);
@@ -1234,26 +1313,30 @@ describe('what dedupe contributes to the round’s novelty count', () => {
     // Each of the round's findings is merged into the copy the review was handed, so none survives as a finding of its
     // own. This is the signal the caller stops on, and what comes back is the set the round was handed — each survivor
     // having absorbed its re-report as an `otherSites` entry, which is the merge working, not a finding added.
-    const run = await round2(() => ({ groups: [[0, 3], [1, 4]] }));
+    const run = await round2([[0, 3], [1, 4]]);
 
     expect(run.result.newFindings).toBe(0);
     expect(run.result.findings.map((finding) => finding.description)).toEqual(held.map((one) => one.description));
   });
 
-  it('does not judge a finding that was merged into one already held', async () => {
-    // The cost half of the same rule: a re-report loses its mark, and everything after dedupe is scoped by the marks. A
-    // round that re-found what it was handed must spend no validator on it — otherwise round 4 pays to re-judge rounds
-    // 1 through 3, which is the multiplier moving the loop out to the caller exists to remove.
-    const run = await round2(() => ({ groups: [[0, 3], [1, 4]] }));
+  it('never puts a finding the review already held up for judgement', async () => {
+    // The cost half of the same rule, and where fusing the phases moved it. Under a separate Validate the saving was in
+    // the fan-out: a re-report lost its mark in the merge and so bought no validator. The merge is now the adjudicator's
+    // own answer, delivered in the same message as the verdicts, so it cannot un-ask a question it has already asked —
+    // what has to hold instead is the input. Only this round's two findings are put up; the three the ledger supplied are
+    // shown as `[held]` context, so the merge can see them without their being re-judged. Otherwise round 4 pays to
+    // re-judge rounds 1 through 3, which is the multiplier moving the loop out to the caller exists to remove.
+    const run = await round2([[0, 3], [1, 4]]);
 
-    expect(run.called(/^validate/)).toHaveLength(0);
+    expect(run.judged).toEqual(found.map((one) => one.description));
   });
 
-  it('judges only the survivors that were marked, whatever else dedupe merged', async () => {
-    const run = await round2(() => ({ groups: [[0, 1, 2], [3, 4]] }));
-    const judged = run.called(/^validate/);
+  it('judges this round’s findings and no others, whatever else the merge collapsed', async () => {
+    // The same input rule under a merge that collapses the held findings among themselves and the new ones among
+    // themselves — a rearrangement of the scope that must not change which findings were up for judgement.
+    const run = await round2([[0, 1, 2], [3, 4]]);
 
-    expect(judged).toHaveLength(1);
-    expect(judged[0].prompt).toContain('length is re-read after the check');
+    expect(run.judged).toEqual(found.map((one) => one.description));
+    expect(run.result.newFindings).toBe(1);
   });
 });

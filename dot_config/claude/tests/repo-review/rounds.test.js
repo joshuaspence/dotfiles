@@ -26,9 +26,22 @@ const held = [
 
 const found = [issue({ description: 'the retry loop never terminates', file: 'core/frame.py', lines: '51' })];
 
-// One unit spanning every file either list cites, so no finding lands in the unclaimed cross-cutting dedupe scope and
-// every round below runs a single dedupe agent.
+// One unit spanning every file either list cites, so no finding lands in the unclaimed cross-cutting scope and every
+// round below runs a single adjudicator.
 const units = [{ name: 'core', summary: 'the protocol', paths: ['core/wire.py', 'core/frame.py'] }];
+
+// The findings an adjudicator was asked for a verdict on, in the order it was asked, collected by answering yes to each.
+const judgedIn = (config = {}) => {
+  const judged = [];
+
+  const validate = (subject) => {
+    judged.push(subject.description);
+
+    return { confirmed: true, rationale: 'yes' };
+  };
+
+  return [judged, { ...config, validate }];
+};
 
 const round = (args = {}, config = {}) =>
   runReview({ issues: found, units, args: { round: 2, knownFindings: held, ...args }, ...config });
@@ -79,12 +92,22 @@ describe('what a round returns', () => {
 
 describe('what a round does not do again', () => {
   it('judges only what it found itself', async () => {
-    // Validation is the second-largest fan-out in the run (`findings × --validators`). Judging the accumulated set every
-    // round makes round 4 pay for rounds 1 through 3, which is most of what made a looped run unaffordable.
-    const judged = (await round()).called(/^validate/);
+    // Validation used to be its own fan-out, `findings × --validators` agents of it, and judging the accumulated set
+    // every round made round 4 pay for rounds 1 through 3 — most of what made a looped run unaffordable. One adjudicator
+    // per unit means the saving is no longer in the agent count but in what that one agent is asked for: the scope it
+    // reads has to hold the held findings, because they are what this round's reports are merged against, and it is only
+    // asked to judge the one finding that is new.
+    const [judged, config] = judgedIn();
+    const run = await round({}, config);
+    const [adjudicator] = run.called(/^adjudicate/);
 
-    expect(judged).toHaveLength(1);
-    expect(judged[0].prompt).toContain('the retry loop never terminates');
+    expect(run.called(/^adjudicate/)).toHaveLength(1);
+    expect(judged).toEqual(['the retry loop never terminates']);
+
+    // The held findings are in front of it, marked as not its to judge — a merge it could not see them in would report
+    // this round's finding as new when it is the same defect an earlier round already recorded.
+    expect(adjudicator.prompt).toContain('[held] ');
+    expect(adjudicator.prompt).toContain('unchecked frame length');
   });
 
   it('offers only what it found itself as new, so the next command is not asked to re-fix a held finding', async () => {
@@ -105,7 +128,7 @@ describe('what a round does not do again', () => {
     const run = await round({}, { review: () => ({ issues: [] }) });
 
     expect(run.called(/^dedupe/)).toHaveLength(0);
-    expect(run.called(/^validate/)).toHaveLength(0);
+    expect(run.called(/^adjudicate/)).toHaveLength(0);
     expect(run.result.newFindings).toBe(0);
     expect(run.result.findings).toEqual(withFingerprints(held));
     expect(run.logged('Round 2 produced no findings — the review is dry.')).toHaveLength(1);
@@ -145,11 +168,12 @@ describe('a first round', () => {
   it('is a round that happens to hold nothing', async () => {
     // Round 1 is not a special case in the script, and this is the assertion that keeps it that way: with an empty
     // ledger every finding is new, so `newFindings` is the whole confirmed set and `findings` is the same list.
-    const run = await runReview({ issues: [...held, ...found], units });
+    const [judged, config] = judgedIn();
+    const run = await runReview({ issues: [...held, ...found], units, ...config });
 
     expect(run.result.round).toBe(1);
     expect(run.result.findings).toHaveLength(3);
     expect(run.result.newFindings).toBe(3);
-    expect(run.called(/^validate/)).toHaveLength(3);
+    expect(judged).toHaveLength(3);
   });
 });

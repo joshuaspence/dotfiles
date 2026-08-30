@@ -1,10 +1,11 @@
 /**
  * How a `gaps` entry names the finding it is about.
  *
- * Validation is the only per-finding phase here, and a finding whose validators all failed is reported nowhere else — it
- * is in no `findings` list and has no other row — so this one line is where the user learns something was lost and
- * where to go look. It has to cite the site, and it has to stay one line: `gaps` renders as a bullet list, and a
- * reviewer's `description` routinely arrives with newlines in it.
+ * A finding its adjudicators left out of their answer is reported nowhere else — it is in no `findings` list and has no
+ * other row — so this one line is where the user learns something was lost and where to go look. It has to cite the site,
+ * and it has to stay one line: `gaps` renders as a bullet list, and a reviewer's `description` routinely arrives with
+ * newlines in it. That the line is per *finding* while the agent that dropped it is per *unit* is the point: one
+ * adjudicator can leave out one verdict of the several it was asked for, so a per-agent gap would not name the loss.
  *
  * The interesting case is the budget itself. `slice` counts UTF-16 code units, so a cut landing between the halves of a
  * surrogate pair keeps a lone leading surrogate — not a character, and rendered U+FFFD by every way out of the process.
@@ -25,7 +26,7 @@ describe('the one line a lost finding is named on', () => {
       validate: () => null,
     });
 
-    const gap = run.result.gaps.find((entry) => entry.includes('Validation did not complete'));
+    const gap = run.result.gaps.find((entry) => entry.includes('Adjudication did not complete'));
     expect(gap).toBeTruthy();
     // The gap should contain the first 80 characters of the description.
     expect(gap).toContain('A'.repeat(80));
@@ -42,7 +43,7 @@ describe('the one line a lost finding is named on', () => {
       validate: () => null,
     });
 
-    const splitGap = split.result.gaps.find((entry) => entry.includes('Validation did not complete'));
+    const splitGap = split.result.gaps.find((entry) => entry.includes('Adjudication did not complete'));
     expect(splitGap).toBeTruthy();
     expect(splitGap.isWellFormed()).toBe(true);
     expect(splitGap).toContain('A'.repeat(79));
@@ -56,7 +57,7 @@ describe('the one line a lost finding is named on', () => {
       validate: () => null,
     });
 
-    const fittingGap = fitting.result.gaps.find((entry) => entry.includes('Validation did not complete'));
+    const fittingGap = fitting.result.gaps.find((entry) => entry.includes('Adjudication did not complete'));
     expect(fittingGap).toBeTruthy();
     expect(fittingGap.isWellFormed()).toBe(true);
     expect(fittingGap).toContain('A'.repeat(76) + '😀😀');
@@ -70,7 +71,7 @@ describe('the one line a lost finding is named on', () => {
       validate: () => null,
     });
 
-    const gap = run.result.gaps.find((entry) => entry.includes('Validation did not complete'));
+    const gap = run.result.gaps.find((entry) => entry.includes('Adjudication did not complete'));
     expect(gap).toBeTruthy();
     // `gaps` is rendered as a one-line-per-finding list, so `issueDescription` collapses every run of whitespace to a
     // single space *before* truncating: the newlines are gone rather than preserved, and one finding stays one entry.
@@ -87,7 +88,7 @@ describe('the one line a lost finding is named on', () => {
       validate: () => null,
     });
 
-    const gap = run.result.gaps.find((entry) => entry.includes('Validation did not complete'));
+    const gap = run.result.gaps.find((entry) => entry.includes('Adjudication did not complete'));
     expect(gap).toBeTruthy();
     // Should preserve special characters within the 80-character window.
     expect(gap).toContain('backticks');
