@@ -3,7 +3,7 @@
 # The unit's `RuntimeDirectory` lives on the `tmpfs` at `$XDG_RUNTIME_DIR` and is reclaimed when the unit exits.
 # It is bind-mounted onto a stable `/tmp/claude-scratch` inside a private mount namespace, so Claude always sees
 # the same workspace path (making the folder-trust prompt a one-time thing) while each session's storage stays
-# separate and disposable. Requires unprivileged user namespaces (`kernel.apparmor_restrict_unprivileged_userns=0`).
+# separate and disposable.
 #
 # Usage: `_systemd_run_claude <unit-prefix> [extra systemd-run args...] -- [claude args...]`
 function _systemd_run_claude() {
@@ -36,6 +36,10 @@ function _systemd_run_claude() {
   # Each session bind-mounts its own fresh, auto-reaped `RuntimeDirectory` onto that path inside a private mount
   # namespace, so concurrent sessions stay isolated despite sharing the path. `PrivateTmp` keeps the bind mountpoint
   # off the host's `/tmp`.
+  if [[ "$(sysctl --ignore --values kernel.apparmor_restrict_unprivileged_userns)" != "0" ]]; then
+    echo "Unprivileged user namespaces are restricted, so the scratch directory cannot be bind-mounted." >&2
+    return 1
+  fi
   systemd_run_opts+=("--property" "BindPaths=${host_dir}:${work_dir}")
 
   while [[ $# -gt 0 && "$1" != "--" ]]; do

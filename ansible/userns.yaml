@@ -1,0 +1,23 @@
+---
+- name: 'Configure user namespaces'
+  hosts: 'localhost'
+
+  tasks:
+    # Absent on kernels without AppArmor's user namespace restriction, where unprivileged user namespaces are
+    # unrestricted already and setting the key would only make the reload fail.
+    - name: 'Check whether the kernel restricts unprivileged user namespaces'
+      ansible.builtin.stat:
+        path: '/proc/sys/kernel/apparmor_restrict_unprivileged_userns'
+      register: 'userns_restriction'
+
+    # `claude-scratch` (see `shell/functions/claude.bash`) runs Claude Code in a transient systemd user unit that
+    # bind-mounts a disposable `RuntimeDirectory` onto a stable path. Unsharing the mount namespace for that bind mount
+    # needs `CAP_SYS_ADMIN`, which the per-user service manager can only hold inside an unprivileged user namespace.
+    # Ubuntu confines those to the capability-less `unprivileged_userns` AppArmor profile unless this is turned off.
+    - name: 'Allow unprivileged user namespaces'
+      when: 'userns_restriction.stat.exists'
+      ansible.posix.sysctl:
+        name: 'kernel.apparmor_restrict_unprivileged_userns'
+        value: '0'
+        sysctl_file: '/etc/sysctl.d/60-unprivileged-userns.conf'
+        sysctl_set: true

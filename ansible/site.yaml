@@ -25,3 +25,5 @@
   import_playbook: 'keyd.yaml'
 - name: 'Install packages'
   import_playbook: 'packages.yaml'
+- name: 'Configure user namespaces'
+  import_playbook: 'userns.yaml'
