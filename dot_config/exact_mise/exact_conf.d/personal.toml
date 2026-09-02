@@ -2,3 +2,4 @@
 "pipx:JelmerT/cc2538-bsl" = "latest"
 "pipx:esphome" = "latest"
 "pipx:esptool" = "latest"
+"pipx:homeassistant-cli" = "latest"
