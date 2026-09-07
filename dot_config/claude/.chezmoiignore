@@ -1,5 +1,6 @@
 *
 !agents/
+!CLAUDE.md
 !commands/
 !file-suggestion.sh
 !scripts/
