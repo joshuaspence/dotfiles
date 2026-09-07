@@ -1,6 +1,12 @@
 [settings]
 idiomatic_version_file_enable_tools = ["go", "node", "pnpm", "python", "terraform", "terragrunt"]
-npm.package_manager = "pnpm"
+
+# Mise's `npm` backend installs packages with `pnpm add --global --global-dir ... --global-bin-dir ...`, but pnpm v12
+# removed both of those flags, so every tool using the `npm` backend (e.g. `markdownlint-cli2`) fails to install once
+# `pnpm` is resolved to `latest`. Fall back to `npm` until Mise stops passing the removed flags.
+#
+# See jdx/mise#12590 and pnpm/pnpm#14281.
+npm.package_manager = "npm"
 
 # TODO: Consider adding these:
 #
