@@ -22,6 +22,7 @@
   )
   "env" (dict
     "CLAUDE_CODE_NEW_INIT" "true"
+    "DISABLE_FEEDBACK_COMMAND" "true"
     "DISABLE_UPDATES" "true"
   )
   "extraKnownMarketplaces" (dict
@@ -73,24 +74,33 @@
     "command" "bash ~/.config/claude/file-suggestion.sh"
   )
   "hooks" (dict)
+  "outputStyle" "default"
   "permissions" (dict
     "allow" (list 
       "Bash(jq:*)"
       "Read(~/workspace)"
     )
-    "deny" (list 
+    "deny" (list
       "Read(./.env)"
     )
     "ask" (list)
     "defaultMode" "auto"
   )
+  "pluginConfigs" (dict)
+  "sandbox" (dict)
+  "showThinkingSummaries" false
+  "skillOverrides" (dict)
   "skipAutoPermissionPrompt" true
   "skipDangerousModePermissionPrompt" true
   "skipWorkflowUsageWarning" true
+  "spellcheck" (dict
+    "enabled" true
+  )
   "statusLine" (dict
     "type" "command"
     "command" "bash ~/.config/claude/statusline.sh"
   )
+  "theme" "auto"
   "tui" "fullscreen"
 -}}
 
