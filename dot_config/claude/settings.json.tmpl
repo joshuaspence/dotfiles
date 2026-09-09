@@ -21,7 +21,9 @@
     "skill-creator@claude-plugins-official" true
   )
   "env" (dict
+    "CLAUDE_CODE_DEBUG_LOGS_DIR" (printf "%s/.local/state/claude/debug" .chezmoi.homeDir)
     "CLAUDE_CODE_NEW_INIT" "true"
+    "CLAUDE_CODE_PLUGIN_CACHE_DIR" (printf "%s/.cache/claude/plugins" .chezmoi.homeDir)
     "DISABLE_FEEDBACK_COMMAND" "true"
     "DISABLE_UPDATES" "true"
   )

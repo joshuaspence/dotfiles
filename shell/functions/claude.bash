@@ -94,10 +94,17 @@ function claude-incognito() {
   claude_opts+=("--property" "TemporaryFileSystem=${CLAUDE_CONFIG_DIR}")
   claude_opts+=("--setenv" "CLAUDE_CODE_SKIP_PROMPT_HISTORY=1")
 
+  # The plugin cache lives outside `$CLAUDE_CONFIG_DIR` now (see `CLAUDE_CODE_PLUGIN_CACHE_DIR` in `settings.json`), so
+  # the mask above no longer covers it. Mask its parent and re-expose the plugins read-only, mirroring the config dir:
+  # incognito writes stay throwaway while plugins keep working. Keep this path in sync with the `settings.json` value.
+  local -r plugin_cache_dir="${XDG_CACHE_HOME:-${HOME}/.cache}/claude"
+  claude_opts+=("--property" "TemporaryFileSystem=${plugin_cache_dir}")
+  claude_opts+=("--property" "BindReadOnlyPaths=-${plugin_cache_dir}/plugins")
+
   # Re-expose the read-mostly config over the mask, read-only. A leading `-` on the source makes a missing path a
   # no-op instead of a unit start failure.
   local name
-  for name in agents .claude.json CLAUDE.md commands .credentials.json file-suggestion.sh plugins scripts settings.json skills statusline.sh workflows; do
+  for name in agents .claude.json CLAUDE.md commands .credentials.json file-suggestion.sh scripts settings.json skills statusline.sh workflows; do
     claude_opts+=("--property" "BindReadOnlyPaths=-${CLAUDE_CONFIG_DIR}/${name}")
   done
 
