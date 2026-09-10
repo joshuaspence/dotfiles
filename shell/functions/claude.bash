@@ -104,7 +104,7 @@ function claude-incognito() {
   # Re-expose the read-mostly config over the mask, read-only. A leading `-` on the source makes a missing path a
   # no-op instead of a unit start failure.
   local name
-  for name in agents .claude.json CLAUDE.md commands .credentials.json file-suggestion.sh scripts settings.json skills statusline.sh workflows; do
+  for name in agents .claude.json CLAUDE.md commands .credentials.json file-suggestion.sh scripts settings.json skills workflows; do
     claude_opts+=("--property" "BindReadOnlyPaths=-${CLAUDE_CONFIG_DIR}/${name}")
   done
 

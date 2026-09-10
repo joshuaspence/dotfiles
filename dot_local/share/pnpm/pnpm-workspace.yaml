@@ -1,0 +1,7 @@
+---
+# pnpm 12 reads resolution-policy settings (unlike registry/auth settings, which live in `.npmrc` / `config.yaml`) only
+# from the workspace-root manifest. For `pnpm add --global` -- how mise's built-in npm backend installs tools -- the
+# "workspace root" is `PNPM_HOME`, which defaults to this directory (`~/.local/share/pnpm`). Disabling
+# `blockExoticSubdeps` lets pnpm install `npm:@joshuaspence/claude-hud`, whose dependency on `jarrodwatts/claude-hud` is
+# an (intentional) git subdependency that pnpm 12 otherwise refuses (`ERR_PNPM_EXOTIC_SUBDEP`).
+blockExoticSubdeps: false

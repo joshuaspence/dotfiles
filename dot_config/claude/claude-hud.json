@@ -1,4 +1,10 @@
 {
+  "showSeparators": true,
+  "pathLevels": 1,
+  "gitStatus": {
+    "showAheadBehind": true,
+    "showFileStats": true
+  },
   "display": {
     "showAgents": true,
     "showConfigCounts": true,

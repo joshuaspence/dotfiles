@@ -1,16 +1,10 @@
 *
 !agents/
+!claude-hud.json
 !CLAUDE.md
 !commands/
 !file-suggestion.sh
 !scripts/
 !settings.json
 !skills/
-!statusline.sh
 !workflows/
-
-!plugins/
-plugins/*
-!plugins/claude-hud/
-plugins/claude-hud/*
-!plugins/claude-hud/config.json
