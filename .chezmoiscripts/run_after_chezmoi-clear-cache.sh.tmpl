@@ -14,5 +14,5 @@ set -o pipefail
 # the directory is created and is not bumped by writes to files within it).
 
 echo "Clearing Chezmoi cache ({{ (divf $age $days) | floor }} days old)"
-rm --recursive --force "${CACHE}"
+rm --recursive --force {{ .chezmoi.cacheDir | shellQuote }}
 {{ end -}}
