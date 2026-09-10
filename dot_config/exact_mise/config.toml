@@ -1,5 +1,6 @@
 [settings]
 idiomatic_version_file_enable_tools = ["go", "node", "pnpm", "python", "terraform", "terragrunt"]
+minimum_release_age_excludes = ["npm:@joshuaspence/claude-hud"]
 npm.package_manager = "pnpm"
 
 # TODO: Consider adding these:
