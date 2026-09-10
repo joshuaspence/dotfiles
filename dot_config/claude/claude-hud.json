@@ -1,16 +1,43 @@
 {
-  "showSeparators": true,
-  "pathLevels": 1,
+  "pathLevels": 3,
+  "elementOrder": [
+    "project",
+    "sessionTime",
+    "context",
+    "usage",
+    "environment",
+    "addedDirs",
+    "promptCache",
+    "memory",
+    "tools",
+    "skills",
+    "mcp",
+    "agents",
+    "todos"
+  ],
   "gitStatus": {
-    "showAheadBehind": true,
-    "showFileStats": true
+    "branchOverflow": "wrap"
   },
   "display": {
-    "showAgents": true,
     "showConfigCounts": true,
+    "showCost": true,
+    "showRoutedCost": true,
     "showDuration": true,
-    "showSessionName": true,
+    "showAgents": true,
     "showTodos": true,
-    "showTools": true
+    "showSessionName": true,
+    "showEffortLevel": true,
+    "showSessionTokens": true,
+    "showOutputStyle": true,
+    "showLastResponseAt": true,
+    "mergeGroups": [
+      ["project", "sessionTime"],
+      ["context", "usage", "environment"]
+    ],
+    "rightAlign": ["sessionTime", "environment"]
+  },
+  "colors": {
+    "model": "green",
+    "label": "brightBlue"
   }
 }
