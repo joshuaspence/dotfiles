@@ -1,5 +1,19 @@
 # Global instructions
 
+## Code
+
+- **All code is a liability.** Every line is somewhere a bug can live, so less code means fewer bugs. Weigh the code a
+  change costs against the value it delivers, and remember the cheapest code to maintain is the code not written.
+- **Fail loudly rather than quietly.** The most expensive bugs are silences, not errors. These generally arise when code
+  makes assumptions that are not verified.
+- **Reach for a library or a built-in before reimplementing a solved problem.** A repository's own internal libraries
+  count the same as a dependency. Not every published library is worth depending on: prefer one that is well tested,
+  widely adopted, has multiple contributors and is actively developed. An unmaintained dependency is code you did not
+  write but still own.
+- **Simplify aggressively.** Prefer the shorter form when it says the same thing, consolidate duplicates rather than
+  letting parallel copies drift, and drop compatibility nothing depends on yet. A change that adds words without adding
+  meaning is not an improvement.
+
 ## Always make changes in a git worktree
 
 Before modifying files in a git repository, move this session into a git worktree first by calling the `EnterWorktree`
