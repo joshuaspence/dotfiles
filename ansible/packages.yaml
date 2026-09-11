@@ -148,6 +148,10 @@
         - name: 'Install Ghostty'
           ansible.builtin.apt:
             name: 'ghostty'
+        - name: 'Make Ghostty the default terminal'
+          community.general.alternatives:
+            name: 'x-terminal-emulator'
+            path: '/usr/bin/ghostty'
 
     - name: 'GitHub CLI'
       block:
