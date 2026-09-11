@@ -133,6 +133,22 @@
           ansible.builtin.apt:
             name: 'dropbox'
 
+    - name: 'Ghostty'
+      block:
+        - name: 'Add Ghostty repository'
+          ansible.builtin.deb822_repository:
+            name: 'ghostty'
+            uris: 'https://ppa.launchpadcontent.net/mkasberg/ghostty-ubuntu/ubuntu/'
+            suites: '{{ ansible_facts.distribution_release }}'
+            components: 'main'
+            signed_by: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x0721FDF5FECB88DC6920361657C8EF455CEAE491'
+          notify: 'Update APT cache'
+        - name: 'Flush handlers'
+          ansible.builtin.meta: 'flush_handlers'
+        - name: 'Install Ghostty'
+          ansible.builtin.apt:
+            name: 'ghostty'
+
     - name: 'GitHub CLI'
       block:
         - name: 'Add GitHub CLI repository'
