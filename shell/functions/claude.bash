@@ -55,15 +55,17 @@ function _systemd_run_claude() {
   # Tell Claude the workspace is disposable so it reports files honestly instead of implying they persist. The bind
   # source `${host_dir}` is a live, same-inode view of the files, reachable from the user's normal shell during the
   # session -- but it, too, is reaped when the unit exits.
-  local system_prompt
-  read -d '' -r system_prompt < <(sed 's/^[[:blank:]]*//' << EOT | paste --serial --delimiters=' '
-    The working directory \`${work_dir}\` is a disposable scratch workspace on a \`tmpfs\`. Everything in it --
-    including any files you create -- is permanently destroyed when this session exits. Do NOT tell the user that files
-    were saved as if they persist; when you write files here, remind the user they are temporary and must be copied out
-    before quitting. During this session the same files are also directly accessible from the user's normal shell at
-    \`${host_dir}\` (that path is likewise removed on exit).
-EOT
-  ) || true
+  local -ra system_prompt_lines=(
+    "The working directory \`${work_dir}\` is a disposable scratch workspace on a \`tmpfs\`. Everything in it --"
+    "including any files you create -- is permanently destroyed when this session exits. Do NOT tell the user that"
+    "files were saved as if they persist; when you write files here, remind the user they are temporary and must be"
+    "copied out before quitting. During this session the same files are also directly accessible from the user's normal"
+    "shell at \`${host_dir}\` (that path is likewise removed on exit)."
+  )
+
+  # `${array[*]}` joins its elements on the first character of `$IFS`.
+  local IFS=' '
+  local -r system_prompt="${system_prompt_lines[*]}"
 
   systemd-run "${systemd_run_opts[@]}" claude --append-system-prompt "${system_prompt}" "$@"
 }
