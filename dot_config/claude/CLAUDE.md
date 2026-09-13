@@ -14,9 +14,9 @@
   that skips what it cannot reach hides the half of the suite that never ran. Deselect what does not apply so it is
   never counted, and read the skip count before believing a suite that passed easily.
 - **Reach for a library or a built-in before reimplementing a solved problem.** A repository's own internal libraries
-  count the same as a dependency. Not every published library is worth depending on: prefer one that is well tested,
-  widely adopted, has multiple contributors and is actively developed. An unmaintained dependency is code you did not
-  write but still own.
+  count the same as a dependency. Behaviour is the gate: a package earns its place only if it can be driven to fail
+  loudly rather than guess, and that outranks any amount of code it would delete. Adoption, testing and recent activity
+  then weigh the cost of owning it, since an unmaintained dependency is code you did not write but still own.
 - **Simplify aggressively.** Prefer the shorter form when it says the same thing, consolidate duplicates rather than
   letting parallel copies drift, and drop compatibility nothing depends on yet. A change that adds words without adding
   meaning is not an improvement.
