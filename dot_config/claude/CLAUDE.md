@@ -85,7 +85,8 @@ Sweep other pre-existing worktrees only when asked.
 
 - **Change only what was asked.** An unrequested change costs more to review than it saves, so say what else needs
   fixing and let it be its own change.
-- **Prefer ground truth to reasoning about it.** Query the environment, read the capture, run the command.
+- **Prefer ground truth to reasoning about it.** Query the environment, read the capture, run the command. A claim you
+  have not checked is a guess however confident it sounds, so check it or say that you have not.
 - **Never commit anything that authenticates.** The test is capability, not identifiability. Keep secrets out of argv
   and off disk, and enumerable specifics in a gitignored local config.
 - **Codify what was learned.** Write a correction or a discovery into the repository's `CLAUDE.md`, `DESIGN.md` or
