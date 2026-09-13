@@ -6,6 +6,9 @@
   change costs against the value it delivers, and remember the cheapest code to maintain is the code not written.
 - **Fail loudly rather than quietly.** The most expensive bugs are silences, not errors, and a silence is an assumption
   that went unverified, so prefer an error to a fallback that carries on without the thing it was meant to do.
+- **A missing prerequisite fails; only an inapplicable test is skipped.** A skip reads exactly like a pass, so a fixture
+  that skips what it cannot reach hides the half of the suite that never ran. Deselect what does not apply so it is
+  never counted, and read the skip count before believing a suite that passed easily.
 - **Reach for a library or a built-in before reimplementing a solved problem.** A repository's own internal libraries
   count the same as a dependency. Not every published library is worth depending on: prefer one that is well tested,
   widely adopted, has multiple contributors and is actively developed. An unmaintained dependency is code you did not
