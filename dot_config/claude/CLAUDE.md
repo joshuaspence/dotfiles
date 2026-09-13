@@ -11,7 +11,9 @@
   But lines are a proxy, not the liability itself: the simplest code is not the smallest, and decomposing an expression
   or lengthening a name to say what it means is worth the size it costs.
 - **Fail loudly rather than quietly.** The most expensive bugs are silences, not errors, and a silence is an assumption
-  that went unverified, so prefer an error to a fallback that carries on without the thing it was meant to do.
+  that went unverified, so prefer an error to a fallback that carries on without the thing it was meant to do. Where you
+  own the interface, make the failure path the default: an API the caller cannot use wrongly beats one they must
+  remember to check.
 - **A missing prerequisite fails; only an inapplicable test is skipped.** A skip reads exactly like a pass, so a fixture
   that skips what it cannot reach hides the half of the suite that never ran. Deselect what does not apply so it is
   never counted, and read the skip count before believing a suite that passed easily.
