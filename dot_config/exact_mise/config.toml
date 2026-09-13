@@ -45,3 +45,8 @@ terragrunt = "latest"
 tflint = "latest"
 yamllint = "latest"
 yq = "latest"
+
+# Installs the `pipx:` tools with `uv tool install`, which picks an interpreter satisfying each package's
+# `requires-python`. Without `uv`, mise falls back to the system `pipx`, which builds every tool against the system
+# Python: 3.12 on Ubuntu 24.04, too old for `pipx:homeassistant-cli` 1.0.0.
+uv = "latest"
