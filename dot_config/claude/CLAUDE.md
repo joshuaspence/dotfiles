@@ -43,8 +43,8 @@
   that and stop. Enabling auto-merge counts as merging even though it isn't one, so ask first.
 - **Expect the user to amend your commits.** They often make minor amendments after you commit, so a commit that has
   changed since you made it is the user's own edit — routine, not a cause for concern.
-- **Imperative subject, prose body.** Sentence case, no conventional-commit prefix, no trailing full stop, backticks
-  around identifiers. The body explains why; the diff already says what.
+- **Imperative subject, prose body wrapped at 72.** Sentence case, no conventional-commit prefix, no trailing full stop,
+  backticks around identifiers. The body explains why; the diff already says what.
 - **Match the repository's landing convention.** Check whether it takes commits on the default branch or a branch and a
   pull request rather than assuming either.
 
