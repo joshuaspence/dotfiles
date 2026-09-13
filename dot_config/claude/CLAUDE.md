@@ -6,8 +6,10 @@
 
 ## Code
 
-- **All code is a liability.** Every line is somewhere a bug can live, so less code means fewer bugs. Weigh the code a
-  change costs against the value it delivers, and remember the cheapest code to maintain is the code not written.
+- **All code is a liability.** Every line is somewhere a bug can live, so less code usually means fewer bugs. Weigh the
+  code a change costs against the value it delivers, and remember the cheapest code to maintain is the code not written.
+  But lines are a proxy, not the liability itself: the simplest code is not the smallest, and decomposing an expression
+  or lengthening a name to say what it means is worth the size it costs.
 - **Fail loudly rather than quietly.** The most expensive bugs are silences, not errors, and a silence is an assumption
   that went unverified, so prefer an error to a fallback that carries on without the thing it was meant to do.
 - **A missing prerequisite fails; only an inapplicable test is skipped.** A skip reads exactly like a pass, so a fixture
