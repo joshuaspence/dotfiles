@@ -35,6 +35,9 @@
 - **A comment earns its place or goes.** Comments explain why, not what, and a stale one is a defect. Delete dead code
   rather than commenting it out — the history already has it, and a commented-out block is a comment that explains
   nothing.
+- **Leave the story of a change to its commit message.** A comment explaining what the code used to be, or why it
+  replaced an earlier version, belongs in the commit that made the change: the present reader rarely needs that history,
+  and the one who does is better served by `git log`. Comment why the code is as it is, not how it came to be.
 - **Separate a commented block from the code around it with blank lines.** A comment binds to the code directly below
   it, so keep them together and set the group off with a blank line on either side; packed against unrelated lines,
   nothing marks where the comment's scope ends.
