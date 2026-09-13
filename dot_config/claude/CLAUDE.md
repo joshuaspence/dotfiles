@@ -4,8 +4,8 @@
 
 - **All code is a liability.** Every line is somewhere a bug can live, so less code means fewer bugs. Weigh the code a
   change costs against the value it delivers, and remember the cheapest code to maintain is the code not written.
-- **Fail loudly rather than quietly.** The most expensive bugs are silences, not errors. These generally arise when code
-  makes assumptions that are not verified.
+- **Fail loudly rather than quietly.** The most expensive bugs are silences, not errors, and a silence is an assumption
+  that went unverified, so prefer an error to a fallback that carries on without the thing it was meant to do.
 - **Reach for a library or a built-in before reimplementing a solved problem.** A repository's own internal libraries
   count the same as a dependency. Not every published library is worth depending on: prefer one that is well tested,
   widely adopted, has multiple contributors and is actively developed. An unmaintained dependency is code you did not
@@ -14,37 +14,68 @@
   letting parallel copies drift, and drop compatibility nothing depends on yet. A change that adds words without adding
   meaning is not an improvement.
 
-## Always make changes in a git worktree
+## Comments and prose
 
-Before modifying files in a git repository, move this session into a git worktree first by calling the `EnterWorktree`
-tool. Do this **by default** for any change-making work, so edits, commits, and any resulting branch stay isolated from
-the main checkout. Call `ExitWorktree` when the work is done.
+> [!NOTE]
+> The repository's own style guide wins — an `.editorconfig`, a formatter config, a documented convention or simply the
+way the surrounding files read. Check for one first; what follows is the default in its absence.
 
-Skip the worktree and work in place only when:
+- **Wrap code, comments and prose at 120 columns, filled.** Reflow with the formatter where one exists rather than by
+  hand. Markdown tables are exempt.
+- **A comment earns its place or goes.** Comments explain why, not what, and a stale one is a defect.
+- **Quote the evidence a claim rests on.** A claim that cannot be checked cannot be falsified, so name the identifier,
+  capture or commit.
+- **Pad Markdown table columns to the widest cell**, write the separator row as `|-----|` and count widths in characters
+  rather than bytes.
+- **Link to an anchor rather than naming a heading in prose.** `[Git](#git)`, not "the Git section".
+- **Skip the Oxford comma.** "foo, bar and baz", never "foo, bar, and baz".
+- **Headings and titles take sentence case.**
 
-- The user explicitly says not to (e.g. "don't use a worktree", "just edit here", "work on the current branch").
-- The task is read-only (answering questions, reviewing, searching, running tests without editing).
-- The directory is not a git repository, or the session is already inside a linked worktree (`git rev-parse --git-dir`
-  differs from `--git-common-dir`).
+## Git
 
-## Tear down worktrees once their branch has merged
+- **One logical change per commit.** Stage the paths you touched rather than the whole tree, and split a branch that has
+  grown past one idea.
+- **Commit without asking; never push or merge without being asked.** Committing finishes the work, pushing leaves the
+  machine, and merging is the user's own action: get a pull request green and approved once asked to open one, report
+  that and stop. Enabling auto-merge counts as merging even though it isn't one, so ask first.
+- **Imperative subject, prose body.** Sentence case, no conventional-commit prefix, no trailing full stop, backticks
+  around identifiers. The body explains why; the diff already says what.
+- **Match the repository's landing convention.** Check whether it takes commits on the default branch or a branch and a
+  pull request rather than assuming either.
 
-The teardown half of the default above: when wrapping up, if a worktree's branch has been merged (its PR is merged, or
-`git log <base>..<branch>` is empty), remove the worktree and delete the branch, then report what was removed. Close
-the lifecycle you opened rather than leaving merged worktrees and branches to accumulate.
+### Ask once per session before working in a worktree
 
-- **Scope:** Proactively tear down the worktree this session created or worked in. Sweep _other_ pre-existing worktrees
-  only when the user asks (e.g. "clean up worktrees").
-- **Confirm before deleting:** Delete a branch only once it is merged, and only with `git branch -d` (never `-D`): the
-  safe form refuses an unmerged branch, so a refusal means it is not merged — leave it and say so.
-- **Order:** Remove the worktree before deleting its branch — git will not delete a branch that is checked out in any
-  worktree (shown with a `+` in `git branch`).
-- **`ExitWorktree` may refuse to remove** a worktree it does not own — a resumed session, or one another live session
-  holds the liveness lock on. Fall back to `ExitWorktree` with `action: "keep"` to return to the main checkout, then
-  run `git worktree remove` from there.
-- **`git worktree remove` refuses worktrees with initialized submodules** unless given `--force`, independent of
-  whether the tree is dirty. `--force` is safe when the branch is merged and the only content is regenerable (e.g.
-  vendored test-framework submodules); never `--force` past real uncommitted work — inspect first. **Never remove a
-  locked or in-use worktree.** If `git worktree remove` refuses and names an owner, leave it.
+At the first change-making work of a session in a git repository, ask whether to work in a git worktree and honour that
+answer for the rest of the session: `EnterWorktree` on a yes, `ExitWorktree` when the work is done. Isolation earns its
+cost when several agents run at once or the main checkout has work in progress, and not otherwise, so it is the user's
+call.
 
-Verify the end state with `git worktree list` and `git branch`, and report what was removed rather than assuming.
+- **Ask at the first edit, not at session start**, so a read-only session never raises it, and ask **once** — the answer
+  carries across the rest of the session, including other repositories, and holds even where a later checkout would tip
+  the balance the other way, because re-asking each repository costs more than living with the first answer.
+- **Do not ask when there is nothing to decide**: already answered, not a git repository or already inside a linked
+  worktree.
+- **Recommend against one when it would be wrong, and say why.** A fresh worktree branches from the remote default
+  branch, so it arrives without unpushed local work — check before offering.
+
+### Tear down worktrees once their branch has merged
+
+When wrapping up, remove the worktree this session used and delete its branch once merged, then report what was removed.
+Sweep other pre-existing worktrees only when asked.
+
+- **Remove the worktree before deleting its branch**, and delete only with `git branch -d`: a refusal means the branch
+  is not merged, so leave it and say so.
+- **Never force past real work or an owner.** `ExitWorktree` may refuse a worktree it does not own — fall back to
+  `action: "keep"` and remove it from the main checkout. A worktree with initialised submodules refuses removal without
+  `--force` however clean it is, so reserve `--force` for regenerable content and inspect before reaching for it.
+- **Verify the end state** with `git worktree list` and `git branch` rather than assuming it.
+
+## Working together
+
+- **Change only what was asked.** An unrequested change costs more to review than it saves, so say what else needs
+  fixing and let it be its own change.
+- **Prefer ground truth to reasoning about it.** Query the environment, read the capture, run the command.
+- **Never commit anything that authenticates.** The test is capability, not identifiability. Keep secrets out of argv
+  and off disk, and enumerable specifics in a gitignored local config.
+- **Codify what was learned.** Write a correction or a discovery into the repository's `CLAUDE.md`, `DESIGN.md` or
+  memory as part of the same change; a stale reference document is how a repository misleads the next reader.
