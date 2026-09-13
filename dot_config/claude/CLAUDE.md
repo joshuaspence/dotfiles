@@ -30,7 +30,9 @@
 
 - **Wrap code, comments and prose at 120 columns, filled.** Reflow with the formatter where one exists rather than by
   hand. Markdown tables are exempt.
-- **A comment earns its place or goes.** Comments explain why, not what, and a stale one is a defect.
+- **A comment earns its place or goes.** Comments explain why, not what, and a stale one is a defect. Delete dead code
+  rather than commenting it out — the history already has it, and a commented-out block is a comment that explains
+  nothing.
 - **Separate a commented block from the code around it with blank lines.** A comment binds to the code directly below
   it, so keep them together and set the group off with a blank line on either side; packed against unrelated lines,
   nothing marks where the comment's scope ends.
