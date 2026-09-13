@@ -18,7 +18,7 @@
 
 > [!NOTE]
 > The repository's own style guide wins — an `.editorconfig`, a formatter config, a documented convention or simply the
-way the surrounding files read. Check for one first; what follows is the default in its absence.
+> way the surrounding files read. Check for one first; what follows is the default in its absence.
 
 - **Wrap code, comments and prose at 120 columns, filled.** Reflow with the formatter where one exists rather than by
   hand. Markdown tables are exempt.
