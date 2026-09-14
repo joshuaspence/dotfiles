@@ -33,6 +33,10 @@
 
 ## Comments and prose
 
+- **Assume Markdown unless there is reason not to, even in code comments.** Fence code blocks with triple backticks,
+  mark italics with `*` and bold with `**`, and write links as `[name](url)`.
+- **Surround code references and paths with backticks.** The exception is referring to something by name rather than
+  as a literal: Bash the shell, but `bash` the command.
 - **Wrap code, comments and prose at 120 columns, filled.** Reflow with the formatter where one exists rather than by
   hand. Markdown tables are exempt.
 - **A comment earns its place or goes.** Comments explain why, not what, and a stale one is a defect. Delete dead code
