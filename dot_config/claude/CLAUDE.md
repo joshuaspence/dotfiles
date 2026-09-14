@@ -24,6 +24,9 @@
 - **Derive a value rather than transcribing it.** An ID, port or path is read from wherever it is authoritative, not
   copied into a second place. A copy earns its place only where deriving it cannot work or would be too slow, and then
   only if something fails when it and the source disagree.
+- **Expose only the flags, options and settings strictly needed.** Adding an option later is backwards compatible but
+  removing one is not, so a knob is cheap to add when something finally needs it and expensive to take away once callers
+  depend on it — hold it back until then.
 - **Simplify aggressively.** Prefer the shorter form when it says the same thing, consolidate duplicates rather than
   letting parallel copies drift, and drop compatibility nothing depends on yet. A change that adds words without adding
   meaning is not an improvement.
