@@ -1,0 +1,14 @@
+keybind = ctrl+alt+shift+r=prompt_tab_title
+keybind = ctrl+print_screen=write_scrollback_file:copy
+keybind = ctrl+shift+q=close_window
+keybind = ctrl+shift+r=prompt_surface_title
+
+# Remap keybindings that conflict with GNOME.
+keybind = ctrl+alt+arrow_up=unbind
+keybind = ctrl+alt+arrow_down=unbind
+keybind = ctrl+alt+arrow_left=unbind
+keybind = ctrl+alt+arrow_right=unbind
+keybind = super+ctrl+arrow_up=goto_split:up
+keybind = super+ctrl+arrow_down=goto_split:down
+keybind = super+ctrl+arrow_left=goto_split:left
+keybind = super+ctrl+arrow_right=goto_split:right
