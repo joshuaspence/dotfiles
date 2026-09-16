@@ -2,7 +2,7 @@
 
 These are my dotfiles. There are many like them, but these ones are mine. Managed with [Chezmoi](https://www.chezmoi.io).
 
-## Quick Start
+## Quick start
 
 - `chezmoi apply [TARGET]...` ensures that the specified target(s) are in the target state, updating them if necessary.
 - `chezmoi diff [TARGET]...` shows the difference between the target state and the destination state.
