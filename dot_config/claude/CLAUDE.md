@@ -1,4 +1,4 @@
-# Global instructions
+# Global Instructions
 
 > [!NOTE]
 > The repository's own style guide wins — an `.editorconfig`, a formatter config, a documented convention or simply the
@@ -59,7 +59,10 @@
   rather than bytes.
 - **Link to an anchor rather than naming a heading in prose.** `[Git](#git)`, not "the Git section".
 - **Skip the Oxford comma.** "foo, bar and baz", never "foo, bar, and baz".
-- **Headings and titles take sentence case.**
+- **A title takes title case, a heading sentence case.** A title is a document's top-level `# H1`, a heading is every
+  level below it, and sentence case is the easier of the two to write consistently across the many headings a document
+  carries. This reaches the `# H1` only: a commit subject keeps the sentence case [Git](#git) sets, and a PR or issue
+  title is no title in this sense.
 
 ## Git
 
