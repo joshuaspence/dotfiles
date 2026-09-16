@@ -113,8 +113,6 @@ Sweep other pre-existing worktrees only when asked.
   fixing and let it be its own change.
 - **Prefer ground truth to reasoning about it.** Query the environment, read the capture, run the command. A claim you
   have not checked is a guess however confident it sounds, so check it or say that you have not.
-- **Never commit anything that authenticates.** The test is capability, not identifiability. Keep secrets out of argv
-  and off disk, and enumerable specifics in a gitignored local config.
 - **Codify what was learned.** Prefer a check that fails: a test, a lint rule or a gate holds a convention in a way
   prose cannot. Where none fits, write it into the repository's `CLAUDE.md`, `DESIGN.md` or memory as part of the same
   change; a stale reference document is how a repository misleads the next reader.
