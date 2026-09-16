@@ -244,12 +244,35 @@ export const stubBudget = () => ({ total: null, spent: () => 0, remaining: () =>
 // --- Running a whole script -----------------------------------------------------------------------------------------
 
 /**
+ * What returning a value out of `parallel()` or `pipeline()` does to it in the real runtime: the harness JSON
+ * round-trips it to journal it for resume, so what the script body gets back is a fresh clone. Object identity is gone
+ * and — the part that actually bites — so is every symbol-keyed own property, because `JSON.stringify` cannot see one.
+ *
+ * Modelled here because a double that passes objects through by reference makes a whole class of failure invisible, and
+ * a green suite is then no evidence at all. `repo-review` marks the findings a round raised with a symbol; strip those
+ * and it still judges the right findings, because adjudication runs inside the pipeline, and then reports that none of
+ * them was new. Nothing in the script can notice — an unmarked finding is indistinguishable from a held one.
+ *
+ * Only the return to the script body is serialized. Within a `pipeline`, stage 1's value reaches stage 2 by reference,
+ * marks intact — so this wraps the finished chain and not each stage, and a test that stamps a symbol inside a stage
+ * and reads it in the next one is asserting real behaviour.
+ */
+const acrossBoundary = (value) => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
+
+/**
  * Faithful stand-in for the runtime's `parallel`: concurrent, a barrier, and — importantly for these tests — a thunk
  * that throws resolves to `null` rather than rejecting the whole call. Several failure paths in these scripts exist
  * only because of that behaviour, so getting it wrong here would hide them.
  */
 const parallelImpl = (thunks) =>
-  Promise.all(thunks.map((thunk) => Promise.resolve().then(thunk).catch(() => null)));
+  Promise.all(
+    thunks.map((thunk) =>
+      Promise.resolve()
+        .then(thunk)
+        .then(acrossBoundary)
+        .catch(() => null),
+    ),
+  );
 
 /**
  * Faithful stand-in for the runtime's `pipeline`: each item runs every stage independently with no barrier, and a stage
@@ -270,7 +293,7 @@ export const pipelineImpl = (items, ...stages) =>
           value = await stage(value, item, index);
         }
 
-        return value;
+        return acrossBoundary(value);
       } catch {
         return null;
       }

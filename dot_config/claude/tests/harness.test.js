@@ -640,6 +640,60 @@ return {
   });
 });
 
+/**
+ * What a value loses on its way out of `parallel()` or `pipeline()`. The real runtime JSON round-trips a stage's return
+ * value to journal it for resume, which strips every symbol-keyed own property, so a harness that handed objects back
+ * by reference would be more forgiving than production in the one direction that matters: a script relying on a mark
+ * surviving would pass here and lose it there, and every test built on this harness would agree that it worked.
+ *
+ * Asserted through the injected globals rather than the exported implementations, so it covers what a script actually
+ * sees. The `insideNextStage` case is the other half of the contract and the reason this is not simply "clone
+ * everything": within a pipeline, stages hand values to each other by reference, so a mark set in one stage is readable
+ * in the next and only the return to the script body is serialized.
+ */
+describe('the parallel()/pipeline() boundary', () => {
+  it('strips symbol-keyed marks on the way out but keeps them between stages', async () => {
+    setupTestWorkflow(`
+export const meta = { title: 'Test', phases: [] };
+
+const MARK = Symbol('mark');
+const observed = {};
+
+const [fromParallel] = await parallel([() => ({ id: 'a', [MARK]: true })]);
+
+const [fromPipeline] = await pipeline(
+  [1],
+  () => ({ id: 'b', [MARK]: true }),
+  (value) => {
+    observed.insideNextStage = Boolean(value[MARK]);
+    return value;
+  },
+);
+
+return {
+  observed,
+  parallelKeptString: fromParallel.id,
+  parallelKeptMark: Boolean(fromParallel[MARK]),
+  pipelineKeptString: fromPipeline.id,
+  pipelineKeptMark: Boolean(fromPipeline[MARK]),
+};
+`);
+
+    const run = await runWorkflow({ scriptPath: TEST_SCRIPT_PATH, agent: () => 'answer' });
+
+    // Live for the whole stage that set it, which is why adjudication judged the right findings and only the tally was
+    // wrong — the most misleading shape this failure could have taken.
+    expect(run.result.observed.insideNextStage, 'a mark set in one stage reaches the next').toBe(true);
+
+    expect(run.result.parallelKeptMark, 'parallel() does not return the mark').toBe(false);
+    expect(run.result.pipelineKeptMark, 'pipeline() does not return the mark').toBe(false);
+
+    // The string keys crossing intact is what makes the loss silent: nothing about the finding looks damaged.
+    expect(run.result.parallelKeptString).toBe('a');
+    expect(run.result.pipelineKeptString).toBe('b');
+  });
+});
+
 describe('pipelineImpl', () => {
   it('runs each item through all stages sequentially', async () => {
     const items = [1, 2, 3];

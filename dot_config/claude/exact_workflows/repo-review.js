@@ -1144,6 +1144,17 @@ const survivingMember = (issues, members) =>
 // Both are symbol-keyed own properties, which is what lets them survive `mergeIssueGroups` while staying out of every
 // prompt digest, out of the JSON the run returns, and out of reach of any field name a reviewer might use. Nothing on
 // `knownFindings` can carry either one: those made a round trip through the wrapper's JSON, which has no symbols.
+//
+// The same invisibility is a trap one boundary further in, and neither mark may cross one unaided: `parallel()` and
+// `pipeline()` JSON round-trip whatever they return, for the resume journal, so a mark is stripped from every finding
+// on the way out even though it was live for the whole stage that set it. Objects flow by reference *within* a pipeline
+// — a mark set in stage 1 does reach stage 2 — so the loss is only on the return to the script body. A mark that has to
+// cross one is carried as an index into the array it belongs to and re-applied on the far side, which is the whole
+// purpose of the `newIdx`/`confirmedIdx` pair `scopeAdjudicate` returns.
+//
+// Written down because nothing detects the loss: a stripped mark reads exactly like a held finding. Adjudication still
+// judges the right findings, since it runs inside the pipeline, and the gate at the end of the run then carries every
+// finding and reports that none of them was new — a full report of real defects, over a contribution of zero.
 
 // Which findings this round raised, so everything below can tell them from the ones that arrived on `args` without
 // comparing content.
@@ -1549,7 +1560,22 @@ const scopeAdjudicate = async (issues, name, survey) => {
   // Nothing new in this scope, so there is nothing to judge and nothing to merge: its held findings were deduped and
   // confirmed by the rounds that produced them, and re-asking a settled question costs a full Opus agent to be told
   // `groups: []`. Under the shared union this ran anyway, once per unit, on every round after the first.
-  if (judged.length === 0) return { issues, stalled: [], chunks: 0, agents: 0, largest: 0, whole: true, unjudged: [] };
+  //
+  // The mark arrays are empty rather than absent: every issue in this scope is held, so there is nothing to re-apply on
+  // the far side of the barrier, and saying so explicitly keeps the caller's repair free of a shape test.
+  if (judged.length === 0) {
+    return {
+      issues,
+      newIdx: [],
+      confirmedIdx: [],
+      stalled: [],
+      chunks: 0,
+      agents: 0,
+      largest: 0,
+      whole: true,
+      unjudged: [],
+    };
+  }
 
   const chunks = crossChunks(issues.length);
   const nameOf = (chunk) => [name, chunk.name].filter(Boolean).join(':');
@@ -1610,8 +1636,15 @@ const scopeAdjudicate = async (issues, name, survey) => {
     answer ? globalizeGroups(answer.groups, chunks[c].indices) : [],
   );
 
+  // Indexed after the merge, because the merge is what decides which copy of a re-reported defect survives and which
+  // marks it carries; indexed at all, because a symbol cannot cross the `parallel()` this scope's result returns
+  // through. See the note above `NEW_THIS_ROUND` — the caller re-applies both from these.
+  const survivors = mergeIssueGroups(issues, groups);
+
   return {
-    issues: mergeIssueGroups(issues, groups),
+    issues: survivors,
+    newIdx: survivors.flatMap((issue, i) => (issue[NEW_THIS_ROUND] ? [i] : [])),
+    confirmedIdx: survivors.flatMap((issue, i) => (issue[CONFIRMED] ? [i] : [])),
     stalled: Array.from({ length: panel }, (_, k) =>
       chunks.filter((_chunk, c) => !runs[k]?.[c]).map((chunk) => `${nameOf(chunk)}${voteTag(k, panel)}`),
     ).flat(),
@@ -2287,6 +2320,24 @@ const [unitScopes, lensIssues] = await parallel([
   () => reviewIssues(lensSpecs),
 ]);
 
+// Neither mark survived the barrier above, so both are re-applied here, before any of them is read. This is the repair
+// the `newIdx`/`confirmedIdx` pair exists for, and it is deliberately the first thing after the `await`: everything
+// below treats a mark as authoritative, and an unmarked finding is indistinguishable from a held one.
+const remarked = (scope) => {
+  for (const i of scope.newIdx) scope.issues[i][NEW_THIS_ROUND] = true;
+  for (const i of scope.confirmedIdx) scope.issues[i][CONFIRMED] = true;
+
+  // Marked wholesale rather than by index: a stray was raised by this round's reviewers and passed on unadjudicated, so
+  // there is no held finding among them to tell apart. The leftovers scope is where they are judged.
+  for (const issue of scope.strays) issue[NEW_THIS_ROUND] = true;
+
+  return scope;
+};
+
+// The lenses review the tree; they are never handed the ledger. So every finding they raise is this round's own, and
+// none of them has been judged yet — `CONFIRMED` is the leftovers adjudicator's to set.
+for (const issue of lensIssues ?? []) issue[NEW_THIS_ROUND] = true;
+
 // A unit's stage dying takes its whole pipeline item down, and that item is where the findings already held for the unit
 // were waiting to be merged. `pipeline()` reports it as a `null`, so a `null` is refilled from `held` rather than skipped:
 // dropping it would erase every earlier round's findings for that unit from the ledger, the same failure the three abort
@@ -2295,14 +2346,26 @@ const [unitScopes, lensIssues] = await parallel([
 const scopes = units.map((unit, u) => {
   const scope = unitScopes?.[u];
 
-  if (scope) return scope;
+  if (scope) return remarked(scope);
 
   gaps.push(
     `Review and adjudication of unit '${unit.slug}' in round ${round} failed outright, so it contributed nothing — ` +
       `the ${held.perUnit[u].length} finding(s) already held for it are carried unchanged. Re-run the review.`,
   );
 
-  return { issues: held.perUnit[u], strays: [], stalled: [], chunks: 0, agents: 0, whole: true, unjudged: [] };
+  // Built here rather than returned through the barrier, so its marks were never at risk — but it carries the empty
+  // pair anyway, so that every element of `scopes` has the one shape whether its unit survived or not.
+  return {
+    issues: held.perUnit[u],
+    newIdx: [],
+    confirmedIdx: [],
+    strays: [],
+    stalled: [],
+    chunks: 0,
+    agents: 0,
+    whole: true,
+    unjudged: [],
+  };
 });
 
 log(
@@ -2451,6 +2514,22 @@ log(
 // cancel two genuine new defects and a productive round reads as dry, so the caller stops and the rounds the user asked
 // for never run.
 const newThisRound = deduped.filter((issue) => issue[NEW_THIS_ROUND]);
+
+// A round that held nothing and found something must have marked something, so zero here is a defect in this script and
+// not a fact about the code. With no held findings there is nothing for a merge to absorb a report into, and a merge
+// takes its marks from the group's lowest-indexed member, so every survivor of a cold start carries this round's mark.
+//
+// Worth a gap of its own because every other signal reads as success: the gate below carries an unmarked finding rather
+// than dropping it, so the run reports its findings and calls all of them previously known, and `newFindings: 0` then
+// tells the caller the review has gone dry and there is no round after this one. Losing the marks between the Review
+// barrier and here is the way that happens, so this is the assertion that a mark did survive it.
+if (prevCount === 0 && deduped.length > 0 && newThisRound.length === 0) {
+  gaps.push(
+    `Round ${round} kept ${deduped.length} finding(s) with nothing held before it but marked none of them as new, ` +
+      "which cannot happen: no verdict was applied to any of them and this round's contribution is reported as zero. " +
+      'The marks were lost rather than the findings re-reported — treat this round as unvalidated and re-run it.',
+  );
+}
 
 // What the review holds after this round: everything it was handed that the merges kept, plus this round's confirmed
 // additions. Filtered out of `deduped` rather than concatenated, so the order is the one the wrapper reports against.
