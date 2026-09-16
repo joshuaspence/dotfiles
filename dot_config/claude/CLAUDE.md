@@ -80,26 +80,18 @@
 - **Match the repository's landing convention.** Check whether it takes commits on the default branch or a branch and a
   pull request rather than assuming either.
 
-### Ask once per session before working in a worktree
+## Worktrees
 
-At the first change-making work of a session in a git repository, ask whether to work in a git worktree and honour that
-answer for the rest of the session: `EnterWorktree` on a yes, `ExitWorktree` when the work is done. Isolation earns its
-cost when several agents run at once or the main checkout has work in progress, and not otherwise, so it is the user's
-call.
-
-- **Ask at the first edit, not at session start**, so a read-only session never raises it, and ask **once** — the answer
-  carries across the rest of the session, including other repositories, and holds even where a later checkout would tip
-  the balance the other way, because re-asking each repository costs more than living with the first answer.
+- **Ask once, at the first edit, whether to work in a worktree** — `EnterWorktree` on a yes, `ExitWorktree` when the
+  work is done — and honour it for the rest of the session, including other repositories, since re-asking each one costs
+  more than living with the first answer. Isolation earns its cost only when several agents run at once or the main
+  checkout has work in progress, so it is the user's call and a read-only session never raises it.
 - **Do not ask when there is nothing to decide**: already answered, not a git repository or already inside a linked
   worktree.
 - **Recommend against one when it would be wrong, and say why.** A fresh worktree branches from the remote default
   branch, so it arrives without unpushed local work — check before offering.
-
-### Tear down worktrees once their branch has merged
-
-When wrapping up, remove the worktree this session used and delete its branch once merged, then report what was removed.
-Sweep other pre-existing worktrees only when asked.
-
+- **Tear down the session's worktree once its branch has merged**, reporting what was removed; sweep other pre-existing
+  worktrees only when asked.
 - **Remove the worktree before deleting its branch**, and delete only with `git branch -d`: a refusal means the branch
   is not merged, so leave it and say so.
 - **Never force past real work or an owner.** `ExitWorktree` may refuse a worktree it does not own — fall back to
