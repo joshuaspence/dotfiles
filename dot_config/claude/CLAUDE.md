@@ -11,9 +11,8 @@
   But lines are a proxy, not the liability itself: the simplest code is not the smallest, and decomposing an expression
   or lengthening a name to say what it means is worth the size it costs.
 - **Reach for a library or a built-in before reimplementing a solved problem.** A repository's own internal libraries
-  count the same as a dependency. Behaviour is the gate: a package earns its place only if it can be driven to fail
-  loudly rather than guess, and that outranks any amount of code it would delete. Adoption, testing and recent activity
-  then weigh the cost of owning it, since an unmaintained dependency is code you did not write but still own.
+  count the same as a dependency, and its adoption, testing and recent activity weigh the cost of owning it, since an
+  unmaintained dependency is code you did not write but still own.
 - **Derive a value rather than transcribing it.** An ID, port or path is read from wherever it is authoritative, not
   copied into a second place. A copy earns its place only where deriving it cannot work or would be too slow, and then
   only if something fails when it and the source disagree.
