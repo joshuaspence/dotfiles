@@ -14,18 +14,6 @@
   that went unverified, so prefer an error to a fallback that carries on without the thing it was meant to do. Where you
   own the interface, make the failure path the default: an API the caller cannot use wrongly beats one they must
   remember to check.
-- **A missing prerequisite fails; only an inapplicable test is skipped.** A skip reads exactly like a pass, so a fixture
-  that skips what it cannot reach hides the half of the suite that never ran. Deselect what does not apply so it is
-  never counted, and read the skip count before believing a suite that passed easily.
-- **A test shows the presence of bugs, never their absence.** A green suite means the cases you thought to write
-  passed, not that the code is correct, so read coverage as a record of what was checked rather than proof that it
-  works, and weigh a test by the bug it would have caught rather than the lines it touches.
-- **The most valuable test drives the real thing through its real interface.** A unit test pins one function's
-  contract, but an end-to-end test — running the actual command or entry point with only the mocking a hermetic run
-  demands — catches the bugs that live between the units, in the wiring and the assumptions no single unit owns. The
-  `platform/renovate` repository shows the split: `lib/**/*.test.js` unit-tests each module, while `test/e2e/` execs the
-  real `renovate` binary against fixtures and asserts it logs no warnings. Cover the units, but reach for the highest
-  level that still runs fast and deterministic.
 - **Reach for a library or a built-in before reimplementing a solved problem.** A repository's own internal libraries
   count the same as a dependency. Behaviour is the gate: a package earns its place only if it can be driven to fail
   loudly rather than guess, and that outranks any amount of code it would delete. Adoption, testing and recent activity
@@ -39,6 +27,21 @@
 - **Simplify aggressively.** Prefer the shorter form when it says the same thing, consolidate duplicates rather than
   letting parallel copies drift, and drop compatibility nothing depends on yet. A change that adds words without adding
   meaning is not an improvement.
+
+## Testing
+
+- **A missing prerequisite fails; only an inapplicable test is skipped.** A skip reads exactly like a pass, so a fixture
+  that skips what it cannot reach hides the half of the suite that never ran. Deselect what does not apply so it is
+  never counted, and read the skip count before believing a suite that passed easily.
+- **A test shows the presence of bugs, never their absence.** A green suite means the cases you thought to write
+  passed, not that the code is correct, so read coverage as a record of what was checked rather than proof that it
+  works, and weigh a test by the bug it would have caught rather than the lines it touches.
+- **The most valuable test drives the real thing through its real interface.** A unit test pins one function's
+  contract, but an end-to-end test — running the actual command or entry point with only the mocking a hermetic run
+  demands — catches the bugs that live between the units, in the wiring and the assumptions no single unit owns. The
+  `platform/renovate` repository shows the split: `lib/**/*.test.js` unit-tests each module, while `test/e2e/` execs the
+  real `renovate` binary against fixtures and asserts it logs no warnings. Cover the units, but reach for the highest
+  level that still runs fast and deterministic.
 
 ## Comments and prose
 
