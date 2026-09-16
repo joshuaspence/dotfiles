@@ -33,10 +33,8 @@
   weigh a test by the bug it would have caught rather than the lines it touches.
 - **The most valuable test drives the real thing through its real interface.** A unit test pins one function's contract,
   but an end-to-end test — running the actual command or entry point with only the mocking a hermetic run demands —
-  catches the bugs that live between the units, in the wiring and the assumptions no single unit owns. The
-  `platform/renovate` repository shows the split: `lib/**/*.test.js` unit-tests each module, while `test/e2e/` execs the
-  real `renovate` binary against fixtures and asserts it logs no warnings. Cover the units, but reach for the highest
-  level that still runs fast and deterministic.
+  catches the bugs that live between the units, in the wiring and the assumptions no single unit owns. Cover the units,
+  but reach for the highest level that still runs fast and deterministic.
 
 ## Comments and prose
 
