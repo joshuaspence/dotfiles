@@ -1,0 +1,14 @@
+---
+- name: 'Enable Wayland'
+  hosts: 'localhost'
+
+  tasks:
+    # NVIDIA's proprietary driver installer sets `WaylandEnable=false` here to force Xorg, which older driver/GDM
+    # combinations needed; current drivers support Wayland, so undo it if the installer (or anything else) has set it.
+    # Restarting GDM to apply this would end the current session, so leave that to a reboot rather than doing it here.
+    - name: 'Ensure GDM does not force Xorg'
+      community.general.ini_file:
+        path: '/etc/gdm3/custom.conf'
+        section: 'daemon'
+        option: 'WaylandEnable'
+        value: 'true'
