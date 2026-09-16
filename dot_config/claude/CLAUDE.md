@@ -10,10 +10,6 @@
   code a change costs against the value it delivers, and remember the cheapest code to maintain is the code not written.
   But lines are a proxy, not the liability itself: the simplest code is not the smallest, and decomposing an expression
   or lengthening a name to say what it means is worth the size it costs.
-- **Fail loudly rather than quietly.** The most expensive bugs are silences, not errors, and a silence is an assumption
-  that went unverified, so prefer an error to a fallback that carries on without the thing it was meant to do. Where you
-  own the interface, make the failure path the default: an API the caller cannot use wrongly beats one they must
-  remember to check.
 - **Reach for a library or a built-in before reimplementing a solved problem.** A repository's own internal libraries
   count the same as a dependency. Behaviour is the gate: a package earns its place only if it can be driven to fail
   loudly rather than guess, and that outranks any amount of code it would delete. Adoption, testing and recent activity
