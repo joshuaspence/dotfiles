@@ -102,5 +102,6 @@
 - **Prefer ground truth to reasoning about it.** Query the environment, read the capture, run the command. A claim you
   have not checked is a guess however confident it sounds, so check it or say that you have not.
 - **Codify what was learned.** Prefer a check that fails: a test, a lint rule or a gate holds a convention in a way
-  prose cannot. Where none fits, write it into the repository's `CLAUDE.md`, `DESIGN.md` or memory as part of the same
-  change; a stale reference document is how a repository misleads the next reader.
+  prose cannot. Where none fits, write it down as part of the same change: a repository-scoped lesson into that
+  repository's `CLAUDE.md`, `DESIGN.md` or memory, one that holds everywhere into the global `CLAUDE.md`; a stale
+  reference document is how a repository misleads the next reader.
