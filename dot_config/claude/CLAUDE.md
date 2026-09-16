@@ -72,9 +72,6 @@
 - **Commit without asking; never push or merge without being asked.** Committing finishes the work, pushing leaves the
   machine, and merging is the user's own action: get a pull request green and approved once asked to open one, report
   that and stop. Enabling auto-merge counts as merging even though it isn't one, so ask first.
-- **Expect the user to amend your commits.** A commit that has changed since you made it is the user's own edit, not a
-  fault to investigate or undo. Read the amendment, though: it is the clearest evidence of a convention this file has
-  not yet stated, so codify it rather than absorbing it quietly.
 - **Imperative subject, prose body wrapped at 72.** Sentence case, no conventional-commit prefix, no trailing full stop,
   backticks around identifiers. The body explains why; the diff already says what.
 - **Match the repository's landing convention.** Check whether it takes commits on the default branch or a branch and a
