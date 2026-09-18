@@ -13,8 +13,8 @@
     "claude-md-management@claude-plugins-official" true
     "code-review@claude-plugins-official" true
     "code-simplifier@claude-plugins-official" true
-    "grill-me@mattpocock" true
     "hookify@claude-plugins-official" true
+    "mattpocock-skills@claude-plugins-official" true
     "ralph-loop@claude-plugins-official" true
     "skill-creator@claude-plugins-official" true
   )
@@ -24,40 +24,27 @@
     "CLAUDE_CODE_PLUGIN_CACHE_DIR" (printf "%s/.cache/claude/plugins" .chezmoi.homeDir)
     "DISABLE_FEEDBACK_COMMAND" "true"
     "DISABLE_UPDATES" "true"
+    "FORCE_AUTOUPDATE_PLUGINS" "true"
   )
   "extraKnownMarketplaces" (dict
     "anthropic-agent-skills" (dict
       "source" (dict
-        "source" "git"
-        "url" "https://github.com/anthropics/skills.git"
+        "source" "github"
+        "repo" "anthropics/skills"
+      )
+    )
+    "hashicorp" (dict
+      "autoUpdate" true
+      "source" (dict
+        "source" "github"
+        "repo" "hashicorp/agent-skills"
       )
     )
     "joshuaspence-claude-plugins" (dict
+      "autoUpdate" true
       "source" (dict
         "source" "github"
         "repo" "joshuaspence/claude-plugins"
-      )
-    )
-    "mattpocock" (dict
-      "source" (dict
-        "source" "settings"
-        "name" "mattpocock"
-        "plugins" (list
-          (dict
-            "name" "grill-me"
-            "source" (dict
-              "source" "github"
-              "repo" "mattpocock/skills"
-            )
-          )
-          (dict
-            "name" "write-a-skill"
-            "source" (dict
-              "source" "github"
-              "repo" "mattpocock/skills"
-            )
-          )
-        )
       )
     )
   )
@@ -73,10 +60,11 @@
     "allow" (list 
       "Read(~/workspace)"
     )
+    "ask" (list)
     "deny" (list
       "Read(./.env)"
     )
-    "ask" (list)
+    "additionalDirectories" (list)
     "defaultMode" "auto"
   )
   "pluginConfigs" (dict)
@@ -123,7 +111,6 @@
       )
     )
   )
-  "remoteControlAtStartup" false
   "voice" (dict
     "enabled" true
     "mode" "tap"
@@ -137,8 +124,8 @@
   "env" (dict
     "AWS_PROFILE" "claude"
     "AWS_REGION" "ap-southeast-2"
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC" "true"
     "CLAUDE_CODE_USE_BEDROCK" "true"
+    "DISABLE_TELEMETRY" "true"
   )
   "extraKnownMarketplaces" (dict
     "anduril" (dict
