@@ -1,8 +1,8 @@
 keybind = ctrl+print_screen=write_scrollback_file:copy
-keybind = ctrl+shift+arrow_down=jump_to_prompt:1
 keybind = ctrl+shift+arrow_up=jump_to_prompt:-1
-keybind = ctrl+shift+page_down=move_tab:1
+keybind = ctrl+shift+arrow_down=jump_to_prompt:1
 keybind = ctrl+shift+page_up=move_tab:-1
+keybind = ctrl+shift+page_down=move_tab:1
 keybind = ctrl+shift+q=close_window
 
 # Remap keybindings that conflict with GNOME.
