@@ -34,10 +34,18 @@
     - name: 'AWS CLI'
       block:
         - name: 'Install AWS CLI'
-          when: 'not is_ci'
-          community.general.snap:
-            name: 'aws-cli'
-            classic: true
+          block:
+            - name: 'Download AWS CLI installer'
+              ansible.builtin.unarchive:
+                src: 'https://awscli.amazonaws.com/awscli-exe-linux-{{ (dpkg_architecture == "arm64") | ternary("aarch64", "x86_64") }}.zip'
+                dest: '/tmp'
+                remote_src: true
+            - name: 'Run AWS CLI installer'
+              ansible.builtin.command:
+                cmd: '/tmp/aws/install --update'
+
+              # The bundled installer is idempotent with `--update` but gives no machine-readable signal, so report changed.
+              changed_when: true
         - name: 'Install Session Manager Plugin'
           ansible.builtin.apt:
             deb: 'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb'
