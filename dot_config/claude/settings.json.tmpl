@@ -94,21 +94,21 @@
       "environment" (concat
         (dig "autoMode" "environment" (list) $config)
         (dig "autoMode" "environment" (list) .)
-      )
+      | default (list))
     )
     "permissions" (dict
       "allow" (concat
         (dig "permissions" "allow" (list) $config)
         (dig "permissions" "allow" (list) .)
-      )
+      | default (list))
       "ask" (concat
         (dig "permissions" "ask" (list) $config)
         (dig "permissions" "ask" (list) .)
-      )
+      | default (list))
       "deny" (concat
         (dig "permissions" "deny" (list) $config)
         (dig "permissions" "deny" (list) .)
-      )
+      | default (list))
     )
   )
 -}}
@@ -125,21 +125,21 @@
       "environment" (concat
         (dig "autoMode" "environment" (list) $config)
         (dig "autoMode" "environment" (list) .)
-      )
+      | default (list))
     )
     "permissions" (dict
       "allow" (concat
         (dig "permissions" "allow" (list) $config)
         (dig "permissions" "allow" (list) .)
-      )
+      | default (list))
       "ask" (concat
         (dig "permissions" "ask" (list) $config)
         (dig "permissions" "ask" (list) .)
-      )
+      | default (list))
       "deny" (concat
         (dig "permissions" "deny" (list) $config)
         (dig "permissions" "deny" (list) .)
-      )
+      | default (list))
     )
   )
 -}}
