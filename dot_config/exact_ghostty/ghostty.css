@@ -1,0 +1,23 @@
+/**
+ * Strengthen the active-vs-inactive tab distinction in Ghostty's libadwaita tab bar. Adwaita marks the selected tab
+ * with only `background-color: alpha(currentColor, 0.1)` — a 10% tint of the text colour — which is hard to pick out
+ * on a dark theme. Give the active tab a solid accent background (with bold text as a non-colour cue) and dim the
+ * inactive tabs instead.
+ */
+
+tabbar tab:selected,
+tabbar tab:selected:hover,
+tabbar tab:selected:active {
+  background-color: alpha(@accent_bg_color, 0.4);
+  color: @accent_fg_color;
+  box-shadow: none;
+  font-weight: bold;
+}
+
+tabbar tab:not(:selected) {
+  opacity: 0.5;
+}
+
+tabbar tab:not(:selected):hover {
+  opacity: 1;
+}

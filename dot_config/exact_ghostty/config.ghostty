@@ -2,6 +2,7 @@ background-opacity = 0.9
 background-opacity-cells = true
 bell-features = system,no-title,border
 config-file = keybind.ghostty
+gtk-custom-css = ghostty.css
 gtk-wide-tabs = false
 maximize = true
 notify-on-command-finish = unfocused
