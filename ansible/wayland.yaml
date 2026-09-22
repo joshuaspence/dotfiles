@@ -12,3 +12,6 @@
         section: 'daemon'
         option: 'WaylandEnable'
         value: 'true'
+        owner: 'root'
+        group: 'root'
+        mode: '0644'
