@@ -35,11 +35,17 @@
       block:
         - name: 'Install AWS CLI'
           block:
+            # `ansible.builtin.unarchive` unpacks a zip by shelling out to `unzip`, which a minimal Ubuntu install does not carry.
+            - name: 'Install AWS CLI installer dependencies'
+              ansible.builtin.apt:
+                name: 'unzip'
+
             - name: 'Download AWS CLI installer'
               ansible.builtin.unarchive:
                 src: 'https://awscli.amazonaws.com/awscli-exe-linux-{{ (dpkg_architecture == "arm64") | ternary("aarch64", "x86_64") }}.zip'
                 dest: '/tmp'
                 remote_src: true
+
             - name: 'Run AWS CLI installer'
               ansible.builtin.command:
                 cmd: '/tmp/aws/install --update'
