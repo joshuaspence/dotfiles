@@ -15,11 +15,6 @@ window-inherit-working-directory = false
 window-new-tab-position = current
 window-subtitle = working-directory
 
-# Workaround for ghostty-org/ghostty#11404: a double click consults the link matcher before word selection, and the
-# built-in path regex spans spaces, so double clicking either path of a `diff --git` line selects both. The cost is
-# ctrl+click on URLs and paths; OSC 8 hyperlinks are unaffected.
-link-url = false
-
 # Workaround for ghostty-org/ghostty#8579.
 #
 # TODO: Check if this issue persists after upgrading to Ubuntu 26.04.
