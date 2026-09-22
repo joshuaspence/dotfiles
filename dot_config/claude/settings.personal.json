@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "agentPushNotifEnabled": true,
+  "autoMode": {
+    "environment": [
+      "Source control: github.com/joshuaspence, github.com/spence-com-au",
+      "Tusted internal domains: *.joshuaspence.com, *.spence.au, *.spence.com.au, *.spence.family, *.spence.network"
+    ]
+  },
+  "enabledPlugins": {
+    "invoices@joshuaspence-claude-plugins": true,
+    "ndis@joshuaspence-claude-plugins": true,
+    "photos@joshuaspence-claude-plugins": true,
+    "pocketsmith@joshuaspence-claude-plugins": true
+  },
+  "inputNeededNotifEnabled": true,
+  "permissions": {
+    "allow": [
+      "mcp__pocketsmith__get_*",
+      "mcp__pocketsmith__list_*",
+      "Read(~/Dropbox/**)"
+    ]
+  },
+  "voice": {
+    "enabled": true,
+    "mode": "tap"
+  }
+}
