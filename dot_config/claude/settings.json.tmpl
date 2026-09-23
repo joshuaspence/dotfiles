@@ -85,61 +85,36 @@
   "tui" "fullscreen"
 -}}
 
-{{- if .personal -}}
-{{- with (include "dot_config/claude/settings.personal.json" | fromJson) -}}
+{{- /*
+Each enabled profile's fragment layers over the base, later profiles winning. `mergeOverwrite` replaces a list outright,
+so the third operand restores append semantics for the lists that accumulate across profiles; `default` covers sprig
+`concat` returning nil when everything it joins is empty.
+*/ -}}
+{{- range $profile := list "personal" "work" -}}
+{{- if index $ $profile -}}
+{{- $overlay := printf "dot_config/claude/settings.%s.json" $profile | include | fromJson -}}
 {{- $config = mergeOverwrite
   $config
-  .
+  $overlay
   (dict
     "autoMode" (dict
       "environment" (concat
         (dig "autoMode" "environment" (list) $config)
-        (dig "autoMode" "environment" (list) .)
+        (dig "autoMode" "environment" (list) $overlay)
       | default (list))
     )
     "permissions" (dict
       "allow" (concat
         (dig "permissions" "allow" (list) $config)
-        (dig "permissions" "allow" (list) .)
+        (dig "permissions" "allow" (list) $overlay)
       | default (list))
       "ask" (concat
         (dig "permissions" "ask" (list) $config)
-        (dig "permissions" "ask" (list) .)
+        (dig "permissions" "ask" (list) $overlay)
       | default (list))
       "deny" (concat
         (dig "permissions" "deny" (list) $config)
-        (dig "permissions" "deny" (list) .)
-      | default (list))
-    )
-  )
--}}
-{{- end -}}
-{{- end -}}
-
-{{- if .work -}}
-{{- with (include "dot_config/claude/settings.work.json" | fromJson) -}}
-{{- $config = mergeOverwrite
-  $config
-  .
-  (dict
-    "autoMode" (dict
-      "environment" (concat
-        (dig "autoMode" "environment" (list) $config)
-        (dig "autoMode" "environment" (list) .)
-      | default (list))
-    )
-    "permissions" (dict
-      "allow" (concat
-        (dig "permissions" "allow" (list) $config)
-        (dig "permissions" "allow" (list) .)
-      | default (list))
-      "ask" (concat
-        (dig "permissions" "ask" (list) $config)
-        (dig "permissions" "ask" (list) .)
-      | default (list))
-      "deny" (concat
-        (dig "permissions" "deny" (list) $config)
-        (dig "permissions" "deny" (list) .)
+        (dig "permissions" "deny" (list) $overlay)
       | default (list))
     )
   )
