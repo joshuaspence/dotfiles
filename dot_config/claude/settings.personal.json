@@ -8,19 +8,13 @@
     ]
   },
   "enabledPlugins": {
+    "github@claude-plugins-official": true,
     "invoices@joshuaspence-claude-plugins": true,
     "ndis@joshuaspence-claude-plugins": true,
     "photos@joshuaspence-claude-plugins": true,
     "pocketsmith@joshuaspence-claude-plugins": true
   },
   "inputNeededNotifEnabled": true,
-  "permissions": {
-    "allow": [
-      "mcp__pocketsmith__get_*",
-      "mcp__pocketsmith__list_*",
-      "Read(~/Dropbox/**)"
-    ]
-  },
   "voice": {
     "enabled": true,
     "mode": "tap"
