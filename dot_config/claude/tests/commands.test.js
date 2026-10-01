@@ -100,6 +100,16 @@ describe('repo-review-fix', () => {
     expect(table).not.toMatch(/"max-fixes"/);
   });
 
+  it('asks the user to bound a run the flags did not bound, with a tool it is allowed to ask with', () => {
+    // `--max-fixes` has no default, so a flagless invocation is an unbounded one: an Opus fixer plus its reviewers for
+    // every finding the ledger has ever accumulated. The script refuses such a run, which makes the prompt the only way
+    // a flagless invocation fixes anything — and a prompt the frontmatter does not permit is a prompt that cannot
+    // happen, leaving the command to launch a run it has already been told will be refused.
+    expect(frontmatter).toContain('AskUserQuestion');
+    expect(body).toMatch(/If the user supplied neither, ask/);
+    expect(script).toContain('if (!bounded)');
+  });
+
   it('withholds from the script exactly the flags the script does not read', () => {
     // `--output` is handled by the wrapper. The check is that the file says so *and* that the script really has no such
     // input — a script that grew an `output` key while the command still withheld it would be a silently ignored flag.

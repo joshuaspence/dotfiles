@@ -30,8 +30,8 @@ const INTERNALS = [
   'withFingerprint',
   'HIGH_RISK',
 
-  // The two caps and the ordering they select through.
-  'DEFAULT_MAX_FIXES',
+  // The two caps, whether either was given, and the ordering they select through.
+  'bounded',
   'maxFixes',
   'severityFloor',
   'severityRank',
@@ -283,9 +283,13 @@ export function fixScenario({ headSha = HEAD, survey = {}, fix, reviewFix } = {}
 /**
  * Run a fix end to end. `reviewers` is pinned to 1 so each fix gets one reviewer, and `findings` defaults to a single
  * finding — the smallest run that reaches the Fix phase at all.
+ *
+ * `severity` is pinned to the lowest floor for the same reason: the script refuses a run bounded by neither a floor nor
+ * a cap, and the command never launches one — it asks the user first — so an unbounded run is not a state a scenario
+ * about anything else should have to opt out of. A test *about* that refusal passes `severity: undefined` to strip it.
  */
 export async function runFix({ args = {}, ...config } = {}) {
-  const runArgs = { findings: [issue()], reviewers: 1, reviewedCommit: REVIEWED, ...args };
+  const runArgs = { findings: [issue()], reviewers: 1, severity: 'low', reviewedCommit: REVIEWED, ...args };
   const scenario = fixScenario(config);
   const run = await runWorkflow({ scriptPath: SCRIPT, args: runArgs, agent: scenario.agent });
 

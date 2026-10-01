@@ -8,6 +8,7 @@ argument-hint: >-
   [--reviewers <n>]
   [--severity <low|medium|high|critical>]
 allowed-tools:
+  - AskUserQuestion
   - Bash(git branch --delete --force:*)
   - Bash(git rev-parse:*)
   - Bash(git worktree list:*)
@@ -48,19 +49,24 @@ a bare token is an error — say so and stop, rather than guessing that it was m
   `low`, i.e. every finding is eligible. It is a floor, not a filter: `--severity high` means high **and** critical. Pass
   it through as `severity` when given; omit it otherwise.
 
+  **Passing it bounds the run on its own, so no count cap is applied**: `--severity high` fixes *every* high and
+  critical finding in the ledger, however many that is. The floor is the ceiling in that case — you have said what is
+  worth fixing, and cutting the list off part-way through would only hide the rest behind a number nobody chose. Add
+  `--max-fixes` as well when you want both bounds.
+
   A finding whose `severity` the script does not recognise — only reachable in a hand-edited ledger — ranks as `low`, so
   it sorts last and any floor above `low` excludes it. That is not silent: it lands in the count the shortfall gap
   reports.
 - `--max-fixes <n>` caps how many findings this invocation attempts. Must be a non-negative integer; reject any other
-  value and stop with an error rather than guessing. If omitted, the script defaults it to `5`. The script selects
-  worst-first, so the cap always spends itself on the most severe findings available, and it reports what it left behind
-  as a gap. `--max-fixes 0` is legal and useful: it selects nothing, spawns no agent at all, and reports how many
-  findings were eligible — which is how you ask what a run *would* attempt without paying for it. Pass it through as
-  `maxFixes` when given; omit it otherwise.
+  value and stop with an error rather than guessing. **It has no default**: omitted, nothing caps the count and every
+  finding the floor admits is attempted. The script selects worst-first, so the cap always spends itself on the most
+  severe findings available, and it reports what it left behind as a gap. `--max-fixes 0` is legal and useful: it
+  selects nothing, spawns no agent at all, and reports how many findings were eligible — which is how you ask what a run
+  *would* attempt without paying for it. Pass it through as `maxFixes` when given; omit it otherwise.
 
   This is the flag that decides what the run costs. One finding costs a fixer plus its reviewers, on Opus for the
-  high-risk categories, plus up to two revisions if the reviewers reject the fix — so the ceiling is real work and the
-  default is deliberately low. Raising it is how the user spends more; nothing else here multiplies.
+  high-risk categories, plus up to two revisions if the reviewers reject the fix — so a cap of 20 over a mature ledger
+  is real money. That is why there is no default to fall back on: see [Bounding the run](#bounding-the-run).
 
 - `--reviewers <n>` sets how many independent reviewers judge each fix. Must be a non-negative integer; reject any other
   value and stop with an error rather than guessing. If omitted, the script defaults it to `1`. A fix is kept only on a
@@ -77,17 +83,17 @@ a bare token is an error — say so and stop, rather than guessing that it was m
 Worked examples. Every row is a run against a ledger that already exists — see [The ledger](#the-ledger) for where
 `findings`, `exclusions` and `reviewedCommit` come from, which is the same in every row and so is elided here:
 
-| Invocation                                        | `args` beyond the ledger keys            |
-|---------------------------------------------------|------------------------------------------|
-| `/repo-review-fix`                                | `{}`                                     |
-| `/repo-review-fix --max-fixes 12`                 | `{ "maxFixes": 12 }`                     |
-| `/repo-review-fix --severity high`                | `{ "severity": "high" }`                 |
-| `/repo-review-fix --severity high --max-fixes 20` | `{ "severity": "high", "maxFixes": 20 }` |
-| `/repo-review-fix --reviewers 3`                  | `{ "reviewers": 3 }`                     |
-| `/repo-review-fix --reviewers 0 --max-fixes 1`    | `{ "reviewers": 0, "maxFixes": 1 }`      |
-| `/repo-review-fix --max-fixes 0`                  | `{ "maxFixes": 0 }`                      |
-| `/repo-review-fix --effort xhigh`                 | `{ "effort": "xhigh" }`                  |
-| `/repo-review-fix --output fixes.md`              | `{}`                                     |
+| Invocation                                        | `args` beyond the ledger keys                            |
+|---------------------------------------------------|----------------------------------------------------------|
+| `/repo-review-fix`                                | prompts first; see [Bounding the run](#bounding-the-run) |
+| `/repo-review-fix --max-fixes 12`                 | `{ "maxFixes": 12 }`                                     |
+| `/repo-review-fix --severity high`                | `{ "severity": "high" }`, uncapped                       |
+| `/repo-review-fix --severity high --max-fixes 20` | `{ "severity": "high", "maxFixes": 20 }`                 |
+| `/repo-review-fix --max-fixes 0`                  | `{ "maxFixes": 0 }`                                      |
+| `/repo-review-fix --reviewers 0 --max-fixes 1`    | `{ "reviewers": 0, "maxFixes": 1 }`                      |
+| `/repo-review-fix --reviewers 3`                  | prompts first, then `{ "reviewers": 3, … }`              |
+| `/repo-review-fix --effort xhigh`                 | prompts first, then `{ "effort": "xhigh", … }`           |
+| `/repo-review-fix --output fixes.md`              | prompts first                                            |
 
 ## The ledger
 
@@ -125,6 +131,33 @@ Then take three things from it, and pass them through **verbatim**:
   over a detail — a line number, a name — that the drift explains rather than the fixer. Withhold it and the reviewer
   reads an accurate fix as one that misses its target, which costs a revision cycle that cannot resolve the mismatch.
 
+## Bounding the run
+
+Every run must be bounded by `--severity`, by `--max-fixes`, or by both. **If the user supplied neither, ask — with
+`AskUserQuestion`, once, after the ledger is read and before the workflow is launched.** Do not pick a number for them
+and do not launch unbounded: an unbounded run over a mature ledger is one Opus fixer plus its reviewers for every
+finding the review has ever confirmed, and the user is the only one who can authorise that. The script refuses such a
+run rather than taking it, so launching without an answer costs a launch and fixes nothing.
+
+Build the options from the ledger you have just read, not from a fixed list — you know its real severity distribution,
+and an option offering to fix 2 critical findings when the ledger holds 2 criticals is a choice the user can make at a
+glance. Count the findings per severity, then offer, as a single question headed `Scope`:
+
+- the highest severity that has findings, as a floor — "`critical` only (2 findings)";
+- the next floor down that would admit more — "`high` and above (9 findings)";
+- a count cap at the worst findings regardless of severity — "the 5 worst findings";
+- every finding in the ledger — "all 31 findings, uncapped".
+
+Drop any option that is empty or duplicates another (a ledger whose findings are all `high` has one meaningful floor,
+not four), and name the finding count in every label: the count *is* the cost. Translate the answer into the flags it
+means — a floor into `severity`, a count into `maxFixes` — and pass those to the script exactly as if they had been
+typed, so there is one code path and the report says what was in force. If the user declines to choose, stop and say
+nothing was fixed; do not fall back to a number.
+
+One flag is enough to skip this entirely. `--max-fixes 12` alone bounds the run at 12 worst-first, and `--severity high`
+alone bounds it at the high and critical findings however many there are — in both cases the user has already said how
+much work to authorise, and asking again would be asking twice.
+
 ## Run the workflow
 
 Call the `Workflow` tool with:
@@ -139,15 +172,19 @@ Call the `Workflow` tool with:
   workflow to route past it, and do not deliberately send a string — one that is not valid JSON cannot be recovered, and
   the script then aborts with a gap rather than fixing anything.
 
-  Build it from the three ledger keys above plus **only the flags the user actually supplied**. The script fills in every
-  documented default (`--severity low`, `--max-fixes 5`, `--reviewers 1`, `--effort high`), so do not synthesise
-  defaults here, and never include `--output`.
+  Build it from the three ledger keys above plus **only the flags the user actually supplied**, or chose when asked. The
+  script fills in every documented default (`--severity low`, `--reviewers 1`, `--effort high`), so do not synthesise
+  defaults here, and never include `--output`. `--max-fixes` has no default to synthesise: omit it and nothing caps the
+  count, which is why [Bounding the run](#bounding-the-run) will already have established that a floor or a cap is in
+  force before you get here.
 
 Before you call it, state in one line what you are about to spend: how many findings the ledger holds, the floor and cap
-in force, and therefore roughly how many findings will be attempted — e.g. "31 findings in the ledger, fixing up to 5 at
-`high` or above." Then launch. Running that workflow *is* the fixing: it runs in the background and returns a structured
-result when it finishes. Do not fix anything yourself, do not launch fix agents outside it, and do not re-run it while it
-is in flight. Watch progress in `/workflows`.
+in force, and therefore how many findings will be attempted — e.g. "31 findings in the ledger, fixing up to 5 at `high`
+or above", or "31 findings in the ledger, fixing all 9 at `high` or above, uncapped". Say the number that will actually
+get a fixer, because with no cap that number is the count the floor admits rather than a ceiling. Then launch. Running
+that workflow *is* the fixing: it runs in the background and returns a structured result when it finishes. Do not fix
+anything yourself, do not launch fix agents outside it, and do not re-run it while it is in flight. Watch progress in
+`/workflows`.
 
 The result is `{ base, reviewedCommit, considered, selected, sandboxBranches, keepBranches, outcomes, gaps }`:
 

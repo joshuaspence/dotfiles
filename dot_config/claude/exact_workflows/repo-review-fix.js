@@ -14,9 +14,11 @@
  *
  * Inputs arrive on `args` as `{ findings, exclusions, reviewedCommit, severity, maxFixes, reviewers, effort }`,
  * normalized through `normalizeArgs` below because this call site delivers that object JSON-encoded as a string.
- * `findings` is what the ledger holds — the wrapper passes them all, and the *script* applies the caps, for the reason
- * the whole redesign turns on: a knob the caller enforces is a knob the caller can forget, and every knob that
- * multiplies work has to have a ceiling somewhere that does not depend on being asked for.
+ * `findings` is what the ledger holds — the wrapper passes them all, and the *script* applies the caps, because a cap
+ * the caller applies is a cap that cannot be reported: the shortfall gap exists to say what was left behind, and only
+ * the side that did the truncating knows. Neither cap has a default. `--severity` bounds the run by *what* is worth
+ * fixing and `--max-fixes` by *how much*, either one is enough, and a run given neither is refused rather than run
+ * unbounded — the wrapper asks the user which they want, and the refusal is what holds it to that.
  *
  * The return value is `{ base, reviewedCommit, considered, selected, sandboxBranches, keepBranches, outcomes, gaps }`.
  * `base` is the commit every fix is parented on, and it is the tree's *current* `HEAD` — not the `reviewedCommit` the
@@ -216,14 +218,16 @@ const reviewers = nonNegativeIntOr(input?.reviewers, 1);
 // Up to 2 revisions (3 total fix attempts) before a rejected fix is dropped.
 const FIX_REVISION_CAP = 2;
 
-// `--max-fixes <n>` is the run's cost ceiling, and it is a *default* rather than an opt-in: a ledger accumulates
-// findings round over round, so an uncapped run over a mature ledger launches one worktree-isolated Opus agent per
-// finding — plus its reviewers, plus up to two revisions each — for as many findings as have ever been confirmed. The
-// bundled `--fix` phase had no such cap and did not appear to need one, because it only ever saw the findings one round
-// confirmed; the split removed that accidental bound, so this is the explicit one that replaces it. 0 is honoured as
-// "attempt nothing", which is how a caller asks for the selection without paying for it.
-const DEFAULT_MAX_FIXES = 5;
-const maxFixes = nonNegativeIntOr(input?.maxFixes, DEFAULT_MAX_FIXES);
+// `--max-fixes <n>` is the run's cost ceiling, and omitting it means *no ceiling*: the selection is then the whole
+// eligible list. 0 is honoured as "attempt nothing", which is how a caller asks for the selection without paying for it,
+// and it is the one reason this needs a non-negative parser of its own rather than `||`.
+//
+// A ledger accumulates findings round over round, so an uncapped run over a mature ledger launches one worktree-isolated
+// Opus agent per finding — plus its reviewers, plus up to two revisions each — for as many findings as have ever been
+// confirmed. That is a real amount of work to ask for unknowingly, so the ceiling is *chosen* rather than defaulted: a
+// floor and a cap are two ways of bounding the same run, and the `bounded` check below refuses a run that set neither
+// instead of picking a number on the caller's behalf.
+const maxFixes = nonNegativeIntOr(input?.maxFixes, Infinity);
 
 // Severity is ranked, not compared: `--severity high` means high *and* critical, and the ranking is also what orders
 // the selection below, so the findings the cap keeps are the worst ones rather than whichever the ledger listed first.
@@ -235,7 +239,14 @@ const SEVERITY_ORDER = ['low', 'medium', 'high', 'critical'];
 // records below is what keeps that from being silent.
 const severityRank = (issue) => Math.max(SEVERITY_ORDER.indexOf(issue?.severity), 0);
 
-const severityFloor = SEVERITY_ORDER.includes(input?.severity) ? input.severity : SEVERITY_ORDER[0];
+const floorGiven = SEVERITY_ORDER.includes(input?.severity);
+const severityFloor = floorGiven ? input.severity : SEVERITY_ORDER[0];
+
+// Whether the caller bounded this run by either knob. Neither is a refusal rather than an unbounded run, and that is the
+// whole reason the cap's default went away: a number this script picks is a number the caller never saw, and the work it
+// authorises — an Opus fixer and its reviewers per finding — is the one thing here that cannot be undone cheaply.
+const capGiven = Number.isFinite(maxFixes);
+const bounded = floorGiven || capGiven;
 
 
 // --- Effort caps -----------------------------------------------------------------------------------------------------
@@ -784,16 +795,10 @@ const gaps = [];
 
 const reviewedCommit = fullCommitSha(input?.reviewedCommit);
 
-// Nothing to do, and nothing to spend a survey agent on. Both reasons are worth telling apart in the log: a caller that
-// passed no findings has a wrapper or ledger problem, while a floor and a cap that selected none of them is this
-// script's own doing and is described by the gap below.
-if (selected.length === 0) {
-  const why =
-    allFindings.length === 0
-      ? 'no findings were passed to it — the ledger is empty, or the wrapper sent none'
-      : `none of the ${allFindings.length} finding(s) passed to it are at or above \`${severityFloor}\` severity, or ` +
-        `\`--max-fixes ${maxFixes}\` allowed none`;
-
+// Finishing before the survey, which is a real agent on a real repo and pointless when nothing will be based on it.
+// `base: null` is what tells the wrapper no fix was attempted and there is nothing to tear down; `gap` is false only for
+// the empty ledger, which is the one honest way to finish with nothing and so must not report as incomplete.
+const refuse = (why, { gap = true } = {}) => {
   log(`Nothing to fix: ${why}.`);
 
   return {
@@ -804,8 +809,31 @@ if (selected.length === 0) {
     sandboxBranches: [],
     keepBranches: [],
     outcomes: [],
-    gaps: allFindings.length === 0 ? [] : [`No fix was attempted: ${why}.`],
+    gaps: gap ? [`No fix was attempted: ${why}.`] : [],
   };
+};
+
+// A run bounded by neither knob is refused rather than run unbounded. The command is expected to ask the user which of
+// the two they want before launching — an unbounded run over a mature ledger is one Opus fixer plus its reviewers per
+// finding, for every finding ever confirmed — and this is where that expectation is enforced rather than trusted,
+// because a wrapper that forgets to ask fails in exactly the direction that costs the most.
+if (!bounded) {
+  return refuse(
+    'neither a severity floor nor a fix cap was given, so the run has no ceiling. Pass `--severity <floor>` to fix ' +
+      'everything at or above it, or `--max-fixes <n>` to cap the count',
+  );
+}
+
+// Nothing to do. Both reasons are worth telling apart in the log: a caller that passed no findings has a wrapper or
+// ledger problem, while a floor and a cap that selected none of them is this script's own doing.
+if (selected.length === 0) {
+  return refuse(
+    allFindings.length === 0
+      ? 'no findings were passed to it — the ledger is empty, or the wrapper sent none'
+      : `none of the ${allFindings.length} finding(s) passed to it are at or above \`${severityFloor}\` severity` +
+          (capGiven ? `, or \`--max-fixes ${maxFixes}\` allowed none` : ''),
+    { gap: allFindings.length > 0 },
+  );
 }
 
 // Everything the caps left behind, said once and plainly. A run that quietly attempted 5 of 40 findings reads exactly

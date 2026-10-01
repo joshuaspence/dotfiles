@@ -42,8 +42,13 @@ const DRIVERS = {
     const { fixScenario, issue, REVIEWED } = await import('./repo-review-fix/scenario.js');
 
     // Every phase past Survey is gated on there being a finding to fix *and* a base commit to pin it to, so both have to
-    // be supplied: an empty `findings` list returns before spawning even the survey.
-    return { agent: fixScenario().agent, args: { findings: [issue()], reviewers: 1, reviewedCommit: REVIEWED } };
+    // be supplied: an empty `findings` list returns before spawning even the survey. `severity` is the third gate — a
+    // run bounded by neither a floor nor a count cap is refused outright, since the command is expected to have asked
+    // the user for one of the two before launching.
+    return {
+      agent: fixScenario().agent,
+      args: { findings: [issue()], reviewers: 1, severity: 'low', reviewedCommit: REVIEWED },
+    };
   },
 };
 

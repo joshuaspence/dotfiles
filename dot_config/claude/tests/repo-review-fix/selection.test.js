@@ -4,7 +4,8 @@
  * This is the command's cost control. A ledger accumulates across rounds, so the list handed in has no natural bound —
  * it is every finding the review ever validated and nothing has since fixed. Each entry admitted costs a fixer plus its
  * reviewers, on Opus for the high-risk categories, so an unbounded list is exactly the runaway the split was meant to
- * end. Two knobs bound it: a severity floor filters, then a count cap truncates worst-first.
+ * end. Two knobs bound it: a severity floor filters, then a count cap truncates worst-first. Neither has a cost-control
+ * default any more — the command asks the user instead — so a run given neither is refused rather than run unbounded.
  *
  * The failure mode being guarded is quiet: truncating in the wrong order still fixes `--max-fixes` findings and still
  * reports a plausible result, it just spends the budget on the least important ones. So the assertions read the
@@ -30,28 +31,38 @@ const fixedDescriptions = (run) =>
 // The gap the caps raise, as distinct from the teardown and pipeline gaps that share the list.
 const shortfall = (run) => run.result.gaps.filter((gap) => /were \*\*not\*\* attempted/.test(gap));
 
-describe('the count cap', () => {
-  it('defaults to five, which is what the flagless invocation costs', async () => {
-    const { DEFAULT_MAX_FIXES, maxFixes } = await internals({});
+const manyHigh = (count) => Array.from({ length: count }, (_, idx) => bySeverity('high', { file: `src/${idx}.ts` }));
 
-    expect(maxFixes).toBe(DEFAULT_MAX_FIXES);
-    expect(DEFAULT_MAX_FIXES).toBe(5);
+describe('the count cap', () => {
+  it('has no default, so an omitted cap caps nothing', async () => {
+    // The previous default was 5, and it was the wrong place for the decision: a caller who did not ask for a cap got
+    // one anyway, and the 26 findings a 31-finding ledger held back were a number nobody chose. The choice moved to the
+    // command, which asks; absent an answer the script applies no ceiling of its own.
+    const { maxFixes } = await internals({});
+
+    expect(maxFixes).toBe(Infinity);
   });
 
-  it('fixes the cap and no more when the ledger holds more than that', async () => {
-    const findings = Array.from({ length: 9 }, (_, idx) => bySeverity('high', { file: `src/${idx}.ts` }));
-    const run = await runFix({ args: { findings } });
+  it('attempts every eligible finding when no cap was given', async () => {
+    const run = await runFix({ args: { findings: manyHigh(9) } });
 
     expect(run.result.considered).toBe(9);
-    expect(run.result.selected).toBe(5);
-    expect(run.calls.filter((call) => call.label.startsWith('fix:'))).toHaveLength(5);
+    expect(run.result.selected).toBe(9);
+    expect(run.calls.filter((call) => call.label.startsWith('fix:'))).toHaveLength(9);
+  });
+
+  it('fixes the cap and no more when one was given', async () => {
+    const run = await runFix({ args: { findings: manyHigh(9), maxFixes: 4 } });
+
+    expect(run.result.considered).toBe(9);
+    expect(run.result.selected).toBe(4);
+    expect(run.calls.filter((call) => call.label.startsWith('fix:'))).toHaveLength(4);
   });
 
   it('records the shortfall as a gap, so the caller knows the ledger is not empty', async () => {
     // Without this the caller cannot tell "nothing left to fix" from "hit the cap": both return with every attempted fix
     // applied, so a wrapper reporting the run would say the ledger is clear while 2 defects remain in it.
-    const findings = Array.from({ length: 7 }, (_, idx) => bySeverity('high', { file: `src/${idx}.ts` }));
-    const run = await runFix({ args: { findings } });
+    const run = await runFix({ args: { findings: manyHigh(7), maxFixes: 5 } });
 
     expect(shortfall(run)).toHaveLength(1);
     expect(shortfall(run)[0]).toMatch(/2 of 7 finding\(s\)/);
@@ -62,6 +73,64 @@ describe('the count cap', () => {
     const run = await runFix({ args: { findings: [bySeverity('high'), bySeverity('low')] } });
 
     expect(shortfall(run)).toEqual([]);
+  });
+
+  it('never names a cap it does not have when it explains selecting nothing', async () => {
+    // `Infinity` reaching a user-facing string would read as a cap of infinity *having* excluded something, which is the
+    // opposite of what happened: an uncapped run that selects nothing was held back entirely by the floor.
+    const run = await runFix({ args: { findings: [bySeverity('low')], severity: 'critical' } });
+
+    expect(run.result.gaps.join('\n')).toMatch(/below `critical` severity|at or above `critical`/);
+    expect(run.result.gaps.join('\n')).not.toMatch(/Infinity/);
+  });
+});
+
+describe('what counts as a bounded run', () => {
+  // The script's own guard on the command's prompt. `--severity` bounds a run by what is worth fixing and `--max-fixes`
+  // by how much; given neither, the run would be one Opus fixer plus reviewers for every finding the ledger has ever
+  // accumulated. The command is required to ask the user which they want, and this is what holds it to that — a wrapper
+  // that forgets fails here, cheaply, instead of spending the whole ledger.
+  //
+  // The fixture pins a floor so that every other suite is testing a run the command could really have launched, so a
+  // test about the bound itself has to take that floor back off.
+  const asTyped = (args = {}) => runFix({ args: { severity: undefined, ...args } });
+
+  it('refuses a run with neither, before any agent is spawned', async () => {
+    const run = await asTyped({ findings: manyHigh(9) });
+
+    expect(run.calls).toEqual([]);
+    expect(run.result).toMatchObject({ base: null, considered: 9, selected: 0, outcomes: [], sandboxBranches: [] });
+  });
+
+  it('names both flags when it refuses, since the refusal is a cue to choose one', async () => {
+    const run = await asTyped({ findings: manyHigh(9) });
+
+    expect(run.result.gaps).toHaveLength(1);
+    expect(run.result.gaps[0]).toMatch(/no ceiling/);
+    expect(run.result.gaps[0]).toMatch(/`--severity <floor>`/);
+    expect(run.result.gaps[0]).toMatch(/`--max-fixes <n>`/);
+  });
+
+  it('accepts a floor alone, and then fixes everything above it', async () => {
+    const run = await asTyped({ findings: manyHigh(3), severity: 'high' });
+
+    expect(run.result.selected).toBe(3);
+  });
+
+  it('accepts a cap alone', async () => {
+    const run = await asTyped({ findings: manyHigh(3), maxFixes: 2 });
+
+    expect(run.result.selected).toBe(2);
+  });
+
+  it('accepts a cap of zero, which is a choice like any other', async () => {
+    // `--max-fixes 0` asks what a run would attempt without paying for it, so it has to read as bounded rather than as
+    // the absent cap it numerically resembles — and the refusal it gets must be the empty selection, not the unbounded
+    // one, because only the first reports how many findings were waiting.
+    const run = await asTyped({ findings: manyHigh(3), maxFixes: 0 });
+
+    expect(run.result.selected).toBe(0);
+    expect(run.result.gaps.join('\n')).toMatch(/3 finding\(s\)/);
   });
 });
 
@@ -142,8 +211,8 @@ describe('runs that spawn nothing', () => {
   });
 
   it('spawns no agent when the cap is zero', async () => {
-    // `--max-fixes 0` is how the wrapper asks "what would you fix?" without paying for any of it, so it must be a
-    // distinct thing from the default rather than a falsy value that falls back to five.
+    // `--max-fixes 0` is how the wrapper asks "what would you fix?" without paying for any of it, so it must survive
+    // the non-negative parse rather than reading as a falsy value with no cap behind it.
     const run = await runFix({ args: { findings: [bySeverity('critical')], maxFixes: 0 } });
 
     expect(run.calls).toEqual([]);
