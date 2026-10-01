@@ -89,8 +89,11 @@
   branch, so it arrives without unpushed local work — check before offering.
 - **Tear down the session's worktree once its branch has merged**, reporting what was removed; sweep other pre-existing
   worktrees only when asked.
-- **Remove the worktree before deleting its branch**, and delete only with `git branch -d`: a refusal means the branch
-  is not merged, so leave it and say so.
+- **Remove the worktree before deleting its branch**, and try `git branch -d` first. Its refusal is not proof the work
+  is unmerged: a squash or rebase merge rewrites the commits, so the original tip stays unreachable, and `git cherry`
+  misses it too since it compares patch IDs commit by commit. Confirm the content landed —
+  `git cherry <base> $(git commit-tree <branch>^{tree} -p $(git merge-base <base> <branch>) -m _)` prints a leading `-`
+  when it did — and only then is `git branch -D` right. Leave the branch and say so when nothing confirms it landed.
 - **Never force past real work or an owner.** `ExitWorktree` may refuse a worktree it does not own — fall back to
   `action: "keep"` and remove it from the main checkout. A worktree with initialised submodules refuses removal without
   `--force` however clean it is, so reserve `--force` for regenerable content and inspect before reaching for it.
