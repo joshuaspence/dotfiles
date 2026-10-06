@@ -79,14 +79,15 @@
 
 ## Worktrees
 
-- **Ask once, at the first edit, whether to work in a worktree** — `EnterWorktree` on a yes, `ExitWorktree` when the
-  work is done — and honour it for the rest of the session, including other repositories, since re-asking each one costs
-  more than living with the first answer. Isolation earns its cost only when several agents run at once or the main
-  checkout has work in progress, so it is the user's call and a read-only session never raises it.
-- **Do not ask when there is nothing to decide**: already answered, not a git repository or already inside a linked
-  worktree.
-- **Recommend against one when it would be wrong, and say why.** A fresh worktree branches from the remote default
-  branch, so it arrives without unpushed local work — check before offering.
+- **Enter a worktree at the first edit, without asking** — `EnterWorktree` there, `ExitWorktree` once the work is done —
+  and stay in one for the rest of the session, including other repositories. Isolation keeps the main checkout free for
+  the user and for the agents running alongside, and is cheap enough that it is not worth a question.
+- **Do not enter one where there is nothing to isolate**: not a git repository, already inside a linked worktree, or a
+  session that only reads.
+- **Edit in place instead, and say why, when a worktree would leave work behind.** A fresh worktree branches from the
+  remote default branch, so it arrives without unpushed local commits or an uncommitted tree, and a tool that reads a
+  repository from a fixed path — `chezmoi` its source directory, for one — never sees the worktree at all. Check for
+  these before entering rather than after.
 - **Tear down the session's worktree once its branch has merged**, reporting what was removed; sweep other pre-existing
   worktrees only when asked.
 - **Remove the worktree before deleting its branch**, and try `git branch -d` first. Its refusal is not proof the work
