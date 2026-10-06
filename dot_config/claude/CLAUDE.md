@@ -88,6 +88,10 @@
   remote default branch, so it arrives without unpushed local commits or an uncommitted tree, and a tool that reads a
   repository from a fixed path — `chezmoi` its source directory, for one — never sees the worktree at all. Check for
   these before entering rather than after.
+- **A worktree sits inside the repository, so whatever walks the filesystem sees the tree twice.** `EnterWorktree` puts
+  it under `.claude/worktrees/<name>/`, and the `worktree.location` setting relocates only Claude Code Desktop's
+  SSH-session worktrees — the CLI does not read it. A tool that walks instead of reading git's ignore rules, `yamllint`
+  and `shfmt` among them, needs the path spelled out in its own ignore list.
 - **Tear down the session's worktree once its branch has merged**, reporting what was removed; sweep other pre-existing
   worktrees only when asked.
 - **Remove the worktree before deleting its branch**, and try `git branch -d` first. Its refusal is not proof the work

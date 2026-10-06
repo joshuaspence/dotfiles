@@ -2,6 +2,7 @@
 extends: 'default'
 
 ignore: |
+  .claude/worktrees/
   pnpm-lock.yaml
 
 rules:
