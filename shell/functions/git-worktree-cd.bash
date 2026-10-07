@@ -104,3 +104,5 @@ function _git_worktree_cd_complete() {
     fi
   done
 }
+
+alias gwtcd='git-worktree-cd'

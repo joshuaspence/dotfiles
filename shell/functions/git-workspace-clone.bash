@@ -12,3 +12,5 @@ function git-workspace-clone() {
   git clone "${repository}" "${destination}"
   cd "${destination}"
 }
+
+alias gwsc='git-workspace-clone'
