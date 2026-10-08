@@ -22,7 +22,6 @@ function _systemd_run_claude() {
   systemd_run_opts+=("--unit" "${unit}")
   systemd_run_opts+=("--property" "PrivateTmp=yes")
   systemd_run_opts+=("--property" "RuntimeDirectory=${unit}")
-  systemd_run_opts+=("--property" "TemporaryFileSystem=${CLAUDE_CONFIG_DIR}/projects")
   systemd_run_opts+=("--property" "WorkingDirectory=${work_dir}")
   systemd_run_opts+=("--setenv" "CLAUDE_CONFIG_DIR=${CLAUDE_CONFIG_DIR}")
   systemd_run_opts+=("--setenv" "PATH")
@@ -72,8 +71,13 @@ function _systemd_run_claude() {
 
 # Launch Claude Code in a disposable, self-cleaning working directory.
 #
-# Use it for throwaway tasks you don't want cluttering (or reading from) a real project. Anything you want to
-# keep must be copied out before you quit.
+# Use it for throwaway tasks you don't want cluttering (or reading from) a real project. Anything you want to keep must
+# be copied out before you quit.
+#
+# Only the working directory is disposable. The transcript lands in the real `$CLAUDE_CONFIG_DIR`, keyed by the stable
+# `/tmp/claude-scratch` path, so `--resume` and `--continue` work across sessions -- but they restore the conversation,
+# not the files it talks about, which died with the unit that wrote them. Reach for `claude-incognito` when the
+# transcript should be thrown away too.
 function claude-scratch() {
   _systemd_run_claude claude-scratch -- "$@"
 }
