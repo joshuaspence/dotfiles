@@ -84,6 +84,9 @@
   the user and for the agents running alongside, and is cheap enough that it is not worth a question.
 - **Do not enter one where there is nothing to isolate**: not a git repository, already inside a linked worktree, or a
   session that only reads.
+- **Spawn an editing subagent with `isolation: "worktree"`**, `/subtask` forks included. A subagent cannot enter a
+  worktree itself and otherwise shares the spawning session's checkout, so isolation is the spawner's choice at the
+  `Agent` call; "already inside a linked worktree" exempts a session, never a subagent sharing its parent's tree.
 - **Edit in place instead, and say why, when a worktree would leave work behind.** A fresh worktree branches from the
   remote default branch, so it arrives without unpushed local commits or an uncommitted tree, and a tool that reads a
   repository from a fixed path — `chezmoi` its source directory, for one — never sees the worktree at all. Check for
