@@ -86,11 +86,11 @@
         - name: 'Add Claude Desktop repository'
           ansible.builtin.deb822_repository:
             name: 'claude-desktop'
-            uris: 'https://pkg.claude-desktop-debian.dev'
+            uris: 'https://downloads.claude.ai/claude-desktop/apt/stable'
             suites: 'stable'
             components: 'main'
             architectures: '{{ dpkg_architecture }}'
-            signed_by: 'https://pkg.claude-desktop-debian.dev/KEY.gpg'
+            signed_by: 'https://downloads.claude.ai/claude-desktop/key.asc'
           notify: 'Update APT cache'
         - name: 'Flush handlers'
           ansible.builtin.meta: 'flush_handlers'
