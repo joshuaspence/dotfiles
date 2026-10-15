@@ -8,7 +8,7 @@
     ]
   },
   "enabledPlugins": {
-    "github@claude-plugins-official": true,
+    "github@joshuaspence-claude-plugins": true,
     "invoices@joshuaspence-claude-plugins": true,
     "ndis@joshuaspence-claude-plugins": true,
     "photos@joshuaspence-claude-plugins": true,
