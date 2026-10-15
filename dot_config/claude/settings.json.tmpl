@@ -21,7 +21,6 @@
     "session-report@claude-plugins-official" true
     "skill-creator@claude-plugins-official" true
     "terraform@claude-plugins-official" true
-    "terraform@hashicorp" true
   )
   "env" (dict
     "CLAUDE_CODE_DEBUG_LOGS_DIR" (printf "%s/.local/state/claude/debug" .chezmoi.homeDir)
@@ -36,13 +35,6 @@
       "source" (dict
         "source" "github"
         "repo" "anthropics/skills"
-      )
-    )
-    "hashicorp" (dict
-      "autoUpdate" true
-      "source" (dict
-        "source" "github"
-        "repo" "hashicorp/agent-skills"
       )
     )
     "joshuaspence-claude-plugins" (dict
