@@ -4,7 +4,7 @@
   "autoMode": {
     "environment": [
       "Source control: github.com/joshuaspence, github.com/spence-com-au",
-      "Tusted internal domains: *.joshuaspence.com, *.spence.au, *.spence.com.au, *.spence.family, *.spence.network"
+      "Trusted internal domains: *.joshuaspence.com, *.spence.au, *.spence.com.au, *.spence.family, *.spence.network"
     ]
   },
   "enabledPlugins": {
