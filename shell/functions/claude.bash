@@ -20,17 +20,11 @@ function _systemd_run_claude() {
 
   local -a systemd_run_opts=()
   systemd_run_opts+=("--unit" "${unit}")
-  systemd_run_opts+=("--property" "PrivateTmp=yes")
   systemd_run_opts+=("--property" "RuntimeDirectory=${unit}")
   systemd_run_opts+=("--property" "WorkingDirectory=${work_dir}")
   systemd_run_opts+=("--setenv" "CLAUDE_CONFIG_DIR=${CLAUDE_CONFIG_DIR}")
   systemd_run_opts+=("--setenv" "PATH")
   systemd_run_opts+=("--setenv" "TERM")
-
-  # Browsers launched from inside the unit share its private `/tmp`, so Chrome cannot find the running instance and
-  # opens a second one on the same profile. `portal-open` hands the URL to the desktop portal, outside the unit.
-  systemd_run_opts+=("--setenv" "BROWSER=portal-open")
-
   systemd_run_opts+=("--pty")
   systemd_run_opts+=("--quiet")
   systemd_run_opts+=("--collect")
@@ -38,8 +32,11 @@ function _systemd_run_claude() {
 
   # Claude always sees the same workspace path, so the folder-trust prompt only fires once -- trust is keyed by cwd.
   # Each session bind-mounts its own fresh, auto-reaped `RuntimeDirectory` onto that path inside a private mount
-  # namespace, so concurrent sessions stay isolated despite sharing the path. `PrivateTmp` keeps the bind mountpoint
-  # off the host's `/tmp`.
+  # namespace, so concurrent sessions stay isolated despite sharing the path. The host sees only an empty mountpoint.
+  #
+  # The rest of `/tmp` is deliberately shared with the host rather than made private with `PrivateTmp`: programs find
+  # their running peers through sockets there -- Chrome's `SingletonSocket`, Claude Code's own `/tmp/cc-daemon-*` --
+  # and hiding them makes a browser opened from the session start a second Chrome on the same profile.
   if [[ "$(sysctl --ignore --values kernel.apparmor_restrict_unprivileged_userns)" != "0" ]]; then
     echo "Unprivileged user namespaces are restricted, so the scratch directory cannot be bind-mounted." >&2
     return 1
