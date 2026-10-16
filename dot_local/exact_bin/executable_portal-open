@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Open each URL through the XDG desktop portal, which launches the handler from the session's own namespaces rather
+# than the caller's. A Chrome started inside a `PrivateTmp` unit cannot see the running Chrome's `SingletonSocket` under
+# the host's `/tmp`, so it opens a second browser on the same profile instead of a tab in the existing one.
+#
+# Usage: `portal-open <url>...`, suitable as `$BROWSER`.
+set -eu
+
+for uri in "$@"; do
+  gdbus call --session \
+    --dest org.freedesktop.portal.Desktop \
+    --object-path /org/freedesktop/portal/desktop \
+    --method org.freedesktop.portal.OpenURI.OpenURI \
+    '' "${uri}" '{}' >/dev/null
+done

@@ -26,6 +26,11 @@ function _systemd_run_claude() {
   systemd_run_opts+=("--setenv" "CLAUDE_CONFIG_DIR=${CLAUDE_CONFIG_DIR}")
   systemd_run_opts+=("--setenv" "PATH")
   systemd_run_opts+=("--setenv" "TERM")
+
+  # Browsers launched from inside the unit share its private `/tmp`, so Chrome cannot find the running instance and
+  # opens a second one on the same profile. `portal-open` hands the URL to the desktop portal, outside the unit.
+  systemd_run_opts+=("--setenv" "BROWSER=portal-open")
+
   systemd_run_opts+=("--pty")
   systemd_run_opts+=("--quiet")
   systemd_run_opts+=("--collect")
