@@ -44,7 +44,9 @@
   a literal: Bash the shell, but `bash` the command.
 - **Wrap code, comments and prose at 120 characters, filled** — filled so no line carries to the next a word that would
   fit on it; characters, not bytes, so an em-dash counts as one column, not three. Reflow with the formatter where one
-  exists rather than by hand; Markdown tables are exempt.
+  exists rather than by hand; Markdown tables are exempt. So is anything GitHub renders as a comment — a pull request or
+  issue body, a comment, a review reply: it draws every newline as a line break, so a hard-wrapped paragraph there comes
+  out ragged. Write each paragraph and list item there as one line.
 - **A comment earns its place or goes.** Comments explain why, not what, and a stale one is a defect. Delete dead code
   rather than commenting it out — the history already has it, and a commented-out block is a comment that explains
   nothing.
@@ -53,7 +55,9 @@
   and the one who does is better served by `git log`. Comment why the code is as it is, not how it came to be.
 - **Separate a commented block from the code around it with blank lines.** A comment binds to the code directly below
   it, so keep them together and set the group off with a blank line on either side; packed against unrelated lines,
-  nothing marks where the comment's scope ends.
+  nothing marks where the comment's scope ends. Where order means nothing, as among an interface's members, put the
+  uncommented ones first and packed together and the commented ones after them, so the blank lines do not break up a run
+  of plain fields.
 - **Quote the evidence a claim rests on.** A claim that cannot be checked cannot be falsified, so name the identifier,
   capture or commit.
 - **Pad Markdown table columns to the widest cell**, write the separator row as `|-----|` and count widths in characters
@@ -79,29 +83,18 @@
 
 ## Worktrees
 
-- **Enter a worktree at the first edit, without asking** — `EnterWorktree` there, `ExitWorktree` once the work is done —
-  and stay in one for the rest of the session, including other repositories. Isolation keeps the main checkout free for
-  the user and for the agents running alongside, and is cheap enough that it is not worth a question.
-- **Do not enter one where there is nothing to isolate**: not a git repository, already inside a linked worktree, or a
-  session that only reads.
-- **Spawn an editing subagent with `isolation: "worktree"`**, `/subtask` forks included. A subagent cannot enter a
-  worktree itself and otherwise shares the spawning session's checkout, so isolation is the spawner's choice at the
-  `Agent` call; "already inside a linked worktree" exempts a session, never a subagent sharing its parent's tree.
-- **Edit in place instead, and say why, when a worktree would leave work behind.** A fresh worktree branches from the
-  remote default branch, so it arrives without unpushed local commits or an uncommitted tree, and a tool that reads a
-  repository from a fixed path — `chezmoi` its source directory, for one — never sees the worktree at all. Check for
-  these before entering rather than after.
-- **A worktree sits inside the repository, so whatever walks the filesystem sees the tree twice.** `EnterWorktree` puts
-  it under `.claude/worktrees/<name>/`, and the `worktree.location` setting relocates only Claude Code Desktop's
-  SSH-session worktrees — the CLI does not read it. A tool that walks instead of reading git's ignore rules, `yamllint`
-  and `shfmt` among them, needs the path spelled out in its own ignore list.
+- **Ask once, at the first edit, whether to work in a worktree** — `EnterWorktree` on a yes, `ExitWorktree` when the
+  work is done — and honour it for the rest of the session, including other repositories, since re-asking each one costs
+  more than living with the first answer. Isolation earns its cost only when several agents run at once or the main
+  checkout has work in progress, so it is the user's call and a read-only session never raises it.
+- **Do not ask when there is nothing to decide**: already answered, not a git repository or already inside a linked
+  worktree.
+- **Recommend against one when it would be wrong, and say why.** A fresh worktree branches from the remote default
+  branch, so it arrives without unpushed local work — check before offering.
 - **Tear down the session's worktree once its branch has merged**, reporting what was removed; sweep other pre-existing
   worktrees only when asked.
-- **Remove the worktree before deleting its branch**, and try `git branch -d` first. Its refusal is not proof the work
-  is unmerged: a squash or rebase merge rewrites the commits, so the original tip stays unreachable, and `git cherry`
-  misses it too since it compares patch IDs commit by commit. Confirm the content landed —
-  `git cherry <base> $(git commit-tree <branch>^{tree} -p $(git merge-base <base> <branch>) -m _)` prints a leading `-`
-  when it did — and only then is `git branch -D` right. Leave the branch and say so when nothing confirms it landed.
+- **Remove the worktree before deleting its branch**, and delete only with `git branch -d`: a refusal means the branch
+  is not merged, so leave it and say so.
 - **Never force past real work or an owner.** `ExitWorktree` may refuse a worktree it does not own — fall back to
   `action: "keep"` and remove it from the main checkout. A worktree with initialised submodules refuses removal without
   `--force` however clean it is, so reserve `--force` for regenerable content and inspect before reaching for it.
