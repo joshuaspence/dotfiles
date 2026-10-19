@@ -7,6 +7,8 @@ on:
       - 'master'
   schedule:
     - cron: '0 0 * * 1'
+permissions:
+  contents: 'read'
 jobs:
   bootstrap:
     name: 'Bootstrap (ubuntu=${{ matrix.ubuntu_version }}, personal=${{ matrix.personal }}, work=${{ matrix.work }})'
