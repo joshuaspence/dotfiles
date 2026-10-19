@@ -53,7 +53,8 @@ so collect each one as you scan the tokens instead of expecting a single run at 
   defects involving them). Pass them as `paths`, an **array of strings** in the order they appeared, e.g.
   `["src", "lib"]` — and use the array form even for a single path (`["src"]`). Omit the key entirely when no path was
   given; the script then reviews the whole repository. Each path may name a directory or a single file, and the two may
-  be mixed. The script drops blank entries and collapses exact duplicates, so `src src` scopes to `src` once; it cannot
+  be mixed. The script drops blank entries, puts each path in the form `git ls-files` prints (`./src/` becomes `src`,
+  and `.` scopes to the whole repository) and collapses exact duplicates, so `src src` scopes to `src` once; it cannot
   tell that `src` and `src/a.js` overlap, though, and passing both merely makes the narrower one redundant — pass what
   the user wrote and do not try to prune the list yourself.
 - `--effort <low|medium|high|xhigh|max>` sets the requested reasoning effort for the workflow's subagents. If omitted,
