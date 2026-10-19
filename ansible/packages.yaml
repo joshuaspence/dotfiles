@@ -83,6 +83,15 @@
     - name: 'Claude Desktop'
       when: 'is_personal'
       block:
+        # The package's postinst otherwise writes its own `claude-desktop.list` for the same URI with a different
+        # `signed-by=` keyring, and apt refuses to read any source while the two `Signed-By` values conflict.
+        - name: 'Stop Claude Desktop adding its own repository'
+          ansible.builtin.copy:
+            dest: '/etc/default/claude-desktop'
+            content: |
+              CLAUDE_DESKTOP_ADD_REPO=false
+            mode: '0644'
+
         - name: 'Add Claude Desktop repository'
           ansible.builtin.deb822_repository:
             name: 'claude-desktop'
