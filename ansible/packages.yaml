@@ -88,8 +88,7 @@
         - name: 'Stop Claude Desktop adding its own repository'
           ansible.builtin.copy:
             dest: '/etc/default/claude-desktop'
-            content: |
-              CLAUDE_DESKTOP_ADD_REPO=false
+            content: 'CLAUDE_DESKTOP_ADD_REPO=false'
             mode: '0644'
 
         - name: 'Add Claude Desktop repository'
