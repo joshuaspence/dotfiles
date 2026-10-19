@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - 'master'
+permissions:
+  contents: 'read'
 jobs:
   ansible-lint:
     name: 'Ansible Lint'
