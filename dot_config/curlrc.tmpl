@@ -1,0 +1,16 @@
+compressed
+create-dirs
+{{/*
+  Before curl 8.17.0 `--fail` and `--fail-with-body` clash rather than override each other, so a global `fail-with-body`
+  makes every `curl -f` exit 2. Ubuntu 24.04 ships curl 8.5.0 and Ubuntu 26.04 ships 8.18.0.
+*/ -}}
+{{ if semverCompare ">=26.04" .chezmoi.osRelease.versionID -}}
+fail-with-body
+{{ else -}}
+fail
+{{ end -}}
+hsts = ~/.local/state/curl/hsts
+location
+no-progress-bar
+parallel
+referer = ";auto"
