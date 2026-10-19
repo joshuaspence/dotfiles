@@ -145,31 +145,49 @@ describe('dedupe merge', () => {
     expect(merged[0].otherSites).toEqual(['run.js:4']);
   });
 
-  it('takes a merged group’s symbol marks from its lowest index, not from the member that survives', async () => {
-    // How a round knows what it contributed: it marks its own findings with a symbol and counts the marks still standing
-    // after dedupe (see `NEW_THIS_ROUND`). A mark answers "is this a defect the review did not already hold?", which
-    // only position can answer — the union puts everything the round was handed ahead of what it reported. So on a group
-    // spanning risk tiers, the mark has to come from the lowest index even though the high-risk member is the one kept.
-    // Taken from the survivor instead, a round that merely re-reported a known defect through a higher tier reads as
-    // net-positive: the caller keeps looping over a converged review, re-judging and re-fixing what it already holds.
-    const { mergeIssueGroups } = await internals();
-    const newThisRound = Symbol('found in this round');
+  it('keeps a held finding over a higher-risk re-report of it, content and marks alike', async () => {
+    // How a round knows what it contributed: it marks its own findings with a symbol and counts the marks still
+    // standing after dedupe (see `NEW_THIS_ROUND`), and the wrapper cross-checks that count against the fingerprints it
+    // did not send. So a held finding has to survive as the object it arrived as, even when the re-report absorbed into
+    // it sits in a higher risk tier. Replaced by the re-report, the merged finding would be unmarked — not counted as
+    // new — while carrying a fingerprint the wrapper never sent, and the ledger entry's `firstSeen` and `fixBranch`
+    // would be lost.
+    //
+    // Read through the script's own symbol: a `Symbol('found in this round')` made here is a different key, and every
+    // member would read as held.
+    const { NEW_THIS_ROUND, mergeIssueGroups, withFingerprint } = await internals();
 
-    const spanning = [
-      issue({ category: 'code-quality', description: 'a.ts:10 escapes the query by hand', file: 'src/a.ts' }),
-      {
-        ...issue({ category: 'bug', description: 'a.ts:10 mis-escapes the query', file: 'src/a.ts' }),
-        [newThisRound]: true,
-      },
-    ];
+    const held = {
+      ...withFingerprint(issue({ category: 'code-quality', description: 'a.ts:10 escapes the query by hand' })),
+      firstSeen: { round: 1, commit: 'a1b2c3d4' },
+      fixBranch: { branch: 'rrfix/wf_9a1c2e/0', sha: '7f3b91c' },
+    };
+    const reReport = {
+      ...withFingerprint(issue({ category: 'bug', description: 'a.ts:12 mis-escapes the query', lines: '12' })),
+      [NEW_THIS_ROUND]: true,
+    };
 
-    const merged = mergeIssueGroups(spanning, [[0, 1]]);
+    const merged = mergeIssueGroups([held, reReport], [[0, 1]]);
 
     expect(merged).toHaveLength(1);
+    expect(merged[0]).toEqual({ ...held, otherSites: ['src/a.ts:12'] });
+    expect(merged[0][NEW_THIS_ROUND]).toBeUndefined();
+  });
 
-    // The risk decision itself is unchanged: the `bug` member is still what survives.
+  it('still lets a new high-risk member win over a new low-risk one', async () => {
+    // The held-member rule narrows the candidates only when a group holds one, so a group raised entirely this round
+    // still keeps its high-risk member, and stays marked.
+    const { NEW_THIS_ROUND, mergeIssueGroups } = await internals();
+
+    const bothNew = [
+      { ...issue({ category: 'code-quality', file: 'src/a.ts' }), [NEW_THIS_ROUND]: true },
+      { ...issue({ category: 'bug', file: 'src/b.ts' }), [NEW_THIS_ROUND]: true },
+    ];
+
+    const merged = mergeIssueGroups(bothNew, [[0, 1]]);
+
     expect(merged[0].category).toBe('bug');
-    expect(merged[0][newThisRound]).toBeUndefined();
+    expect(merged[0][NEW_THIS_ROUND]).toBe(true);
   });
 
   it('keeps the mark when every member of a merged group was found this round', async () => {
