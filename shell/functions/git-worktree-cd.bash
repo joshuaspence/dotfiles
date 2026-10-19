@@ -33,7 +33,7 @@ function _git_worktree_list() {
 function git-worktree-cd() {
   local -r name="${1-}"
   local -a worktrees=()
-  local worktree path record=''
+  local worktree path prefix record=''
 
   mapfile -d '' -t worktrees < <(_git_worktree_list)
 
@@ -65,8 +65,17 @@ function git-worktree-cd() {
     fi
   fi
 
+  path="${record%%$'\t'*}"
+
+  # Land in the same directory relative to the worktree's root as the one being left, unless the target doesn't have it
+  # -- another branch, or an untracked directory -- in which case its root will do.
+  prefix=$(git rev-parse --show-prefix) || return
+  if [[ -n ${prefix} && -d ${path}/${prefix} ]]; then
+    path="${path}/${prefix%/}"
+  fi
+
   # shellcheck disable=SC2164
-  builtin cd -- "${record%%$'\t'*}"
+  builtin cd -- "${path}"
 }
 
 # Complete `git-worktree-cd` with every name its worktrees answer to: each one's directory name, plus its branch where
