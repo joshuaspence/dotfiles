@@ -1,8 +1,8 @@
 # Run Claude Code inside a transient systemd user unit rooted at a disposable, self-cleaning working directory.
 #
 # The unit's `RuntimeDirectory` lives on the `tmpfs` at `$XDG_RUNTIME_DIR` and is reclaimed when the unit exits.
-# It is bind-mounted onto a stable `/tmp/claude-scratch` inside a private mount namespace, so Claude always sees
-# the same workspace path (making the folder-trust prompt a one-time thing) while each session's storage stays
+# It is bind-mounted onto a stable `$XDG_RUNTIME_DIR/claude-scratch` inside a private mount namespace, so Claude always
+# sees the same workspace path (making the folder-trust prompt a one-time thing) while each session's storage stays
 # separate and disposable.
 #
 # Usage: `_systemd_run_claude <unit-prefix> [extra systemd-run args...] -- [claude args...]`
@@ -15,8 +15,13 @@ function _systemd_run_claude() {
 
   # Host-side location of this session's `RuntimeDirectory` (single source of truth: reused as the `BindPaths` source
   # below and surfaced to Claude via `--append-system-prompt`).
-  local -r host_dir="${XDG_RUNTIME_DIR:-/run/user/$(id --user)}/${unit}"
-  local -r work_dir="/tmp/claude-scratch"
+  local -r runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id --user)}"
+  local -r host_dir="${runtime_dir}/${unit}"
+
+  # Not under `/tmp`: Claude Code loads `CLAUDE.md`, `CLAUDE.local.md` and `AGENTS.md` from every directory above its
+  # working directory, and any account can plant one in a world-writable parent. Only this user can write to
+  # `$XDG_RUNTIME_DIR`, and its parents belong to root.
+  local -r work_dir="${runtime_dir}/claude-scratch"
 
   local -a systemd_run_opts=()
   systemd_run_opts+=("--unit" "${unit}")
@@ -34,9 +39,9 @@ function _systemd_run_claude() {
   # Each session bind-mounts its own fresh, auto-reaped `RuntimeDirectory` onto that path inside a private mount
   # namespace, so concurrent sessions stay isolated despite sharing the path. The host sees only an empty mountpoint.
   #
-  # The rest of `/tmp` is deliberately shared with the host rather than made private with `PrivateTmp`: programs find
-  # their running peers through sockets there -- Chrome's `SingletonSocket`, Claude Code's own `/tmp/cc-daemon-*` --
-  # and hiding them makes a browser opened from the session start a second Chrome on the same profile.
+  # `/tmp` is deliberately shared with the host rather than made private with `PrivateTmp`: programs find their running
+  # peers through sockets there -- Chrome's `SingletonSocket`, Claude Code's own `/tmp/cc-daemon-*` -- and hiding them
+  # makes a browser opened from the session start a second Chrome on the same profile.
   if [[ "$(sysctl --ignore --values kernel.apparmor_restrict_unprivileged_userns)" != "0" ]]; then
     echo "Unprivileged user namespaces are restricted, so the scratch directory cannot be bind-mounted." >&2
     return 1
@@ -77,9 +82,9 @@ function _systemd_run_claude() {
 # be copied out before you quit.
 #
 # Only the working directory is disposable. The transcript lands in the real `$CLAUDE_CONFIG_DIR`, keyed by the stable
-# `/tmp/claude-scratch` path, so `--resume` and `--continue` work across sessions -- but they restore the conversation,
-# not the files it talks about, which died with the unit that wrote them. Reach for `claude-incognito` when the
-# transcript should be thrown away too.
+# `$XDG_RUNTIME_DIR/claude-scratch` path, so `--resume` and `--continue` work across sessions -- but they restore the
+# conversation, not the files it talks about, which died with the unit that wrote them. Reach for `claude-incognito`
+# when the transcript should be thrown away too.
 function claude-scratch() {
   _systemd_run_claude claude-scratch -- "$@"
 }
