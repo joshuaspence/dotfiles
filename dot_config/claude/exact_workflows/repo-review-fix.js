@@ -1161,22 +1161,34 @@ const fixAndReview = async (issue) => {
       });
     }
 
-    // Revise: a fresh Fix agent starts from the base commit with the rejected diff and the objection.
-    const revised = await runFixer(issue, rev + 1, { priorSha: current.sha, objection: review.objection });
+    // Revise: a fresh Fix agent starts from the base commit with the rejected diff and the objection. A throw is caught
+    // here rather than by the pipeline's catch, which would report the finding as never attempted and drop the rejected
+    // commit from `keepBranches`.
+    let revised = null;
+    let unreturned = 'did not return';
 
-    if (!revised) {
-      gaps.push(`Revision agent did not return for a ${gapFinding(issue)}`);
-
-      return asOutcome(issue, {
-        status: 'verify-failed',
-        reason: 'revision agent did not return',
-        changedFiles: [],
-      });
+    try {
+      revised = await runFixer(issue, rev + 1, { priorSha: current.sha, objection: review.objection });
+    } catch (error) {
+      unreturned = `failed (${String(error?.message || error).split('\n')[0]})`;
     }
 
-    // Reviser declined or its change failed verification: that terminal status stands (no further revisions).
-    if (revised.status !== 'applied' || !revised.sha) {
-      return asOutcome(issue, revised);
+    if (!revised) {
+      gaps.push(`Revision agent ${unreturned} for a ${gapFinding(issue)}`);
+    }
+
+    // No better attempt came back — the reviser died, declined or failed its own verification — so nothing supersedes
+    // the rejected commit: it stands as the outcome, objection and branch intact, instead of the reviser's empty
+    // sandbox. No further revisions either, since a reviser with nothing to offer will not find it on the next pass.
+    if (!revised || revised.status !== 'applied' || !revised.sha) {
+      const reviser = revised ? `${revised.status}${revised.reason ? `: ${revised.reason}` : ''}` : unreturned;
+
+      return asOutcome(issue, {
+        status: STATUS_REVIEW_REJECTED,
+        reason: `${review.objection || 'fix rejected by review'} (revision agent ${reviser})`,
+        branch: current.branch,
+        changedFiles: current.changedFiles || [],
+      });
     }
 
     current = revised;
@@ -1242,10 +1254,10 @@ log(
 // one whose reviewers were. `declined`, `verify-failed` and `resolved-elsewhere` committed nothing (or reverted what
 // they had), so their branches sit at the base commit and are deleted.
 //
-// An outcome names only its *last* attempt's branch, so the intermediate `-r<n>` branches of a revised fix fall outside
-// this list and are deleted with the rest: a superseded attempt is noise, and the objection that superseded it is in the
-// report. Screened by `isSandboxBranch` for the same reason `createdBranches` is — a name outside this run's namespace is
-// not this run's to make promises about either way.
+// An outcome names only its *last committed* attempt's branch, so the intermediate `-r<n>` branches of a revised fix
+// fall outside this list and are deleted with the rest: a superseded attempt is noise, and the objection that
+// superseded it is in the report. Screened by `isSandboxBranch` for the same reason `createdBranches` is — a name
+// outside this run's namespace is not this run's to make promises about either way.
 //
 // This is still a self-reported claim, and the wrapper is expected to verify it: a branch this list omits but which
 // turns out to carry a commit beyond `base` is kept and reported, rather than deleted on an agent's word. That covers

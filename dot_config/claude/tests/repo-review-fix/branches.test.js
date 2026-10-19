@@ -225,10 +225,11 @@ describe('untrusted commit, branch and path names', () => {
       reviewFix: () => ({ approved: false, objection: 'misses a case' }),
     });
 
-    expect(run.result.outcomes[0].status).toBe('verify-failed');
-    expect(run.result.outcomes[0].sha).toBe('');
+    // The discarded revision supersedes nothing, so the rejected first attempt stands as the outcome.
+    expect(run.result.outcomes[0]).toMatchObject({ status: 'review-rejected', branch: 'rrfix/wf_test/0' });
     expect(run.result.outcomes[0].reason).toContain('without a usable commit SHA');
-    expect(run.result.keepBranches).toEqual([]);
+    expect(JSON.stringify(run.result.outcomes)).not.toContain(POISONED_SHA);
+    expect(run.result.keepBranches).toEqual(['rrfix/wf_test/0']);
 
     // The revision is the harder half of the same ordering guarantee: one review has already run and rejected, so the
     // loop is live and would ordinarily review the replacement next. Exactly one review happened — the first attempt's,
