@@ -113,6 +113,11 @@ function claude-incognito() {
   claude_opts+=("--property" "TemporaryFileSystem=${plugin_cache_dir}")
   claude_opts+=("--property" "BindReadOnlyPaths=-${plugin_cache_dir}/plugins")
 
+  # `/tmp` is shared with the host (see `_systemd_run_claude`), and Claude writes session content under its temp root
+  # there -- subagent and background-task output in `<cwd-slug>/<session-id>/tasks/`, `bash-edit-diff` and more -- so
+  # mask that too, or the transcript outlives the unit. `systemd-run` does not pass `$TMPDIR` through, so it is `/tmp`.
+  claude_opts+=("--property" "TemporaryFileSystem=/tmp/claude-$(id --user)")
+
   # Re-expose the read-mostly config over the mask, read-only. A leading `-` on the source makes a missing path a
   # no-op instead of a unit start failure.
   local name
