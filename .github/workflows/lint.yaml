@@ -13,7 +13,7 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v7'
 
-      # Pinned to v26.1.1 as v26.2.0 switched the action to install `ansible-lint` in an isolated `uv` virtualenv whose
+      # Pinned to v26.8.0 as v26.2.0 switched the action to install `ansible-lint` in an isolated `uv` virtualenv whose
       # `bin/` is never added to `$PATH`, so the `requirements_file` step's `ansible-galaxy` resolves to the runner's
       # preinstalled ansible instead and never installs our pinned collection where lint searches. See ansible/ansible-lint#5034.
       - name: 'Run ansible-lint'
