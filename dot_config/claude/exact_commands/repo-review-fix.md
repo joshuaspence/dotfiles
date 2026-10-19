@@ -241,6 +241,12 @@ wants two of them together does that deliberately, with the conflict in front of
    carries no commit at all: the agent reported a fix it never made. That is a **defect in the run**, not an unfixable
    finding — say so plainly, and count the finding as not fixed. A branch whose parent is some other commit still holds
    work; keep it, but say the base is not the one the run claimed.
+
+   Then run `git rev-parse <branch>` for every remaining entry in `sandboxBranches`, the ones no outcome vouches for.
+   They include the reconstructed branch of an agent that committed and then died before reporting, and the earlier
+   `-r<n>` attempts of a revised fix, so this check is the only thing between that work and the delete in step 4. One
+   that does not resolve, or resolves to `base`, is empty. One that resolves to anything else carries a commit: keep it,
+   and list it beneath the table in step 3 as work no outcome accounts for.
 3. **Report a table**, one row per branch that verified, most severe first:
 
    | branch | commit | severity | category | file | fix status |
