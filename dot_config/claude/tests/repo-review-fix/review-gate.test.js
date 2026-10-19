@@ -153,9 +153,10 @@ describe('the revision loop', () => {
   it.each([
     ['declines', 'declined', 'cannot improve further'],
     ['reports its own verification failed', 'verify-failed', 'tests fail'],
-  ])('stops when the reviser %s, since that is a terminal answer', async (_label, status, reason) => {
-    // A reviser that has no better attempt to offer is not going to find one on the next pass, and its own status is
-    // what the finding is reported as — not the rejection that prompted the revision.
+  ])('stops when the reviser %s, keeping the rejected commit', async (_label, status, reason) => {
+    // A reviser that has no better attempt to offer is not going to find one on the next pass. Nothing supersedes the
+    // rejected commit, so it is what the finding is reported as — with the objection, and its branch spared teardown,
+    // since that branch is the only copy of the work.
     const run = await runFix({
       fix: (subject, { idx, attempt }) =>
         attempt === 0 ? appliedFix(subject, { idx, attempt }) : { status, branch: 'rrfix/wf_test/0-r1', reason },
@@ -166,21 +167,35 @@ describe('the revision loop', () => {
 
     // Only the original attempt was reviewed: nothing sends a declined or failed revision to the gate.
     expect(run.called(/^review-fix:/)).toHaveLength(1);
-    expect(outcome(run)).toMatchObject({ status, reason });
+    expect(outcome(run)).toMatchObject({ status: 'review-rejected', branch: 'rrfix/wf_test/0' });
+    expect(outcome(run).reason).toContain('needs work');
+    expect(outcome(run).reason).toContain(`${status}: ${reason}`);
+    expect(run.result.keepBranches).toEqual(['rrfix/wf_test/0']);
   });
 
-  it('records a gap when a revision agent fails to return', async () => {
+  it.each([
+    ['returns nothing', () => null, 'did not return'],
+    [
+      'throws',
+      () => {
+        throw new Error('worktree could not be created');
+      },
+      'failed (worktree could not be created)',
+    ],
+  ])('records a gap and keeps the rejected commit when a revision agent %s', async (_label, revise, gap) => {
     // A revision agent dying is worktree infrastructure, not a verdict on fixability — distinct from a revision that
-    // declined — so it is reported as a shortfall in the run rather than as a finding that resisted fixing.
+    // declined — so it is reported as a shortfall in the run rather than as a finding that resisted fixing. The commit
+    // it was meant to improve on still stands.
     const run = await runFix({
-      fix: (subject, { idx, attempt }) => (attempt > 0 ? null : appliedFix(subject, { idx, attempt })),
+      fix: (subject, { idx, attempt }) => (attempt > 0 ? revise() : appliedFix(subject, { idx, attempt })),
       reviewFix: () => ({ approved: false, objection: 'misses a case' }),
     });
 
     expect(run.called(/^revise:/)).toHaveLength(1);
-    expect(outcome(run)).toMatchObject({ status: 'verify-failed', reason: 'revision agent did not return' });
-    expect(run.result.gaps.join(' ')).toContain('Revision agent did not return');
-    expect(run.result.keepBranches).toEqual([]);
+    expect(outcome(run)).toMatchObject({ status: 'review-rejected', branch: 'rrfix/wf_test/0' });
+    expect(outcome(run).reason).toContain('misses a case');
+    expect(run.result.gaps.join(' ')).toContain(`Revision agent ${gap}`);
+    expect(run.result.keepBranches).toEqual(['rrfix/wf_test/0']);
   });
 });
 
