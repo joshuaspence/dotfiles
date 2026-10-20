@@ -47,6 +47,15 @@ jobs:
       - name: 'Run Chezmoi'
         run: 'chezmoi apply --keep-going'
 
+      # A bare `PATH`, as an SSH or console login inherits, so `mise` and `go` are found only through what `~/.profile`
+      # adds to it.
+      - name: 'Test login shell'
+        run: |
+          env -i HOME="${HOME}" TERM=dumb PATH=/usr/bin:/bin bash -lic '
+            set -o xtrace
+            test "$(type -t mise)" = function && [[ ":${PATH}:" == *":${HOME}/go/bin:"* ]]
+          '
+
   unit:
     name: 'Unit Tests (${{ matrix.directory }})'
     runs-on: 'ubuntu-latest'
