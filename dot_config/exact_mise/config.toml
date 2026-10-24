@@ -16,7 +16,6 @@ npm.package_manager = "pnpm"
 # - kubectx
 [tools]
 amazon-ecr-credential-helper = "latest"
-ansible = "latest"
 bat = "latest"
 bun = "latest"
 chezmoi = "latest"
@@ -32,7 +31,7 @@ kubectl = "latest"
 markdownlint-cli2 = "latest"
 node = "lts"
 "npm:@joshuaspence/claude-hud" = "latest"
-"pipx:ansible-lint" = "latest"
+"pipx:ansible-lint" = { version = "latest", uvx_args = "--python 3.14" }
 "pipx:gnome-extensions-cli" = "latest"
 pnpm = "latest"
 pre-commit = "latest"
@@ -45,6 +44,10 @@ terragrunt = "latest"
 tflint = "latest"
 yamllint = "latest"
 yq = "latest"
+
+# ansible-core 2.21 does not run on Python 3.15: it patches `dataclasses._is_type`, which 3.15 removed. Build the
+# Ansible tools against 3.14 until ansible-core supports 3.15.
+ansible = { version = "latest", uvx_args = "--python 3.14" }
 
 # Installs the `pipx:` tools with `uv tool install`, which picks an interpreter satisfying each package's
 # `requires-python`. Without `uv`, mise falls back to the system `pipx`, which builds every tool against the system
