@@ -60,6 +60,17 @@ describe('what the fixer is told', () => {
     expect(prompt).toContain('no runnable typecheck or test suite');
   });
 
+  it('is told to verify under a memory cap, and that a kill by the cap is a failure', async () => {
+    // Every fixer verifies at once on one machine, so a test that allocates without bound is a machine-wide OOM that
+    // takes the whole run down rather than one fix. The second half matters as much: a fixer that reads the kill as a
+    // flaky environment and reruns uncapped is the same runaway again.
+    const prompt = await fixer();
+
+    expect(prompt).toContain('systemd-run --user --scope --quiet --collect -p MemoryMax=');
+    expect(prompt).toContain('-p MemorySwapMax=0 -- <command>');
+    expect(prompt).toContain('never rerun it uncapped or with a higher cap');
+  });
+
   it('is asked for every field the orchestrator reads off the result', async () => {
     // `sha` gates the review (a fix without one is downgraded), `branch` is what teardown deletes, and `changedFiles` is
     // both the reviewer's file list and the report's. A prompt that stopped asking for one of them would not fail — the
