@@ -12,7 +12,8 @@
     "invoices@joshuaspence-claude-plugins": true,
     "ndis@joshuaspence-claude-plugins": true,
     "photos@joshuaspence-claude-plugins": true,
-    "pocketsmith@joshuaspence-claude-plugins": true
+    "pocketsmith@joshuaspence-claude-plugins": true,
+    "terminal-notifications@joshuaspence-claude-plugins": true
   },
   "inputNeededNotifEnabled": true,
   "voice": {
