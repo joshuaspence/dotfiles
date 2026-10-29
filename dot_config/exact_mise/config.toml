@@ -3,17 +3,6 @@ idiomatic_version_file_enable_tools = ["go", "node", "pnpm", "python", "terrafor
 minimum_release_age_excludes = ["npm:@joshuaspence/claude-hud"]
 npm.package_manager = "pnpm"
 
-# TODO: Consider adding these:
-#
-# - aws-sso
-# - bats
-# - claude
-# - claude-powerline
-# - claude-squad
-# - direnv
-# - docker-cli
-# - github-cli
-# - kubectx
 [tools]
 amazon-ecr-credential-helper = "latest"
 bat = "latest"
@@ -30,6 +19,7 @@ k9s = "latest"
 kubectl = "latest"
 markdownlint-cli2 = "latest"
 node = "lts"
+"npm:ccusage" = "latest"
 "npm:@joshuaspence/claude-hud" = "latest"
 "pipx:ansible-lint" = { version = "latest", uvx_args = "--python 3.14" }
 "pipx:gnome-extensions-cli" = "latest"
