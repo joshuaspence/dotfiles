@@ -8,12 +8,12 @@
     ]
   },
   "enabledPlugins": {
-    "github@joshuaspence-claude-plugins": true,
-    "invoices@joshuaspence-claude-plugins": true,
-    "ndis@joshuaspence-claude-plugins": true,
-    "photos@joshuaspence-claude-plugins": true,
-    "pocketsmith@joshuaspence-claude-plugins": true,
-    "terminal-notifications@joshuaspence-claude-plugins": true
+    "github@spence-claude-plugins": true,
+    "invoices@spence-claude-plugins": true,
+    "ndis@spence-claude-plugins": true,
+    "photos@spence-claude-plugins": true,
+    "pocketsmith@spence-claude-plugins": true,
+    "terminal-notifications@spence-claude-plugins": true
   },
   "inputNeededNotifEnabled": true,
   "voice": {
