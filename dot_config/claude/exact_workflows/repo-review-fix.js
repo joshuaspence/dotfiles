@@ -1258,9 +1258,9 @@ log(
 // they had), so their branches sit at the base commit and are deleted.
 //
 // An outcome names only its *last* attempt's branch, so the intermediate `-r<n>` branches of a revised fix fall outside
-// this list and are deleted with the rest: a superseded attempt is noise, and the objection that superseded it is in the
-// report. Screened by `isSandboxBranch` for the same reason `createdBranches` is — a name outside this run's namespace is
-// not this run's to make promises about either way.
+// this list; the wrapper's git check below keeps any of them that holds a commit, since git cannot tell a superseded
+// attempt from lost work. Screened by `isSandboxBranch` for the same reason `createdBranches` is — a name outside this
+// run's namespace is not this run's to make promises about either way.
 //
 // This is still a self-reported claim, and the wrapper is expected to verify it: a branch this list omits but which
 // turns out to carry a commit beyond `base` is kept and reported, rather than deleted on an agent's word. That covers
