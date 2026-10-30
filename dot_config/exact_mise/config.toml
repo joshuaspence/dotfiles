@@ -1,6 +1,5 @@
 [settings]
 idiomatic_version_file_enable_tools = ["go", "node", "pnpm", "python", "terraform", "terragrunt"]
-minimum_release_age_excludes = ["npm:@joshuaspence/claude-hud"]
 npm.package_manager = "pnpm"
 
 [tools]
@@ -20,7 +19,6 @@ kubectl = "latest"
 markdownlint-cli2 = "latest"
 node = "lts"
 "npm:ccusage" = "latest"
-"npm:@joshuaspence/claude-hud" = "latest"
 "pipx:ansible-lint" = { version = "latest", uvx_args = "--python 3.14" }
 "pipx:gnome-extensions-cli" = "latest"
 pnpm = "latest"
