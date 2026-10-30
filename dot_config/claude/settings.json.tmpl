@@ -8,6 +8,7 @@
   "enabledPlugins" (dict
     "cc-plugin-you-should-know@builtin" true
     "claude-code-setup@claude-plugins-official" true
+    "claude-hud@claude-hud" true
     "claude-md-management@claude-plugins-official" true
     "code-review@claude-plugins-official" true
     "commit-commands@claude-plugins-official" true
@@ -36,6 +37,13 @@
       "source" (dict
         "source" "github"
         "repo" "anthropics/skills"
+      )
+    )
+    "claude-hud" (dict
+      "autoUpdate" true
+      "source" (dict
+        "source" "github"
+        "repo" "jarrodwatts/claude-hud"
       )
     )
     "joshuaspence-claude-plugins" (dict
@@ -72,7 +80,7 @@
   "skipWorkflowUsageWarning" true
   "statusLine" (dict
     "type" "command"
-    "command" "claude-hud"
+    "command" (printf "node %s/.local/share/claude-hud/statusline.mjs" .chezmoi.homeDir)
   )
   "theme" "auto"
   "tui" "fullscreen"

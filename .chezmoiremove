@@ -6,3 +6,4 @@
 .sudo_as_admin_successful
 .wget-hsts
 .viminfo
+.local/share/pnpm/pnpm-workspace.yaml

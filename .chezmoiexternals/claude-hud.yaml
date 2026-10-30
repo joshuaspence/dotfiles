@@ -1,0 +1,7 @@
+---
+# `/claude-hud:setup` would copy this launcher into the config directory, but it also rewrites `settings.json`, which
+# chezmoi owns. The launcher finds the newest installed plugin from `CLAUDE_CONFIG_DIR` and
+# `CLAUDE_CODE_PLUGIN_CACHE_DIR` rather than from where it lives, so it can sit outside the config directory.
+.local/share/claude-hud/statusline.mjs:
+  type: 'file'
+  url: 'https://raw.githubusercontent.com/jarrodwatts/claude-hud/{{ (gitHubLatestRelease "jarrodwatts/claude-hud").TagName }}/scripts/statusline.mjs'
