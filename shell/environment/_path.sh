@@ -2,12 +2,6 @@
 
 PATH="${HOME}/.local/bin:${PATH}"
 
-# Shims put mise's tools on `PATH` for the probes that follow, which run before `~/.bashrc` activates mise, and for
-# non-interactive shells, which never do. mise has no `sh` shell type, but its `bash` output for `--shims` is POSIX.
-if command -v mise >/dev/null; then
-  eval "$(mise activate bash --shims)"
-fi
-
-if command -v go >/dev/null; then
-  PATH="$(go env GOPATH)/bin:${PATH}"
-fi
+# Go's default `GOPATH` rather than `go env GOPATH`: `go` comes from mise, which is not active yet here and never is in
+# a non-interactive shell, and running it through a stale shim can make mise download Go during login.
+PATH="${HOME}/go/bin:${PATH}"
