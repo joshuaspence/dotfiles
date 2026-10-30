@@ -270,6 +270,22 @@ describe('path scope', () => {
     expect((await internals({ paths: ['src', ' ', 'src', ' lib ', null] })).paths).toEqual(['src', 'lib']);
   });
 
+  it('puts each path in the form `git ls-files` prints, which is the form the partition comes back in', async () => {
+    // The partitioner answers with what `git ls-files -- './src'` prints, `src/a.ts`, and a scope left as `./src`
+    // contains none of it, so every unit would narrow to nothing and abort the run.
+    const { paths, narrowToScope } = await internals({ paths: ['./src/', 'lib//api', 'src'] });
+
+    expect(paths).toEqual(['src', 'lib/api']);
+    expect(narrowToScope(['src/a.ts', 'lib/api/b.ts'])).toEqual(['src/a.ts', 'lib/api/b.ts']);
+  });
+
+  it('reviews the whole repository when a path names its root', async () => {
+    const { paths, lsFiles } = await internals({ paths: ['src', '.'] });
+
+    expect(paths).toEqual([]);
+    expect(lsFiles).toBe('git ls-files');
+  });
+
   it('filters out non-string elements from paths array', async () => {
     // Non-string elements like numbers, booleans, and objects must be filtered to avoid downstream errors.
     expect((await internals({ paths: ['src', 42, true, {}, [], undefined, 'lib'] })).paths).toEqual(['src', 'lib']);

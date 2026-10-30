@@ -97,10 +97,24 @@ if (typeof args === 'string' && (!input || typeof input !== 'object')) {
 // repository while every later phase behaves correctly for that wider scope, so there is nothing downstream to catch
 // it. Blank entries are dropped and duplicates collapsed, since `git ls-files -- src src` double-counts nothing but a
 // duplicate still reaches the agents as prose implying two distinct scopes.
+//
+// Each path is also put in the form `git ls-files` prints, with `.` and empty segments removed, because the
+// partitioner answers in that form and `narrowToScope` compares the two as strings: `./src` contains no `src/a.js`, so
+// left as typed it empties every unit and aborts the run. A path that reduces to nothing, such as `.`, names the
+// repository root, which makes the scope the whole repository.
 function normalizePaths(value) {
   const list = Array.isArray(value) ? value : [value];
+  const canonical = list
+    .filter((p) => typeof p === 'string' && p.trim() !== '')
+    .map((p) =>
+      p
+        .trim()
+        .split('/')
+        .filter((segment) => segment !== '' && segment !== '.')
+        .join('/'),
+    );
 
-  return [...new Set(list.filter((p) => typeof p === 'string' && p.trim() !== '').map((p) => p.trim()))];
+  return canonical.includes('') ? [] : [...new Set(canonical)];
 }
 
 const paths = normalizePaths(input?.paths ?? input?.path);
