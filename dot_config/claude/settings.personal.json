@@ -19,6 +19,7 @@
     "terminal-notifications@spence-claude-plugins": true
   },
   "inputNeededNotifEnabled": true,
+  "remoteControlAtStartup": true,
   "voice": {
     "enabled": true,
     "mode": "tap"
