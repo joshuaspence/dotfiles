@@ -30,6 +30,7 @@
     "showSessionTokens": true,
     "showOutputStyle": true,
     "showLastResponseAt": true,
+    "showTools": true,
     "mergeGroups": [
       ["project", "sessionTime"],
       ["context", "usage", "environment"]

@@ -13,8 +13,8 @@
  *
  * The exception is `cross-scope ordering`, which is a correctness test wearing a cost test's clothes: concatenating
  * per-unit scopes can put one unit's new finding above another unit's held one, and `mergeIssueGroups` keeps the marks
- * of the *lowest-indexed* member of a group. Get that wrong and the ledger's entry for a known defect is replaced by
- * this round's re-report of it, which is then validated and fixed again as though it had never been seen.
+ * of the *lowest-indexed* member of a group. Get that wrong and the ledger's entry for a known defect takes this
+ * round's mark from its re-report, so it is counted as new and dropped by the gate unless the re-report was confirmed.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -192,9 +192,9 @@ describe('cross-scope ordering', () => {
   it('keeps the held copy of a defect two units both reported, not this round’s', async () => {
     // Each scope puts its own held findings above its own new ones, but concatenating the scopes interleaves them again:
     // `api`'s new finding lands above `core`'s held one. `mergeIssueGroups` carries a group's marks over from its
-    // lowest-indexed member, so without a re-partition immediately before the cross pass the new report wins the merge —
-    // the ledger entry is replaced, `firstSeen` and everything the round that first saw it recorded are lost, and the
-    // defect is judged and fixed again from scratch.
+    // lowest-indexed member, so without a re-partition immediately before the cross pass the held entry takes the new
+    // report's mark — counted as new although the wrapper sent its fingerprint, and dropped by the gate unless the
+    // re-report was confirmed.
     const known = issue({ description: 'partial read treated as EOF', file: 'core/wire.py' });
     const found = issue({ description: 'read returns short and is not retried', file: 'api/handler.py' });
 

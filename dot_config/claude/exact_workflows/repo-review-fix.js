@@ -673,6 +673,20 @@ const REVIEWER_DRIFT =
   'change resolves the defect as the code actually stands: a mismatch the drift does not account for is a fixer that ' +
   'fixed the wrong thing, and the commit existing at all is its claim that the defect was still present.';
 
+// The fixer's own edit can be what runs away when it verifies. One added a test that read a native getter returning a
+// fresh 1 MiB copy of a bitmap for every pixel it checked, and its Vitest worker reached 24 GB in half a minute.
+// Nothing contained it, so the OOM was machine-wide, and systemd's default `OOMPolicy=stop` then stopped the unit the
+// victim ran in: the terminal tab, with the session running this workflow and every fixer still in flight. A scope of
+// its own keeps the kill to the one command, which then fails as the verification it was. The cap is per command rather
+// than shared across fixers, so it bounds a runaway, not the run, and leaves room for a large typecheck.
+const VERIFY_UNDER_CAP =
+  'Run each build, typecheck and test command under a memory cap: `systemd-run --user --scope --quiet --collect -p ' +
+  'MemoryMax=8G -p MemorySwapMax=0 -- <command>`. You share the machine with every other fixer in this run, and an ' +
+  'uncapped runaway exhausts it and takes the whole run down. A command the cap kills (exit status 137 or 143) has ' +
+  'failed verification, most often because a test you wrote allocates without bound: never rerun it uncapped or with ' +
+  'a higher cap, and say in `reason` that the cap killed it. Where `systemd-run` is unavailable, run uncapped and ' +
+  'say so in `reason`.';
+
 const fixerPrompt = (issue, survey, base, reviewedCommit, branchSuffix, generatedPaths, revisionCtx = null) => {
   // The objection is free prose written by a fix reviewer *about a diff it read out of the repository*, and it lands
   // one line above the numbered procedure below — step 0 of which the comment above calls the most important
@@ -710,8 +724,9 @@ const fixerPrompt = (issue, survey, base, reviewedCommit, branchSuffix, generate
     'anything you are not confident in — make NO change and return `{ status: "declined", reason }`. Report `branch` ' +
     'even then: you created it in step 0, and it has to be torn down afterwards whether or not it carries a commit.\n' +
     '3. If you did edit, verify in this worktree using the build/test tooling from the survey below (typecheck and ' +
-    'run the tests). If verification fails, revert and return `{ status: "verify-failed", reason }`. If the ' +
-    'repository has no runnable typecheck or test suite, skip this step and say so in `reason`.\n' +
+    `run the tests). ${VERIFY_UNDER_CAP} If verification fails, revert and return ` +
+    '`{ status: "verify-failed", reason }`. If the repository has no runnable typecheck or test suite, skip this ' +
+    'step and say so in `reason`.\n' +
     '4. On success, stage ONLY the files your fix edited — `git add -- <paths>`, never `git add -A`, so that build ' +
     'output, logs, generated fixtures or any other artifact the verification step left in the worktree stay out of ' +
     'the commit — and commit it with a concise subject line and this trailer as its own last paragraph:\n' +
@@ -1255,8 +1270,8 @@ log(
 // they had), so their branches sit at the base commit and are deleted.
 //
 // An outcome names only its *last committed* attempt's branch, so the intermediate `-r<n>` branches of a revised fix
-// fall outside this list and are deleted with the rest: a superseded attempt is noise, and the objection that
-// superseded it is in the report. Screened by `isSandboxBranch` for the same reason `createdBranches` is — a name
+// fall outside this list; the wrapper's git check below keeps any of them that holds a commit, since git cannot tell a
+// superseded attempt from lost work. Screened by `isSandboxBranch` for the same reason `createdBranches` is — a name
 // outside this run's namespace is not this run's to make promises about either way.
 //
 // This is still a self-reported claim, and the wrapper is expected to verify it: a branch this list omits but which

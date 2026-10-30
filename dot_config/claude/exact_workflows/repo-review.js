@@ -97,10 +97,24 @@ if (typeof args === 'string' && (!input || typeof input !== 'object')) {
 // repository while every later phase behaves correctly for that wider scope, so there is nothing downstream to catch
 // it. Blank entries are dropped and duplicates collapsed, since `git ls-files -- src src` double-counts nothing but a
 // duplicate still reaches the agents as prose implying two distinct scopes.
+//
+// Each path is also put in the form `git ls-files` prints, with `.` and empty segments removed, because the
+// partitioner answers in that form and `narrowToScope` compares the two as strings: `./src` contains no `src/a.js`, so
+// left as typed it empties every unit and aborts the run. A path that reduces to nothing, such as `.`, names the
+// repository root, which makes the scope the whole repository.
 function normalizePaths(value) {
   const list = Array.isArray(value) ? value : [value];
+  const canonical = list
+    .filter((p) => typeof p === 'string' && p.trim() !== '')
+    .map((p) =>
+      p
+        .trim()
+        .split('/')
+        .filter((segment) => segment !== '' && segment !== '.')
+        .join('/'),
+    );
 
-  return [...new Set(list.filter((p) => typeof p === 'string' && p.trim() !== '').map((p) => p.trim()))];
+  return canonical.includes('') ? [] : [...new Set(canonical)];
 }
 
 const paths = normalizePaths(input?.paths ?? input?.path);
@@ -1124,7 +1138,8 @@ const HIGH_RISK = [
 
 const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 
-// Which member of a duplicate group survives — the first high-risk one, or the first member when none is high-risk.
+// Which member of a duplicate group survives — a held one whenever the group holds one, and among the candidates that
+// leaves, the first high-risk one, or the first when none is high-risk.
 //
 // Risk is merged like severity, and for the same reason. Category is not a tie-break the reviewers negotiate: the union
 // dedupe reasons over is `[...deduped, ...roundIssues]` with `roundIssues` in `REVIEWERS` order, so `security` always
@@ -1137,8 +1152,19 @@ const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 // `code-quality` description would send its validator to check a claim nobody made. The absorbed member's site is kept
 // in `otherSites` like any other, so nothing is lost. `reduce` keeps the incumbent on a tie, and `members` is sorted
 // ascending, so a group of one risk tier still keeps its lowest-indexed member.
-const survivingMember = (issues, members) =>
-  members.reduce((keep, j) => (isHighRisk(issues[j]) && !isHighRisk(issues[keep]) ? j : keep));
+//
+// A held finding is the exception the risk decision never overrides: when a group holds one, only held members are
+// candidates. Its content is the ledger's entry — the `fingerprint` the wrapper differences against `knownFindings`,
+// and the `firstSeen` and `fixBranch` it carries — and a re-report that replaced it would arrive under a fingerprint
+// the wrapper never sent, counted as new by the set difference while `newFindings` says it is not. It would also land
+// content the gate never checked, since `CONFIRMED` gates only findings marked `NEW_THIS_ROUND` and the merged finding
+// takes its marks from a held member. The re-report's site is still absorbed into `otherSites`.
+const survivingMember = (issues, members) => {
+  const held = members.filter((j) => !issues[j][NEW_THIS_ROUND]);
+  const candidates = held.length ? held : members;
+
+  return candidates.reduce((keep, j) => (isHighRisk(issues[j]) && !isHighRisk(issues[keep]) ? j : keep));
+};
 
 // --- The two marks a finding carries through the merges ------------------------------------------------------------
 // Both are symbol-keyed own properties, which is what lets them survive `mergeIssueGroups` while staying out of every
@@ -1173,9 +1199,9 @@ const CONFIRMED = Symbol('confirmed by adjudication');
 // A mark on a merged finding comes from the group's lowest-indexed member rather than from the member `survivingMember`
 // kept, because `NEW_THIS_ROUND` describes a *position* in the list being merged and not the content of the finding
 // sitting there. Only the lowest index can answer "is this a defect the review did not already hold?", because the union
-// puts everything accumulated ahead of this round's reports. Left to `{ ...primary }`, a re-report that wins the risk
-// decision over the copy it is absorbed into would carry its own flag onto the merged finding, and would then be
-// re-judged and offered to `/repo-review-fix` a second time.
+// puts everything accumulated ahead of this round's reports. With everything held below everything new, that member is
+// held exactly when the group holds anything, which is also when `survivingMember` keeps a held member, so the merged
+// finding's mark and its content agree on whether the review already held it.
 //
 // `CONFIRMED` is the exception, and is OR-ed across the whole group: it is a judgement about the *defect* and not about
 // a position. Two adjudicators reaching opposite verdicts on the same defect under two different units are not
@@ -1234,7 +1260,7 @@ const mergeIssueGroups = (issues, groups) => {
     ].filter((site) => site && site !== primarySite);
 
     // `issue` is the group's lowest-indexed member — `primaries` is keyed by `members[0]` — which is where the marks
-    // come from, whichever member won the risk decision above. See `withMarksOf`.
+    // come from, whichever member `survivingMember` kept. See `withMarksOf`.
     return [
       withMarksOf(
         { ...primary, severity: members.map((j) => issues[j].severity).reduce(worstSeverity), otherSites },
@@ -2456,10 +2482,10 @@ for (const issue of allScopes.flatMap((scope) => scope.unjudged)) {
 // which is the order the per-finding validator labels index into.
 //
 // Re-partitioned so that everything held sits below everything new, across scopes and not merely inside one.
-// `mergeIssueGroups` carries a group's marks over from its lowest-indexed member, so this is what decides which copy of a
-// re-reported defect survives the cross pass. With one unit's new findings sitting above another unit's held ones, the
-// new report would win: the ledger's entry would be replaced, losing its `firstSeen` and everything the round that first
-// saw it recorded, and the defect would then be re-validated and re-counted as though it had never been reported.
+// `mergeIssueGroups` carries a group's marks over from its lowest-indexed member, so this is what decides whether a
+// re-reported defect leaves the cross pass marked as held. With one unit's new findings sitting above another unit's
+// held ones, the held entry `survivingMember` keeps would take the re-report's mark: counted as new although the
+// wrapper sent its fingerprint, and dropped from the ledger by the gate unless the re-report was confirmed.
 const merged = allScopes.flatMap((scope) => scope.issues);
 const afterUnits = [
   ...merged.filter((issue) => !issue[NEW_THIS_ROUND]),

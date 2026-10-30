@@ -1,6 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "agentPushNotifEnabled": true,
+  "attribution": {
+    "sessionUrl": false
+  },
   "autoMode": {
     "environment": [
       "Source control: github.com/joshuaspence, github.com/spence-com-au",
@@ -8,13 +11,15 @@
     ]
   },
   "enabledPlugins": {
-    "github@joshuaspence-claude-plugins": true,
-    "invoices@joshuaspence-claude-plugins": true,
-    "ndis@joshuaspence-claude-plugins": true,
-    "photos@joshuaspence-claude-plugins": true,
-    "pocketsmith@joshuaspence-claude-plugins": true
+    "github@spence-claude-plugins": true,
+    "invoices@spence-claude-plugins": true,
+    "ndis@spence-claude-plugins": true,
+    "photos@spence-claude-plugins": true,
+    "pocketsmith@spence-claude-plugins": true,
+    "terminal-notifications@spence-claude-plugins": true
   },
   "inputNeededNotifEnabled": true,
+  "remoteControlAtStartup": true,
   "voice": {
     "enabled": true,
     "mode": "tap"

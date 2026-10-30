@@ -1,1 +1,1 @@
-git-worktree-cd.bash
+complete -F _git_worktree_cd_complete gwtcd

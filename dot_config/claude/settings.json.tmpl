@@ -6,7 +6,6 @@
     "environment" (list "$defaults")
   )
   "enabledPlugins" (dict
-    "cc-plugin-you-should-know@builtin" true
     "claude-code-setup@claude-plugins-official" true
     "claude-md-management@claude-plugins-official" true
     "code-review@claude-plugins-official" true
@@ -38,20 +37,16 @@
         "repo" "anthropics/skills"
       )
     )
-    "joshuaspence-claude-plugins" (dict
+    "spence-claude-plugins" (dict
       "autoUpdate" true
       "source" (dict
         "source" "github"
-        "repo" "joshuaspence/claude-plugins"
+        "repo" "spence-com-au/claude-plugins"
       )
     )
   )
   "fastModePerSessionOptIn" true
   "feedbackSurveyRate" 0
-  "fileSuggestion" (dict
-    "type" "command"
-    "command" "bash ~/.config/claude/file-suggestion.sh"
-  )
   "hooks" (dict)
   "outputStyle" "Explanatory"
   "permissions" (dict
@@ -64,6 +59,7 @@
     )
     "defaultMode" "auto"
   )
+  "preferredNotifChannel" "notifications_disabled"
   "sandbox" (dict)
   "showThinkingSummaries" true
   "skillOverrides" (dict)
