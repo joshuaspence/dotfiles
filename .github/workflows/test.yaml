@@ -47,6 +47,14 @@ jobs:
       - name: 'Run Chezmoi'
         run: 'chezmoi apply --keep-going'
 
+      # A bare `PATH`, as an SSH or console login inherits, so `mise` is found only through what the startup files add.
+      # `sh` is `dash`, which reads `~/.profile` in the desktop session and exits on any non-POSIX syntax in it.
+      - name: 'Test shell startup'
+        run: |
+          env -i HOME="${HOME}" TERM=dumb PATH=/usr/bin:/bin bash -lic 'test "$(type -t mise)" = function'
+          env -i HOME="${HOME}" TERM=dumb PATH=/usr/bin:/bin bash -ic 'test "$(type -t mise)" = function'
+          env -i HOME="${HOME}" PATH=/usr/bin:/bin sh -lc 'echo ":${PATH}:"' | grep --fixed-strings ":${HOME}/go/bin:"
+
   unit:
     name: 'Unit Tests (${{ matrix.directory }})'
     runs-on: 'ubuntu-latest'

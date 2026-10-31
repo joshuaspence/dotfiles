@@ -1,9 +1,5 @@
 # shellcheck shell=sh
 
-if test -n "${BASH_VERSION}" && test -f ~/.bashrc; then
-  . ~/.bashrc
-fi
-
 {{ include "shell/helpers.sh" }}
 
 {{- $sourceDir := .chezmoi.sourceDir -}}
@@ -14,4 +10,9 @@ fi
 {{ else -}}
 {{ include $file -}}
 {{ end -}}
-{{ end -}}
+{{ end }}
+# Sourced after the environment so that `~/.bashrc` sees it, and so that the tools mise activates come ahead of
+# `~/go/bin` and `~/.local/bin` on `PATH`, as they do in a non-login shell.
+if test -n "${BASH_VERSION}" && test -f ~/.bashrc; then
+  . ~/.bashrc
+fi
