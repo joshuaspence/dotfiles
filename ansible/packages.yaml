@@ -31,12 +31,13 @@
           ansible.builtin.apt:
             name: '1password'
 
-    - name: 'Android Debug Bridge'
+    - name: 'Android Development Tools'
       when: 'is_personal'
       ansible.builtin.apt:
         name:
           - 'adb'
           - 'android-sdk-platform-tools-common'
+          - 'scrcpy'
 
     - name: 'AWS CLI'
       block:
