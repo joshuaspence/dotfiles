@@ -15,8 +15,7 @@
     "invoices@spence-claude-plugins": true,
     "ndis@spence-claude-plugins": true,
     "photos@spence-claude-plugins": true,
-    "pocketsmith@spence-claude-plugins": true,
-    "terminal-notifications@spence-claude-plugins": true
+    "pocketsmith@spence-claude-plugins": true
   },
   "inputNeededNotifEnabled": true,
   "remoteControlAtStartup": true,
