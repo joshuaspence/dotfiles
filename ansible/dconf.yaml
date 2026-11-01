@@ -73,7 +73,6 @@
               - 'nightthemeswitcher@romainvigier.fr'
               - 'ding@rastersoft.com'
               - 'launch-new-instance@gnome-shell-extensions.gcampax.github.com'
-              - 'workspace-indicator@gnome-shell-extensions.gcampax.github.com'
             favorite-apps:
               - 'google-chrome.desktop'
               - 'slack.desktop'
