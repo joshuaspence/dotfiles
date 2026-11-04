@@ -509,6 +509,22 @@
           ansible.builtin.apt:
             name: 'code'
 
+    - name: 'WiFiman Desktop'
+      when: 'is_personal'
+      vars:
+        # The ui.com download page lags behind this manifest, which is the feed the app's own updater follows.
+        wifiman_manifest: '{{ lookup("url", "https://desktop.ea.wifiman.com/wifiman-desktop-linux-manifest.json", split_lines=false) | from_json }}'
+      block:
+        - name: 'Download WiFiman Desktop'
+          ansible.builtin.get_url:
+            url: '{{ wifiman_manifest.platforms["linux-x86_64"] }}'
+            dest: '/tmp/wifiman-desktop.deb'
+            checksum: 'sha256:{{ wifiman_manifest.checksums["linux-x86_64"] }}'
+            mode: '0644'
+        - name: 'Install WiFiman Desktop'
+          ansible.builtin.apt:
+            deb: '/tmp/wifiman-desktop.deb'
+
     - name: 'Zoom'
       when: 'is_work'
       block:
