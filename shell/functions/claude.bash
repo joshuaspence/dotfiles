@@ -83,52 +83,7 @@ function _systemd_run_claude() {
 #
 # Only the working directory is disposable. The transcript lands in the real `$CLAUDE_CONFIG_DIR`, keyed by the stable
 # `$XDG_RUNTIME_DIR/claude-scratch` path, so `--resume` and `--continue` work across sessions -- but they restore the
-# conversation, not the files it talks about, which died with the unit that wrote them. Reach for `claude-incognito`
-# when the transcript should be thrown away too.
+# conversation, not the files it talks about, which died with the unit that wrote them.
 function claude-scratch() {
   _systemd_run_claude claude-scratch -- "$@"
-}
-
-# Like `claude-scratch`, but stealthier: nothing about the session is written back to the real `$CLAUDE_CONFIG_DIR`.
-#
-# The whole config dir is replaced with a throwaway `tmpfs`, so every write Claude makes (sessions, projects, history,
-# todos, caches, ...) is discarded when the unit exits. The read-mostly bits Claude needs to actually run --
-# credentials, settings, user customizations, and `.claude.json` -- are re-exposed read-only on top of the mask.
-# `CLAUDE_CODE_SKIP_PROMPT_HISTORY=1` is belt-and-braces -- `history.jsonl` already lands on the discarded `tmpfs`.
-#
-# `.claude.json` is bound read-only so folder trust and MCP/onboarding state carry over from real runs (those are
-# reads). Claude's *writes* to it fail: it saves via temp-file + rename, and you cannot rename over a bind mountpoint
-# (`EBUSY`). That's the intended incognito behaviour -- those updates are throwaway state -- but it does mean any
-# trust/onboarding decision made *inside* an incognito session is not remembered. Making writes succeed-but-ephemeral
-# would require seeding a regular-file copy into the `tmpfs` from within the unit (an `ExecStart` wrapper;
-# `systemd-run --property ExecStartPre` is silently ignored for transient units), which isn't worth the extra machinery
-# here.
-function claude-incognito() {
-  # Match the default `_systemd_run_claude` applies, so the paths below line up with the mount it sets.
-  : "${CLAUDE_CONFIG_DIR:=${HOME}/.claude}"
-
-  local -a claude_opts=()
-  claude_opts+=("--property" "TemporaryFileSystem=${CLAUDE_CONFIG_DIR}")
-  claude_opts+=("--setenv" "CLAUDE_CODE_SKIP_PROMPT_HISTORY=1")
-
-  # The plugin cache lives outside `$CLAUDE_CONFIG_DIR` now (see `CLAUDE_CODE_PLUGIN_CACHE_DIR` in `settings.json`), so
-  # the mask above no longer covers it. Mask its parent and re-expose the plugins read-only, mirroring the config dir:
-  # incognito writes stay throwaway while plugins keep working. Keep this path in sync with the `settings.json` value.
-  local -r plugin_cache_dir="${XDG_CACHE_HOME:-${HOME}/.cache}/claude"
-  claude_opts+=("--property" "TemporaryFileSystem=${plugin_cache_dir}")
-  claude_opts+=("--property" "BindReadOnlyPaths=-${plugin_cache_dir}/plugins")
-
-  # `/tmp` is shared with the host (see `_systemd_run_claude`), and Claude writes session content under its temp root
-  # there -- subagent and background-task output in `<cwd-slug>/<session-id>/tasks/`, `bash-edit-diff` and more -- so
-  # mask that too, or the transcript outlives the unit. `systemd-run` does not pass `$TMPDIR` through, so it is `/tmp`.
-  claude_opts+=("--property" "TemporaryFileSystem=/tmp/claude-$(id --user)")
-
-  # Re-expose the read-mostly config over the mask, read-only. A leading `-` on the source makes a missing path a
-  # no-op instead of a unit start failure.
-  local name
-  for name in agents claude-hud.json .claude.json CLAUDE.md commands .credentials.json scripts settings.json skills workflows; do
-    claude_opts+=("--property" "BindReadOnlyPaths=-${CLAUDE_CONFIG_DIR}/${name}")
-  done
-
-  _systemd_run_claude claude-incognito "${claude_opts[@]}" -- "$@"
 }
