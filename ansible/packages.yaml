@@ -64,6 +64,26 @@
           ansible.builtin.apt:
             deb: 'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb'
 
+    - name: 'AWS WorkSpaces'
+      when: 'is_work'
+      block:
+        - name: 'Add AWS WorkSpaces repository'
+          ansible.builtin.deb822_repository:
+            name: 'amazon-workspaces-clients'
+            uris: 'https://d3nt0h4h6pmmc4.cloudfront.net/ubuntu'
+            components: 'main'
+            architectures: 'amd64'
+            signed_by: 'https://workspaces-client-linux-public-key.s3-us-west-2.amazonaws.com/ADB332E7.asc'
+
+            # AWS only publishes up to Noble, so pin every newer release to it rather than tracking the running one.
+            suites: '{{ ansible_facts.distribution_version is version("24.04", ">") | ternary("noble", ansible_facts.distribution_release) }}'
+          notify: 'Update APT cache'
+        - name: 'Flush handlers'
+          ansible.builtin.meta: 'flush_handlers'
+        - name: 'Install AWS WorkSpaces'
+          ansible.builtin.apt:
+            name: 'workspacesclient'
+
     - name: 'Claude'
       block:
         - name: 'Add Claude Code repository'
