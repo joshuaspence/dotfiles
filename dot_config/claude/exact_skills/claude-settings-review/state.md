@@ -1,6 +1,6 @@
 # `/claude-settings-review` state
 
-Last reviewed: none
+**Last reviewed:** none
 
 ## Declined
 
