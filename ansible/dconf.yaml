@@ -11,7 +11,7 @@
       loop: |-
         {%- set entries = [] -%}
         {%- for path, keys in dconf_settings.items() -%}
-          {%- for key, value in keys.items() -%}
+          {%- for key, value in keys.items() if value is not none -%}
             {%- set _ = entries.append({'path': path, 'key': key, 'value': value}) -%}
           {%- endfor -%}
         {%- endfor -%}
@@ -73,16 +73,23 @@
               - 'nightthemeswitcher@romainvigier.fr'
               - 'ding@rastersoft.com'
               - 'launch-new-instance@gnome-shell-extensions.gcampax.github.com'
-            favorite-apps:
-              - 'google-chrome.desktop'
-              - 'slack.desktop'
-              - 'code.desktop'
-              - 'org.gnome.Terminal.desktop'
-              - 'org.gnome.Nautilus.desktop'
-              - 'Zoom.desktop'
+            favorite-apps: >-
+              {{
+                [
+                  'google-chrome.desktop',
+                  'slack.desktop' if is_work else none,
+                  'code.desktop',
+                  'com.mitchellh.ghostty.desktop',
+                  'org.gnome.Nautilus.desktop',
+                  'Zoom.desktop' if is_work else none,
+                  'wifiman-desktop.desktop' if is_personal else none,
+                ] | reject('none')
+              }}
           /org/gnome/shell/extensions/auto-move-windows:
-            application-list:
-              - 'slack.desktop:1'
+            application-list: >-
+              {{
+                ['slack.desktop:1'] if is_work else none
+              }}
           /org/gnome/shell/extensions/dash-to-dock:
             autohide: false
             dock-fixed: false
