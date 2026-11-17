@@ -1,0 +1,25 @@
+---
+- name: 'Configure GeoClue'
+  hosts: 'localhost'
+
+  handlers:
+    - name: 'Restart GeoClue'
+      ansible.builtin.systemd_service:
+        name: 'geoclue'
+        state: 'restarted'
+
+  tasks:
+    # GeoClue's built-in WiFi location service is Mozilla's, which was retired in 2024 and now answers every query with
+    # `Not Found`, so GNOME's automatic timezone never sees a location and never changes. BeaconDB is its replacement,
+    # and the default from GeoClue 2.7.2, which Ubuntu ships from 25.10.
+    - name: 'Use BeaconDB for WiFi geolocation'
+      when: 'ansible_facts.distribution_version is version("25.10", "<")'
+      ansible.builtin.copy:
+        dest: '/etc/geoclue/conf.d/90-beacondb.conf'
+        content: |
+          [wifi]
+          url=https://api.beacondb.net/v1/geolocate
+        owner: 'root'
+        group: 'root'
+        mode: '0644'
+      notify: 'Restart GeoClue'
