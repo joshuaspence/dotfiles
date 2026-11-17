@@ -521,7 +521,10 @@
             dest: '/tmp/wifiman-desktop.deb'
             checksum: 'sha256:{{ wifiman_manifest.checksums["linux-x86_64"] }}'
             mode: '0644'
+
+        # The package's postinst enables and starts `wifiman-desktop.service`, which fails without systemd as PID 1.
         - name: 'Install WiFiman Desktop'
+          when: 'not is_ci'
           ansible.builtin.apt:
             deb: '/tmp/wifiman-desktop.deb'
 
