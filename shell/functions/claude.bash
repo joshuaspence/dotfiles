@@ -46,6 +46,6 @@ function claude-scratch() {
   claude-trust-dir "${scratch_dir}" || return
 
   local work_dir
-  work_dir="$(mktemp --directory --tmpdir "${scratch_dir}")" || return
+  work_dir="$(mktemp --directory --tmpdir="${scratch_dir}")" || return
   env --chdir "${work_dir}" claude "$@"
 }
