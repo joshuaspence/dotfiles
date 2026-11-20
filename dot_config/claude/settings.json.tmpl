@@ -69,7 +69,7 @@
   "skipWorkflowUsageWarning" true
   "statusLine" (dict
     "type" "command"
-    "command" "claude-hud"
+    "command" "COLUMNS=$((COLUMNS - 4)) node \"$(mise where http:claude-hud)/hud.mjs\""
   )
   "theme" "auto"
   "tui" "fullscreen"
