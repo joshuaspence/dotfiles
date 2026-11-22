@@ -19,6 +19,7 @@ kubectl = "latest"
 markdownlint-cli2 = "latest"
 node = "lts"
 "npm:ccusage" = "latest"
+packer = "latest"
 "pipx:ansible-lint" = { version = "latest", uvx_args = "--python 3.14" }
 "pipx:gnome-extensions-cli" = "latest"
 pnpm = "latest"
