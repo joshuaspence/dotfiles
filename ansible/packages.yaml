@@ -492,6 +492,24 @@
           ansible.builtin.apt:
             name: 'teleport'
 
+    - name: 'Unity Hub'
+      when: 'is_personal'
+      block:
+        - name: 'Add Unity Hub repository'
+          ansible.builtin.deb822_repository:
+            name: 'unityhub'
+            uris: 'https://hub.unity3d.com/linux/repos/deb'
+            suites: 'stable'
+            components: 'main'
+            architectures: '{{ dpkg_architecture }}'
+            signed_by: 'https://hub.unity3d.com/linux/keys/public'
+          notify: 'Update APT cache'
+        - name: 'Flush handlers'
+          ansible.builtin.meta: 'flush_handlers'
+        - name: 'Install Unity Hub'
+          ansible.builtin.apt:
+            name: 'unityhub'
+
     - name: 'VSCode'
       block:
         - name: 'Add VSCode repository'
