@@ -34,16 +34,6 @@ tflint = "latest"
 yamllint = "latest"
 yq = "latest"
 
-# Upstream ships `claude-hud` as a Claude Code plugin: no release assets and no `bin`, so install the tagged source
-# with the `http` backend and have `statusLine.command` run its `hud.mjs`.
-[tools."http:claude-hud"]
-version = "latest"
-url = "https://github.com/jarrodwatts/claude-hud/archive/refs/tags/v{{ version }}.tar.gz"
-strip_components = 1
-version_list_url = "https://api.github.com/repos/jarrodwatts/claude-hud/releases"
-version_json_path = ".[].tag_name"
-version_order = "semver"
-
 # ansible-core 2.21 does not run on Python 3.15: it patches `dataclasses._is_type`, which 3.15 removed. Build the
 # Ansible tools against 3.14 until ansible-core supports 3.15.
 ansible = { version = "latest", uvx_args = "--python 3.14" }
@@ -52,3 +42,14 @@ ansible = { version = "latest", uvx_args = "--python 3.14" }
 # `requires-python`. Without `uv`, mise falls back to the system `pipx`, which builds every tool against the system
 # Python: 3.12 on Ubuntu 24.04, too old for `pipx:homeassistant-cli` 1.0.0.
 uv = "latest"
+
+# Upstream ships `claude-hud` as a Claude Code plugin: no release assets and no `bin`, so install the tagged source
+# with the `http` backend and have `statusLine.command` run its `hud.mjs`. Keep this table last: TOML assigns every key
+# below a table header to that table, so a tool added after it becomes an option of `http:claude-hud`.
+[tools."http:claude-hud"]
+version = "latest"
+url = "https://github.com/jarrodwatts/claude-hud/archive/refs/tags/v{{ version }}.tar.gz"
+strip_components = 1
+version_list_url = "https://api.github.com/repos/jarrodwatts/claude-hud/releases"
+version_json_path = ".[].tag_name"
+version_order = "semver"
