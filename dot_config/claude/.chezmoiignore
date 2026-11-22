@@ -7,3 +7,6 @@
 !settings.json
 !skills/
 !workflows/
+
+# Claude Code syncs the claude.ai account's skills here. Without this, `exact_skills` deletes them on every apply.
+skills/synced/
