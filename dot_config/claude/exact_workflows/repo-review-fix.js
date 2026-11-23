@@ -12,7 +12,8 @@
  * re-fixed them once per round. Split, the review is the only thing that finds, this is the only thing that writes, and
  * the ledger is the whole interface between them.
  *
- * Inputs arrive on `args` as `{ findings, exclusions, reviewedCommit, severity, maxFixes, reviewers, effort }`,
+ * Inputs arrive on `args` as
+ * `{ findings, exclusions, reviewedCommit, liveFixBranches, landedFindings, severity, maxFixes, reviewers, effort }`,
  * normalized through `normalizeArgs` below because this call site delivers that object JSON-encoded as a string.
  * `findings` is what the ledger holds — the wrapper passes them all, and the *script* applies the caps, because a cap
  * the caller applies is a cap that cannot be reported: the shortfall gap exists to say what was left behind, and only
@@ -260,37 +261,6 @@ const capLeaf = (e) => capEffort(e, 'xhigh');
 const leafEffort = capLeaf(effort);
 
 
-// --- Which findings get fixed ----------------------------------------------------------------------------------------
-// The ledger's findings, sanitised rather than trusted: they make a full round trip through the wrapper's JSON and back,
-// and a non-object entry would reach `issueSite` and throw. Fingerprinted on the way in so every finding this run
-// touches carries one from its first line to its last — the value a fixer is told to write into its commit trailer and
-// the value the wrapper matches a branch against are then the same one by construction.
-const allFindings = (Array.isArray(input?.findings) ? input.findings : [])
-  .filter((issue) => issue && typeof issue === 'object')
-  .map(withFingerprint);
-
-// A finding carrying a `fixBranch` already has an unmerged fix from an earlier run, so it is set aside rather than
-// offered again: attempting it would hand the user a second branch for the same defect, and because the ordering below
-// is stable, a capped run would spend its cap on the same worst findings every time and never reach the next batch. The
-// wrapper removes the key once the branch is gone, which is what puts the finding back in play.
-const eligible = allFindings.filter((issue) => severityRank(issue) >= SEVERITY_ORDER.indexOf(severityFloor));
-const unbranched = eligible.filter((issue) => !issue.fixBranch);
-
-// Worst first, then capped. `sort` is specified stable, so findings of equal severity keep the ledger's order — which is
-// the review's own, oldest first, so a defect that has survived several rounds is offered before an equally severe one
-// found this round.
-const ranked = [...unbranched].sort((left, right) => severityRank(right) - severityRank(left));
-const selected = ranked.slice(0, maxFixes);
-
-// The categories that fix and review at the Opus tier. A verbatim copy of `repo-review.js`'s list, which derives it from
-// the reviewer roster's `highRisk` flags — a roster this script has no reason to carry, since it reports no findings of
-// its own and only ever reads a `category` back off one. Guarded by the same parity test as `fingerprint`: a category
-// marked high-risk there and missing here would fix the hardest defects on the cheap model with nothing saying so.
-const HIGH_RISK = ['architecture', 'bug', 'consistency', 'security'];
-
-const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
-
-
 // --- Untrusted git identifiers -------------------------------------------------------------------------------------
 // Every commit and branch name this script handles is a model-supplied string that ends up on a `git` command line:
 // interpolated into the `git show` / `git switch` instructions of downstream prompts, and handed to the wrapper, which
@@ -365,6 +335,59 @@ const runIdTally = (branchNames) => {
 
   return [...counts.entries()].sort((a, b) => b[1] - a[1]);
 };
+
+
+// --- Which findings get fixed ----------------------------------------------------------------------------------------
+// The ledger's findings, sanitised rather than trusted: they make a full round trip through the wrapper's JSON and back,
+// and a non-object entry would reach `issueSite` and throw. Fingerprinted on the way in so every finding this run
+// touches carries one from its first line to its last — the value a fixer is told to write into its commit trailer and
+// the value the wrapper matches a branch against are then the same one by construction.
+const allFindings = (Array.isArray(input?.findings) ? input.findings : [])
+  .filter((issue) => issue && typeof issue === 'object')
+  .map(withFingerprint);
+
+// What git says about earlier fixes, read by the wrapper because this script cannot: `liveFixBranches` is every
+// `rrfix/*` branch that still exists, local or on a remote, and `landedFindings` is every fingerprint a
+// `Repo-Review-Finding:` trailer in `HEAD`'s history names. A missing list is `null` rather than empty, because "the
+// wrapper did not look" must not read as "there are no branches" — that would hide every finding a branch was ever
+// recorded for.
+const liveFixBranches = Array.isArray(input?.liveFixBranches)
+  ? new Set(input.liveFixBranches.filter(isSandboxBranch))
+  : null;
+const landedFindings = new Set(
+  (Array.isArray(input?.landedFindings) ? input.landedFindings : []).filter((value) => typeof value === 'string'),
+);
+
+// The branch holding a fix for this finding that the user has neither landed nor deleted, or `null`. Such a finding is
+// set aside rather than offered again: attempting it would hand the user a second branch for the same defect, and
+// because the ordering below is stable, a capped run would spend its cap on the same worst findings every time and
+// never reach the next batch. Everything else is offered, including a finding whose fix has landed — its fixer then
+// retires it as `resolved-elsewhere`, which is the only thing that ever shrinks the ledger. The `fixBranch` is
+// hand-editable ledger content, and membership of `liveFixBranches` is what holds it to the sandbox shape: `{}`, `true`
+// or `master` matches nothing there, so it sets nothing aside.
+const pendingFixBranch = (issue) => {
+  const branch = issue.fixBranch?.branch;
+
+  return liveFixBranches?.has(branch) && !landedFindings.has(issue.fingerprint) ? branch : null;
+};
+
+const eligible = allFindings.filter((issue) => severityRank(issue) >= SEVERITY_ORDER.indexOf(severityFloor));
+const setAside = eligible.filter(pendingFixBranch);
+const offered = eligible.filter((issue) => !pendingFixBranch(issue));
+
+// Worst first, then capped. `sort` is specified stable, so findings of equal severity keep the ledger's order — which is
+// the review's own, oldest first, so a defect that has survived several rounds is offered before an equally severe one
+// found this round.
+const ranked = [...offered].sort((left, right) => severityRank(right) - severityRank(left));
+const selected = ranked.slice(0, maxFixes);
+
+// The categories that fix and review at the Opus tier. A verbatim copy of `repo-review.js`'s list, which derives it from
+// the reviewer roster's `highRisk` flags — a roster this script has no reason to carry, since it reports no findings of
+// its own and only ever reads a `category` back off one. Guarded by the same parity test as `fingerprint`: a category
+// marked high-risk there and missing here would fix the hardest defects on the cheap model with nothing saying so.
+const HIGH_RISK = ['architecture', 'bug', 'consistency', 'security'];
+
+const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 
 
 // --- Untrusted paths -----------------------------------------------------------------------------------------------
@@ -845,35 +868,67 @@ if (!bounded) {
   );
 }
 
-// Nothing to do. Both reasons are worth telling apart in the log: a caller that passed no findings has a wrapper or
-// ledger problem, while a floor and a cap that selected none of them is this script's own doing.
+// "Finding (branch)" for each finding set aside, so a gap names what the user would have to land or delete rather than
+// only counting it. Both halves are safe to print: the fingerprint is this script's own hex, and the branch passed
+// `isSandboxBranch`.
+const setAsideList = setAside.map((issue) => `\`${issue.fingerprint}\` (\`${pendingFixBranch(issue)}\`)`).join(', ');
+
+// "a, b and c", for counts that are only worth naming when they are not zero.
+const listOf = (parts) => parts.filter(Boolean).join(', ').replace(/, ([^,]*)$/, ' and $1');
+
+// Nothing to do, and only the reason that actually emptied the selection is named: a caller that passed no findings has
+// a wrapper or ledger problem, and each stage below empties it for a different reason with a different remedy.
 if (selected.length === 0) {
+  const floor = `\`${severityFloor}\` severity`;
+
   return refuse(
     allFindings.length === 0
       ? 'no findings were passed to it — the ledger is empty, or the wrapper sent none'
-      : `none of the ${allFindings.length} finding(s) passed to it are at or above \`${severityFloor}\` severity` +
-          (eligible.length > unbranched.length ? ' and not already holding an unmerged fix branch' : '') +
-          (capGiven ? `, or \`--max-fixes ${maxFixes}\` allowed none` : ''),
+      : eligible.length === 0
+        ? `none of the ${allFindings.length} finding(s) passed to it are at or above ${floor}`
+        : offered.length === 0
+          ? `every one of the ${eligible.length} finding(s) at or above ${floor} already has an unmerged fix on a ` +
+            `branch: ${setAsideList}. Land or delete a branch to have its finding offered again`
+          : `\`--max-fixes ${maxFixes}\` allowed none of the ${offered.length} finding(s) it would otherwise attempt`,
     { gap: allFindings.length > 0 },
   );
 }
 
-// Everything the caps left behind, said once and plainly. A run that quietly attempted 5 of 40 findings reads exactly
+// Everything the run left behind, said once and plainly. A run that quietly attempted 5 of 40 findings reads exactly
 // like a run that had 5 findings, and the difference is the 35 defects the user still has — so the shortfall is a gap,
-// not a log line, because gaps are what the report is required to show.
+// not a log line, because gaps are what the report is required to show. Findings set aside are told apart from the
+// rest: they are not untried, they have a fix the user has not yet taken.
 if (selected.length < allFindings.length) {
   const byFloor = allFindings.length - eligible.length;
-  const byBranch = eligible.length - unbranched.length;
-  const byCap = unbranched.length - selected.length;
+  const byCap = offered.length - selected.length;
 
   gaps.push(
     `${allFindings.length - selected.length} of ${allFindings.length} finding(s) were **not** attempted this run: ` +
-      `${byFloor} below \`${severityFloor}\` severity` +
-      (byBranch ? `, ${byBranch} already holding an unmerged fix branch` : '') +
-      (byCap ? `, and ${byCap} beyond \`--max-fixes ${maxFixes}\`` : '') +
-      '. They are unchanged in the ledger and are **not** verified as unfixable' +
-      (byCap ? ' — re-run to take the next batch, worst first.' : '.') +
-      (byBranch ? ' A finding with a fix branch is offered again once that branch is deleted.' : ''),
+      listOf([
+        byFloor && `${byFloor} below \`${severityFloor}\` severity`,
+        byCap && `${byCap} beyond \`--max-fixes ${maxFixes}\``,
+        setAside.length && `${setAside.length} already fixed on an unmerged branch`,
+      ]) +
+      '.' +
+      (byFloor || byCap
+        ? ' Those below the floor or beyond the cap are unchanged in the ledger and are **not** verified as unfixable' +
+          (byCap ? ' — re-run to take the next batch, worst first.' : '.')
+        : '') +
+      (setAside.length
+        ? ` Set aside for their fix branches: ${setAsideList}. ` +
+          'Land or delete a branch to have its finding offered again.'
+        : ''),
+  );
+}
+
+// A wrapper that did not say which fix branches exist gets every recorded one offered again. That re-fixes rather than
+// hides, which is the recoverable direction, but it may hand the user a second branch for one defect.
+const unchecked = liveFixBranches === null ? eligible.filter((issue) => issue.fixBranch).length : 0;
+
+if (unchecked) {
+  gaps.push(
+    `No \`liveFixBranches\` was passed, so ${unchecked} finding(s) recorded with a fix branch were offered again ` +
+      'rather than set aside, and may now have two.',
   );
 }
 

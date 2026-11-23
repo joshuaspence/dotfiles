@@ -10,6 +10,8 @@ argument-hint: >-
 allowed-tools:
   - AskUserQuestion
   - Bash(git branch --delete --force:*)
+  - Bash(git for-each-ref:*)
+  - Bash(git log --grep=^Repo-Review-Finding: --format=%b HEAD)
   - Bash(git rev-parse:*)
   - Bash(git worktree list:*)
   - Bash(git worktree prune:*)
@@ -46,8 +48,8 @@ a bare token is an error — say so and stop, rather than guessing that it was m
 
 - `--severity <low|medium|high|critical>` sets the lowest severity worth fixing. Those are the four the review's
   findings carry; reject anything else and stop with an error rather than guessing. If omitted, the script defaults to
-  `low`, i.e. every finding is eligible. It is a floor, not a filter: `--severity high` means high **and** critical. Pass
-  it through as `severity` when given; omit it otherwise.
+  `low`, i.e. no finding is held back for its severity. It is a floor, not a filter: `--severity high` means high
+  **and** critical. Pass it through as `severity` when given; omit it otherwise.
 
   **Passing it bounds the run on its own, so no count cap is applied**: `--severity high` fixes *every* high and
   critical finding in the ledger, however many that is. The floor is the ceiling in that case — you have said what is
@@ -114,20 +116,30 @@ itself — finding defects is the other command's job, and doing it here would b
    yours to reinterpret. Say which version you found.
 4. If `findings` is an empty array, stop and say so: the review found nothing, or everything it found has been fixed. Do
    not run the workflow — it would refuse anyway, and the refusal costs a launch.
-5. For every finding carrying a `fixBranch`, run `git rev-parse --verify --quiet refs/heads/<branch>` on the branch it
-   names. If that prints nothing, the user has deleted the branch — having taken the fix or discarded it — so remove
-   the `fixBranch` key from that finding. The script sets aside every finding that still carries one, so this is the
-   only way such a finding is offered again: its fixer then retires it as `resolved-elsewhere` if the fix was taken, or
-   fixes it afresh if it was not.
+5. Ask git which earlier fixes are still pending, with exactly these two commands, and keep their output for `args`:
 
-Then take three things from it, and pass them through **verbatim**:
+   ```bash
+   git for-each-ref --format='%(refname:lstrip=-3)' 'refs/heads/rrfix/' 'refs/remotes/*/rrfix/*/*'
+   git log --grep=^Repo-Review-Finding: --format=%b HEAD
+   ```
+
+   The first lists every fix branch still alive, local or pushed, as `rrfix/<run-id>/<n>`: pass its lines as
+   `liveFixBranches`. The second prints the body of every fix commit already in `HEAD`, however it got there — merged,
+   squashed or cherry-picked: pass the value of each `Repo-Review-Finding:` line in it as `landedFindings`. Either may
+   print nothing, which is an empty list. If either command *fails*, omit both keys rather than passing what you have:
+   the script then offers every finding again and says so, where a list you could not read, passed as empty, would read
+   as "every fix branch is gone" or "nothing has landed".
+
+   The script sets aside a finding whose `fixBranch.branch` is in `liveFixBranches` and whose `fingerprint` is not in
+   `landedFindings`, because the user already holds an unmerged fix for it. If that leaves **no** finding to offer,
+   stop: name those branches, say that landing or deleting one is what puts its finding back in play, and do not launch.
+
+Then take three things from the ledger, and pass them through **verbatim**:
 
 - `findings` — every entry, unfiltered. Do **not** apply `--severity` or `--max-fixes` yourself, and do not pre-select
   what looks worth fixing. The script does the selecting, and it is the script's job precisely because a cap the caller
   applies is a cap the caller can forget: the whole reason this command exists is that the previous design let the work
-  scale without a ceiling. Pass the list; let the script cut it down and tell you what it left. That includes the
-  findings still carrying a `fixBranch`, which the script sets aside and counts in its shortfall gap — but leave them out
-  of any count you quote the user, in the `Scope` options and the spend line alike, since none of them gets a fixer.
+  scale without a ceiling. Pass the list; let the script cut it down and tell you what it left.
 - `exclusions` — the review's list of generated and build-output paths. Each fixer is told never to stage one, because a
   regenerated bundle buries the change it is supposed to be showing: in one run four independent fixes each rebuilt
   `dist/server.cjs`, and one of the resulting commits touched 25 files to express a one-line source change.
@@ -148,7 +160,8 @@ run rather than taking it, so launching without an answer costs a launch and fix
 
 Build the options from the ledger you have just read, not from a fixed list — you know its real severity distribution,
 and an option offering to fix 2 critical findings when the ledger holds 2 criticals is a choice the user can make at a
-glance. Count the findings per severity, then offer, as a single question headed `Scope`:
+glance. Count the findings per severity, leaving out the ones step 5 of [Reading it](#reading-it) found set aside since
+none of them will get a fixer, then offer, as a single question headed `Scope`:
 
 - the highest severity that has findings, as a floor — "`critical` only (2 findings)";
 - the next floor down that would admit more — "`high` and above (9 findings)";
@@ -185,12 +198,13 @@ Call the `Workflow` tool with:
   count, which is why [Bounding the run](#bounding-the-run) will already have established that a floor or a cap is in
   force before you get here.
 
-Before you call it, state in one line what you are about to spend: how many findings the ledger holds, the floor and cap
-in force, and therefore how many findings will be attempted — e.g. "31 findings in the ledger, fixing up to 5 at `high`
-or above", or "31 findings in the ledger, fixing all 9 at `high` or above, uncapped". Say the number that will actually
-get a fixer, because with no cap that number is the count the floor admits rather than a ceiling. Then launch. Running
-that workflow *is* the fixing: it runs in the background and returns a structured result when it finishes. Do not fix
-anything yourself, do not launch fix agents outside it, and do not re-run it while it is in flight. Watch progress in
+Before you call it, state in one line what you are about to spend: how many findings the ledger holds, how many of them
+are set aside for a pending fix branch, the floor and cap in force, and therefore how many findings will be attempted —
+e.g. "31 findings in the ledger, fixing up to 5 at `high` or above", or "31 findings in the ledger, 2 set aside for
+their fix branches, fixing all 9 others at `high` or above, uncapped". Say the number that will actually get a fixer,
+because with no cap that number is the count the floor admits rather than a ceiling. Then launch. Running that workflow
+*is* the fixing: it runs in the background and returns a structured result when it finishes. Do not fix anything
+yourself, do not launch fix agents outside it, and do not re-run it while it is in flight. Watch progress in
 `/workflows`.
 
 The result is `{ base, reviewedCommit, considered, selected, sandboxBranches, keepBranches, outcomes, gaps }`:
@@ -198,8 +212,9 @@ The result is `{ base, reviewedCommit, considered, selected, sandboxBranches, ke
 - `base` — the commit every fix is parented on: the `HEAD` the survey read before any agent ran. It is `null` when the
   run refused, which is the one outcome that needs explaining rather than reporting; see below.
 - `reviewedCommit` — echoed back from the ledger, or `null` if it was unusable.
-- `considered` — how many findings you passed. `selected` — how many the floor and the cap admitted. When they differ the
-  script has already said so in `gaps`; the two numbers are what make the gap checkable.
+- `considered` — how many findings you passed. `selected` — how many the floor and the cap admitted once the findings
+  with a pending fix branch were set aside. When they differ the script has already said so in `gaps`; the two numbers
+  are what make the gap checkable.
 - `outcomes` — one entry per selected finding, in the order they were attempted (worst first), each carrying the
   finding's `fingerprint`, `description`, `category`, `severity`, `file` and `lines`, plus the fix's `status`, `sha`,
   `branch`, `changedFiles` and `reason`. `status` is one of:
@@ -334,18 +349,18 @@ it has no business rewriting what the review recorded.
    the defect was not there: it was fixed by hand, subsumed by an earlier batch, or the code was deleted. Keeping it
    means every future run pays a fixer to rediscover that there is nothing to fix, forever, because nothing else will
    ever retire it. This is the one thing that shrinks the ledger, and it is why the status exists.
-2. **Record a `fixBranch` on every finding whose outcome carries a verified commit** — the `applied` and
-   `review-rejected` ones, keyed by `fingerprint`, holding the branch name and the abbreviated SHA — and leave out every
-   `fixBranch` that step 5 of [Reading it](#reading-it) removed. A finding with one is still open, since nothing has
-   been landed and the defect is still in the tree, but the script does not offer it again while it carries the key:
-   the user already has an unmerged fix for it, and attempting it again would hand them a second one while spending the
-   cap on it rather than on the next batch. Deleting the branch is what puts it back in play.
+2. **Record a `fixBranch` on every finding whose outcome was `applied` and verified**, keyed by `fingerprint`, holding
+   the branch name and the abbreviated SHA. A finding with one is still open, since nothing has been landed and the
+   defect is still in the tree, but the next run sets it aside for as long as that branch is alive and its fix has not
+   landed: the user already has an approved fix for it, and attempting it again would hand them a second one while
+   spending the cap on it rather than on the next batch. Leave a `review-rejected` fix unrecorded — its reviewers
+   objected through every revision, so it is not a fix the user already has, and the next run should try afresh.
 
 Set `updatedAt` to the current time. Do **not** touch `reviewedCommit` or `round`: they describe the review, and no
 review happened here. Writing `base` into `reviewedCommit` would tell the next run that the current tree has been
 reviewed when it has not, which silently suppresses everything a real review of it would find.
 
-If nothing changed — no finding was retired, gained a branch or lost one — do not write the file at all, and say so. An
+If nothing changed — no finding was retired and none got a branch — do not write the file at all, and say so. An
 `updatedAt` bump on an otherwise identical file is a diff that claims something happened.
 
 The two files this command writes are not exceptions to the read-only posture above. `--output` writes where the user

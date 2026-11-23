@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { internals, issue, promptIssue, runFix } from './scenario.js';
+import { internals, issue, promptIssue, runFix, withFingerprints } from './scenario.js';
 
 // Severity is the only field selection reads, so fixtures vary it and carry a description naming what they are — which
 // is also what makes an ordering failure legible in the assertion diff.
@@ -193,43 +193,109 @@ describe('the severity floor', () => {
 });
 
 describe('findings that already have a fix branch', () => {
-  // The wrapper records a `fixBranch` on every finding a run produced a commit for, and nothing is landed, so the next
-  // run is handed the same findings back. Offered again, a capped run spends its cap on the very findings it just
-  // fixed — the ordering is stable, so it is the same ones every time — and hands the user a second branch for each.
-  const branched = (finding, n) => ({ ...finding, fixBranch: { branch: `rrfix/wf_earlier/${n}`, sha: '7f3b91c' } });
+  // The wrapper records a `fixBranch` on every finding a run produced an approved commit for, and nothing is landed, so
+  // the next run is handed the same findings back. Offered again, a capped run spends its cap on the very findings it
+  // just fixed — the ordering is stable, so it is the same ones every time — and hands the user a second branch for
+  // each. Whether that fix is still pending is git's to say, so the wrapper passes what git reports and the script
+  // decides; these tests pin the decision.
+  const branchOf = (n) => `rrfix/wf_earlier/${n}`;
+  const branched = (finding, n) => ({ ...finding, fixBranch: { branch: branchOf(n), sha: '7f3b91c' } });
   const batch = (names) => names.map((name) => bySeverity('high', { description: name, file: `src/${name}.ts` }));
+  const fixWith = (args) => runFix({ args: { liveFixBranches: [0, 1, 2].map(branchOf), landedFindings: [], ...args } });
 
   it('takes the next batch on a capped re-run, rather than the one it already fixed', async () => {
     const findings = [...batch(['a', 'b']).map(branched), ...batch(['c', 'd', 'e'])];
-    const run = await runFix({ args: { findings, maxFixes: 2 } });
+    const run = await fixWith({ findings, maxFixes: 2 });
 
     expect(fixedDescriptions(run)).toEqual(['c', 'd']);
   });
 
   it('sets them aside even when they outrank everything else', async () => {
     const findings = [branched(bySeverity('critical'), 0), bySeverity('low')];
-    const run = await runFix({ args: { findings, maxFixes: 1 } });
+    const run = await fixWith({ findings, maxFixes: 1 });
 
     expect(fixedDescriptions(run)).toEqual(['a low finding']);
   });
 
-  it('counts them in the shortfall, apart from the floor and the cap', async () => {
-    const findings = [...batch(['a', 'b']).map(branched), ...batch(['c', 'd', 'e']), bySeverity('low')];
-    const run = await runFix({ args: { findings, severity: 'high', maxFixes: 2 } });
+  it('offers one again once its branch is gone, so deleting the branch is how to ask for a fresh fix', async () => {
+    const findings = batch(['a', 'b']).map(branched);
+    const run = await fixWith({ findings, liveFixBranches: [branchOf(1)] });
 
-    expect(shortfall(run)).toHaveLength(1);
-    expect(shortfall(run)[0]).toMatch(/4 of 6 finding\(s\)/);
-    expect(shortfall(run)[0]).toMatch(
-      /1 below `high` severity, 2 already holding an unmerged fix branch, and 1 beyond `--max-fixes 2`/,
-    );
-    expect(shortfall(run)[0]).toMatch(/offered again once that branch is deleted/);
+    expect(fixedDescriptions(run)).toEqual(['a']);
   });
 
-  it('spawns nothing when every finding has one, and says that is why', async () => {
-    const run = await runFix({ args: { findings: batch(['a', 'b']).map(branched), severity: 'high' } });
+  it('offers one again once its fix has landed, so its fixer can retire it', async () => {
+    // Cherry-picking a fix, or merging its pull request, leaves the branch in place. Set aside for as long as the
+    // branch exists, a landed finding would never reach a fixer again and so never be retired as `resolved-elsewhere`.
+    const [landed, pending] = withFingerprints(batch(['a', 'b']).map(branched));
+    const run = await fixWith({ findings: [landed, pending], landedFindings: [landed.fingerprint] });
+
+    expect(fixedDescriptions(run)).toEqual(['a']);
+  });
+
+  it.each([
+    ['an empty object', {}],
+    ['`true`', true],
+    ['a bare string', branchOf(0)],
+    ['a branch outside the sandbox namespace', { branch: 'master', sha: '7f3b91c' }],
+  ])('sets nothing aside for a `fixBranch` that is %s', async (_, fixBranch) => {
+    // The ledger is hand-editable, and a malformed key that hid its finding would hide it from every run to come.
+    const findings = [bySeverity('high', { fixBranch })];
+    const run = await fixWith({ findings, liveFixBranches: ['master', branchOf(0)] });
+
+    expect(fixedDescriptions(run)).toEqual(['a high finding']);
+  });
+
+  it('offers them all again, and says so, when the wrapper did not say which branches exist', async () => {
+    // "Not looked" must not read as "no branches": that would hide every finding a branch was ever recorded for.
+    // Offering them re-fixes instead, which is recoverable, and the gap says why the user may now hold two branches.
+    const findings = batch(['a', 'b']).map(branched);
+    const run = await runFix({ args: { findings } });
+
+    expect(fixedDescriptions(run)).toEqual(['a', 'b']);
+    expect(run.result.gaps.join('\n')).toMatch(/No `liveFixBranches` was passed, so 2 finding\(s\)/);
+  });
+
+  it('counts them in the shortfall apart from the floor and the cap, and names their branches', async () => {
+    const findings = [...batch(['a', 'b']).map(branched), ...batch(['c', 'd', 'e']), bySeverity('low')];
+    const run = await fixWith({ findings, severity: 'high', maxFixes: 2 });
+    const [gap] = shortfall(run);
+
+    expect(shortfall(run)).toHaveLength(1);
+    expect(gap).toMatch(/4 of 6 finding\(s\)/);
+    expect(gap).toMatch(
+      /1 below `high` severity, 1 beyond `--max-fixes 2` and 2 already fixed on an unmerged branch\./,
+    );
+    expect(gap).toContain(`(\`${branchOf(0)}\`)`);
+    expect(gap).toContain(`(\`${branchOf(1)}\`)`);
+  });
+
+  it('does not call a finding with a fix branch untried', async () => {
+    const run = await fixWith({ findings: [branched(bySeverity('high'), 0), bySeverity('high')], severity: 'high' });
+    const [gap] = shortfall(run);
+
+    expect(gap).toMatch(/: 1 already fixed on an unmerged branch\./);
+    expect(gap).not.toMatch(/below|not\*\* verified as unfixable/);
+  });
+
+  it('spawns nothing when every finding has one, and names the branches rather than the floor or the cap', async () => {
+    const run = await fixWith({ findings: batch(['a', 'b']).map(branched), severity: 'high', maxFixes: 5 });
+    const gaps = run.result.gaps.join('\n');
 
     expect(run.calls).toEqual([]);
-    expect(run.result.gaps.join('\n')).toMatch(/not already holding an unmerged fix branch/);
+    expect(gaps).toMatch(/every one of the 2 finding\(s\) at or above `high` severity already has an unmerged fix/);
+    expect(gaps).toContain(branchOf(1));
+    expect(gaps).not.toMatch(/--max-fixes/);
+  });
+
+  it('blames only the cap when a zero cap is what selected nothing', async () => {
+    // `--max-fixes 0` is the "what would a run attempt" probe, so its answer has to be the count it would attempt.
+    const findings = [branched(bySeverity('high'), 0), bySeverity('high'), bySeverity('high')];
+    const run = await fixWith({ findings, maxFixes: 0 });
+    const gaps = run.result.gaps.join('\n');
+
+    expect(gaps).toMatch(/`--max-fixes 0` allowed none of the 2 finding\(s\) it would otherwise attempt/);
+    expect(gaps).not.toMatch(/fix branch|severity/);
   });
 });
 
