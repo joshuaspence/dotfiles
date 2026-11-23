@@ -154,7 +154,12 @@ re-worded by the reviewer that re-reports it.
       "otherSites": [],
       "reason": "a length prefix is read but never bounded",
       "firstSeen": { "round": 2, "commit": "a1b2c3d4…" },
-      "fixBranch": { "branch": "rrfix/wf_9a1c2e/0", "sha": "7f3b91c" }
+      "fixAttempt": {
+        "at": "2026-08-30T06:12:00Z",
+        "status": "applied",
+        "branch": "rrfix/wf_9a1c2e/0",
+        "sha": "7f3b91c"
+      }
     }
   ]
 }
@@ -172,11 +177,11 @@ re-worded by the reviewer that re-reports it.
   never reaches an agent; it is also why this is the only key *you* add, since an unknown one is carried rather than
   validated and a mistake here would be silent.
 
-  `fixBranch` is the other command's key and rides along on exactly the same mechanism: `/repo-review-fix` writes it onto
-  a finding it has produced an unmerged branch for. It is optional and most findings have none. Carry it through
-  untouched, and do not treat it as "fixed" — nothing has been landed, so the defect is still in the tree and the review
-  is still right to hold it. Mention it when you report that finding, so the user is not offered a second fix for
-  something they already have one for.
+  `fixAttempt` is the other command's key and rides along on exactly the same mechanism: `/repo-review-fix` writes it
+  onto every finding it attempted, with the outcome and, when the attempt produced one, the unmerged branch holding the
+  fix. It is optional and most findings have none. Carry it through untouched, and do not treat it as "fixed": nothing
+  has been landed, so the defect is still in the tree and the review is still right to hold it. Mention its branch when
+  you report that finding, so the user is not offered a second fix for something they already have one for.
 - `round` is the last round's `round` — the **absolute** count across every invocation, which the next one continues
   from. It is not the number of rounds run today; see `--rounds`.
 - `reviewedCommit` is the last round's, so the next report can say how far the checkout has moved since the review.
@@ -414,7 +419,7 @@ findings):
   and modules involved, for repository-wide findings), and why it was flagged. Link each to its source with the
   permalink format below, and note any `otherSites`. Mark each as new this round or held, and for a held one give the
   round it was first seen in — a finding outstanding since round 1 of four reads very differently from one found minutes
-  ago. If a held finding carries a `fixBranch` from [the ledger](#the-ledger), say so and name the branch: it is still
+  ago. If a held finding's `fixAttempt` in [the ledger](#the-ledger) names a branch, say so and name it: it is still
   open, but an unmerged fix for it already exists and the user should read that rather than ask for another. Then say
   once, plainly, that the held findings were **not re-examined this round** and some may already be fixed.
 - If none were returned, state: "No issues found. Checked for bugs, security, consistency, code quality, architecture,

@@ -327,17 +327,23 @@ it has no business rewriting what the review recorded.
    the defect was not there: it was fixed by hand, subsumed by an earlier batch, or the code was deleted. Keeping it
    means every future run pays a fixer to rediscover that there is nothing to fix, forever, because nothing else will
    ever retire it. This is the one thing that shrinks the ledger, and it is why the status exists.
-2. **Record a `fixBranch` on every finding whose outcome carries a verified commit** — the `applied` and
-   `review-rejected` ones, keyed by `fingerprint`, holding the branch name and the abbreviated SHA. A finding with one is
-   still open, and is deliberately still offered to the next run: nothing has been landed, so the defect is still in the
-   tree. What the key buys is that the next report can say a branch already exists for it, so the user is not handed a
-   second fix for a finding they have an unmerged fix for.
+2. **Record a `fixAttempt` on every other finding that has an outcome**, keyed by `fingerprint`, replacing any it
+   already had. It holds `at`, the same timestamp as `updatedAt`, and `status`, the outcome's status. When the outcome's
+   commit verified in [Report the branches](#report-the-branches), it also holds `branch` and the abbreviated `sha`. A
+   finding whose commit did not verify gets neither, even if it is `applied`, because a branch that holds no commit is
+   not a fix the user has.
+
+   The script puts findings attempted earlier after those never attempted at the same severity, oldest attempt first, so
+   a capped re-run takes the next batch instead of the same worst findings. A finding with a `fixAttempt` is still open
+   and is still offered: nothing has been landed, so the defect is still in the tree. When it comes round again and its
+   `fixAttempt` names a branch, say in the report that the earlier branch exists, so the user can compare the two fixes
+   or delete one.
 
 Set `updatedAt` to the current time. Do **not** touch `reviewedCommit` or `round`: they describe the review, and no
 review happened here. Writing `base` into `reviewedCommit` would tell the next run that the current tree has been
 reviewed when it has not, which silently suppresses everything a real review of it would find.
 
-If nothing changed — no finding was retired and none got a branch — do not write the file at all, and say so. An
+If nothing changed — the run refused, so no finding has an outcome — do not write the file at all, and say so. An
 `updatedAt` bump on an otherwise identical file is a diff that claims something happened.
 
 The two files this command writes are not exceptions to the read-only posture above. `--output` writes where the user

@@ -192,6 +192,59 @@ describe('the severity floor', () => {
   });
 });
 
+describe('findings an earlier run attempted', () => {
+  // The wrapper records a `fixAttempt` on every finding a run attempted, and nothing is landed, so the next run is
+  // handed the same findings back. Ranked by severity alone, a capped re-run would spend its cap on the very findings
+  // it just attempted, since the ordering is stable, and never reach the rest.
+  const attempted = (finding, at, status = 'applied') => ({ ...finding, fixAttempt: { at, status } });
+  const batch = (names) => names.map((name) => bySeverity('high', { description: name, file: `src/${name}.ts` }));
+
+  it.each(['applied', 'declined', 'verify-failed', 'review-rejected'])(
+    'takes the next batch on a capped re-run after the last one came back `%s`',
+    async (status) => {
+      const [a, b, c, d] = batch(['a', 'b', 'c', 'd']);
+      const earlier = '2026-11-01T00:00:00Z';
+      const findings = [attempted(a, earlier, status), attempted(b, earlier, status), c, d];
+      const run = await runFix({ args: { findings, maxFixes: 2 } });
+
+      expect(fixedDescriptions(run)).toEqual(['c', 'd']);
+    },
+  );
+
+  it('returns to the least recently attempted once every finding has been tried', async () => {
+    const [a, b, c] = batch(['a', 'b', 'c']);
+    const findings = [
+      attempted(a, '2026-11-03T00:00:00Z'),
+      attempted(b, '2026-11-01T00:00:00Z'),
+      attempted(c, '2026-11-02T00:00:00Z'),
+    ];
+    const run = await runFix({ args: { findings, maxFixes: 2 } });
+
+    expect(fixedDescriptions(run)).toEqual(['b', 'c']);
+  });
+
+  it('still ranks severity first, so an attempted finding outranks a less severe untried one', async () => {
+    const findings = [bySeverity('low'), attempted(bySeverity('critical'), '2026-11-01T00:00:00Z')];
+    const run = await runFix({ args: { findings, maxFixes: 1 } });
+
+    expect(fixedDescriptions(run)).toEqual(['a critical finding']);
+  });
+
+  it.each([
+    ['an empty object', {}],
+    ['`true`', true],
+    ['a numeric `at`', { at: 20261101 }],
+  ])('reads a `fixAttempt` that is %s as never attempted', async (_, fixAttempt) => {
+    // The ledger is hand-editable. Ordering hides nothing, so reading a malformed key either way costs one retry at
+    // most, and "never attempted" keeps the ledger's own order.
+    const [a, b] = batch(['a', 'b']);
+    const findings = [{ ...a, fixAttempt }, attempted(b, '2026-11-01T00:00:00Z')];
+    const run = await runFix({ args: { findings, maxFixes: 1 } });
+
+    expect(fixedDescriptions(run)).toEqual(['a']);
+  });
+});
+
 describe('runs that spawn nothing', () => {
   // The cheapest thing this command can do is refuse to start, and both paths below have to reach that without paying
   // for the survey — which is a real agent on a real repo, and pointless when there is nothing to base on it.

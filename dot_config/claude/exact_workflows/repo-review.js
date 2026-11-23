@@ -1155,7 +1155,7 @@ const isHighRisk = (issue) => HIGH_RISK.includes(issue.category);
 //
 // A held finding is the exception the risk decision never overrides: when a group holds one, only held members are
 // candidates. Its content is the ledger's entry — the `fingerprint` the wrapper differences against `knownFindings`,
-// and the `firstSeen` and `fixBranch` it carries — and a re-report that replaced it would arrive under a fingerprint
+// and the `firstSeen` and `fixAttempt` it carries — and a re-report that replaced it would arrive under a fingerprint
 // the wrapper never sent, counted as new by the set difference while `newFindings` says it is not. It would also land
 // content the gate never checked, since `CONFIRMED` gates only findings marked `NEW_THIS_ROUND` and the merged finding
 // takes its marks from a held member. The re-report's site is still absorbed into `otherSites`.

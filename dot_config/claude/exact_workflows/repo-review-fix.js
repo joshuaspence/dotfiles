@@ -269,11 +269,21 @@ const allFindings = (Array.isArray(input?.findings) ? input.findings : [])
   .filter((issue) => issue && typeof issue === 'object')
   .map(withFingerprint);
 
-// Worst first, then capped. `sort` is specified stable, so findings of equal severity keep the ledger's order — which is
-// the review's own, oldest first, so a defect that has survived several rounds is offered before an equally severe one
+// When an earlier run last attempted this finding, as the wrapper recorded it in `fixAttempt.at`, or `''` for a finding
+// no run has attempted. An ISO-8601 timestamp sorts as a string, and `''` sorts before every one of them. A malformed
+// key reads as never attempted, which costs at most one early retry, since ordering hides nothing.
+const lastAttempted = (issue) => (typeof issue.fixAttempt?.at === 'string' ? issue.fixAttempt.at : '');
+
+// Worst first, then least recently attempted, then capped. Without the second key, a capped run would pick the same
+// worst findings every time, whatever became of them: an `applied` fix the user has not landed yet, a `declined` one
+// that will be declined again. With it, each re-run takes the next batch, and the cap works through the whole severity
+// before returning to any finding. `sort` is specified stable, so the remaining ties keep the ledger's order. That is
+// the review's own order, oldest first, so a defect that has survived several rounds comes before an equally severe one
 // found this round.
 const eligible = allFindings.filter((issue) => severityRank(issue) >= SEVERITY_ORDER.indexOf(severityFloor));
-const ranked = [...eligible].sort((left, right) => severityRank(right) - severityRank(left));
+const ranked = [...eligible].sort(
+  (left, right) => severityRank(right) - severityRank(left) || lastAttempted(left).localeCompare(lastAttempted(right)),
+);
 const selected = ranked.slice(0, maxFixes);
 
 // The categories that fix and review at the Opus tier. A verbatim copy of `repo-review.js`'s list, which derives it from
