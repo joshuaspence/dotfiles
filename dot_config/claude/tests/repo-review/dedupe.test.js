@@ -150,7 +150,7 @@ describe('dedupe merge', () => {
     // standing after dedupe (see `NEW_THIS_ROUND`), and the wrapper cross-checks that count against the fingerprints it
     // did not send. So a held finding has to survive as the object it arrived as, even when the re-report absorbed into
     // it sits in a higher risk tier. Replaced by the re-report, the merged finding would be unmarked — not counted as
-    // new — while carrying a fingerprint the wrapper never sent, and the ledger entry's `firstSeen` and `fixBranch`
+    // new — while carrying a fingerprint the wrapper never sent, and the ledger entry's `firstSeen` and `fixAttempt`
     // would be lost.
     //
     // Read through the script's own symbol: a `Symbol('found in this round')` made here is a different key, and every
@@ -160,7 +160,7 @@ describe('dedupe merge', () => {
     const held = {
       ...withFingerprint(issue({ category: 'code-quality', description: 'a.ts:10 escapes the query by hand' })),
       firstSeen: { round: 1, commit: 'a1b2c3d4' },
-      fixBranch: { branch: 'rrfix/wf_9a1c2e/0', sha: '7f3b91c' },
+      fixAttempt: { at: '2026-08-30T06:12:00Z', status: 'applied', branch: 'rrfix/wf_9a1c2e/0', sha: '7f3b91c' },
     };
     const reReport = {
       ...withFingerprint(issue({ category: 'bug', description: 'a.ts:12 mis-escapes the query', lines: '12' })),
