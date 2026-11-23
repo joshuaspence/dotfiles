@@ -269,11 +269,17 @@ const allFindings = (Array.isArray(input?.findings) ? input.findings : [])
   .filter((issue) => issue && typeof issue === 'object')
   .map(withFingerprint);
 
+// A finding carrying a `fixBranch` already has an unmerged fix from an earlier run, so it is set aside rather than
+// offered again: attempting it would hand the user a second branch for the same defect, and because the ordering below
+// is stable, a capped run would spend its cap on the same worst findings every time and never reach the next batch. The
+// wrapper removes the key once the branch is gone, which is what puts the finding back in play.
+const eligible = allFindings.filter((issue) => severityRank(issue) >= SEVERITY_ORDER.indexOf(severityFloor));
+const unbranched = eligible.filter((issue) => !issue.fixBranch);
+
 // Worst first, then capped. `sort` is specified stable, so findings of equal severity keep the ledger's order — which is
 // the review's own, oldest first, so a defect that has survived several rounds is offered before an equally severe one
 // found this round.
-const eligible = allFindings.filter((issue) => severityRank(issue) >= SEVERITY_ORDER.indexOf(severityFloor));
-const ranked = [...eligible].sort((left, right) => severityRank(right) - severityRank(left));
+const ranked = [...unbranched].sort((left, right) => severityRank(right) - severityRank(left));
 const selected = ranked.slice(0, maxFixes);
 
 // The categories that fix and review at the Opus tier. A verbatim copy of `repo-review.js`'s list, which derives it from
@@ -846,6 +852,7 @@ if (selected.length === 0) {
     allFindings.length === 0
       ? 'no findings were passed to it — the ledger is empty, or the wrapper sent none'
       : `none of the ${allFindings.length} finding(s) passed to it are at or above \`${severityFloor}\` severity` +
+          (eligible.length > unbranched.length ? ' and not already holding an unmerged fix branch' : '') +
           (capGiven ? `, or \`--max-fixes ${maxFixes}\` allowed none` : ''),
     { gap: allFindings.length > 0 },
   );
@@ -856,14 +863,17 @@ if (selected.length === 0) {
 // not a log line, because gaps are what the report is required to show.
 if (selected.length < allFindings.length) {
   const byFloor = allFindings.length - eligible.length;
-  const byCap = eligible.length - selected.length;
+  const byBranch = eligible.length - unbranched.length;
+  const byCap = unbranched.length - selected.length;
 
   gaps.push(
     `${allFindings.length - selected.length} of ${allFindings.length} finding(s) were **not** attempted this run: ` +
       `${byFloor} below \`${severityFloor}\` severity` +
+      (byBranch ? `, ${byBranch} already holding an unmerged fix branch` : '') +
       (byCap ? `, and ${byCap} beyond \`--max-fixes ${maxFixes}\`` : '') +
       '. They are unchanged in the ledger and are **not** verified as unfixable' +
-      (byCap ? ' — re-run to take the next batch, worst first.' : '.'),
+      (byCap ? ' — re-run to take the next batch, worst first.' : '.') +
+      (byBranch ? ' A finding with a fix branch is offered again once that branch is deleted.' : ''),
   );
 }
 

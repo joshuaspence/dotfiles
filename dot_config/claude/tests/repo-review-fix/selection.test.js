@@ -192,6 +192,47 @@ describe('the severity floor', () => {
   });
 });
 
+describe('findings that already have a fix branch', () => {
+  // The wrapper records a `fixBranch` on every finding a run produced a commit for, and nothing is landed, so the next
+  // run is handed the same findings back. Offered again, a capped run spends its cap on the very findings it just
+  // fixed — the ordering is stable, so it is the same ones every time — and hands the user a second branch for each.
+  const branched = (finding, n) => ({ ...finding, fixBranch: { branch: `rrfix/wf_earlier/${n}`, sha: '7f3b91c' } });
+  const batch = (names) => names.map((name) => bySeverity('high', { description: name, file: `src/${name}.ts` }));
+
+  it('takes the next batch on a capped re-run, rather than the one it already fixed', async () => {
+    const findings = [...batch(['a', 'b']).map(branched), ...batch(['c', 'd', 'e'])];
+    const run = await runFix({ args: { findings, maxFixes: 2 } });
+
+    expect(fixedDescriptions(run)).toEqual(['c', 'd']);
+  });
+
+  it('sets them aside even when they outrank everything else', async () => {
+    const findings = [branched(bySeverity('critical'), 0), bySeverity('low')];
+    const run = await runFix({ args: { findings, maxFixes: 1 } });
+
+    expect(fixedDescriptions(run)).toEqual(['a low finding']);
+  });
+
+  it('counts them in the shortfall, apart from the floor and the cap', async () => {
+    const findings = [...batch(['a', 'b']).map(branched), ...batch(['c', 'd', 'e']), bySeverity('low')];
+    const run = await runFix({ args: { findings, severity: 'high', maxFixes: 2 } });
+
+    expect(shortfall(run)).toHaveLength(1);
+    expect(shortfall(run)[0]).toMatch(/4 of 6 finding\(s\)/);
+    expect(shortfall(run)[0]).toMatch(
+      /1 below `high` severity, 2 already holding an unmerged fix branch, and 1 beyond `--max-fixes 2`/,
+    );
+    expect(shortfall(run)[0]).toMatch(/offered again once that branch is deleted/);
+  });
+
+  it('spawns nothing when every finding has one, and says that is why', async () => {
+    const run = await runFix({ args: { findings: batch(['a', 'b']).map(branched), severity: 'high' } });
+
+    expect(run.calls).toEqual([]);
+    expect(run.result.gaps.join('\n')).toMatch(/not already holding an unmerged fix branch/);
+  });
+});
+
 describe('runs that spawn nothing', () => {
   // The cheapest thing this command can do is refuse to start, and both paths below have to reach that without paying
   // for the survey — which is a real agent on a real repo, and pointless when there is nothing to base on it.

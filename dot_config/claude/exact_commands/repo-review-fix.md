@@ -114,13 +114,20 @@ itself — finding defects is the other command's job, and doing it here would b
    yours to reinterpret. Say which version you found.
 4. If `findings` is an empty array, stop and say so: the review found nothing, or everything it found has been fixed. Do
    not run the workflow — it would refuse anyway, and the refusal costs a launch.
+5. For every finding carrying a `fixBranch`, run `git rev-parse --verify --quiet refs/heads/<branch>` on the branch it
+   names. If that prints nothing, the user has deleted the branch — having taken the fix or discarded it — so remove
+   the `fixBranch` key from that finding. The script sets aside every finding that still carries one, so this is the
+   only way such a finding is offered again: its fixer then retires it as `resolved-elsewhere` if the fix was taken, or
+   fixes it afresh if it was not.
 
 Then take three things from it, and pass them through **verbatim**:
 
 - `findings` — every entry, unfiltered. Do **not** apply `--severity` or `--max-fixes` yourself, and do not pre-select
   what looks worth fixing. The script does the selecting, and it is the script's job precisely because a cap the caller
   applies is a cap the caller can forget: the whole reason this command exists is that the previous design let the work
-  scale without a ceiling. Pass the list; let the script cut it down and tell you what it left.
+  scale without a ceiling. Pass the list; let the script cut it down and tell you what it left. That includes the
+  findings still carrying a `fixBranch`, which the script sets aside and counts in its shortfall gap — but leave them out
+  of any count you quote the user, in the `Scope` options and the spend line alike, since none of them gets a fixer.
 - `exclusions` — the review's list of generated and build-output paths. Each fixer is told never to stage one, because a
   regenerated bundle buries the change it is supposed to be showing: in one run four independent fixes each rebuilt
   `dist/server.cjs`, and one of the resulting commits touched 25 files to express a one-line source change.
@@ -328,16 +335,17 @@ it has no business rewriting what the review recorded.
    means every future run pays a fixer to rediscover that there is nothing to fix, forever, because nothing else will
    ever retire it. This is the one thing that shrinks the ledger, and it is why the status exists.
 2. **Record a `fixBranch` on every finding whose outcome carries a verified commit** — the `applied` and
-   `review-rejected` ones, keyed by `fingerprint`, holding the branch name and the abbreviated SHA. A finding with one is
-   still open, and is deliberately still offered to the next run: nothing has been landed, so the defect is still in the
-   tree. What the key buys is that the next report can say a branch already exists for it, so the user is not handed a
-   second fix for a finding they have an unmerged fix for.
+   `review-rejected` ones, keyed by `fingerprint`, holding the branch name and the abbreviated SHA — and leave out every
+   `fixBranch` that step 5 of [Reading it](#reading-it) removed. A finding with one is still open, since nothing has
+   been landed and the defect is still in the tree, but the script does not offer it again while it carries the key:
+   the user already has an unmerged fix for it, and attempting it again would hand them a second one while spending the
+   cap on it rather than on the next batch. Deleting the branch is what puts it back in play.
 
 Set `updatedAt` to the current time. Do **not** touch `reviewedCommit` or `round`: they describe the review, and no
 review happened here. Writing `base` into `reviewedCommit` would tell the next run that the current tree has been
 reviewed when it has not, which silently suppresses everything a real review of it would find.
 
-If nothing changed — no finding was retired and none got a branch — do not write the file at all, and say so. An
+If nothing changed — no finding was retired, gained a branch or lost one — do not write the file at all, and say so. An
 `updatedAt` bump on an otherwise identical file is a diff that claims something happened.
 
 The two files this command writes are not exceptions to the read-only posture above. `--output` writes where the user
