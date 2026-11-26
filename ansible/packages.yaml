@@ -402,6 +402,24 @@
           ansible.builtin.apt:
             name: 'jfrog-cli-v2'
 
+    - name: 'Signal'
+      when: 'is_personal'
+      block:
+        - name: 'Add Signal repository'
+          ansible.builtin.deb822_repository:
+            name: 'signal-desktop'
+            uris: 'https://updates.signal.org/desktop/apt'
+            suites: 'xenial'
+            components: 'main'
+            architectures: 'amd64'
+            signed_by: 'https://updates.signal.org/desktop/apt/keys.asc'
+          notify: 'Update APT cache'
+        - name: 'Flush handlers'
+          ansible.builtin.meta: 'flush_handlers'
+        - name: 'Install Signal'
+          ansible.builtin.apt:
+            name: 'signal-desktop'
+
     - name: 'Slack'
       when: 'is_work'
       block:
